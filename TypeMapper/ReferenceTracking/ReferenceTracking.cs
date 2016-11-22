@@ -8,7 +8,7 @@ namespace TypeMapper
 {
     /// <summary>
     /// A reference value type can be mapped to many different types (one instance for each target type).
-    /// This class helps tracking each reference to the mapped type instance
+    /// This class helps tracking and retrieving each reference to the mapped type instance.
     /// </summary>
     public class ReferenceTracking : IReferenceTracking
     {

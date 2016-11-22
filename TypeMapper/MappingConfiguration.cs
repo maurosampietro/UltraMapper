@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -15,6 +16,21 @@ namespace TypeMapper
         private Dictionary<TypePair, PropertyConfiguration> _typeMappings =
             new Dictionary<TypePair, PropertyConfiguration>();
 
+        private IMappingConvention _mappingConvention;
+
+        public TypeConfiguration()
+        {
+            _mappingConvention = new MappingConvention();
+        }
+
+        public TypeConfiguration( IMappingConvention mappingConvention )
+        {
+            _mappingConvention = mappingConvention;
+        }
+
+        public TypeConfiguration( Action<MappingConvention> config )
+            : this() { config( (MappingConvention)_mappingConvention ); }
+
         public PropertyConfiguration<TSource, TDestination> Map<TSource, TDestination>()
         {
             var map = this.Map( typeof( TSource ), typeof( TDestination ) );
@@ -29,7 +45,7 @@ namespace TypeMapper
             if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
                 return typeMapping;
 
-            var propertymappings = new PropertyConfiguration( source, destination );
+            var propertymappings = new PropertyConfiguration( source, destination, _mappingConvention );
             _typeMappings.Add( typePair, propertymappings );
 
             return propertymappings;
@@ -72,7 +88,7 @@ namespace TypeMapper
         }
 
         public PropertyConfiguration( Type source, Type destination )
-            : this( source, destination, new SameNameAndTypeConvention() ) { }
+            : this( source, destination, new MappingConvention() ) { }
 
         public PropertyConfiguration( Type source, Type destination, IMappingConvention mappingConvention )
         {
@@ -109,9 +125,8 @@ namespace TypeMapper
             PropertyMapping propertyMapping;
             if( !_propertyMappings.TryGetValue( typePairKey, out propertyMapping ) )
             {
-                var sourceProperty = new SourceProperty()
+                var sourceProperty = new SourceProperty( sourcePropertyInfo )
                 {
-                    PropertyInfo = sourcePropertyInfo,
                     IsBuiltInType = sourcePropertyInfo.PropertyType.IsBuiltInType( true ),
                     IsEnumerable = sourcePropertyInfo.PropertyType.IsEnumerable(),
                     ValueGetter = FastInvoke.BuildUntypedCastGetter( sourcePropertyInfo )
@@ -121,9 +136,8 @@ namespace TypeMapper
                 _propertyMappings.Add( typePairKey, propertyMapping );
             }
 
-            propertyMapping.DestinationProperty = new DestinationProperty()
+            propertyMapping.DestinationProperty = new DestinationProperty( destinationPropertyInfo )
             {
-                PropertyInfo = destinationPropertyInfo,
                 NullableUnderlyingType = Nullable.GetUnderlyingType( destinationPropertyInfo.PropertyType ),
                 ValueSetter = FastInvoke.BuildUntypedCastSetter( destinationPropertyInfo )
             };
@@ -158,8 +172,6 @@ namespace TypeMapper
         internal PropertyConfiguration( PropertyConfiguration map )
             : base( map ) { }
 
-        public PropertyConfiguration() : this( new SameNameAndTypeConvention() ) { }
-
         public PropertyConfiguration( IMappingConvention mappingConvention )
             : base( typeof( TSource ), typeof( TDestination ), mappingConvention ) { }
 
@@ -185,5 +197,14 @@ namespace TypeMapper
         {
             return MapProperty( sourcePropertySelector, destinationPropertySelector, null );
         }
+
+        //public PropertyConfiguration<TSource, TDestination> MapProperty<TSourceProperty, TDestinationProperty>(
+        //   Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
+        //   Expression<Func<TDestination, TDestinationProperty>> destinationPropertySelector ) 
+        //where TSourceProperty:IEnumerable 
+        //where TDestinationProperty : IEnumerable
+        //{
+        //    return null; // MapProperty( sourcePropertySelector, destinationPropertySelector, null );
+        //}
     }
 }

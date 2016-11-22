@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TypeMapper</RootNamespace>
     <AssemblyName>TypeMapper</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,14 +41,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExpressionExtensions.cs" />
+    <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="FastInvoke.cs" />
     <Compile Include="MappingConfiguration.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
-    <Compile Include="MappingConventions\SameTypeAndName.cs" />
+    <Compile Include="MappingConventions\DefaultMappingConvention.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingConfiguration.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingRules\IPropertyMatchingRule.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingRules\ExactNameMatching.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingRules\PrefixMatching.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingRules\PropertyMatchingRuleBase.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingRules\SuffixMatching.cs" />
+    <Compile Include="MappingConventions\PropertyMatchingRules\TypeMatchingRule.cs" />
     <Compile Include="ReferenceTracking\IReferenceTracking.cs" />
     <Compile Include="ReferenceTracking\ReferenceTracking.cs" />
-    <Compile Include="TypeExtensions.cs" />
+    <Compile Include="ExtensionMethods\TypeExtensions.cs" />
     <Compile Include="TypeMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyInfoPair.cs" />

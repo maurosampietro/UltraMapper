@@ -2,6 +2,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.ComponentModel;
+using TypeMapper.MappingConventions;
+using TypeMapper.MappingConventions.PropertyMatchingRules;
 
 namespace TypeMapper.Tests
 {
@@ -10,6 +13,9 @@ namespace TypeMapper.Tests
     {
         public class BaseTypes
         {
+            public long NotImplicitlyConvertible { get; set; } = 31;
+            public int ImplicitlyConvertible { get; set; } = 33;
+
             public bool Boolean { get; set; } = true;
             public byte Byte { get; set; } = 0x1;
             public sbyte SByte { get; set; } = 0x2;
@@ -34,6 +40,7 @@ namespace TypeMapper.Tests
             public BaseTypes Reference { get; set; }
 
             public List<int> ListOfInts { get; set; }
+            public List<InnerType> ListOfInnerType { get; set; }
 
             public BaseTypes()
             {
@@ -41,11 +48,19 @@ namespace TypeMapper.Tests
                 this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
 
                 this.ListOfInts = new List<int>() { 1, 2, 3 };
+
+                this.ListOfInnerType = new List<Tests.TypeMapperTests.InnerType>() {
+                    new Tests.TypeMapperTests.InnerType() { A = "a", B="b",C = this  },
+                    new Tests.TypeMapperTests.InnerType(){ A = "c", B="d",C = this  },
+                };
             }
         }
 
         public class BaseTypesDto
         {
+            public int NotImplicitlyConvertible { get; set; }
+            public long ImplicitlyConvertible { get; set; }
+
             public bool Boolean { get; set; }
             public byte Byte { get; set; }
             public sbyte SByte { get; set; }
@@ -68,7 +83,10 @@ namespace TypeMapper.Tests
 
             public BaseTypes Reference { get; set; }
 
-            public List<int> ListOfInts { get; set; }
+            public BindingList<int> ListOfInts { get; set; }
+
+            public BindingList<InnerTypeDto> ListOfInnerTypeDto { get; set; }
+
         }
 
         public class InnerType
@@ -87,7 +105,6 @@ namespace TypeMapper.Tests
             public BaseTypes C { get; set; }
         }
 
-
         [TestMethod]
         public void SimpleTypes()
         {
@@ -96,36 +113,130 @@ namespace TypeMapper.Tests
             var temp2 = new BaseTypesDto();
             temp2.Reference = temp;
 
-            var config = new TypeConfiguration();
-
+            var config = new TypeConfiguration( new MappingConvention() );
             var config2 = config.Map<BaseTypes, BaseTypesDto>()
+                .MapProperty( a => a.ListOfInnerType, b => b.ListOfInnerTypeDto )
+                //null nullable
+                .MapProperty( a => a.NullNullableInt32, b => b.SByte )
+                //.MapProperty( a => a.NullNullableInt32, b => b.SByte, a => a == null ? 0 : a.Value )
+                .MapProperty( a => a.NullNullableInt32, b => b.Int32, a => a == null ? 0 : a.Value )
 
-                 //null nullable
-                 .MapProperty( a => a.NullNullableInt32, b => b.SByte )
-                 //.MapProperty( a => a.NullNullableInt32, b => b.SByte, a => a == null ? 0 : a.Value )
-                 .MapProperty( a => a.NullNullableInt32, b => b.Int32, a => a == null ? 0 : a.Value )
+                //inner class
+                .MapProperty( a => a.InnerType, b => b.InnerType )
 
-                 //inner class
-                 .MapProperty( a => a.InnerType, b => b.InnerType )
+                //circular reference (self reference)
+                .MapProperty( a => a.SelfReference, b => b.SelfReference )
 
-            //circular reference (self reference)
-            .MapProperty( a => a.SelfReference, b => b.SelfReference )
+                .MapProperty( a => a.String, d => d.String )
+                .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+                .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
-            .MapProperty( a => a.String, d => d.String )
-            .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
-            .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
+                //same sourceproperty/destinationProperty: second mapping overrides 
+                .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
+                .MapProperty( a => a.Single, y => y.Double )
 
-            //same sourceproperty/destinationProperty: second mapping overrides 
-            .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-            .MapProperty( a => a.Single, y => y.Double )
-
-            .MapProperty( a => a.NullableInt32, d => d.Char )
-            .MapProperty( a => a.Char, d => d.NullableInt32 )
-            .MapProperty( a => a.Char, d => d.Int32 );
+                .MapProperty( a => a.NullableInt32, d => d.Char )
+                .MapProperty( a => a.Char, d => d.NullableInt32 )
+                .MapProperty( a => a.Char, d => d.Int32 );
 
             var typeMapper = new TypeMapper( config );
 
             typeMapper.Map( temp, temp2 );
+        }
+    }
+
+    [TestClass]
+    public class ConventionTests
+    {
+        public class SourceClass
+        {
+            public int A { get; set; } = 31;
+            public long B { get; set; } = 33;
+            public int C { get; set; }
+            public int D { get; set; }
+        }
+
+        public class TargetClass
+        {
+            public long A { get; set; }
+            public int B { get; set; }
+        }
+
+        public class TargetClassDto
+        {
+            public long ADto { get; set; }
+            public int ADataTransferObject { get; set; }
+
+            public long BDataTransferObject { get; set; }
+
+            public int Cdto { get; set; }
+            public int Ddatatransferobject { get; set; }
+        }
+
+        [TestMethod]
+        public void ExactNameAndImplicitlyConvertibleTypeConventionTest()
+        {
+            var source = new SourceClass();
+            var target = new TargetClass();
+
+            var config = new TypeConfiguration( new MappingConvention() );
+            var mapper = new TypeMapper( config );
+
+            mapper.Map( source, target );
+
+            Assert.IsTrue( source.A == target.A );
+            Assert.IsTrue( source.B != target.B );
+        }
+
+        [TestMethod]
+        public void ExactNameAndTypeConventionTest()
+        {
+            var source = new SourceClass();
+            var target = new TargetClass();
+
+            var config = new TypeConfiguration( cfg =>
+            {
+                cfg.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>(
+                    ruleConfig => ruleConfig.AllowImplicitConversions = false );
+            } );
+
+            var mapper = new TypeMapper( config );
+            mapper.Map( source, target );
+
+            Assert.IsTrue( source.A != target.A );
+            Assert.IsTrue( source.B != target.B );
+        }
+
+        [TestMethod]
+        public void SuffixNameAndTypeConventionTest()
+        {
+            var source = new SourceClass();
+            var target = new TargetClassDto();
+
+            var config = new TypeConfiguration( cfg =>
+            {
+                cfg.PropertyMatchingRules
+                    .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )                    
+                    .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                    .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                    .Respect( ( rule1, rule2, rule3 ) => rule1 & (rule2 | rule3) );
+            } );
+
+
+            var p1 = source.GetType().GetProperty( "A" );
+            var p2 = target.GetType().GetProperty( "ADto" );
+
+            //var e = (typeMatch & (nameMatch | suffixMatch | prefixMatch)).Expression;
+            //var t = e.Compile();
+            //bool result = t( p1, p2 );
+
+            var mapper = new TypeMapper( config );
+            mapper.Map( source, target );
+
+            Assert.IsTrue( source.A == target.ADto );
+            Assert.IsTrue( source.B == target.BDataTransferObject );
+            Assert.IsTrue( source.C == target.Cdto );
+            Assert.IsTrue( source.D == target.Ddatatransferobject );
         }
     }
 }

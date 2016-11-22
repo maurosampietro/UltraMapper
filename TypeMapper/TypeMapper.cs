@@ -111,35 +111,43 @@ namespace TypeMapper
 
                             //track these references BEFORE recursion to avoid infinite loops and stackoverflow
                             referenceTracking.Add( sourcePropertyValue, destinationPropertyType, destinationPropertyValue );
-                            this.Map( sourcePropertyValue, destinationPropertyValue, referenceTracking );
 
                             //Collection
                             if( mapping.SourceProperty.IsEnumerable )
                             {
                                 var collection = (IList)destinationPropertyValue;
 
-                                bool isBuiltInType = false;
-                                Type type = null;
+                                Type genericType = destinationPropertyType.GetGenericType();
+                                bool isBuiltInType = genericType.IsBuiltInType( false );
+
                                 foreach( var sourceItem in (IEnumerable)sourcePropertyValue )
                                 {
-                                    if( type == null )
-                                    {
-                                        type = sourceItem.GetType();
-                                        isBuiltInType = type.IsBuiltInType( false );
-                                    }
-
-                                    var destinationItem = Activator.CreateInstance( type );
+                                    object destinationItem;
                                     if( isBuiltInType )
+                                    {
+                                        destinationItem = Activator.CreateInstance( genericType );
                                         destinationItem = sourceItem;
+                                    }
                                     else
-                                        this.Map( sourceItem, destinationItem );
+                                    {
+                                        if( !referenceTracking.TryGetValue( sourceItem,
+                                            genericType, out destinationItem ) )
+                                        {
+                                            destinationItem = Activator.CreateInstance( genericType );
+
+                                            //track these references BEFORE recursion to avoid infinite loops and stackoverflow
+                                            referenceTracking.Add( sourceItem, genericType, destinationItem );
+                                            this.Map( sourceItem, destinationItem, referenceTracking );
+                                        }
+                                    }
 
                                     collection.Add( destinationItem );
                                 }
                             }
+                            else this.Map( sourcePropertyValue, destinationPropertyValue, referenceTracking );
                         }
 
-                        mapping.DestinationProperty.ValueSetter( destination, destinationPropertyValue );                     
+                        mapping.DestinationProperty.ValueSetter( destination, destinationPropertyValue );
                     }
                 }
             }
@@ -152,6 +160,9 @@ namespace TypeMapper
         void AddItem( IList collection, object item );
     }
 
+    /// <summary>
+    /// Creates a new collection and assign it to the input collection
+    /// </summary>
     public class ReplaceCollection : ICollectionMapper
     {
         public void AddItem( IList collection, object item )
@@ -160,6 +171,15 @@ namespace TypeMapper
         }
     }
 
+    ///// <summary>
+    ///// Keeps using the input collection and maps
+    ///// removing and adding element to it.
+    ///// </summary>
+    //public class UpdateCollection : ICollectionMapper { }
+
+    ///// <summary>
+    ///// Keeps the input collection and adds elements to it
+    ///// </summary>
     //public class MergeCollection : ICollectionMapper { }
 
 
@@ -194,7 +214,12 @@ namespace TypeMapper
 
     public class BaseProperty
     {
-        public PropertyInfo PropertyInfo { get; set; }
+        public readonly PropertyInfo PropertyInfo;
+
+        public BaseProperty( PropertyInfo propertyInfo )
+        {
+            this.PropertyInfo = propertyInfo;
+        }
 
         public override bool Equals( object obj )
         {
@@ -216,6 +241,9 @@ namespace TypeMapper
         public bool IsBuiltInType { get; set; }
         public bool IsEnumerable { get; set; }
         public Func<TSource, object> ValueGetter { get; set; }
+
+        public SourceProperty( PropertyInfo propertyInfo )
+            : base( propertyInfo ) { }
     }
 
     public class DestinationProperty<TDestination> : BaseProperty
@@ -223,11 +251,20 @@ namespace TypeMapper
         //This info is evaluated at configuration level only once for performance reasons
         public Type NullableUnderlyingType { get; set; }
         public Action<TDestination, object> ValueSetter { get; set; }
+
+        public DestinationProperty( PropertyInfo propertyInfo )
+            : base( propertyInfo ) { }
     }
 
     public class SourceProperty : SourceProperty<object>
     {
+        public SourceProperty( PropertyInfo propertyInfo )
+            : base( propertyInfo ) { }
     }
 
-    public class DestinationProperty : DestinationProperty<object> { }
+    public class DestinationProperty : DestinationProperty<object>
+    {
+        public DestinationProperty( PropertyInfo propertyInfo )
+            : base( propertyInfo ) { }
+    }
 }

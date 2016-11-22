@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper;
+using TypeMapper.MappingConventions.PropertyMatchingRules;
 
 namespace ConsoleApplication
 {
@@ -84,19 +85,20 @@ namespace ConsoleApplication
         }
 
 
+
         static void Main( string[] args )
         {
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-            //var p = typeof( BaseTypes ).GetProperty( "Decimal" );
-            //var setter1 = FastInvoke.BuildUntypedSetter<BaseTypes, decimal>( p );
+            //var p = typeof( BaseTypes ).GetProperty( "Int32" );
+            //var setter1 = FastInvoke.BuildUntypedSetter<BaseTypes, int>( p );
             //var setter2 = FastInvoke.BuildUntypedSetter<BaseTypes>( p );
             //var setter3 = FastInvoke.BuildUntypedCastSetter( p );
 
             //Stopwatch sw1 = new Stopwatch();
             //sw1.Start();
-            //for( decimal i = 0; i < 10000000; i++ )
+            //for( int i = 0; i < 10000000; i++ )
             //{
             //    setter1( temp, i );
             //}
@@ -105,7 +107,7 @@ namespace ConsoleApplication
 
             //Stopwatch sw2 = new Stopwatch();
             //sw2.Start();
-            //for( decimal i = 0; i < 10000000; i++ )
+            //for( int i = 0; i < 10000000; i++ )
             //{
             //    setter2( temp, i );
             //}
@@ -114,22 +116,22 @@ namespace ConsoleApplication
 
             //Stopwatch sw3 = new Stopwatch();
             //sw3.Start();
-            //for( decimal i = 0; i < 10000000; i++ )
+            //for( int i = 0; i < 10000000; i++ )
             //{
             //    setter3( temp, i );
             //}
             //sw3.Stop();
             //Console.WriteLine( sw3.ElapsedMilliseconds );
 
-            //var mapper = new TypeMapper.TypeMapper();
-            //Stopwatch sw4 = new Stopwatch();
-            //sw4.Start();
-            //for( int i = 0; i < 10000000; i++ )
-            //{
-            //    mapper.Map( temp, temp2 );
-            //}
-            //sw4.Stop();
-            //Console.WriteLine( sw4.ElapsedMilliseconds );
+            var mapper = new TypeMapper.TypeMapper();
+            Stopwatch sw4 = new Stopwatch();
+            sw4.Start();
+            for( int i = 0; i < 10000000; i++ )
+            {
+                mapper.Map( temp, temp2 );
+            }
+            sw4.Stop();
+            Console.WriteLine( sw4.ElapsedMilliseconds );
 
 
             Stopwatch sw5 = new Stopwatch();
@@ -143,8 +145,6 @@ namespace ConsoleApplication
             Console.WriteLine( sw5.ElapsedMilliseconds );
 
             Console.ReadKey();
-
-            
         }
     }
 }
