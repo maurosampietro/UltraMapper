@@ -58,14 +58,14 @@ namespace TypeMapper
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
         }
 
-        public static Type GetGenericType( this Type type )
+        public static Type GetCollectionGenericType( this Type type )
         {
             foreach( Type interfaceType in type.GetInterfaces() )
             {
                 if( interfaceType.IsGenericType &&
-                    interfaceType.GetGenericTypeDefinition() == typeof( IList<> ) )
+                    interfaceType.GetGenericTypeDefinition() == typeof( ICollection<> ) )
                 {
-                    return type.GetGenericArguments()[ 0 ];
+                    return interfaceType.GetGenericArguments()[ 0 ];
                 }
             }
 

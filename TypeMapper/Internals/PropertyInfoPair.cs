@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeMapper
+namespace TypeMapper.Internals
 {
-    public class PropertyInfoPair
+    internal class PropertyInfoPair
     {
         public readonly PropertyInfo SourceProperty;
         public readonly PropertyInfo DestinationProperty;

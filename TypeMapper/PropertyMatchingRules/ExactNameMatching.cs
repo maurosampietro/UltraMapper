@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeMapper.MappingConventions.PropertyMatchingRules
+namespace TypeMapper.MappingConventions
 {
     /// <summary>
     /// Two properties match if they have the same name.

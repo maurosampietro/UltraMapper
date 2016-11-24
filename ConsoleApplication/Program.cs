@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper;
-using TypeMapper.MappingConventions.PropertyMatchingRules;
+using TypeMapper.MappingConventions;
 
 namespace ConsoleApplication
 {
@@ -132,19 +132,16 @@ namespace ConsoleApplication
             }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
-
-
-            Stopwatch sw5 = new Stopwatch();
-            sw5.Start();
-            AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
-            for( int i = 0; i < 10000000; i++ )
-            {
-                AutoMapper.Mapper.Map( temp, temp2 );
-            }
-            sw5.Stop();
-            Console.WriteLine( sw5.ElapsedMilliseconds );
-
-            Console.ReadKey();
+            
+            //Stopwatch sw5 = new Stopwatch();
+            //sw5.Start();
+            //AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    AutoMapper.Mapper.Map( temp, temp2 );
+            //}
+            //sw5.Stop();
+            //Console.WriteLine( sw5.ElapsedMilliseconds );
         }
     }
 }

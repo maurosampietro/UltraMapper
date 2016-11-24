@@ -5,23 +5,23 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeMapper.MappingConventions.PropertyMatchingRules
+namespace TypeMapper.MappingConventions
 {
     /// <summary>
     /// Two properties match if the source type is of the same type 
-    /// or (optionally) implicitly convertible to the destination type.
+    /// or (optionally) implicitly convertible to the target type.
     /// </summary>
     public class TypeMatchingRule : PropertyMatchingRuleBase
     {
         public bool AllowImplicitConversions { get; set; } = true;
 
-        public override bool IsCompliant( PropertyInfo source, PropertyInfo destination )
+        public override bool IsCompliant( PropertyInfo source, PropertyInfo target )
         {
             var sourceType = source.PropertyType;
-            var destinationType = destination.PropertyType;
+            var targetType = target.PropertyType;
 
-            return source.PropertyType == destination.PropertyType || (this.AllowImplicitConversions 
-                && sourceType.IsImplicitlyConvertibleTo( destinationType ));
+            return source.PropertyType == target.PropertyType || (this.AllowImplicitConversions 
+                && sourceType.IsImplicitlyConvertibleTo( targetType ));
         }
     }
 }

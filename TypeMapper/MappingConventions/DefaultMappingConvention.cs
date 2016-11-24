@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using TypeMapper.MappingConventions.PropertyMatchingRules;
+using TypeMapper.MappingConventions;
 
 namespace TypeMapper.MappingConventions
 {
@@ -15,16 +15,17 @@ namespace TypeMapper.MappingConventions
     /// Two properties match if they have the same name and the type
     /// is the same or implicitly convertible to the target type.
     /// </summary>
-    public class MappingConvention : IMappingConvention
+    public class DefaultMappingConvention : IMappingConvention
     {
         public PropertyMatchingConfiguration PropertyMatchingRules { get; set; }
-        public Func<PropertyInfo, PropertyInfo, bool> MatchingEvaluator { get; set; }
 
-        public MappingConvention()
+        public DefaultMappingConvention()
         {
-            this.PropertyMatchingRules = new PropertyMatchingConfiguration();
-            this.PropertyMatchingRules.GetOrAdd<ExactNameMatching>( cfg => cfg.IgnoreCase = false );
-            this.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>( cfg => cfg.AllowImplicitConversions = true );
+            this.PropertyMatchingRules = new PropertyMatchingConfiguration( cfg =>
+            {
+                cfg.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = false );
+                cfg.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true );
+            } );
         }
 
         public bool IsMatch( PropertyInfo source, PropertyInfo target )
@@ -32,24 +33,6 @@ namespace TypeMapper.MappingConventions
             return this.PropertyMatchingRules.MatchingEvaluator( source, target );
         }
     }
-
-    //public interface IPropertyMatchingConfiguration : IEnumerable<IPropertyMatchingRule>
-    //{
-    //    IPropertyMatchingConfiguration<T> GetOrAdd<T>( Action<T> ruleConfig = null ) where T : IPropertyMatchingRule, new();
-    //    IPropertyMatchingConfiguration Remove<T>( Action<T> ruleConfig = null ) where T : IPropertyMatchingRule;
-    //}
-
-    //public interface IPropertyMatchingConfiguration<T1> : IPropertyMatchingConfiguration
-    //{
-    //    new IPropertyMatchingConfiguration<T1, T2> GetOrAdd<T2>( Action<T2> ruleConfig = null ) where T2 : IPropertyMatchingRule, new();
-    //}
-
-    //public interface IPropertyMatchingConfiguration<T, V> : IPropertyMatchingConfiguration { }
-    //public interface IPropertyMatchingConfiguration<T, V, S> : IPropertyMatchingConfiguration { }
-    //public interface IPropertyMatchingConfiguration<T, V, S, Z> : IPropertyMatchingConfiguration { }
-
-
-
 
     public static class PropertyMatchingRuleChainingExtensions
     {

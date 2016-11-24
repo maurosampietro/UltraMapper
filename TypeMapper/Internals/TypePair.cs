@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeMapper
+namespace TypeMapper.Internals
 {
-    public class TypePair
+    internal class TypePair
     {
         public readonly Type SourceType;
         public readonly Type DestinationType;

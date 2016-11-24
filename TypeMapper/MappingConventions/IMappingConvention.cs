@@ -4,13 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using TypeMapper.MappingConventions.PropertyMatchingRules;
+using TypeMapper.MappingConventions;
 
 namespace TypeMapper.MappingConventions
 {
     public interface IMappingConvention
     {
-        PropertyMatchingConfiguration PropertyMatchingRules { get; set; }
-        bool IsMatch( PropertyInfo source, PropertyInfo destination );
+        PropertyMatchingConfiguration PropertyMatchingRules { get; }
+        bool IsMatch( PropertyInfo source, PropertyInfo target );
     }
 }

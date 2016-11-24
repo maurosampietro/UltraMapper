@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.ComponentModel;
 using TypeMapper.MappingConventions;
-using TypeMapper.MappingConventions.PropertyMatchingRules;
+using TypeMapper.Configuration;
+using TypeMapper.Mappers;
 
 namespace TypeMapper.Tests
 {
@@ -41,6 +42,7 @@ namespace TypeMapper.Tests
 
             public List<int> ListOfInts { get; set; }
             public List<InnerType> ListOfInnerType { get; set; }
+            //public Dictionary<string, int> Dictionary { get; set; }
 
             public BaseTypes()
             {
@@ -53,6 +55,11 @@ namespace TypeMapper.Tests
                     new Tests.TypeMapperTests.InnerType() { A = "a", B="b",C = this  },
                     new Tests.TypeMapperTests.InnerType(){ A = "c", B="d",C = this  },
                 };
+
+                //this.Dictionary = new Dictionary<string, int>()
+                //{
+                //    {"a",1}, {"b",2}, {"c",3}
+                //};
             }
         }
 
@@ -87,6 +94,8 @@ namespace TypeMapper.Tests
 
             public BindingList<InnerTypeDto> ListOfInnerTypeDto { get; set; }
 
+            //public Dictionary<string, int> Dictionary { get; set; }
+
         }
 
         public class InnerType
@@ -108,13 +117,18 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void SimpleTypes()
         {
+
             var temp = new BaseTypes();
+            var pi = typeof( KeyValuePair<string, int> );
+
+            var instance = new DictionaryMapper().CreateNewInstance( pi, "mauro", 11 );
+          
 
             var temp2 = new BaseTypesDto();
             temp2.Reference = temp;
 
-            var config = new TypeConfiguration( new MappingConvention() );
-            var config2 = config.Map<BaseTypes, BaseTypesDto>()
+            var config = new TypeConfiguration( new DefaultMappingConvention() );
+            var config2 = config.MapTypes<BaseTypes, BaseTypesDto>()
                 .MapProperty( a => a.ListOfInnerType, b => b.ListOfInnerTypeDto )
                 //null nullable
                 .MapProperty( a => a.NullNullableInt32, b => b.SByte )
@@ -152,8 +166,9 @@ namespace TypeMapper.Tests
         {
             public int A { get; set; } = 31;
             public long B { get; set; } = 33;
-            public int C { get; set; }
-            public int D { get; set; }
+            public int C { get; set; } = 71;
+            public int D { get; set; } = 73;
+            public int E { get; set; } = 101;
         }
 
         public class TargetClass
@@ -171,6 +186,8 @@ namespace TypeMapper.Tests
 
             public int Cdto { get; set; }
             public int Ddatatransferobject { get; set; }
+
+            public int E { get; set; }
         }
 
         [TestMethod]
@@ -179,7 +196,7 @@ namespace TypeMapper.Tests
             var source = new SourceClass();
             var target = new TargetClass();
 
-            var config = new TypeConfiguration( new MappingConvention() );
+            var config = new TypeConfiguration( new DefaultMappingConvention() );
             var mapper = new TypeMapper( config );
 
             mapper.Map( source, target );
@@ -213,30 +230,22 @@ namespace TypeMapper.Tests
             var source = new SourceClass();
             var target = new TargetClassDto();
 
-            var config = new TypeConfiguration( cfg =>
+            var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
-                cfg.PropertyMatchingRules
-                    .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )                    
+                cfg.MappingConvention.PropertyMatchingRules
+                    .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
                     .Respect( ( rule1, rule2, rule3 ) => rule1 & (rule2 | rule3) );
             } );
 
-
-            var p1 = source.GetType().GetProperty( "A" );
-            var p2 = target.GetType().GetProperty( "ADto" );
-
-            //var e = (typeMatch & (nameMatch | suffixMatch | prefixMatch)).Expression;
-            //var t = e.Compile();
-            //bool result = t( p1, p2 );
-
-            var mapper = new TypeMapper( config );
             mapper.Map( source, target );
 
             Assert.IsTrue( source.A == target.ADto );
             Assert.IsTrue( source.B == target.BDataTransferObject );
             Assert.IsTrue( source.C == target.Cdto );
             Assert.IsTrue( source.D == target.Ddatatransferobject );
+            Assert.IsTrue( source.E == target.E );
         }
     }
 }

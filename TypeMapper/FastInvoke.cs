@@ -41,7 +41,6 @@ namespace TypeMapper
             return lambda.Compile();
         }
 
-
         public static Action<T, object> BuildUntypedSetter<T>( PropertyInfo propertyInfo )
         {
             // (t, p) => if( p != null ) t.set_Foo( Convert(p) )

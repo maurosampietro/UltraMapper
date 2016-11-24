@@ -5,11 +5,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeMapper.MappingConventions.PropertyMatchingRules
+namespace TypeMapper.MappingConventions
 {
     public abstract class PropertyMatchingRuleBase : IPropertyMatchingRule
     {
-        public abstract bool IsCompliant( PropertyInfo source, PropertyInfo destination );
+        public abstract bool IsCompliant( PropertyInfo source, PropertyInfo target );
 
         public static RuleChaining operator &( PropertyMatchingRuleBase lhs, PropertyMatchingRuleBase rhs )
         {

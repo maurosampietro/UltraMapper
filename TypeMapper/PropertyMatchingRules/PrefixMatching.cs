@@ -5,24 +5,24 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeMapper.MappingConventions.PropertyMatchingRules
+namespace TypeMapper.MappingConventions
 {
     /// <summary>
-    /// Two properties match if targetName = sourceName + suffix.
+    /// Two properties match if targetName = suffix + sourceName.
     /// Name case can be optionally ignored.
     /// </summary>
-    public class SuffixMatching : PropertyMatchingRuleBase
+    public class PrefixMatching : PropertyMatchingRuleBase
     {
         public bool IgnoreCase { get; set; }
-        public string[] Suffixes { get; set; }
+        public string[] Prefixes { get; set; }
 
-        public SuffixMatching()
+        public PrefixMatching()
             : this( new string[] { "Dto", "DataTransferObject" } ) { }
 
-        public SuffixMatching( params string[] suffixes )
+        public PrefixMatching( params string[] prefixes )
         {
             this.IgnoreCase = false;
-            this.Suffixes = suffixes;
+            this.Prefixes = prefixes;
         }
 
         public override bool IsCompliant( PropertyInfo source, PropertyInfo target )
@@ -30,8 +30,8 @@ namespace TypeMapper.MappingConventions.PropertyMatchingRules
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-            return this.Suffixes.Any( ( suffix ) =>
-                target.Name.Equals( source.Name + suffix, comparisonType ) );
+            return this.Prefixes.Any( ( prefix ) =>
+                target.Name.Equals( prefix + source.Name, comparisonType ) );
         }
     }
 }
