@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    internal class SourceProperty : SourceProperty<object>
+    public class SourceProperty : SourceProperty<object>
     {
         public SourceProperty( PropertyInfo propertyInfo )
             : base( propertyInfo ) { }
     }
 
-    internal class SourceProperty<TSource> : PropertyBase
+    public class SourceProperty<TSource> : PropertyBase
     {
         //This info is evaluated at configuration level only once for performance reasons
         public bool IsBuiltInType { get; set; }

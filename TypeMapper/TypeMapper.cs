@@ -137,7 +137,6 @@ namespace TypeMapper
                         object targetItem;
                         if( isBuiltInType )
                         {
-                            targetItem = Activator.CreateInstance( genericType );
                             targetItem = sourceItem;
                         }
                         else
@@ -146,7 +145,7 @@ namespace TypeMapper
                                 genericType, out targetItem ) )
                             {
                                 targetItem = Activator.CreateInstance( genericType );
-
+                                
                                 //track these references BEFORE recursion to avoid infinite loops and stackoverflow
                                 referenceTracking.Add( sourceItem, genericType, targetItem );
                                 this.Map( sourceItem, targetItem, referenceTracking );

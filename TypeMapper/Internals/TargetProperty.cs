@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    internal class TargetProperty<TTarget> : PropertyBase
+    public class TargetProperty<TTarget> : PropertyBase
     {
         //This info is evaluated at configuration level only once for performance reasons
         public Type NullableUnderlyingType { get; set; }
@@ -17,7 +17,7 @@ namespace TypeMapper.Internals
             : base( propertyInfo ) { }
     }
 
-    internal class TargetProperty : TargetProperty<object>
+    public class TargetProperty : TargetProperty<object>
     {
         public TargetProperty( PropertyInfo propertyInfo )
             : base( propertyInfo ) { }

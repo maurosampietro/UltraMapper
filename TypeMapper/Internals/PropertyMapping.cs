@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    internal class PropertyMapping : PropertyMapping<object, object>
+    public class PropertyMapping : PropertyMapping<object, object>
     {
         public PropertyMapping( SourceProperty sourceProperty,
             TargetProperty targetProperty = null,
@@ -17,12 +17,12 @@ namespace TypeMapper.Internals
         }
     }
 
-    internal class PropertyMapping<TSource, TTarget>
+    public class PropertyMapping<TSource, TTarget>
     {
         public SourceProperty<TSource> SourceProperty { get; private set; }
         public TargetProperty<TTarget> TargetProperty { get; set; }
 
-        //Generalize to Fun<object,object> to avoid carrying too many generic T types around
+        //Generalize to Func<object,object> to avoid carrying too many generic T types around
         //and using Delegate and DynamicInvoke.
         public Func<object, object> ValueConverter { get; set; }
 

@@ -119,16 +119,12 @@ namespace TypeMapper.Tests
         {
 
             var temp = new BaseTypes();
-            var pi = typeof( KeyValuePair<string, int> );
-
-            var instance = new DictionaryMapper().CreateNewInstance( pi, "mauro", 11 );
-          
-
             var temp2 = new BaseTypesDto();
             temp2.Reference = temp;
 
-            var config = new TypeConfiguration( new DefaultMappingConvention() );
+            var config = new TypeConfiguration( );
             var config2 = config.MapTypes<BaseTypes, BaseTypesDto>()
+                .MapProperty( a => a.ListOfInts, b => b.ListOfInts )
                 .MapProperty( a => a.ListOfInnerType, b => b.ListOfInnerTypeDto )
                 //null nullable
                 .MapProperty( a => a.NullNullableInt32, b => b.SByte )

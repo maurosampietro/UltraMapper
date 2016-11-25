@@ -56,7 +56,7 @@ namespace TypeMapper.Configuration
             }
         }
 
-        internal PropertyMapping Map( PropertyInfo sourcePropertyInfo, PropertyInfo targetPropertyInfo )
+        protected PropertyMapping Map( PropertyInfo sourcePropertyInfo, PropertyInfo targetPropertyInfo )
         {
             var typePairKey = new PropertyInfoPair( sourcePropertyInfo, targetPropertyInfo );
 
@@ -121,7 +121,7 @@ namespace TypeMapper.Configuration
             var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
-            var propertyMapping = this.Map( sourcePropertyInfo, targetPropertyInfo );
+            var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
 
             propertyMapping.ValueConverter = (converter == null) ? null :
                 converter.EncapsulateInGenericFunc<TSourceProperty>().Compile();

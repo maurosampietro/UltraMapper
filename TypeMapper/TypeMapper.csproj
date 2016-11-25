@@ -55,7 +55,7 @@
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
     <Compile Include="MappingConventions\DefaultMappingConvention.cs" />
-    <Compile Include="NewInstanceExpressionFactory.cs" />
+    <Compile Include="InstanceFactory.cs" />
     <Compile Include="PropertyMatchingRules\PropertyMatchingConfiguration.cs" />
     <Compile Include="PropertyMatchingRules\IPropertyMatchingRule.cs" />
     <Compile Include="PropertyMatchingRules\ExactNameMatching.cs" />

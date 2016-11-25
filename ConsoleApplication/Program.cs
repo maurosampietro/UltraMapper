@@ -123,16 +123,16 @@ namespace ConsoleApplication
             //sw3.Stop();
             //Console.WriteLine( sw3.ElapsedMilliseconds );
 
-            var mapper = new TypeMapper.TypeMapper();
-            Stopwatch sw4 = new Stopwatch();
-            sw4.Start();
-            for( int i = 0; i < 10000000; i++ )
-            {
-                mapper.Map( temp, temp2 );
-            }
-            sw4.Stop();
-            Console.WriteLine( sw4.ElapsedMilliseconds );
-            
+            //var mapper = new TypeMapper.TypeMapper();
+            //Stopwatch sw4 = new Stopwatch();
+            //sw4.Start();
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    mapper.Map( temp, temp2 );
+            //}
+            //sw4.Stop();
+            //Console.WriteLine( sw4.ElapsedMilliseconds );
+
             //Stopwatch sw5 = new Stopwatch();
             //sw5.Start();
             //AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
@@ -142,6 +142,74 @@ namespace ConsoleApplication
             //}
             //sw5.Stop();
             //Console.WriteLine( sw5.ElapsedMilliseconds );
+
+            var type = typeof( KeyValuePair<string, int> );
+
+            Stopwatch sw4 = new Stopwatch();
+            sw4.Start();
+            var instanceCreator4 = ConstructorFactory.GetOrCreateConstructor( type );
+            for( int i = 0; i < 10000000; i++ )
+            {
+                instanceCreator4( );
+                //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            }
+            sw4.Stop();
+            Console.WriteLine( "return object " + sw4.ElapsedMilliseconds );
+
+
+            Stopwatch sw5 = new Stopwatch();
+            sw5.Start();
+            var instanceCreator5 = ConstructorFactory.GetOrCreateConstructor<KeyValuePair<string, int>>();
+            for( int i = 0; i < 10000000; i++ )
+            {
+                instanceCreator5();
+                //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            }
+            sw5.Stop();
+            Console.WriteLine( "cast everything " + sw5.ElapsedMilliseconds );
+
+            Stopwatch sw6 = new Stopwatch();
+            sw6.Start();
+            var instanceCreator6 = ConstructorFactory.GetOrCreateConstructor<string, int>( type );
+            for( int i = 0; i < 10000000; i++ )
+            {
+                instanceCreator6( "mauro", i );
+                //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            }
+            sw6.Stop();
+            Console.WriteLine( "return cast to object" + sw6.ElapsedMilliseconds );
+
+            Stopwatch sw7 = new Stopwatch();
+            sw7.Start();
+
+            for( int i = 0; i < 10000000; i++ )
+            {
+                new KeyValuePair<string, int>( "mauro", i );
+            }
+            sw7.Stop();
+            Console.WriteLine( "new " + sw7.ElapsedMilliseconds );
+
+            Stopwatch sw8 = new Stopwatch();
+            sw8.Start();
+            var instanceCreator8 = ConstructorFactory.GetOrCreateConstructor<string, int, KeyValuePair<string, int>>();
+            for( int i = 0; i < 10000000; i++ )
+            {
+                instanceCreator8( "mauro", i );
+            }
+            sw8.Stop();
+            Console.WriteLine( "no cast delegate" + sw8.ElapsedMilliseconds );
+
+            Stopwatch sw9 = new Stopwatch();
+            sw9.Start();
+            var instanceCreator9 = ConstructorFactory.GetOrCreateConstructor<string, int, KeyValuePair<string, int>>();
+            for( int i = 0; i < 10000000; i++ )
+            {
+                Activator.CreateInstance( type );
+            }
+            sw9.Stop();
+            Console.WriteLine( "Activator" + sw9.ElapsedMilliseconds );
+
+            Console.ReadKey();
         }
     }
 }

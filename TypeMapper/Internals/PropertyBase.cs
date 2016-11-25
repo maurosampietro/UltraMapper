@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    internal class PropertyBase
+    public class PropertyBase
     {
         public readonly PropertyInfo PropertyInfo;
 
