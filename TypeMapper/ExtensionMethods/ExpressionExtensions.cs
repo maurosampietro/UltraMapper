@@ -105,7 +105,7 @@ namespace TypeMapper
 
         public static object GetDefaultValue( this Type type )
         {
-            if( type == null ) throw new ArgumentNullException( "type" );
+            if( type == null ) throw new ArgumentNullException( nameof( type ) );
 
             var expression = Expression.Lambda<Func<object>>(
                 Expression.Convert( Expression.Default( type ), typeof( object ) ) );

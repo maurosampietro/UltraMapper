@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,9 @@ namespace ConsoleApplication
     {
         public class BaseTypes
         {
+            public long NotImplicitlyConvertible { get; set; } = 31;
+            public int ImplicitlyConvertible { get; set; } = 33;
+
             public bool Boolean { get; set; } = true;
             public byte Byte { get; set; } = 0x1;
             public sbyte SByte { get; set; } = 0x2;
@@ -36,15 +40,34 @@ namespace ConsoleApplication
             public BaseTypes SelfReference { get; set; }
             public BaseTypes Reference { get; set; }
 
+            public List<int> ListOfInts { get; set; }
+            public List<InnerType> ListOfInnerType { get; set; }
+            //public Dictionary<string, int> Dictionary { get; set; }
+
             public BaseTypes()
             {
-                //this.SelfReference = this;
+                this.SelfReference = this;
                 this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
+
+                this.ListOfInts = new List<int>() { 1, 2, 3 };
+
+                this.ListOfInnerType = new List<InnerType>() {
+                    new InnerType() { A = "a", B="b",C = this  },
+                    new InnerType(){ A = "c", B="d",C = this  },
+                };
+
+                //this.Dictionary = new Dictionary<string, int>()
+                //{
+                //    {"a",1}, {"b",2}, {"c",3}
+                //};
             }
         }
 
         public class BaseTypesDto
         {
+            public int NotImplicitlyConvertible { get; set; }
+            public long ImplicitlyConvertible { get; set; }
+
             public bool Boolean { get; set; }
             public byte Byte { get; set; }
             public sbyte SByte { get; set; }
@@ -66,6 +89,13 @@ namespace ConsoleApplication
             public BaseTypesDto SelfReference { get; set; }
 
             public BaseTypes Reference { get; set; }
+
+            public BindingList<int> ListOfInts { get; set; }
+
+            public BindingList<InnerTypeDto> ListOfInnerTypeDto { get; set; }
+
+            public Dictionary<string, int> Dictionary { get; set; }
+
         }
 
         public class InnerType
@@ -83,7 +113,6 @@ namespace ConsoleApplication
 
             public BaseTypes C { get; set; }
         }
-
 
 
         static void Main( string[] args )
@@ -133,81 +162,82 @@ namespace ConsoleApplication
             //sw4.Stop();
             //Console.WriteLine( sw4.ElapsedMilliseconds );
 
-            //Stopwatch sw5 = new Stopwatch();
-            //sw5.Start();
-            //AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
-            //for( int i = 0; i < 10000000; i++ )
-            //{
-            //    AutoMapper.Mapper.Map( temp, temp2 );
-            //}
-            //sw5.Stop();
-            //Console.WriteLine( sw5.ElapsedMilliseconds );
-
-            var type = typeof( KeyValuePair<string, int> );
-
-            Stopwatch sw4 = new Stopwatch();
-            sw4.Start();
-            var instanceCreator4 = ConstructorFactory.GetOrCreateConstructor( type );
-            for( int i = 0; i < 10000000; i++ )
-            {
-                instanceCreator4( );
-                //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
-            }
-            sw4.Stop();
-            Console.WriteLine( "return object " + sw4.ElapsedMilliseconds );
-
-
             Stopwatch sw5 = new Stopwatch();
             sw5.Start();
-            var instanceCreator5 = ConstructorFactory.GetOrCreateConstructor<KeyValuePair<string, int>>();
+            AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
             for( int i = 0; i < 10000000; i++ )
             {
-                instanceCreator5();
-                //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+                AutoMapper.Mapper.Map( temp, temp2 );
             }
             sw5.Stop();
-            Console.WriteLine( "cast everything " + sw5.ElapsedMilliseconds );
+            Console.WriteLine( sw5.ElapsedMilliseconds );
 
-            Stopwatch sw6 = new Stopwatch();
-            sw6.Start();
-            var instanceCreator6 = ConstructorFactory.GetOrCreateConstructor<string, int>( type );
-            for( int i = 0; i < 10000000; i++ )
-            {
-                instanceCreator6( "mauro", i );
-                //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
-            }
-            sw6.Stop();
-            Console.WriteLine( "return cast to object" + sw6.ElapsedMilliseconds );
+            //var type = typeof( KeyValuePair<string, int> );
 
-            Stopwatch sw7 = new Stopwatch();
-            sw7.Start();
 
-            for( int i = 0; i < 10000000; i++ )
-            {
-                new KeyValuePair<string, int>( "mauro", i );
-            }
-            sw7.Stop();
-            Console.WriteLine( "new " + sw7.ElapsedMilliseconds );
 
-            Stopwatch sw8 = new Stopwatch();
-            sw8.Start();
-            var instanceCreator8 = ConstructorFactory.GetOrCreateConstructor<string, int, KeyValuePair<string, int>>();
-            for( int i = 0; i < 10000000; i++ )
-            {
-                instanceCreator8( "mauro", i );
-            }
-            sw8.Stop();
-            Console.WriteLine( "no cast delegate" + sw8.ElapsedMilliseconds );
+            //Stopwatch sw5 = new Stopwatch();
+            //sw5.Start();
+            //var instanceCreator5 = ConstructorFactory.GetOrCreateConstructor<KeyValuePair<string, int>>();
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    instanceCreator5();
+            //    //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            //}
+            //sw5.Stop();
+            //Console.WriteLine( "cast input params" + sw5.ElapsedMilliseconds );
 
-            Stopwatch sw9 = new Stopwatch();
-            sw9.Start();
-            var instanceCreator9 = ConstructorFactory.GetOrCreateConstructor<string, int, KeyValuePair<string, int>>();
-            for( int i = 0; i < 10000000; i++ )
-            {
-                Activator.CreateInstance( type );
-            }
-            sw9.Stop();
-            Console.WriteLine( "Activator" + sw9.ElapsedMilliseconds );
+            //Stopwatch sw6 = new Stopwatch();
+            //sw6.Start();
+            //var instanceCreator6 = ConstructorFactory.GetOrCreateConstructor<string, int>( type );
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    instanceCreator6( "mauro", i );
+            //    //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            //}
+            //sw6.Stop();
+            //Console.WriteLine( "return object" + sw6.ElapsedMilliseconds );
+
+            //Stopwatch sw7 = new Stopwatch();
+            //sw7.Start();
+
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    new KeyValuePair<string, int>( "mauro", i );
+            //}
+            //sw7.Stop();
+            //Console.WriteLine( "new " + sw7.ElapsedMilliseconds );
+
+            //Stopwatch sw8 = new Stopwatch();
+            //sw8.Start();
+            //var instanceCreator8 = ConstructorFactory.GetOrCreateConstructor<string, int, KeyValuePair<string, int>>();
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    instanceCreator8( "mauro", i );
+            //}
+            //sw8.Stop();
+            //Console.WriteLine( "no casts" + sw8.ElapsedMilliseconds );
+
+            //Stopwatch sw9 = new Stopwatch();
+            //sw9.Start();
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    Activator.CreateInstance( type );
+            //}
+            //sw9.Stop();
+            //Console.WriteLine( "Activator" + sw9.ElapsedMilliseconds );
+
+
+            //Stopwatch sw4 = new Stopwatch();
+            //sw4.Start();
+            //var instanceCreator4 = ConstructorFactory.GetOrCreateConstructor( type );
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    instanceCreator4();
+            //    //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            //}
+            //sw4.Stop();
+            //Console.WriteLine( "object parameterless" + sw4.ElapsedMilliseconds );
 
             Console.ReadKey();
         }

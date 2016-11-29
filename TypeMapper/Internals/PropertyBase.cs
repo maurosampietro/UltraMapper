@@ -10,6 +10,7 @@ namespace TypeMapper.Internals
     public class PropertyBase
     {
         public readonly PropertyInfo PropertyInfo;
+        public bool IsBuiltInType { get; set; }
 
         public PropertyBase( PropertyInfo propertyInfo )
         {

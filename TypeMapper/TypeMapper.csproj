@@ -43,15 +43,21 @@
   <ItemGroup>
     <Compile Include="CollectionMappingStrategies\CollectionMappingStrategy.cs" />
     <Compile Include="CollectionMappingStrategies\ICollectionMappingStrategy.cs" />
+    <Compile Include="Configuration\ObjectMapperConfiguration.cs" />
     <Compile Include="Configuration\PropertyConfiguration.cs" />
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="FastInvoke.cs" />
     <Compile Include="Configuration\TypeConfiguration.cs" />
+    <Compile Include="Internals\ObjectPair.cs" />
     <Compile Include="Internals\PropertyBase.cs" />
     <Compile Include="Internals\PropertyMapping.cs" />
     <Compile Include="Internals\SourceProperty.cs" />
     <Compile Include="Internals\TargetProperty.cs" />
+    <Compile Include="Mappers\BuiltInTypesMapper.cs" />
+    <Compile Include="Mappers\CollectionMapper.cs" />
     <Compile Include="Mappers\DictionaryMapper.cs" />
+    <Compile Include="Mappers\IObjectMapper.cs" />
+    <Compile Include="Mappers\ReferenceMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
     <Compile Include="MappingConventions\DefaultMappingConvention.cs" />

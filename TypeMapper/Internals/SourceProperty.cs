@@ -16,7 +16,6 @@ namespace TypeMapper.Internals
     public class SourceProperty<TSource> : PropertyBase
     {
         //This info is evaluated at configuration level only once for performance reasons
-        public bool IsBuiltInType { get; set; }
         public bool IsEnumerable { get; set; }
         public Func<TSource, object> ValueGetter { get; set; }
 

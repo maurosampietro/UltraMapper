@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,11 +10,86 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class DictionaryMapper
+    public class DictionaryMapper : IObjectMapper
     {
-        public object CreateNewInstance( Type type, params object[] values )
+        public bool CanHandle( PropertyMapping mapping )
         {
-            return InstanceFactory.CreateObject( type, values );
+            bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom(
+                mapping.SourceProperty.PropertyInfo.PropertyType );
+
+            bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom(
+                mapping.TargetProperty.PropertyInfo.PropertyType );
+
+            return sourceIsDictionary || targetIsDictionary;
+        }
+
+        public IEnumerable<ObjectPair> Map( object source, object targetInstance,
+            PropertyMapping mapping, IReferenceTracking referenceTracking )
+        {
+            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
+
+            object trackedCollection;
+            if( referenceTracking.TryGetValue( source, targetPropertyType, out trackedCollection ) )
+            {
+                mapping.TargetProperty.ValueSetter( targetInstance, trackedCollection );
+                yield break;
+            }
+
+            //map 'the container' itself
+            var collection = mapping.TargetProperty.CollectionStrategy
+                 .GetTargetCollection<IDictionary>( targetInstance, mapping );
+
+            referenceTracking.Add( source, targetPropertyType, collection );
+            mapping.TargetProperty.ValueSetter( targetInstance, collection );
+
+            //map contained items
+            Type genericType = targetPropertyType.GetCollectionGenericType();
+            var keyType = genericType.GetGenericArguments()[ 0 ];
+            var valueType = genericType.GetGenericArguments()[ 1 ];
+
+            bool keyIsBuiltInType = keyType.IsBuiltInType( false );
+            bool valueIsBuiltInType = keyType.IsBuiltInType( false );
+
+            foreach( dynamic sourceItem in (IDictionary)source )
+            {
+                var key = sourceItem.Key;
+                var value = sourceItem.Value;
+
+                object targetItemKey, targetItemValue;
+                if( keyIsBuiltInType )
+                {
+                    targetItemKey = key;
+                }
+                else
+                {
+                    if( !referenceTracking.TryGetValue( key, keyType, out targetItemKey ) )
+                    {
+                        targetItemKey = Activator.CreateInstance( keyType );
+
+                        //track these references BEFORE recursion to avoid infinite loops and stackoverflow
+                        referenceTracking.Add( key, keyType, targetItemKey );
+                        yield return new ObjectPair( key, targetItemKey );
+                    }
+                }
+
+                if( valueIsBuiltInType )
+                {
+                    targetItemValue = value;
+                }
+                else
+                {
+                    if( !referenceTracking.TryGetValue( value, valueType, out targetItemValue ) )
+                    {
+                        targetItemValue = Activator.CreateInstance( valueType );
+
+                        //track these references BEFORE recursion to avoid infinite loops and stackoverflow
+                        referenceTracking.Add( value, valueType, targetItemKey );
+                        yield return new ObjectPair( value, targetItemValue );
+                    }
+                }
+
+                collection.Add( targetItemKey, targetItemValue );
+            }
         }
     }
 }

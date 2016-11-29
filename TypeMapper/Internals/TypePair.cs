@@ -9,16 +9,17 @@ namespace TypeMapper.Internals
     internal class TypePair
     {
         public readonly Type SourceType;
-        public readonly Type DestinationType;
+        public readonly Type TargetType;
+
         private readonly int _hashcode;
 
         public TypePair( Type sourceType, Type destinatinationType )
         {
             this.SourceType = sourceType;
-            this.DestinationType = destinatinationType;
+            this.TargetType = destinatinationType;
 
-            _hashcode = unchecked(SourceType.GetHashCode() * 31)
-                ^ DestinationType.GetHashCode();
+            _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
+                ^ this.TargetType.GetHashCode();
         }
 
         public override bool Equals( object obj )
@@ -27,7 +28,7 @@ namespace TypeMapper.Internals
             if( typePair == null ) return false;
 
             return this.SourceType.Equals( typePair.SourceType ) &&
-                this.DestinationType.Equals( typePair.DestinationType );
+                this.TargetType.Equals( typePair.TargetType );
         }
 
         public override int GetHashCode()

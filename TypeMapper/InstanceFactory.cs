@@ -300,7 +300,7 @@ namespace TypeMapper
             //{
                 //2. generate one otherwise
                 var constructorInfo = type.GetConstructor( ctorArgTypes );
-
+            
                 var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
                 var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
                     Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();

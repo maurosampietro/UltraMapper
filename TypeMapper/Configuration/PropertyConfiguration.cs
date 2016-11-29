@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.Internals;
+using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Configuration
@@ -14,22 +17,26 @@ namespace TypeMapper.Configuration
     {
         //A source property can be mapped to multiple target properties
         private Dictionary<PropertyInfoPair, PropertyMapping> _propertyMappings;
+        private IEnumerable<IObjectMapper> _objectMappers;
 
         /// <summary>
         /// This constructor is only used by derived classes to allow
         /// casts from PropertyConfiguration to the derived class itself
         /// </summary>
         /// <param name="configuration">An already existing mapping configuration</param>
-        protected PropertyConfiguration( PropertyConfiguration configuration )
+        protected PropertyConfiguration( PropertyConfiguration configuration, IEnumerable<IObjectMapper> objectMappers )
         {
             _propertyMappings = configuration._propertyMappings;
+            _objectMappers = objectMappers;
         }
 
-        public PropertyConfiguration( Type source, Type target )
-            : this( source, target, new DefaultMappingConvention() ) { }
+        public PropertyConfiguration( Type source, Type target, IEnumerable<IObjectMapper> objectMappers )
+            : this( source, target, new DefaultMappingConvention(), objectMappers ) { }
 
-        public PropertyConfiguration( Type source, Type target, IMappingConvention mappingConvention )
+        public PropertyConfiguration( Type source, Type target,
+            IMappingConvention mappingConvention, IEnumerable<IObjectMapper> objectMappers )
         {
+            _objectMappers = objectMappers;
             _propertyMappings = new Dictionary<PropertyInfoPair, PropertyMapping>();
 
             var bindingAttributes = BindingFlags.Instance | BindingFlags.Public;
@@ -76,9 +83,16 @@ namespace TypeMapper.Configuration
 
             propertyMapping.TargetProperty = new TargetProperty( targetPropertyInfo )
             {
+                IsBuiltInType = targetPropertyInfo.PropertyType.IsBuiltInType( true ),
                 NullableUnderlyingType = Nullable.GetUnderlyingType( targetPropertyInfo.PropertyType ),
-                ValueSetter = FastInvoke.BuildUntypedCastSetter( targetPropertyInfo )
+                ValueSetter = FastInvoke.BuildUntypedCastSetter( targetPropertyInfo ),
             };
+
+            propertyMapping.Mapper = _objectMappers.FirstOrDefault(
+                mapper => mapper.CanHandle( propertyMapping ) );
+
+            if( propertyMapping == null )
+                throw new Exception( $"No object mapper can handle {propertyMapping}" );
 
             return propertyMapping;
         }
@@ -104,19 +118,19 @@ namespace TypeMapper.Configuration
     {
         /// <summary>
         /// This constructor is only used internally to allow
-        /// casts from PropertyConfiguration to ProertyConfiguration<>
+        /// casts from PropertyConfiguration to PropertyConfiguration<>
         /// </summary>
         /// <param name="map">An already existing mapping configuration</param>
-        internal PropertyConfiguration( PropertyConfiguration map )
-            : base( map ) { }
+        internal PropertyConfiguration( PropertyConfiguration map, IEnumerable<IObjectMapper> objectMappers )
+            : base( map, objectMappers ) { }
 
-        public PropertyConfiguration( IMappingConvention mappingConvention )
-            : base( typeof( TSource ), typeof( TTarget ), mappingConvention ) { }
+        public PropertyConfiguration( IMappingConvention mappingConvention, IEnumerable<IObjectMapper> objectMappers )
+            : base( typeof( TSource ), typeof( TTarget ), mappingConvention, objectMappers ) { }
 
         public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
             Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
             Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
-            Expression<Func<TSourceProperty, TTargetProperty>> converter )
+            Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
         {
             var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
@@ -130,19 +144,23 @@ namespace TypeMapper.Configuration
         }
 
         public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
-            Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
-            Expression<Func<TTarget, TTargetProperty>> targetPropertySelector )
-        {
-            return MapProperty( sourcePropertySelector, targetPropertySelector, null );
-        }
+           Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
+           Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
+           ICollectionMappingStrategy collectionStrategy,
+           Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
+           where TTargetProperty : IEnumerable
+        {          
+            var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
+            var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
-        //public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
-        //   Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
-        //   Expression<Func<TTarget, TTargetProperty>> targetPropertySelector ) 
-        //where TSourceProperty:IEnumerable 
-        //where TTargetProperty : IEnumerable
-        //{
-        //    return null; // MapProperty( sourcePropertySelector, targetPropertySelector, null );
-        //}
+            var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
+
+            propertyMapping.ValueConverter = (converter == null) ? null :
+                converter.EncapsulateInGenericFunc<TSourceProperty>().Compile();
+
+            propertyMapping.TargetProperty.CollectionStrategy = collectionStrategy;
+
+            return this;
+        }
     }
 }

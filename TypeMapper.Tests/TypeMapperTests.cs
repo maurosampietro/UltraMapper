@@ -6,6 +6,7 @@ using System.ComponentModel;
 using TypeMapper.MappingConventions;
 using TypeMapper.Configuration;
 using TypeMapper.Mappers;
+using TypeMapper.CollectionMappingStrategies;
 
 namespace TypeMapper.Tests
 {
@@ -40,26 +41,34 @@ namespace TypeMapper.Tests
             public BaseTypes SelfReference { get; set; }
             public BaseTypes Reference { get; set; }
 
-            public List<int> ListOfInts { get; set; }
+            public HashSet<int> ListOfInts { get; set; }
             public List<InnerType> ListOfInnerType { get; set; }
-            //public Dictionary<string, int> Dictionary { get; set; }
+            public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            public Dictionary<InnerType, InnerType> Dictionary { get; set; }
 
             public BaseTypes()
             {
                 this.SelfReference = this;
                 this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
 
-                this.ListOfInts = new List<int>() { 1, 2, 3 };
+                this.ListOfInts = new HashSet<int>() { 1, 2, 3 };
 
                 this.ListOfInnerType = new List<Tests.TypeMapperTests.InnerType>() {
                     new Tests.TypeMapperTests.InnerType() { A = "a", B="b",C = this  },
                     new Tests.TypeMapperTests.InnerType(){ A = "c", B="d",C = this  },
                 };
 
-                //this.Dictionary = new Dictionary<string, int>()
-                //{
-                //    {"a",1}, {"b",2}, {"c",3}
-                //};
+                this.DictionaryBuiltInTypes = new Dictionary<string, int>()
+                {
+                    {"a",1}, {"b",2}, {"c",3}
+                };
+
+                this.Dictionary = new Dictionary<InnerType, InnerType>()
+                {
+                    {new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
+                    {new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
+                    {new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
+                };
             }
         }
 
@@ -90,12 +99,17 @@ namespace TypeMapper.Tests
 
             public BaseTypes Reference { get; set; }
 
-            public BindingList<int> ListOfInts { get; set; }
+            public HashSet<int> ListOfInts { get; set; }
 
             public BindingList<InnerTypeDto> ListOfInnerTypeDto { get; set; }
 
-            //public Dictionary<string, int> Dictionary { get; set; }
+            public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            public Dictionary<InnerTypeDto, InnerTypeDto> Dictionary { get; set; }
 
+            public BaseTypesDto() {
+
+                this.ListOfInts = new HashSet<int>() { 0 };
+            }
         }
 
         public class InnerType
@@ -122,9 +136,11 @@ namespace TypeMapper.Tests
             var temp2 = new BaseTypesDto();
             temp2.Reference = temp;
 
-            var config = new TypeConfiguration( );
+            var config = new TypeConfiguration();
             var config2 = config.MapTypes<BaseTypes, BaseTypesDto>()
-                .MapProperty( a => a.ListOfInts, b => b.ListOfInts )
+                .MapProperty( a => a.Dictionary, b => b.Dictionary )
+
+                .MapProperty( a => a.ListOfInts, b => b.ListOfInts, new KeepCollection() )
                 .MapProperty( a => a.ListOfInnerType, b => b.ListOfInnerTypeDto )
                 //null nullable
                 .MapProperty( a => a.NullNullableInt32, b => b.SByte )
@@ -132,12 +148,13 @@ namespace TypeMapper.Tests
                 .MapProperty( a => a.NullNullableInt32, b => b.Int32, a => a == null ? 0 : a.Value )
 
                 //inner class
+                .MapProperty( a => a.InnerType, b => b.String, c => c.A + c.B )
                 .MapProperty( a => a.InnerType, b => b.InnerType )
 
                 //circular reference (self reference)
                 .MapProperty( a => a.SelfReference, b => b.SelfReference )
 
-                .MapProperty( a => a.String, d => d.String )
+                .MapProperty( a => a.String, d => d.Single )
                 .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
                 .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
@@ -228,6 +245,11 @@ namespace TypeMapper.Tests
 
             var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
+                cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                    .Add<ReferenceMapper>()
+                    .Add<CollectionMapper>()
+                    .Add<DictionaryMapper>();
+
                 cfg.MappingConvention.PropertyMatchingRules
                     .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )

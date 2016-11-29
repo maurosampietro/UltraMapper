@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Configuration;
 using TypeMapper.Internals;
+using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Configuration
@@ -18,7 +19,7 @@ namespace TypeMapper.Configuration
         public TypeConfiguration() { }
 
         public TypeConfiguration( Action<T> config )
-              : base( new T() ) { config?.Invoke( (T)_mappingConvention ); }
+              : base( new T() ) { config?.Invoke( (T)this.MappingConvention ); }
     }
 
     public class TypeConfiguration
@@ -26,20 +27,28 @@ namespace TypeMapper.Configuration
         private Dictionary<TypePair, PropertyConfiguration> _typeMappings =
             new Dictionary<TypePair, PropertyConfiguration>();
 
-        protected IMappingConvention _mappingConvention;
-        public IMappingConvention MappingConvention { get { return _mappingConvention; } }
+        public IMappingConvention MappingConvention { get; protected set; }
+        public ObjectMapperConfiguration ObjectMappers { get; set; }
 
         public TypeConfiguration()
         {
-            _mappingConvention = new DefaultMappingConvention();
+            this.MappingConvention = new DefaultMappingConvention();
+            this.ObjectMappers = new ObjectMapperConfiguration()
+                .Add<BuiltInTypeMapper>()
+                .Add<ReferenceMapper>()
+                .Add<DictionaryMapper>() //since dictionaries are collections to be correctly handled must be evaluated by a suitable mapper before a CollectionMapper
+                .Add<CollectionMapper>();
         }
 
         public TypeConfiguration( Action<DefaultMappingConvention> config )
-            : this() { config?.Invoke( (DefaultMappingConvention)_mappingConvention ); }
+            : this()
+        {
+            config?.Invoke( (DefaultMappingConvention)this.MappingConvention );
+        }
 
         public TypeConfiguration( IMappingConvention mappingConvention )
         {
-            _mappingConvention = mappingConvention;
+            this.MappingConvention = mappingConvention;
         }
 
         public PropertyConfiguration<TSource, TTarget> MapTypes<TSource, TTarget>( TSource source, TTarget target )
@@ -50,7 +59,7 @@ namespace TypeMapper.Configuration
         public PropertyConfiguration<TSource, TTarget> MapTypes<TSource, TTarget>()
         {
             var map = this.MapTypes( typeof( TSource ), typeof( TTarget ) );
-            return new PropertyConfiguration<TSource, TTarget>( map );
+            return new PropertyConfiguration<TSource, TTarget>( map, this.ObjectMappers );
         }
 
         public PropertyConfiguration MapTypes( Type source, Type target )
@@ -61,7 +70,7 @@ namespace TypeMapper.Configuration
             if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
                 return typeMapping;
 
-            var propertymappings = new PropertyConfiguration( source, target, _mappingConvention );
+            var propertymappings = new PropertyConfiguration( source, target, this.MappingConvention, this.ObjectMappers );
             _typeMappings.Add( typePair, propertymappings );
 
             return propertymappings;
@@ -94,7 +103,7 @@ namespace TypeMapper.Configuration
             {
                 PropertyConfiguration typeMapping = null;
                 if( !_typeMappings.TryGetValue( key, out typeMapping ) )
-                    typeMapping = this.MapTypes( key.SourceType, key.DestinationType );
+                    typeMapping = this.MapTypes( key.SourceType, key.TargetType );
 
                 return typeMapping;
             }

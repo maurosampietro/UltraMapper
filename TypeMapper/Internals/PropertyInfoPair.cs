@@ -10,16 +10,17 @@ namespace TypeMapper.Internals
     internal class PropertyInfoPair
     {
         public readonly PropertyInfo SourceProperty;
-        public readonly PropertyInfo DestinationProperty;
+        public readonly PropertyInfo TargetProperty;
+
         private readonly int _hashcode;
 
         public PropertyInfoPair( PropertyInfo sourceType, PropertyInfo destinatinationType )
         {
             this.SourceProperty = sourceType;
-            this.DestinationProperty = destinatinationType;
+            this.TargetProperty = destinatinationType;
 
-            _hashcode = unchecked(SourceProperty.GetHashCode() * 31)
-                ^ DestinationProperty.GetHashCode();
+            _hashcode = unchecked(this.SourceProperty.GetHashCode() * 31)
+                ^ this.TargetProperty.GetHashCode();
         }
 
         public override bool Equals( object obj )
@@ -28,7 +29,7 @@ namespace TypeMapper.Internals
             if( typePair == null ) return false;
 
             return this.SourceProperty.Equals( typePair.SourceProperty ) &&
-                this.DestinationProperty.Equals( typePair.DestinationProperty );
+                this.TargetProperty.Equals( typePair.TargetProperty );
         }
 
         public override int GetHashCode()
