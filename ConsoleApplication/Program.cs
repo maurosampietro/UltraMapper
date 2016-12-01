@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper;
+using TypeMapper.Configuration;
 using TypeMapper.MappingConventions;
 
 namespace ConsoleApplication
@@ -16,7 +17,6 @@ namespace ConsoleApplication
         {
             public long NotImplicitlyConvertible { get; set; } = 31;
             public int ImplicitlyConvertible { get; set; } = 33;
-
             public bool Boolean { get; set; } = true;
             public byte Byte { get; set; } = 0x1;
             public sbyte SByte { get; set; } = 0x2;
@@ -32,42 +32,14 @@ namespace ConsoleApplication
             public short Int16 { get; set; } = 10;
             public ushort UInt16 { get; set; } = 11;
             public string String { get; set; } = "12";
-
-            public InnerType InnerType { get; set; }
             public int? NullableInt32 { get; set; } = 12;
             public int? NullNullableInt32 { get; set; } = null;
-
-            public BaseTypes SelfReference { get; set; }
-            public BaseTypes Reference { get; set; }
-
-            public List<int> ListOfInts { get; set; }
-            public List<InnerType> ListOfInnerType { get; set; }
-            //public Dictionary<string, int> Dictionary { get; set; }
-
-            public BaseTypes()
-            {
-                this.SelfReference = this;
-                this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
-
-                this.ListOfInts = new List<int>() { 1, 2, 3 };
-
-                this.ListOfInnerType = new List<InnerType>() {
-                    new InnerType() { A = "a", B="b",C = this  },
-                    new InnerType(){ A = "c", B="d",C = this  },
-                };
-
-                //this.Dictionary = new Dictionary<string, int>()
-                //{
-                //    {"a",1}, {"b",2}, {"c",3}
-                //};
-            }
         }
 
         public class BaseTypesDto
         {
             public int NotImplicitlyConvertible { get; set; }
             public long ImplicitlyConvertible { get; set; }
-
             public bool Boolean { get; set; }
             public byte Byte { get; set; }
             public sbyte SByte { get; set; }
@@ -84,34 +56,6 @@ namespace ConsoleApplication
             public ushort UInt16 { get; set; }
             public string String { get; set; }
             public int? NullableInt32 { get; set; }
-
-            public InnerTypeDto InnerType { get; set; }
-            public BaseTypesDto SelfReference { get; set; }
-
-            public BaseTypes Reference { get; set; }
-
-            public BindingList<int> ListOfInts { get; set; }
-
-            public BindingList<InnerTypeDto> ListOfInnerTypeDto { get; set; }
-
-            public Dictionary<string, int> Dictionary { get; set; }
-
-        }
-
-        public class InnerType
-        {
-            public string A { get; set; }
-            public string B { get; set; }
-
-            public BaseTypes C { get; set; }
-        }
-
-        public class InnerTypeDto
-        {
-            public string A { get; set; }
-            public string B { get; set; }
-
-            public BaseTypes C { get; set; }
         }
 
 
@@ -152,28 +96,45 @@ namespace ConsoleApplication
             //sw3.Stop();
             //Console.WriteLine( sw3.ElapsedMilliseconds );
 
-            //var mapper = new TypeMapper.TypeMapper();
-            //Stopwatch sw4 = new Stopwatch();
-            //sw4.Start();
-            //for( int i = 0; i < 10000000; i++ )
-            //{
-            //    mapper.Map( temp, temp2 );
-            //}
-            //sw4.Stop();
-            //Console.WriteLine( sw4.ElapsedMilliseconds );
+            int iterations = (int)Math.Pow( 10, 8 );
+
+            var mapper = new TypeMapper.TypeMapper();
+            var config = new TypeConfiguration();
+            var compiled = (Action<BaseTypes, BaseTypesDto>)config[ temp.GetType(), temp2.GetType() ].MappingExpression.Compile();
+
+            Stopwatch sw4 = new Stopwatch();
+            sw4.Start();
+            for( int i = 0; i < iterations; i++ )
+            {
+                compiled( temp, temp2 );
+            }
+            sw4.Stop();
+            Console.WriteLine( sw4.ElapsedMilliseconds );
 
             Stopwatch sw5 = new Stopwatch();
             sw5.Start();
             AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
-            for( int i = 0; i < 10000000; i++ )
+            for( int i = 0; i < iterations; i++ )
             {
                 AutoMapper.Mapper.Map( temp, temp2 );
             }
             sw5.Stop();
             Console.WriteLine( sw5.ElapsedMilliseconds );
 
-            //var type = typeof( KeyValuePair<string, int> );
 
+
+            var type = typeof( KeyValuePair<string, int> );
+
+            //Stopwatch sw4 = new Stopwatch();
+            //sw4.Start();
+            //Delegate instanceCreator4 = ConstructorFactory.GetOrCreateConstructor<string, int>( type );
+            //for( int i = 0; i < 10000000; i++ )
+            //{
+            //    instanceCreator4.DynamicInvoke( "mauro", i );
+            //    //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            //}
+            //sw4.Stop();
+            //Console.WriteLine( "dynamic invoke: " + sw4.ElapsedMilliseconds );
 
 
             //Stopwatch sw5 = new Stopwatch();
@@ -228,16 +189,15 @@ namespace ConsoleApplication
             //Console.WriteLine( "Activator" + sw9.ElapsedMilliseconds );
 
 
-            //Stopwatch sw4 = new Stopwatch();
-            //sw4.Start();
-            //var instanceCreator4 = ConstructorFactory.GetOrCreateConstructor( type );
+            //Stopwatch sw3 = new Stopwatch();
+            //sw3.Start();
+            //var instanceCreator3 = ConstructorFactory.GetOrCreateConstructor( type, typeof( string ), typeof( int ) );
             //for( int i = 0; i < 10000000; i++ )
             //{
-            //    instanceCreator4();
-            //    //InstanceFactoryNoCasting.GetInstance<KeyValuePair<string, int>>();
+            //    instanceCreator3( new object[] { "mauro", i } );
             //}
-            //sw4.Stop();
-            //Console.WriteLine( "object parameterless" + sw4.ElapsedMilliseconds );
+            //sw3.Stop();
+            //Console.WriteLine( "object parameterless" + sw3.ElapsedMilliseconds );
 
             Console.ReadKey();
         }

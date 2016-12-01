@@ -31,7 +31,7 @@ namespace TypeMapper.Mappers
             object trackedCollection;
             if( referenceTracking.TryGetValue( source, targetPropertyType, out trackedCollection ) )
             {
-                mapping.TargetProperty.ValueSetter( targetInstance, trackedCollection );
+                //mapping.TargetProperty.ValueSetter( targetInstance, trackedCollection );
                 yield break;
             }
 
@@ -40,7 +40,7 @@ namespace TypeMapper.Mappers
                  .GetTargetCollection<IDictionary>( targetInstance, mapping );
 
             referenceTracking.Add( source, targetPropertyType, collection );
-            mapping.TargetProperty.ValueSetter( targetInstance, collection );
+            //mapping.TargetProperty.ValueSetter( targetInstance, collection );
 
             //map contained items
             Type genericType = targetPropertyType.GetCollectionGenericType();
@@ -50,18 +50,22 @@ namespace TypeMapper.Mappers
             bool keyIsBuiltInType = keyType.IsBuiltInType( false );
             bool valueIsBuiltInType = keyType.IsBuiltInType( false );
 
-            foreach( dynamic sourceItem in (IDictionary)source )
-            {
-                var key = sourceItem.Key;
-                var value = sourceItem.Value;
+            //var keyProp = genericType.GetProperty( "Key" ).BuildUntypedCastGetter();
+            //var valueProp = genericType.GetProperty( "Value" ).BuildUntypedCastGetter();
 
-                object targetItemKey, targetItemValue;
-                if( keyIsBuiltInType )
+            if( keyIsBuiltInType && valueIsBuiltInType )
+            {
+                foreach( DictionaryEntry sourceItem in (IDictionary)source )
+                    collection.Add( sourceItem.Key, sourceItem.Value );
+            }
+            else if( !keyIsBuiltInType && !valueIsBuiltInType )
+            {
+                foreach( DictionaryEntry sourceItem in (IDictionary)source )
                 {
-                    targetItemKey = key;
-                }
-                else
-                {
+                    var key = sourceItem.Key;// keyProp( sourceItem );
+                    var value = sourceItem.Value;// valueProp( sourceItem );
+
+                    object targetItemKey;
                     if( !referenceTracking.TryGetValue( key, keyType, out targetItemKey ) )
                     {
                         targetItemKey = Activator.CreateInstance( keyType );
@@ -70,14 +74,8 @@ namespace TypeMapper.Mappers
                         referenceTracking.Add( key, keyType, targetItemKey );
                         yield return new ObjectPair( key, targetItemKey );
                     }
-                }
 
-                if( valueIsBuiltInType )
-                {
-                    targetItemValue = value;
-                }
-                else
-                {
+                    object targetItemValue;
                     if( !referenceTracking.TryGetValue( value, valueType, out targetItemValue ) )
                     {
                         targetItemValue = Activator.CreateInstance( valueType );
@@ -86,9 +84,47 @@ namespace TypeMapper.Mappers
                         referenceTracking.Add( value, valueType, targetItemKey );
                         yield return new ObjectPair( value, targetItemValue );
                     }
-                }
 
-                collection.Add( targetItemKey, targetItemValue );
+                    collection.Add( targetItemKey, targetItemValue );
+                }
+            }
+            else
+            {
+                foreach( DictionaryEntry sourceItem in (IDictionary)source )
+                {
+                    var key = sourceItem.Key;// keyProp( sourceItem );
+                    var value = sourceItem.Value;// valueProp( sourceItem );
+
+                    object targetItemKey, targetItemValue;
+                    if( keyIsBuiltInType )
+                    {
+                        targetItemKey = key;
+                    }
+                    else if( !referenceTracking.TryGetValue( key, keyType, out targetItemKey ) )
+                    {
+                        targetItemKey = Activator.CreateInstance( keyType );
+
+                        //track these references BEFORE recursion to avoid infinite loops and stackoverflow
+                        referenceTracking.Add( key, keyType, targetItemKey );
+                        yield return new ObjectPair( key, targetItemKey );
+                    }
+
+
+                    if( valueIsBuiltInType )
+                    {
+                        targetItemValue = value;
+                    }
+                    else if( !referenceTracking.TryGetValue( value, valueType, out targetItemValue ) )
+                    {
+                        targetItemValue = Activator.CreateInstance( valueType );
+
+                        //track these references BEFORE recursion to avoid infinite loops and stackoverflow
+                        referenceTracking.Add( value, valueType, targetItemKey );
+                        yield return new ObjectPair( value, targetItemValue );
+                    }
+
+                    collection.Add( targetItemKey, targetItemValue );
+                }
             }
         }
     }

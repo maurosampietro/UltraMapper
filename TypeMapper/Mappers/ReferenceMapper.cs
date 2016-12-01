@@ -26,7 +26,7 @@ namespace TypeMapper.Mappers
 
             if( value == null )
             {
-                mapping.TargetProperty.ValueSetter( targetInstance, null );
+                //mapping.TargetProperty.ValueSetter( targetInstance, null );
                 yield break;
             }
 
@@ -41,7 +41,7 @@ namespace TypeMapper.Mappers
                 yield return new ObjectPair( value, targetValue );
             }
 
-            mapping.TargetProperty.ValueSetter( targetInstance, targetValue );
+            //mapping.TargetProperty.ValueSetter( targetInstance, targetValue );
             yield break;
         }
     }

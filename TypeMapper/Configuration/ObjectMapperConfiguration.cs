@@ -11,33 +11,53 @@ namespace TypeMapper.Configuration
 {
     public class ObjectMapperConfiguration : IEnumerable<IObjectMapper>
     {
-        private ConcurrentDictionary<Type, IObjectMapper> _objectMappers =
-            new ConcurrentDictionary<Type, IObjectMapper>();
-
-        public ObjectMapperConfiguration Add<T>( T item ) where T : IObjectMapper
+        private class MapperComparer : IEqualityComparer<IObjectMapper>
         {
-            _objectMappers.AddOrUpdate( item.GetType(),
-                item, ( type, instance ) => instance );
+            public bool Equals( IObjectMapper x, IObjectMapper y )
+            {
+                return x.GetType() == y.GetType();
+            }
 
+            public int GetHashCode( IObjectMapper obj )
+            {
+                return obj.GetType().GetHashCode();
+            }
+        }
+
+        //it is mandatory to use a collection that preserves insertion order
+        private HashSet<IObjectMapper> _objectMappers
+             = new HashSet<IObjectMapper>( new MapperComparer() );
+
+        public ObjectMapperConfiguration Add<T>( T item )
+            where T : IObjectMapper
+        {
+            _objectMappers.Add( item );
             return this;
         }
 
-        public ObjectMapperConfiguration Add<T>() where T : IObjectMapper, new()
+        public ObjectMapperConfiguration Add<T>()
+            where T : IObjectMapper, new()
         {
             return this.Add( new T() );
         }
 
-        public ObjectMapperConfiguration Remove<T>() where T : IObjectMapper
+        public ObjectMapperConfiguration Remove<T>()
+            where T : IObjectMapper
         {
-            IObjectMapper instance;
-            _objectMappers.TryRemove( typeof( T ), out instance );
+            var type = typeof( T );
+
+            var mappersToRemove = _objectMappers.Where(
+                mapper => mapper.GetType() == type );
+
+            foreach( var mapper in mappersToRemove )
+                _objectMappers.Remove( mapper );
 
             return this;
         }
 
         public IEnumerator<IObjectMapper> GetEnumerator()
         {
-            return _objectMappers.Values.GetEnumerator();
+            return _objectMappers.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

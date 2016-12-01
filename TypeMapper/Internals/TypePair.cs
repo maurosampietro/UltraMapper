@@ -12,6 +12,7 @@ namespace TypeMapper.Internals
         public readonly Type TargetType;
 
         private readonly int _hashcode;
+        private readonly Lazy<string> _toString;
 
         public TypePair( Type sourceType, Type destinatinationType )
         {
@@ -20,6 +21,14 @@ namespace TypeMapper.Internals
 
             _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
                 ^ this.TargetType.GetHashCode();
+
+            _toString = new Lazy<string>( () =>
+            {
+                string sourceTypeName = this.SourceType.GetPrettifiedName();
+                string targetTypeName = this.TargetType.GetPrettifiedName();
+
+                return $"[{sourceTypeName}, {targetTypeName}]";
+            } );
         }
 
         public override bool Equals( object obj )
@@ -34,6 +43,11 @@ namespace TypeMapper.Internals
         public override int GetHashCode()
         {
             return _hashcode;
+        }
+
+        public override string ToString()
+        {
+            return _toString.Value;
         }
     }
 }

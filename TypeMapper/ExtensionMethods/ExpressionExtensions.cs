@@ -44,12 +44,17 @@ namespace TypeMapper
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )
         {
+            return expression.EncapsulateInGenericFunc( typeof( T ) );
+        }
+
+        public static Expression<Func<object, object>> EncapsulateInGenericFunc( this Expression expression, Type convertType )
+        {
             // o => Convert( Invoke( expression, Convert( o ) ) )
 
             var lambdaExpression = expression as LambdaExpression;
 
             var parameter = Expression.Parameter( typeof( object ), "o" );
-            var convert = Expression.Convert( parameter, typeof( T ) );
+            var convert = Expression.Convert( parameter, convertType );
             var encapsulatedExpression = Expression.Convert(
                 Expression.Invoke( lambdaExpression, convert ), typeof( object ) );
 

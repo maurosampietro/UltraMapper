@@ -8,11 +8,6 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.CollectionMappingStrategies
 {
-    //public interface ICollectionMapper
-    //{
-    //    void AddItem( IList collection, object item );
-    //}
-
     /// <summary>
     /// Creates a new collection
     /// </summary>
@@ -43,10 +38,10 @@ namespace TypeMapper.CollectionMappingStrategies
     }
 
 
-    ///// <summary>
-    ///// Keeps using the input collection and maps
-    ///// removing and adding element to it.
-    ///// </summary>
+    /// <summary>
+    /// Keeps using the input collection and maps
+    /// removing and adding element to it.
+    /// </summary>
     //public class UpdateCollection : ICollectionMappingStrategy
     //{
     //    public IList GetTargetCollection( object targetInstance, PropertyMapping mapping )
@@ -55,9 +50,9 @@ namespace TypeMapper.CollectionMappingStrategies
     //    }
     //}
 
-    /// <summary>
-    /// Keeps the input collection and adds elements to it
-    /// </summary>
+    ///// <summary>
+    ///// Keeps the input collection and adds elements to it
+    ///// </summary>
     //public class MergeCollection : ICollectionMappingStrategy
     //{
     //    public IList GetTargetCollection( object targetInstance, PropertyMapping mapping )

@@ -8,21 +8,50 @@ using System.Threading.Tasks;
 
 namespace TypeMapper
 {
-    public class FastInvoke
+    public static class FastInvoke
     {
-        public static Func<T, TReturn> BuildTypedGetter<T, TReturn>( PropertyInfo propertyInfo )
+        public static LambdaExpression GetGetterExpression( this PropertyInfo propertyInfo )
+        {
+            var targetType = propertyInfo.DeclaringType;
+            var methodInfo = propertyInfo.GetGetMethod();
+
+            var exTarget = Expression.Parameter( targetType, "t" );
+            var body = Expression.Call( exTarget, methodInfo );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType(
+                propertyInfo.DeclaringType, propertyInfo.PropertyType );
+
+            return LambdaExpression.Lambda( delegateType, body, exTarget );
+        }
+
+        public static LambdaExpression GetSetterExpression( this PropertyInfo propertyInfo )
+        {
+            // (t, p) => t.set_Foo( Convert(p) )
+            var methodInfo = propertyInfo.GetSetMethod();
+
+            var exTarget = Expression.Parameter( propertyInfo.DeclaringType, "t" );
+            var exValue = Expression.Parameter( propertyInfo.PropertyType, "p" );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+                propertyInfo.DeclaringType, propertyInfo.PropertyType );
+
+            var body = Expression.Call( exTarget, methodInfo, exValue );
+            return LambdaExpression.Lambda( delegateType, body, exTarget, exValue );
+        }
+
+        public static Func<T, TReturn> BuildTypedGetter<T, TReturn>( this PropertyInfo propertyInfo )
         {
             return (Func<T, TReturn>)Delegate.CreateDelegate(
                 typeof( Func<T, TReturn> ), propertyInfo.GetGetMethod() );
         }
 
-        public static Action<T, TProperty> BuildTypedSetter<T, TProperty>( PropertyInfo propertyInfo )
+        public static Action<T, TProperty> BuildTypedSetter<T, TProperty>( this PropertyInfo propertyInfo )
         {
             return (Action<T, TProperty>)Delegate.CreateDelegate(
                 typeof( Action<T, TProperty> ), propertyInfo.GetSetMethod() );
         }
 
-        public static Action<object, object> BuildUntypedCastSetter( PropertyInfo propertyInfo )
+        public static Action<object, object> BuildUntypedCastSetter( this PropertyInfo propertyInfo )
         {
             // (t, p) => Convert(t).set_Foo( Convert(p) )
 
@@ -41,7 +70,7 @@ namespace TypeMapper
             return lambda.Compile();
         }
 
-        public static Action<T, object> BuildUntypedSetter<T>( PropertyInfo propertyInfo )
+        public static Action<T, object> BuildUntypedSetter<T>( this PropertyInfo propertyInfo )
         {
             // (t, p) => if( p != null ) t.set_Foo( Convert(p) )
 
@@ -62,7 +91,7 @@ namespace TypeMapper
             return lambda.Compile();
         }
 
-        public static Action<T, object> BuildUntypedSetter<T, TProperty>( PropertyInfo propertyInfo )
+        public static Action<T, object> BuildUntypedSetter<T, TProperty>( this PropertyInfo propertyInfo )
         {
             if( typeof( TProperty ) != propertyInfo.PropertyType )
             {
@@ -76,7 +105,7 @@ namespace TypeMapper
             return new Action<T, object>( ( t, o ) => setter( t, (TProperty)o ) );
         }
 
-        public static Func<object, object> BuildUntypedCastGetter( PropertyInfo propertyInfo )
+        public static Func<object, object> BuildUntypedCastGetter( this PropertyInfo propertyInfo )
         {
             // t => Convert( t.get_Foo() )
 
@@ -91,7 +120,7 @@ namespace TypeMapper
             return lambda.Compile();
         }
 
-        public static Func<T, object> BuildUntypedGetter<T>( PropertyInfo propertyInfo )
+        public static Func<T, object> BuildUntypedGetter<T>( this PropertyInfo propertyInfo )
         {
             // t => Convert( t.get_Foo() )
 
@@ -107,7 +136,7 @@ namespace TypeMapper
             return lambda.Compile();
         }
 
-        public static Action<T, VIndex, object> BuildUntypedIndexSetter<T, VIndex>( PropertyInfo propertyInfo )
+        public static Action<T, VIndex, object> BuildUntypedIndexSetter<T, VIndex>( this PropertyInfo propertyInfo )
         {
             // (t, i, p) => t.set_Foo( Convert(p) )
 

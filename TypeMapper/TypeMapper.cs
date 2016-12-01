@@ -81,20 +81,18 @@ namespace TypeMapper
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
-            var typeMappings = _mappingConfiguration[ sourceType, targetType ];
-            var propertyMappings = typeMappings.GetPropertyMappings();
-
-            foreach( var mapping in propertyMappings )
+            var mappings = _mappingConfiguration[ sourceType, targetType ];
+            foreach( var mapping in mappings )
             {
-                object value = mapping.SourceProperty.ValueGetter( source );
-                if( mapping.ValueConverter != null )
-                    value = mapping.ValueConverter( value );
+                //object value = mapping.SourceProperty.ValueGetter( source );
+                //if( mapping.ValueConverter != null )
+                //    value = mapping.ValueConverter( value );
 
-                var targetValues = mapping.Mapper.Map( value,
-                    target, mapping, referenceTracking );
+                //var refObjs = mapping.Mapper.Map( value,
+                //    target, mapping, referenceTracking );
 
-                foreach( var refValue in targetValues )
-                    this.Map( refValue.Source, refValue.Target, referenceTracking );
+                //foreach( var refObjPair in refObjs )
+                //    this.Map( refObjPair.Source, refObjPair.Target, referenceTracking );
             }
         }
     }

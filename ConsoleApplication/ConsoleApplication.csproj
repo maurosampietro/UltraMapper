@@ -35,10 +35,6 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AutoMapper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Desktop\AutoMapper-master\src\AutoMapper.Net4\bin\Debug\AutoMapper.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -61,6 +57,10 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Desktop\AutoMapper-master\src\AutoMapper.Net4\AutoMapper.Net4.csproj">
+      <Project>{8c955148-fa96-4f0d-880d-abb6770f54e9}</Project>
+      <Name>AutoMapper.Net4</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TypeMapper\TypeMapper.csproj">
       <Project>{34e9592b-27f8-45bc-be54-f90bd125b4e2}</Project>
       <Name>TypeMapper</Name>

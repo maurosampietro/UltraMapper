@@ -36,16 +36,12 @@ namespace TypeMapper.Mappers
                 }
                 catch( Exception ex )
                 {
-                    // TODO: display generic arguments instead (for example: Nullable<int> instead of Nullable'1)
-
-                    string errorMsg = $"Cannot automatically convert value from '{sourcePropertyType.Name}' to '{targetPropertyType.Name}'. " +
-                        $"Please provide a converter for mapping '{mapping.SourceProperty.PropertyInfo.Name} -> {mapping.TargetProperty.PropertyInfo.Name}'";
-
+                    string errorMsg = $"Cannot automatically convert value for the mapping '{mapping}'. Please provide a converter.";
                     throw new Exception( errorMsg, ex );
                 }
             }
 
-            mapping.TargetProperty.ValueSetter( targetInstance, value );
+            //mapping.TargetProperty.ValueSetter( targetInstance, value );
             yield break;
         }
     }

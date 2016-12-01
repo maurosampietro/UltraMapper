@@ -13,14 +13,26 @@ namespace TypeMapper.Internals
         public readonly PropertyInfo TargetProperty;
 
         private readonly int _hashcode;
+        private readonly Lazy<string> _toString;
 
-        public PropertyInfoPair( PropertyInfo sourceType, PropertyInfo destinatinationType )
+        public PropertyInfoPair( PropertyInfo sourceType, PropertyInfo targetType )
         {
             this.SourceProperty = sourceType;
-            this.TargetProperty = destinatinationType;
+            this.TargetProperty = targetType;
 
             _hashcode = unchecked(this.SourceProperty.GetHashCode() * 31)
                 ^ this.TargetProperty.GetHashCode();
+
+            _toString = new Lazy<string>( () =>
+            {
+                string sourceName = this.SourceProperty.Name;
+                string sourceTypeName = this.SourceProperty.PropertyType.GetPrettifiedName();
+
+                string targetName = this.TargetProperty.Name;
+                string targetTypeName = this.TargetProperty.PropertyType.GetPrettifiedName();
+
+                return $"[{sourceTypeName} {sourceName}, {targetTypeName} {targetName}]";
+            } );
         }
 
         public override bool Equals( object obj )
@@ -35,6 +47,11 @@ namespace TypeMapper.Internals
         public override int GetHashCode()
         {
             return _hashcode;
+        }
+
+        public override string ToString()
+        {
+            return _toString.Value;
         }
     }
 }

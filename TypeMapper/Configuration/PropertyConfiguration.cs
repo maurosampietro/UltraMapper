@@ -13,11 +13,39 @@ using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Configuration
 {
-    public class PropertyConfiguration
+    public class PropertyConfiguration : IEnumerable<PropertyMapping>
     {
         //A source property can be mapped to multiple target properties
         private Dictionary<PropertyInfoPair, PropertyMapping> _propertyMappings;
         private IEnumerable<IObjectMapper> _objectMappers;
+
+        private LambdaExpression _expression;
+        public LambdaExpression MappingExpression
+        {
+            get
+            {
+                if( _expression != null )
+                    return _expression;
+
+                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
+                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
+
+                var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+                var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+
+                var expressions = _propertyMappings.Values.Select( mapping =>
+                    Expression.Invoke( mapping.Expression, sourceInstance, targetInstance ) );
+
+                var bodyExp = Expression.Block( expressions.ToArray() );
+
+                var delegateType = typeof( Action<,> )
+                    .MakeGenericType( sourceType, targetType );
+
+                return _expression = Expression.Lambda( delegateType,
+                    bodyExp, sourceInstance, targetInstance );
+            }
+        }
+
 
         /// <summary>
         /// This constructor is only used by derived classes to allow
@@ -74,7 +102,7 @@ namespace TypeMapper.Configuration
                 {
                     IsBuiltInType = sourcePropertyInfo.PropertyType.IsBuiltInType( true ),
                     IsEnumerable = sourcePropertyInfo.PropertyType.IsEnumerable(),
-                    ValueGetter = FastInvoke.BuildUntypedCastGetter( sourcePropertyInfo )
+                    ValueGetterExpr = sourcePropertyInfo.GetGetterExpression()
                 };
 
                 propertyMapping = new PropertyMapping( sourceProperty );
@@ -85,7 +113,7 @@ namespace TypeMapper.Configuration
             {
                 IsBuiltInType = targetPropertyInfo.PropertyType.IsBuiltInType( true ),
                 NullableUnderlyingType = Nullable.GetUnderlyingType( targetPropertyInfo.PropertyType ),
-                ValueSetter = FastInvoke.BuildUntypedCastSetter( targetPropertyInfo ),
+                ValueSetterExpr = targetPropertyInfo.GetSetterExpression()
             };
 
             propertyMapping.Mapper = _objectMappers.FirstOrDefault(
@@ -106,11 +134,19 @@ namespace TypeMapper.Configuration
             }
         }
 
-        internal IEnumerable<PropertyMapping> GetPropertyMappings()
+        internal PropertyMapping this[ PropertyInfoPair typePairKey ]
         {
-            //The internal dictionary is too complex to be used externally.
-            //Return just the mappings themselves, no matter the internal type used.
-            return _propertyMappings.Values;
+            get { return _propertyMappings[ typePairKey ]; }
+        }
+
+        public IEnumerator<PropertyMapping> GetEnumerator()
+        {
+            return _propertyMappings.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 
@@ -137,6 +173,7 @@ namespace TypeMapper.Configuration
 
             var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
 
+            propertyMapping.ValueConverterExp = converter;
             propertyMapping.ValueConverter = (converter == null) ? null :
                 converter.EncapsulateInGenericFunc<TSourceProperty>().Compile();
 
@@ -149,12 +186,13 @@ namespace TypeMapper.Configuration
            ICollectionMappingStrategy collectionStrategy,
            Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
            where TTargetProperty : IEnumerable
-        {          
+        {
             var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
             var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
 
+            propertyMapping.ValueConverterExp = converter;
             propertyMapping.ValueConverter = (converter == null) ? null :
                 converter.EncapsulateInGenericFunc<TSourceProperty>().Compile();
 

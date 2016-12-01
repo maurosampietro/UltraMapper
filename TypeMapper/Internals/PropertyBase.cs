@@ -10,11 +10,19 @@ namespace TypeMapper.Internals
     public class PropertyBase
     {
         public readonly PropertyInfo PropertyInfo;
+        private readonly Lazy<string> _toString;
+
         public bool IsBuiltInType { get; set; }
 
         public PropertyBase( PropertyInfo propertyInfo )
         {
             this.PropertyInfo = propertyInfo;
+
+            _toString = new Lazy<string>( () =>
+            {
+                string typeName = propertyInfo.PropertyType.GetPrettifiedName();
+                return $"{typeName} {propertyInfo.Name}";
+            } );
         }
 
         public override bool Equals( object obj )
@@ -28,6 +36,11 @@ namespace TypeMapper.Internals
         public override int GetHashCode()
         {
             return this.PropertyInfo.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return _toString.Value;
         }
     }
 }
