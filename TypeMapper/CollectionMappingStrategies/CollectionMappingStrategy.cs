@@ -37,7 +37,6 @@ namespace TypeMapper.CollectionMappingStrategies
         }
     }
 
-
     /// <summary>
     /// Keeps using the input collection and maps
     /// removing and adding element to it.

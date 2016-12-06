@@ -13,13 +13,7 @@ namespace TypeMapper.Internals
     {
         public SourceProperty SourceProperty { get; private set; }
         public TargetProperty TargetProperty { get; set; }
-
         public IObjectMapper Mapper { get; set; }
-
-        //Generalize to Func<object,object> to avoid carrying too many generic T types around
-        //and using Delegate and DynamicInvoke.
-        public Func<object, object> ValueConverter { get; set; }
-
         public LambdaExpression ValueConverterExp { get; set; }
 
         private LambdaExpression _expression;
@@ -28,7 +22,12 @@ namespace TypeMapper.Internals
             get
             {
                 if( _expression == null )
-                    _expression = this.GetExpression();
+                {
+                    if( Mapper.GetType() == typeof( ReferenceMapper ) )
+                        _expression = this.GetExpression2();
+                    else
+                        _expression = this.GetExpression();
+                }
 
                 return _expression;
             }
@@ -53,35 +52,54 @@ namespace TypeMapper.Internals
     {
         public static LambdaExpression GetExpression( this PropertyMapping mapping )
         {
-            try
-            {
-                var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
-                var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
+            var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
+            var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
 
-                var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-                var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
 
-                var getValueExp = Expression.Invoke( mapping.SourceProperty.ValueGetterExpr, sourceInstance );
+            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
 
-                var valueExp = getValueExp;
-                if( mapping.ValueConverterExp != null )
-                    valueExp = Expression.Invoke( mapping.ValueConverterExp, getValueExp );
+            var getValueExp = Expression.Invoke( mapping.SourceProperty.ValueGetterExpr, sourceInstance );
 
-                var setValueExp = Expression.Invoke( mapping.TargetProperty.ValueSetterExpr, targetInstance,
-                    Expression.Convert( valueExp, mapping.TargetProperty.
-                    PropertyInfo.PropertyType ) );
+            var valueExp = getValueExp;
+            if( mapping.ValueConverterExp != null )
+                valueExp = Expression.Invoke( mapping.ValueConverterExp, getValueExp );
 
-                var delegateType = typeof( Action<,> )
-                    .MakeGenericType( sourceType, targetType );
+            var setValueExp = Expression.Invoke( mapping.TargetProperty.ValueSetterExpr, targetInstance,
+                Expression.Convert( valueExp, targetPropertyType ) );
 
-                return Expression.Lambda( delegateType,
-                    setValueExp, sourceInstance, targetInstance );
-            }
-            catch( Exception )
-            {
+            var delegateType = typeof( Action<,> )
+                .MakeGenericType( sourceType, targetType );
 
-                return null;
-            }
+            return Expression.Lambda( delegateType,
+                setValueExp, sourceInstance, targetInstance );
+        }
+
+        public static LambdaExpression GetExpression2( this PropertyMapping mapping )
+        {
+            var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
+            var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
+
+            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
+
+            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+
+            var getValueExp = Expression.Invoke( mapping.SourceProperty.ValueGetterExpr, sourceInstance );
+
+            var nullExp = Expression.Constant( null );
+            var conditionalExp =
+               Expression.IfThenElse(
+               Expression.Equal( getValueExp, nullExp ),
+               Expression.Invoke( mapping.TargetProperty.ValueSetterExpr, targetInstance, Expression.Convert( nullExp, targetPropertyType ) ),
+               Expression.Invoke( mapping.TargetProperty.ValueSetterExpr, targetInstance, Expression.New( targetPropertyType ) ) );
+
+            var delegateType = typeof( Action<,> )
+                .MakeGenericType( sourceType, targetType );
+
+            return Expression.Lambda( delegateType,
+                conditionalExp, sourceInstance, targetInstance );
         }
     }
 }

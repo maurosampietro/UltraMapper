@@ -36,7 +36,7 @@ namespace TypeMapper.Configuration
             this.ObjectMappers = new ObjectMapperConfiguration()
                 .Add<BuiltInTypeMapper>()
                 .Add<ReferenceMapper>()
-                .Add<DictionaryMapper>() //since dictionaries are collections to be correctly handled must be evaluated by a suitable mapper before a CollectionMapper
+                .Add<DictionaryMapper>() //since dictionaries are collections, to be correctly handled must be evaluated by a suitable mapper before a CollectionMapper
                 .Add<CollectionMapper>();
         }
 

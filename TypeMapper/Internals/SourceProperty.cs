@@ -8,12 +8,6 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    //public class SourceProperty : SourceProperty<object>
-    //{
-    //    public SourceProperty( PropertyInfo propertyInfo )
-    //        : base( propertyInfo ) { }
-    //}
-
     public class SourceProperty : PropertyBase
     {
         //This info is evaluated at configuration level only once for performance reasons

@@ -15,6 +15,7 @@ namespace TypeMapper.Internals
         public Type NullableUnderlyingType { get; set; }
 
         public Expression ValueSetterExpr { get; set; }
+        public Expression ValueGetterExpr { get; set; }
 
         public ICollectionMappingStrategy CollectionStrategy { get; set; }
 

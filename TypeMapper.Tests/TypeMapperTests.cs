@@ -38,9 +38,9 @@ namespace TypeMapper.Tests
             public int? NullableInt32 { get; set; } = 12;
             public int? NullNullableInt32 { get; set; } = null;
 
-            //public InnerType InnerType { get; set; }
-            //public BaseTypes SelfReference { get; set; }
-            //public BaseTypes Reference { get; set; }
+            public InnerType InnerType { get; set; }
+            public BaseTypes SelfReference { get; set; }
+            public BaseTypes Reference { get; set; }
 
             //public List<int> ListOfInts { get; set; }
             //public List<InnerType> ListOfInnerType { get; set; }
@@ -49,8 +49,8 @@ namespace TypeMapper.Tests
 
             public BaseTypes()
             {
-                //this.SelfReference = this;
-                //this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
+                this.SelfReference = this;
+                this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
 
                 //this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
 
@@ -95,10 +95,10 @@ namespace TypeMapper.Tests
             public string String { get; set; }
             public int? NullableInt32 { get; set; }
 
-            //public InnerTypeDto InnerType { get; set; }
-            //public BaseTypesDto SelfReference { get; set; }
+            public InnerTypeDto InnerType { get; set; }
+            public BaseTypesDto SelfReference { get; set; }
 
-            //public BaseTypes Reference { get; set; }
+            public BaseTypes Reference { get; set; }
 
             //public List<int> ListOfInts { get; set; }
 
@@ -138,119 +138,52 @@ namespace TypeMapper.Tests
             var temp2 = new BaseTypesDto();
 
             var config = new TypeConfiguration();
-            var config2 = config.MapTypes<BaseTypes, BaseTypesDto>()
-                //.MapProperty( a => a.Dictionary, b => b.Dictionary )
 
-                //.MapProperty( a => a.ListOfInts, b => b.ListOfInts, new NewCollection() )
-                //.MapProperty( a => a.ListOfInnerType, b => b.ListOfInnerTypeDto )
-                ////null nullable
-                //.MapProperty( a => a.NullNullableInt32, b => b.SByte )
-                ////.MapProperty( a => a.NullNullableInt32, b => b.SByte, a => a == null ? 0 : a.Value )
-                //.MapProperty( a => a.NullNullableInt32, b => b.Int32, a => a == null ? 0 : a.Value )
+            var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+            {
+                cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                    .Add<ReferenceMapper>()
+                    .Add<CollectionMapper>()
+                    .Add<DictionaryMapper>();
 
-                ////inner class
-                //.MapProperty( a => a.InnerType, b => b.String, c => c.A + c.B )
-                ////.MapProperty( a => a.InnerType, b => b.InnerType )
+                cfg.MappingConvention.PropertyMatchingRules
+                    //.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
+                    .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                    .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                    .Respect( ( rule2, rule3 ) => (rule2 | rule3) );
 
-                ////circular reference (self reference)
-                //.MapProperty( a => a.SelfReference, b => b.SelfReference )
+                cfg.MapTypes<BaseTypes, BaseTypesDto>()
+                   //.MapProperty( a => a.Dictionary, b => b.Dictionary )
 
-                .MapProperty( a => a.String, d => d.Single )
-                .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
-                //.MapProperty( a => a.String, d => d.InnerType.A ) //subnavigation and flattening not supported
-                .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
+                   //.MapProperty( a => a.ListOfInts, b => b.ListOfInts, new NewCollection() )
+                   //.MapProperty( a => a.ListOfInnerType, b => b.ListOfInnerTypeDto )
+                   ////null nullable
+                   //.MapProperty( a => a.NullNullableInt32, b => b.SByte )
+                   ////.MapProperty( a => a.NullNullableInt32, b => b.SByte, a => a == null ? 0 : a.Value )
+                   //.MapProperty( a => a.NullNullableInt32, b => b.Int32, a => a == null ? 0 : a.Value )
 
-                //same sourceproperty/destinationProperty: second mapping overrides 
-                .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                .MapProperty( a => a.Single, y => y.Double )
+                   ////inner class
+                   //.MapProperty( a => a.InnerType, b => b.String, c => c.A + c.B )
+                   ////.MapProperty( a => a.InnerType, b => b.InnerType )
 
-                .MapProperty( a => a.NullableInt32, d => d.Char )
-                .MapProperty( a => a.Char, d => d.NullableInt32 )
-                .MapProperty( a => a.Char, d => d.Int32 );
+                   ////circular reference (self reference)
+                   //.MapProperty( a => a.SelfReference, b => b.SelfReference )
 
-            var typeMapper = new TypeMapper( config );
+                   .MapProperty( a => a.String, d => d.Single )
+                   .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+                   //.MapProperty( a => a.String, d => d.InnerType.A ) //subnavigation and flattening not supported
+                   .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
-            var compiled = (Action<BaseTypes, BaseTypesDto>)config[ temp.GetType(), temp2.GetType() ].First().Expression.Compile();
-            compiled( temp, temp2 );
+                   //same sourceproperty/destinationProperty: second mapping overrides 
+                   .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
+                   .MapProperty( a => a.Single, y => y.Double )
 
-            typeMapper.Map( temp, temp2 );
-        }
-    }
+                   .MapProperty( a => a.NullableInt32, d => d.Char )
+                   .MapProperty( a => a.Char, d => d.NullableInt32 )
+                   .MapProperty( a => a.Char, d => d.Int32 );
+            } );
 
-    [TestClass]
-    public class BuiltInTypeTests
-    {
-        public class BaseTypes
-        {
-            public long NotImplicitlyConvertible { get; set; } = 31;
-            public int ImplicitlyConvertible { get; set; } = 33;
-            public bool Boolean { get; set; } = true;
-            public byte Byte { get; set; } = 0x1;
-            public sbyte SByte { get; set; } = 0x2;
-            public char Char { get; set; } = 'a';
-            public decimal Decimal { get; set; } = 3;
-            public double Double { get; set; } = 4.0;
-            public float Single { get; set; } = 5.0f;
-            public int Int32 { get; set; } = 6;
-            public uint UInt32 { get; set; } = 7;
-            public long Int64 { get; set; } = 8;
-            public ulong UInt64 { get; set; } = 9;
-            public object Object { get; set; } = null;
-            public short Int16 { get; set; } = 10;
-            public ushort UInt16 { get; set; } = 11;
-            public string String { get; set; } = "12";
-            public int? NullableInt32 { get; set; } = 12;
-            public int? NullNullableInt32 { get; set; } = null;
-        }
-
-        public class BaseTypesDto
-        {
-            public int NotImplicitlyConvertible { get; set; }
-            public long ImplicitlyConvertible { get; set; }
-            public bool Boolean { get; set; }
-            public byte Byte { get; set; }
-            public sbyte SByte { get; set; }
-            public char Char { get; set; }
-            public decimal Decimal { get; set; }
-            public double Double { get; set; }
-            public float Single { get; set; }
-            public int Int32 { get; set; }
-            public uint UInt32 { get; set; }
-            public long Int64 { get; set; }
-            public ulong UInt64 { get; set; }
-            public object Object { get; set; }
-            public short Int16 { get; set; }
-            public ushort UInt16 { get; set; }
-            public string String { get; set; }
-            public int? NullableInt32 { get; set; }     
-        }
-
-        [TestMethod]
-        public void BuiltInTypesTest()
-        {
-            var temp = new BaseTypes();
-            var temp2 = new BaseTypesDto();
-
-            var config = new TypeConfiguration();
-            var config2 = config.MapTypes<BaseTypes, BaseTypesDto>()
-                .MapProperty( a => a.String, d => d.Single )
-                .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
-                .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
-
-                //same sourceproperty/destinationProperty: second mapping overrides 
-                .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                .MapProperty( a => a.Single, y => y.Double )
-
-                .MapProperty( a => a.NullableInt32, d => d.Char )
-                .MapProperty( a => a.Char, d => d.NullableInt32 )
-                .MapProperty( a => a.Char, d => d.Int32 );
-
-            var typeMapper = new TypeMapper( config );
-
-            var compiled = (Action<BaseTypes, BaseTypesDto>)config[ temp.GetType(), temp2.GetType() ].MappingExpression.Compile();
-            compiled( temp, temp2 );
-
-            typeMapper.Map( temp, temp2 );
+            mapper.Map( temp, temp2 );
         }
     }
 

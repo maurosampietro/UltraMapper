@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper;
 using TypeMapper.Configuration;
+using TypeMapper.Internals;
+using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 
 namespace ConsoleApplication
@@ -17,6 +21,7 @@ namespace ConsoleApplication
         {
             public long NotImplicitlyConvertible { get; set; } = 31;
             public int ImplicitlyConvertible { get; set; } = 33;
+
             public bool Boolean { get; set; } = true;
             public byte Byte { get; set; } = 0x1;
             public sbyte SByte { get; set; } = 0x2;
@@ -32,14 +37,50 @@ namespace ConsoleApplication
             public short Int16 { get; set; } = 10;
             public ushort UInt16 { get; set; } = 11;
             public string String { get; set; } = "12";
+
             public int? NullableInt32 { get; set; } = 12;
             public int? NullNullableInt32 { get; set; } = null;
+
+            public InnerType InnerType { get; set; }
+            public BaseTypes SelfReference { get; set; }
+            public BaseTypes Reference { get; set; }
+
+            //public List<int> ListOfInts { get; set; }
+            //public List<InnerType> ListOfInnerType { get; set; }
+            //public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            //public Dictionary<InnerType, InnerType> Dictionary { get; set; }
+
+            public BaseTypes()
+            {
+                //this.SelfReference = this;
+                this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
+
+                //this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
+
+                //this.ListOfInnerType = new List<Tests.TypeMapperTests.InnerType>() {
+                //    new Tests.TypeMapperTests.InnerType() { A = "a", B="b",C = this  },
+                //    new Tests.TypeMapperTests.InnerType(){ A = "c", B="d",C = this  },
+                //};
+
+                //this.DictionaryBuiltInTypes = new Dictionary<string, int>()
+                //{
+                //    {"a",1}, {"b",2}, {"c",3}
+                //};
+
+                //this.Dictionary = new Dictionary<InnerType, InnerType>()
+                //{
+                //    {new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
+                //    {new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
+                //    {new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
+                //};
+            }
         }
 
         public class BaseTypesDto
         {
             public int NotImplicitlyConvertible { get; set; }
             public long ImplicitlyConvertible { get; set; }
+
             public bool Boolean { get; set; }
             public byte Byte { get; set; }
             public sbyte SByte { get; set; }
@@ -56,8 +97,41 @@ namespace ConsoleApplication
             public ushort UInt16 { get; set; }
             public string String { get; set; }
             public int? NullableInt32 { get; set; }
+
+            public InnerTypeDto InnerType { get; set; }
+            public BaseTypesDto SelfReference { get; set; }
+
+            public BaseTypes Reference { get; set; }
+
+            //public List<int> ListOfInts { get; set; }
+
+            //public BindingList<InnerTypeDto> ListOfInnerTypeDto { get; set; }
+
+            //public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            //public Dictionary<InnerTypeDto, InnerTypeDto> Dictionary { get; set; }
+
+            public BaseTypesDto()
+            {
+
+                //this.ListOfInts = new List<int>() { 0 };
+            }
         }
 
+        public class InnerType
+        {
+            public string A { get; set; }
+            public string B { get; set; }
+
+            public BaseTypes C { get; set; }
+        }
+
+        public class InnerTypeDto
+        {
+            public string A { get; set; }
+            public string B { get; set; }
+
+            public BaseTypes C { get; set; }
+        }
 
         static void Main( string[] args )
         {
@@ -96,20 +170,32 @@ namespace ConsoleApplication
             //sw3.Stop();
             //Console.WriteLine( sw3.ElapsedMilliseconds );
 
-            int iterations = (int)Math.Pow( 10, 8 );
+            int iterations = (int)Math.Pow( 10, 6 );
 
-            var mapper = new TypeMapper.TypeMapper();
-            var config = new TypeConfiguration();
-            var compiled = (Action<BaseTypes, BaseTypesDto>)config[ temp.GetType(), temp2.GetType() ].MappingExpression.Compile();
+            var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            {
+                cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                    .Add<ReferenceMapper>()
+                    .Add<CollectionMapper>()
+                    .Add<DictionaryMapper>();
+
+                cfg.MappingConvention.PropertyMatchingRules
+                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
+                    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+                    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
+                    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+            } );
 
             Stopwatch sw4 = new Stopwatch();
             sw4.Start();
             for( int i = 0; i < iterations; i++ )
             {
-                compiled( temp, temp2 );
+                mapper.Map( temp, temp2 );
             }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
+
+
 
             Stopwatch sw5 = new Stopwatch();
             sw5.Start();

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Configuration;
 using TypeMapper.Internals;
+using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper
@@ -82,17 +83,21 @@ namespace TypeMapper
             Type targetType = target.GetType();
 
             var mappings = _mappingConfiguration[ sourceType, targetType ];
-            foreach( var mapping in mappings )
+
+            var references = mappings.MapperFunc( source, target );
+            foreach( var refe in references )
             {
-                //object value = mapping.SourceProperty.ValueGetter( source );
-                //if( mapping.ValueConverter != null )
-                //    value = mapping.ValueConverter( value );
+                //resolve this condition in the mapper or as condition in the expression
+                if( refe.Source != null && refe.Target != null )
+                {
+                    Type refeType = refe.Target.GetType();
 
-                //var refObjs = mapping.Mapper.Map( value,
-                //    target, mapping, referenceTracking );
-
-                //foreach( var refObjPair in refObjs )
-                //    this.Map( refObjPair.Source, refObjPair.Target, referenceTracking );
+                    if( !referenceTracking.Contains( refe.Source, refeType ) )
+                    {
+                        referenceTracking.Add( refe.Source, refeType, refe.Target );
+                        this.Map( refe.Source, refe.Target, referenceTracking );
+                    }
+                }
             }
         }
     }
