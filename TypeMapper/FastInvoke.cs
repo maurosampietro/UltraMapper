@@ -10,33 +10,54 @@ namespace TypeMapper
 {
     public static class FastInvoke
     {
-        public static LambdaExpression GetGetterExpression( this PropertyInfo propertyInfo )
+        public static Expression GetGetterExpression( this PropertyInfo propertyInfo )
         {
             var targetType = propertyInfo.DeclaringType;
             var methodInfo = propertyInfo.GetGetMethod();
 
-            var exTarget = Expression.Parameter( targetType, "t" );
-            var body = Expression.Call( exTarget, methodInfo );
+            var targetInstance = Expression.Parameter( targetType, "target" );
+            return Expression.Call( targetInstance, methodInfo );
+        }
+
+        public static Expression GetSetterExpression( this PropertyInfo propertyInfo )
+        {
+            // (target, value) => target.set_Property( value )
+            var methodInfo = propertyInfo.GetSetMethod();
+
+            var targetInstance = Expression.Parameter( propertyInfo.DeclaringType, "target" );
+            var value = Expression.Parameter( propertyInfo.PropertyType, "value" );
+
+            return Expression.Call( targetInstance, methodInfo, value );
+        }
+
+        public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
+        {
+            var targetType = propertyInfo.DeclaringType;
+            var methodInfo = propertyInfo.GetGetMethod();
+
+            var targetInstance = Expression.Parameter( targetType, "target" );
+            var body = Expression.Call( targetInstance, methodInfo );
 
             var delegateType = typeof( Func<,> ).MakeGenericType(
                 propertyInfo.DeclaringType, propertyInfo.PropertyType );
 
-            return LambdaExpression.Lambda( delegateType, body, exTarget );
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
 
-        public static LambdaExpression GetSetterExpression( this PropertyInfo propertyInfo )
+        public static LambdaExpression GetSetterLambdaExpression( this PropertyInfo propertyInfo )
         {
-            // (t, p) => t.set_Foo( Convert(p) )
+            // (target, value) => target.set_Property( value )
             var methodInfo = propertyInfo.GetSetMethod();
 
-            var exTarget = Expression.Parameter( propertyInfo.DeclaringType, "t" );
-            var exValue = Expression.Parameter( propertyInfo.PropertyType, "p" );
+            var targetInstance = Expression.Parameter( propertyInfo.DeclaringType, "target" );
+            var value = Expression.Parameter( propertyInfo.PropertyType, "value" );
+
+            var body = Expression.Call( targetInstance, methodInfo, value );
 
             var delegateType = typeof( Action<,> ).MakeGenericType(
                 propertyInfo.DeclaringType, propertyInfo.PropertyType );
 
-            var body = Expression.Call( exTarget, methodInfo, exValue );
-            return LambdaExpression.Lambda( delegateType, body, exTarget, exValue );
+            return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
 
         public static Func<T, TReturn> BuildTypedGetter<T, TReturn>( this PropertyInfo propertyInfo )
