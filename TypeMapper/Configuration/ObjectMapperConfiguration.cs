@@ -9,40 +9,40 @@ using TypeMapper.Mappers;
 
 namespace TypeMapper.Configuration
 {
-    public class ObjectMapperConfiguration : IEnumerable<IObjectMapper>
+    public class ObjectMapperConfiguration : IEnumerable<IObjectMapperExpression>
     {
-        private class MapperComparer : IEqualityComparer<IObjectMapper>
+        private class MapperComparer : IEqualityComparer<IObjectMapperExpression>
         {
-            public bool Equals( IObjectMapper x, IObjectMapper y )
+            public bool Equals( IObjectMapperExpression x, IObjectMapperExpression y )
             {
                 return x.GetType() == y.GetType();
             }
 
-            public int GetHashCode( IObjectMapper obj )
+            public int GetHashCode( IObjectMapperExpression obj )
             {
                 return obj.GetType().GetHashCode();
             }
         }
 
         //it is mandatory to use a collection that preserves insertion order
-        private HashSet<IObjectMapper> _objectMappers
-             = new HashSet<IObjectMapper>( new MapperComparer() );
+        private HashSet<IObjectMapperExpression> _objectMappers
+             = new HashSet<IObjectMapperExpression>( new MapperComparer() );
 
         public ObjectMapperConfiguration Add<T>( T item )
-            where T : IObjectMapper
+            where T : IObjectMapperExpression
         {
             _objectMappers.Add( item );
             return this;
         }
 
         public ObjectMapperConfiguration Add<T>()
-            where T : IObjectMapper, new()
+            where T : IObjectMapperExpression, new()
         {
             return this.Add( new T() );
         }
 
         public ObjectMapperConfiguration Remove<T>()
-            where T : IObjectMapper
+            where T : IObjectMapperExpression
         {
             var type = typeof( T );
 
@@ -55,7 +55,7 @@ namespace TypeMapper.Configuration
             return this;
         }
 
-        public IEnumerator<IObjectMapper> GetEnumerator()
+        public IEnumerator<IObjectMapperExpression> GetEnumerator()
         {
             return _objectMappers.GetEnumerator();
         }

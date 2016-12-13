@@ -17,7 +17,7 @@ namespace TypeMapper.Configuration
     {
         //A source property can be mapped to multiple target properties
         private Dictionary<PropertyInfoPair, PropertyMapping> _propertyMappings;
-        private IEnumerable<IObjectMapper> _objectMappers;
+        private IEnumerable<IObjectMapperExpression> _objectMappers;
 
         private LambdaExpression _expression;
         public LambdaExpression MappingExpression
@@ -27,61 +27,121 @@ namespace TypeMapper.Configuration
                 if( _expression != null )
                     return _expression;
 
+                var returnType = typeof( List<ObjectPair> );
+
                 var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
                 var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
+                var trackerType = typeof( ReferenceTracking );
 
                 var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
                 var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+                var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
 
-                //MAPPING BUILT-INT TYPES
-                var expressions = _propertyMappings.Values.Select( mapping =>
-                    Expression.Invoke( mapping.Expression, sourceInstance, targetInstance ) ).ToArray();
+                var newRefObjects = Expression.Variable( returnType, "result" );
 
-                var delegateType = typeof( Func<,,> )
-                    .MakeGenericType( sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
-
-                var bodyExp = (expressions?.Any() != true) ? (Expression)Expression.Empty()
-                    : Expression.Block( expressions );
-
-                //GETTING REFERENCES TO RECURSE ON
-
-                var constructor = typeof( ObjectPair ).GetConstructors().First();
-
-                //properties that use a ReferenceMapper
-                var referenceProperties = _propertyMappings.Values.Where( property =>
-                    property.Mapper.GetType() == typeof( ReferenceMapper ) );
-
-                var newInstanceExprs = referenceProperties.Select( propMap =>
+                var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+                var addCalls = _propertyMappings.Values.Select( mapping =>
                 {
-                    var sourceArg = Expression.Invoke( propMap.SourceProperty.ValueGetterExpr, sourceInstance );
-                    var targetArg = Expression.Invoke( propMap.TargetProperty.ValueGetterExpr, targetInstance );
+                    if( mapping.Mapper is BuiltInTypeMapper )
+                    {
+                        return (Expression)Expression.Invoke( mapping.Expression, referenceTrack, sourceInstance, targetInstance );
+                    }
+                    else
+                    {
 
-                    return Expression.New( constructor, sourceArg, targetArg );
+                        var objPairs = Expression.Variable( typeof( IEnumerable<ObjectPair> ), "objPairs" );
+                        var objPair = Expression.Variable( typeof( ObjectPair ), "objPair" );
+                        var loopVar = Expression.Parameter( typeof( ObjectPair ), "loopVar" );
 
-                } ).ToArray();
+                        var loopContent = Expression.IfThen( Expression.NotEqual( loopVar, Expression.Constant( null ) ),
+                            Expression.Call( newRefObjects, addMethod, loopVar ) );
 
-                var result = Expression.Variable( typeof( List<ObjectPair> ), "result" );
+                        return (Expression)Expression.Block
+                        (
+                            new[] { objPairs },
 
-                var addMethod = typeof( List<ObjectPair> ).GetMethod( nameof( List<ObjectPair>.Add ) );
-                var addCalls = newInstanceExprs.Select( exp => Expression.Call( result, addMethod, exp ) ).ToArray();
+                            Expression.Assign( objPairs, Expression.Invoke( mapping.Expression,
+                                referenceTrack, sourceInstance, targetInstance ) ),
 
-                LabelTarget returnTarget = Expression.Label( typeof( List<ObjectPair> ) );
-                GotoExpression returnExpression = Expression.Return( returnTarget, result, typeof( List<ObjectPair> ) );
-                LabelExpression returnLabel = Expression.Label( returnTarget, Expression.Default( typeof( List<ObjectPair> ) ) );
+                            Expression.IfThen
+                            (
+                                Expression.NotEqual( objPairs, Expression.Constant( null ) ),
+                                ForEach( objPairs, loopVar, loopContent )
+                            )
+                        );
+                    }
+                } );
 
-                var expressions2 = new Expression[] {
-                Expression.Assign( result, Expression.New( typeof( List<ObjectPair> ) ) ) }
-                    .Concat( addCalls ).Concat( new Expression[] { returnExpression, returnLabel } );
+                var bodyExp = (addCalls?.Any() != true) ?
+                        (Expression)Expression.Empty() : Expression.Block( addCalls );
 
-                var body = Expression.Block( new[] { result }, new Expression[] { bodyExp }.Concat( expressions2 ) );
+                var body = Expression.Block
+                (
+                    new[] { newRefObjects },
+
+                    Expression.Assign( newRefObjects, Expression.New( returnType ) ),
+                    bodyExp,
+                    newRefObjects
+                );
+
+                var delegateType = typeof( Func<,,,> ).MakeGenericType(
+                    trackerType, sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
 
                 return _expression = Expression.Lambda( delegateType,
-                    body, sourceInstance, targetInstance );
+                    body, referenceTrack, sourceInstance, targetInstance );
             }
         }
 
-        private Func<object, object, IEnumerable<ObjectPair>> _mapperFunc;
-        public Func<object, object, IEnumerable<ObjectPair>> MapperFunc
+        public static Expression ForEach( Expression collection, ParameterExpression loopVar,
+            Expression loopContent, Expression outLoopInitializations = null )
+        {
+            var elementType = loopVar.Type;
+            var enumerableType = typeof( IEnumerable<> ).MakeGenericType( elementType );
+            var enumeratorType = typeof( IEnumerator<> ).MakeGenericType( elementType );
+
+            var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
+            var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( "GetEnumerator" ) );
+            var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
+
+            // The MoveNext method's actually on IEnumerator, not IEnumerator<T>
+            var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator ).GetMethod( "MoveNext" ) );
+            var breakLabel = Expression.Label( "LoopBreak" );
+
+            if( outLoopInitializations == null )
+                outLoopInitializations = Expression.Empty();
+
+            var loop = Expression.Block
+            (
+                new[] { enumeratorVar },
+
+                enumeratorAssign,
+                outLoopInitializations,
+
+                Expression.Loop
+                (
+                    Expression.IfThenElse
+                    (
+                        Expression.Equal( moveNextCall, Expression.Constant( true ) ),
+                        Expression.Block
+                        (
+                            new[] { loopVar },
+
+                            Expression.Assign( loopVar, Expression.Property( enumeratorVar, "Current" ) ),
+                            loopContent
+                        ),
+
+                        Expression.Break( breakLabel )
+                    ),
+
+                    breakLabel
+               )
+            );
+
+            return loop;
+        }
+
+        private Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> _mapperFunc;
+        public Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MapperFunc
         {
             get
             {
@@ -90,89 +150,39 @@ namespace TypeMapper.Configuration
 
                 var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
                 var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
+                var trackerType = typeof( ReferenceTracking );
 
                 var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
                 var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
+                var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
 
                 var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
                 var targetInstance = Expression.Convert( targetLambdaArg, targetType );
 
-                var bodyExp = Expression.Invoke( this.MappingExpression, sourceInstance, targetInstance );
+                var bodyExp = Expression.Invoke( this.MappingExpression,
+                    referenceTrack, sourceInstance, targetInstance );
 
-                return _mapperFunc = Expression.Lambda<Func<object, object, IEnumerable<ObjectPair>>>(
-                    bodyExp, sourceLambdaArg, targetLambdaArg ).Compile();
+                return _mapperFunc = Expression.Lambda<Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>>>(
+                    bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
             }
         }
-
-        ////private Expression<Func<object, object, IEnumerable<ObjectPair>>> _getReferences;
-        ////public Expression<Func<object, object, IEnumerable<ObjectPair>>> GetReferences
-        ////{
-        ////    get
-        ////    {
-        ////        if( _getReferences != null ) return _getReferences;
-
-        ////        var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
-        ////        var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
-
-        ////        var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
-        ////        var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
-
-        ////        var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
-        ////        var targetInstance = Expression.Convert( targetLambdaArg, targetType );
-
-        ////        var constructor = typeof( ObjectPair ).GetConstructors().First();
-
-        ////        //properties that use a ReferenceMapper
-        ////        var referenceProperties = _propertyMappings.Values.Where( property =>
-        ////            property.Mapper.GetType() == typeof( ReferenceMapper ) );
-
-        ////        var newInstanceExprs = referenceProperties.Select( propMap =>
-        ////        {
-        ////            var sourceArg = Expression.Invoke( propMap.SourceProperty.ValueGetterExpr, sourceInstance );
-        ////            var targetArg = Expression.Invoke( propMap.TargetProperty.ValueGetterExpr, targetInstance );
-
-        ////            return Expression.New( constructor, sourceArg, targetArg );
-
-        ////        } ).ToArray();
-
-        ////        var result = Expression.Variable( typeof( List<ObjectPair> ), "result" );
-
-        ////        var addMethod = typeof( List<ObjectPair> ).GetMethod( nameof( List<ObjectPair>.Add ) );
-        ////        var addCalls = newInstanceExprs.Select( exp => Expression.Call( result, addMethod, exp ) ).ToArray();
-
-        ////        LabelTarget returnTarget = Expression.Label( typeof( List<ObjectPair> ) );
-        ////        GotoExpression returnExpression = Expression.Return( returnTarget, result, typeof( List<ObjectPair> ) );
-        ////        LabelExpression returnLabel = Expression.Label( returnTarget, Expression.Default( typeof( List<ObjectPair> ) ) );
-
-        ////        var expressions = new Expression[] {
-        ////        Expression.Assign( result, Expression.New( typeof( List<ObjectPair> ) ) ) }
-        ////            .Concat( addCalls ).Concat( new Expression[] { returnExpression, returnLabel } );
-
-        ////        var body = Expression.Block( new[] { result }, expressions );
-
-        ////        var lambda = Expression.Lambda<Func<object, object, IEnumerable<ObjectPair>>>(
-        ////            body, sourceLambdaArg, targetLambdaArg );
-
-        ////        return _getReferences = lambda;
-        ////    }
-        ////}
 
         /// <summary>
         /// This constructor is only used by derived classes to allow
         /// casts from PropertyConfiguration to the derived class itself
         /// </summary>
         /// <param name="configuration">An already existing mapping configuration</param>
-        protected PropertyConfiguration( PropertyConfiguration configuration, IEnumerable<IObjectMapper> objectMappers )
+        protected PropertyConfiguration( PropertyConfiguration configuration, IEnumerable<IObjectMapperExpression> objectMappers )
         {
             _propertyMappings = configuration._propertyMappings;
             _objectMappers = objectMappers;
         }
 
-        public PropertyConfiguration( Type source, Type target, IEnumerable<IObjectMapper> objectMappers )
-                                    : this( source, target, new DefaultMappingConvention(), objectMappers ) { }
+        public PropertyConfiguration( Type source, Type target, IEnumerable<IObjectMapperExpression> objectMappers )
+                                            : this( source, target, new DefaultMappingConvention(), objectMappers ) { }
 
         public PropertyConfiguration( Type source, Type target,
-            IMappingConvention mappingConvention, IEnumerable<IObjectMapper> objectMappers )
+            IMappingConvention mappingConvention, IEnumerable<IObjectMapperExpression> objectMappers )
         {
             if( objectMappers == null || !objectMappers.Any() )
                 throw new ArgumentException( "Please provide at least one object mapper" );
@@ -233,7 +243,7 @@ namespace TypeMapper.Configuration
             propertyMapping.Mapper = _objectMappers.FirstOrDefault(
                 mapper => mapper.CanHandle( propertyMapping ) );
 
-            if( propertyMapping == null )
+            if( propertyMapping.Mapper == null )
                 throw new Exception( $"No object mapper can handle {propertyMapping}" );
 
             return propertyMapping;
@@ -271,10 +281,10 @@ namespace TypeMapper.Configuration
         /// casts from PropertyConfiguration to PropertyConfiguration<>
         /// </summary>
         /// <param name="map">An already existing mapping configuration</param>
-        internal PropertyConfiguration( PropertyConfiguration map, IEnumerable<IObjectMapper> objectMappers )
+        internal PropertyConfiguration( PropertyConfiguration map, IEnumerable<IObjectMapperExpression> objectMappers )
             : base( map, objectMappers ) { }
 
-        public PropertyConfiguration( IMappingConvention mappingConvention, IEnumerable<IObjectMapper> objectMappers )
+        public PropertyConfiguration( IMappingConvention mappingConvention, IEnumerable<IObjectMapperExpression> objectMappers )
             : base( typeof( TSource ), typeof( TTarget ), mappingConvention, objectMappers ) { }
 
         public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(

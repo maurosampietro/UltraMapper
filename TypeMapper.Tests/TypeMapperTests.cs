@@ -142,9 +142,9 @@ namespace TypeMapper.Tests
             var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
                 cfg.ObjectMappers.Add<BuiltInTypeMapper>()
-                    .Add<ReferenceMapper>()
-                    .Add<CollectionMapper>()
-                    .Add<DictionaryMapper>();
+                    .Add<ReferenceMapper>();
+                    //.Add<CollectionMapper>()
+                    //.Add<DictionaryMapper>();
 
                 cfg.MappingConvention.PropertyMatchingRules
                     //.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
@@ -261,9 +261,9 @@ namespace TypeMapper.Tests
             var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
                 cfg.ObjectMappers.Add<BuiltInTypeMapper>()
-                    .Add<ReferenceMapper>()
-                    .Add<CollectionMapper>()
-                    .Add<DictionaryMapper>();
+                    .Add<ReferenceMapper>();
+                    //.Add<CollectionMapper>()
+                    //.Add<DictionaryMapper>();
 
                 cfg.MappingConvention.PropertyMatchingRules
                     .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )

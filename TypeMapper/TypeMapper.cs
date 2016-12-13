@@ -25,7 +25,7 @@ namespace TypeMapper
 
     public class TypeMapper
     {
-        protected TypeConfiguration _mappingConfiguration;
+        public TypeConfiguration _mappingConfiguration { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance using <see cref="DefaultMappingConvention"/> 
@@ -73,32 +73,22 @@ namespace TypeMapper
         public void Map<TSource, TTarget>( TSource source, TTarget target )
         {
             var referenceTracking = new ReferenceTracking();
+            referenceTracking.Add( source, target.GetType(), target );
+
             this.Map( source, target, referenceTracking );
         }
 
         private void Map<TSource, TTarget>( TSource source,
-            TTarget target, IReferenceTracking referenceTracking )
+            TTarget target, ReferenceTracking referenceTracking )
         {
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
             var mappings = _mappingConfiguration[ sourceType, targetType ];
 
-            var references = mappings.MapperFunc( source, target );
+            var references = mappings.MapperFunc( referenceTracking, source, target );
             foreach( var refe in references )
-            {
-                //resolve this condition in the mapper or as condition in the expression
-                if( refe.Source != null && refe.Target != null )
-                {
-                    Type refeType = refe.Target.GetType();
-
-                    if( !referenceTracking.Contains( refe.Source, refeType ) )
-                    {
-                        referenceTracking.Add( refe.Source, refeType, refe.Target );
-                        this.Map( refe.Source, refe.Target, referenceTracking );
-                    }
-                }
-            }
+                this.Map( refe.Source, refe.Target, referenceTracking );
         }
     }
 }

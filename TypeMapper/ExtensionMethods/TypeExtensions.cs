@@ -73,6 +73,11 @@ namespace TypeMapper
             return null;
         }
 
+        public static bool IsCollectionOfType( this Type sourceType, Type testAgainstType )
+        {
+            return sourceType.IsGenericType && (sourceType.GetGenericTypeDefinition() == testAgainstType);
+        }
+
         #region IsImplicitlyConvertibleTo
 
         private class TypePair
@@ -116,7 +121,7 @@ namespace TypeMapper
         /// </summary>
         private static readonly ReadOnlyDictionary<Type, HashSet<Type>> _implicitNumericConversionTable = new ReadOnlyDictionary<Type, HashSet<Type>>( new Dictionary<Type, HashSet<Type>>()
         {
-             {typeof( sbyte ), new HashSet<Type>(){ typeof( short ), typeof( int ), typeof( long ), typeof( float ), typeof( double ), typeof( decimal ) } },
+             {typeof( sbyte ), new HashSet<Type>(){ typeof( short ), typeof( int ), typeof( long ), typeof( float ), typeof( double ), typeof( decimal ) }},
              {typeof( byte ), new HashSet<Type>() { typeof( short ), typeof( ushort ), typeof( int ), typeof( uint ), typeof( long ), typeof( ulong ), typeof( float ), typeof( double ), typeof( decimal ) }},
              {typeof( short), new HashSet<Type>(){ typeof( int ), typeof( long ), typeof( float ), typeof( double ), typeof( decimal )}},
              {typeof( ushort ), new HashSet<Type>(){ typeof( int ), typeof( uint ), typeof( long ), typeof( ulong ), typeof( float ), typeof( double ), typeof( decimal ) }},
@@ -137,7 +142,7 @@ namespace TypeMapper
         /// <returns>True if a implicit conversion is available, false otherwise</returns>
         public static bool IsImplicitlyConvertibleTo( this Type sourceType, Type targetType )
         {
-            //check implicit conversion from built-in numeric type to built-in numeric type
+            //check implicit conversion between built-in types
             HashSet<Type> implicitConversions;
             if( _implicitNumericConversionTable.TryGetValue( sourceType, out implicitConversions ) )
                 return implicitConversions.Contains( targetType );
@@ -165,6 +170,61 @@ namespace TypeMapper
 
         #endregion
 
+        #region IsExplicitlyConvertibleTo
+        /// <summary>
+        /// A cache that maps a type to the types to which you can explicitly convert.
+        /// </summary>
+        private static Dictionary<TypePair, bool> _explicitConversionTable = new Dictionary<TypePair, bool>();
+
+        /// <summary>
+        /// A cache that maps a numeric built-in type to the numeric built-in types to which you can explicitly convert.
+        /// <a href="https://msdn.microsoft.com/en-us/library/yht2cx7b.aspx">Explicit numeric conversion table</a>
+        /// </summary>
+        private static readonly ReadOnlyDictionary<Type, HashSet<Type>> _explicitNumericConversionTable = new ReadOnlyDictionary<Type, HashSet<Type>>( new Dictionary<Type, HashSet<Type>>()
+        {
+            {typeof( sbyte ), new HashSet<Type>(){ typeof( byte ), typeof( ushort), typeof( uint), typeof( ulong), typeof( char ) } },
+            {typeof( byte ), new HashSet<Type>() {typeof( sbyte), typeof( char)} },
+            {typeof( short), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( ushort), typeof( uint), typeof( ulong), typeof( char) } },
+            {typeof( ushort ), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( short), typeof( char ) } },
+            {typeof( int ), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( short), typeof( ushort), typeof( uint), typeof( ulong), typeof( char ) } },
+            {typeof( uint ), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( short), typeof( ushort), typeof( int), typeof( char) } },
+            {typeof( long ), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( short), typeof( ushort), typeof( int), typeof( uint), typeof( ulong), typeof( char ) } },
+            {typeof( ulong ), new HashSet<Type>(){typeof( sbyte), typeof( byte), typeof( short), typeof( ushort), typeof( int), typeof( uint), typeof( long), typeof( char ) } },
+            {typeof( char ), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( short )} },
+            {typeof( float ), new HashSet<Type>(){ typeof( sbyte), typeof( byte), typeof( short), typeof( ushort), typeof( int), typeof( uint), typeof( long), typeof( ulong), typeof( char), typeof( decimal ) } },
+            {typeof( double ), new HashSet<Type>(){typeof( sbyte), typeof( byte), typeof( short), typeof( ushort), typeof( int), typeof( uint), typeof( long), typeof( ulong), typeof( char), typeof( float), typeof( decimal ) } },
+            {typeof( decimal ), new HashSet<Type>(){ typeof( sbyte ), typeof( byte), typeof( short), typeof( ushort), typeof( int), typeof( uint), typeof( long), typeof( ulong), typeof( char), typeof( float), typeof( double) }},
+        } );
+
+        public static bool IsExplicitlyConvertibleTo( this Type sourceType, Type targetType )
+        {
+            //check explicit conversion between built-in types
+            HashSet<Type> explicitConversions;
+            if( _explicitNumericConversionTable.TryGetValue( sourceType, out explicitConversions ) )
+                return explicitConversions.Contains( targetType );
+
+            //check explicit conversion from any type to any type
+            bool conversionExists = false;
+            var typePairKey = new TypePair( sourceType, targetType );
+
+            if( !_explicitConversionTable.TryGetValue( typePairKey, out conversionExists ) )
+            {
+                conversionExists = sourceType.GetMethods( BindingFlags.Public | BindingFlags.Static )
+                      .Where( methodInfo => methodInfo.Name == "op_Explicit" && methodInfo.ReturnType == targetType )
+                      .Any( methodInfo =>
+                      {
+                          ParameterInfo paramInfo = methodInfo.GetParameters().FirstOrDefault();
+                          return paramInfo?.ParameterType == sourceType;
+                      } );
+
+                //cache the result
+                _explicitConversionTable.Add( typePairKey, conversionExists );
+            }
+
+            return conversionExists;
+        }
+
+        #endregion
 
         /// <summary>
         /// If a type is generic, gets a prettified name.

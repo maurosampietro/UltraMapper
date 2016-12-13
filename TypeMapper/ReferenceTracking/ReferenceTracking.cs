@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 namespace TypeMapper
 {
     /// <summary>
-    /// A reference value type can be mapped to many different types (one instance for each target type).
     /// This class helps tracking and retrieving each reference to the mapped type instance.
+    /// A reference value type can be mapped to many different types (one instance for each target type).
     /// </summary>
-    public class ReferenceTracking : IReferenceTracking
+    public class ReferenceTracking //: IReferenceTracking
     {
         private Dictionary<object, Dictionary<Type, object>> _mappings
-            = new Dictionary<object, Dictionary<Type, object>>();
+            = new Dictionary<object, Dictionary<Type, object>>( 16 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {
             Dictionary<Type, object> targetInstances;
             if( !_mappings.TryGetValue( sourceInstance, out targetInstances ) )
             {
-                targetInstances = new Dictionary<Type, object>();
+                targetInstances = new Dictionary<Type, object>( 4 );
                 _mappings.Add( sourceInstance, targetInstances );
             }
 

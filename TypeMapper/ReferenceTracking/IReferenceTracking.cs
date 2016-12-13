@@ -2,6 +2,10 @@
 
 namespace TypeMapper
 {
+    /// <summary>
+    /// This interface is unused until a real need shows up
+    /// because of virtual calls performance 
+    /// </summary>
     public interface IReferenceTracking
     {
         void Add( object sourceInstance, Type targetType, object targetInstance );

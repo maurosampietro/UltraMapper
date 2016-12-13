@@ -58,10 +58,10 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
-                cfg.ObjectMappers.Add<BuiltInTypeMapper>()
-                    .Add<ReferenceMapper>()
-                    .Add<CollectionMapper>()
-                    .Add<DictionaryMapper>();
+                //cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                //    .Add<ReferenceMapper>()
+                //    .Add<CollectionMapper>()
+                //    .Add<DictionaryMapper>();
 
                 cfg.MappingConvention.PropertyMatchingRules
                     //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )

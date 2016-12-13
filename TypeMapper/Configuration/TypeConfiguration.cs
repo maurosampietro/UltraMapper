@@ -35,9 +35,9 @@ namespace TypeMapper.Configuration
             this.MappingConvention = new DefaultMappingConvention();
             this.ObjectMappers = new ObjectMapperConfiguration()
                 .Add<BuiltInTypeMapper>()
-                .Add<ReferenceMapper>()
-                .Add<DictionaryMapper>() //since dictionaries are collections, to be correctly handled must be evaluated by a suitable mapper before a CollectionMapper
-                .Add<CollectionMapper>();
+                .Add<ReferenceMapper>();
+                //.Add<DictionaryMapper>() //since dictionaries are collections, to be correctly handled must be evaluated by a suitable mapper before a CollectionMapper
+                //.Add<CollectionMapper>();
         }
 
         public TypeConfiguration( Action<DefaultMappingConvention> config )
