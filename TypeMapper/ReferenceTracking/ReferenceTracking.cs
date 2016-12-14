@@ -10,44 +10,82 @@ namespace TypeMapper
     /// This class helps tracking and retrieving each reference to the mapped type instance.
     /// A reference value type can be mapped to many different types (one instance for each target type).
     /// </summary>
+    //public class ReferenceTracking //: IReferenceTracking
+    //{
+    //    private Dictionary<object, Dictionary<Type, object>> _mappings
+    //        = new Dictionary<object, Dictionary<Type, object>>( 8 );
+
+    //    public void Add( object sourceInstance, Type targetType, object targetInstance )
+    //    {
+    //        Dictionary<Type, object> targetInstances;
+    //        if( !_mappings.TryGetValue( sourceInstance, out targetInstances ) )
+    //        {
+    //            targetInstances = new Dictionary<Type, object>( 2 );
+    //            _mappings.Add( sourceInstance, targetInstances );
+    //        }
+
+    //        targetInstances.Add( targetType, targetInstance );
+    //    }
+
+    //    public bool Contains( object sourceInstance, Type targetType )
+    //    {
+    //        object targetInstance;
+    //        return this.TryGetValue( sourceInstance, targetType, out targetInstance );
+    //    }
+
+    //    public bool TryGetValue( object sourceInstance, Type targetType, out object targetInstance )
+    //    {
+    //        Dictionary<Type, object> targetInstances;
+    //        if( !_mappings.TryGetValue( sourceInstance, out targetInstances ) )
+    //        {
+    //            targetInstance = null;
+    //            return false;
+    //        }
+
+    //        return targetInstances.TryGetValue( targetType, out targetInstance );
+    //    }
+
+    //    public object this[ object sourceInstance, Type targetType ]
+    //    {
+    //        get { return _mappings[ sourceInstance ][ targetType ]; }
+    //    }
+    //}
+
+    /// <summary>
+    /// This class helps tracking and retrieving each reference to the mapped type instance.
+    /// A reference value type can be mapped to many different types (one instance for each target type).
+    /// </summary>
     public class ReferenceTracking //: IReferenceTracking
     {
-        private Dictionary<object, Dictionary<Type, object>> _mappings
-            = new Dictionary<object, Dictionary<Type, object>>( 16 );
+        private Dictionary<int, object> _mappings
+            = new Dictionary<int, object>( 8 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {
-            Dictionary<Type, object> targetInstances;
-            if( !_mappings.TryGetValue( sourceInstance, out targetInstances ) )
-            {
-                targetInstances = new Dictionary<Type, object>( 4 );
-                _mappings.Add( sourceInstance, targetInstances );
-            }
+            var key = sourceInstance.GetHashCode() ^ targetType.GetHashCode();
 
-            targetInstances.Add( targetType, targetInstance );
+            if( !_mappings.ContainsKey( key ) )
+                _mappings.Add( key, targetInstance );
         }
 
         public bool Contains( object sourceInstance, Type targetType )
         {
-            object targetInstance;
-            return this.TryGetValue( sourceInstance, targetType, out targetInstance );
+            return this.Contains( sourceInstance, targetType );
         }
 
         public bool TryGetValue( object sourceInstance, Type targetType, out object targetInstance )
         {
-            Dictionary<Type, object> targetInstances;
-            if( !_mappings.TryGetValue( sourceInstance, out targetInstances ) )
-            {
-                targetInstance = null;
-                return false;
-            }
-
-            return targetInstances.TryGetValue( targetType, out targetInstance );
+            var key = sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+            return _mappings.TryGetValue( key, out targetInstance );
         }
 
         public object this[ object sourceInstance, Type targetType ]
         {
-            get { return _mappings[ sourceInstance ][ targetType ]; }
+            get
+            {
+                var key = sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+                return _mappings[ key ];
+            }
         }
     }
 }

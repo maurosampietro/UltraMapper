@@ -16,9 +16,16 @@ namespace TypeMapper.Internals
         public IObjectMapperExpression Mapper { get; set; }
         public LambdaExpression ValueConverterExp { get; set; }
 
-        public Expression Expression
+        private LambdaExpression _expression;
+        public LambdaExpression Expression
         {
-            get { return this.Mapper.GetMappingExpression( this ); }
+            get
+            {
+                if( _expression == null )
+                    _expression = this.Mapper.GetMappingExpression( this );
+
+                return _expression;
+            }
         }
 
         public PropertyMapping( SourceProperty sourceProperty,

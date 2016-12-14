@@ -41,9 +41,9 @@ namespace ConsoleApplication
             public int? NullableInt32 { get; set; } = 12;
             public int? NullNullableInt32 { get; set; } = null;
 
-            //public InnerType InnerType { get; set; }
-            //public BaseTypes SelfReference { get; set; }
-            //public BaseTypes Reference { get; set; }
+            public InnerType InnerType { get; set; }
+            public BaseTypes SelfReference { get; set; }
+            public BaseTypes Reference { get; set; }
 
             //public List<int> ListOfInts { get; set; }
             //public List<InnerType> ListOfInnerType { get; set; }
@@ -54,7 +54,7 @@ namespace ConsoleApplication
             public BaseTypes()
             {
                 //this.SelfReference = this;
-                //this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
+                this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
 
                 //this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
 
@@ -113,7 +113,7 @@ namespace ConsoleApplication
 
             public BaseTypesDto()
             {
-
+                //this.SelfReference = this;
                 //this.ListOfInts = new List<int>() { 0 };
             }
         }
@@ -171,7 +171,7 @@ namespace ConsoleApplication
             //sw3.Stop();
             //Console.WriteLine( sw3.ElapsedMilliseconds );
 
-            int iterations = (int)Math.Pow( 10, 7 );
+            int iterations = (int)Math.Pow( 10, 6 );
 
             var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
@@ -192,27 +192,20 @@ namespace ConsoleApplication
             sw4.Start();
             for( int i = 0; i < iterations; i++ )
             {
-                //mapper.Map( temp, temp2 );
+                mapper.Map( temp, temp2 );
             }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
 
 
-            var propMappings = mapper._mappingConfiguration[ typeof( BaseTypes ), typeof( BaseTypesDto ) ];
-            foreach( var prop in propMappings )
-            {
-                
-            }
-
-
             Stopwatch sw5 = new Stopwatch();
-            sw5.Start();
+
             AutoMapper.Mapper.Initialize( cfg =>
             {
                 cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>();
+                cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
             } );
-
+            sw5.Start();
             for( int i = 0; i < iterations; i++ )
             {
                 AutoMapper.Mapper.Map( temp, temp2 );

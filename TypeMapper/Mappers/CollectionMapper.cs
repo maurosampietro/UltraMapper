@@ -35,7 +35,7 @@ namespace TypeMapper.Mappers
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
         {
-            //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
+            //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
 
             var returnType = typeof( List<ObjectPair> );
             var returnElementType = typeof( ObjectPair );
@@ -43,24 +43,26 @@ namespace TypeMapper.Mappers
             var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
             var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
 
-            var sourcePropertyType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
+            var sourceCollectionType = mapping.SourceProperty.PropertyInfo.PropertyType;
+            var targetCollectionType = mapping.TargetProperty.PropertyInfo.PropertyType;
 
-            var elementType = targetPropertyType.GetCollectionGenericType();
-            bool isBuiltInType = elementType.IsBuiltInType( false );
+            var sourceElementType = sourceCollectionType.GetCollectionGenericType();
+            var targetElementType = targetCollectionType.GetCollectionGenericType();
 
+            bool isSourceElementTypeBuiltIn = sourceCollectionType.IsBuiltInType( false );
+            bool isTargetElementTypeBuiltIn = targetElementType.IsBuiltInType( false );
 
-            var addMethod = sourcePropertyType.GetMethod( "Add" );
+            var addMethod = targetCollectionType.GetMethod( "Add" );
 
             var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
-            var sourceCollection = Expression.Variable( sourcePropertyType, "sourceArg" );
-            var newCollection = Expression.Variable( targetPropertyType, "newCollection" );
-            var nullExp = Expression.Constant( null, sourcePropertyType );
+            var sourceCollection = Expression.Variable( sourceCollectionType, "sourceArg" );
+            var newCollection = Expression.Variable( targetCollectionType, "newCollection" );
+            var nullExp = Expression.Constant( null, sourceCollectionType );
 
-            var loopVar = Expression.Parameter( elementType, "loopVar" );
+            var loopVar = Expression.Parameter( sourceElementType, "loopVar" );
 
             Expression<Func<ReferenceTracking, object, Type, object>> lookup =
                 ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
@@ -70,23 +72,23 @@ namespace TypeMapper.Mappers
 
             var newRefObjects = Expression.Variable( returnType, "result" );
 
-            var newInstanceExp = Expression.New( targetPropertyType );
-            if( targetPropertyType.IsCollectionOfType( typeof( List<> ) ) )
+            var newInstanceExp = Expression.New( targetCollectionType );
+            if( targetCollectionType.IsCollectionOfType( typeof( List<> ) ) )
             {
-                var constructorWithCapacity = targetPropertyType.GetConstructor( new Type[] { typeof( int ) } );
-                var getCountMethod = targetPropertyType.GetProperty( "Count" ).GetGetMethod();
+                var constructorWithCapacity = targetCollectionType.GetConstructor( new Type[] { typeof( int ) } );
+                var getCountMethod = targetCollectionType.GetProperty( "Count" ).GetGetMethod();
 
                 newInstanceExp = Expression.New( constructorWithCapacity, Expression.Call( sourceCollection, getCountMethod ) );
             }
 
 
             Expression innerBody = null;
-            if( isBuiltInType )
+            if( isTargetElementTypeBuiltIn )
             {
                 innerBody = Expression.Block
                 (
                     Expression.Assign( newCollection, newInstanceExp ),
-                    ForEach( sourceCollection, loopVar, Expression.Call( newCollection, addMethod, loopVar ) )
+                    ExpressionLoops.ForEach( sourceCollection, loopVar, Expression.Call( newCollection, addMethod, loopVar ) )
                 );
             }
             else
@@ -94,15 +96,19 @@ namespace TypeMapper.Mappers
                 var addToRefCollectionMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
                 var objectPairConstructor = returnElementType.GetConstructors().First();
                 var objPair = Expression.Variable( returnElementType, "objPair" );
+                var newElement = Expression.Variable( targetElementType, "newElement" );
 
                 innerBody = Expression.Block
                 (
-                    Expression.Assign( newCollection, newInstanceExp ),
-                    ForEach( sourceCollection, loopVar, Expression.Block
-                    (
-                        Expression.Call( newCollection, addMethod, loopVar ),
+                    new[] { newElement },
 
-                        Expression.Assign( objPair, Expression.New( objectPairConstructor, loopVar, objPair ) ),
+                    Expression.Assign( newCollection, newInstanceExp ),
+                    ExpressionLoops.ForEach( sourceCollection, loopVar, Expression.Block
+                    (
+                        Expression.Assign( newElement, Expression.New( targetElementType ) ),
+                        Expression.Call( newCollection, addMethod, newElement ),
+
+                        Expression.Assign( objPair, Expression.New( objectPairConstructor, loopVar, newElement ) ),
                         Expression.Call( newRefObjects, addToRefCollectionMethod, objPair )
                     ) )
                 );
@@ -123,16 +129,16 @@ namespace TypeMapper.Mappers
                     Expression.Equal( sourceCollection, nullExp ),
 
                     Expression.Invoke( mapping.TargetProperty.ValueSetterExpr,
-                        targetInstance, Expression.Constant( null, targetPropertyType ) ),
+                        targetInstance, Expression.Constant( null, targetCollectionType ) ),
 
                     Expression.Block
                     (
                         Expression.Assign( newCollection, Expression.Convert( Expression.Invoke( lookup,
-                            referenceTrack, sourceCollection, Expression.Constant( targetPropertyType ) ), targetPropertyType ) ),
+                            referenceTrack, sourceCollection, Expression.Constant( targetCollectionType ) ), targetCollectionType ) ),
 
                         Expression.IfThen
                         (
-                            Expression.Equal( newCollection, Expression.Constant( null, targetPropertyType ) ),
+                            Expression.Equal( newCollection, Expression.Constant( null, targetCollectionType ) ),
                             innerBody
                         ),
 
@@ -148,54 +154,6 @@ namespace TypeMapper.Mappers
 
             return Expression.Lambda( delegateType,
                 body, referenceTrack, sourceInstance, targetInstance );
-        }
-
-        public static Expression ForEach( Expression collection, ParameterExpression loopVar,
-            Expression loopContent, Expression outLoopInitializations = null )
-        {
-            var elementType = loopVar.Type;
-            var enumerableType = typeof( IEnumerable<> ).MakeGenericType( elementType );
-            var enumeratorType = typeof( IEnumerator<> ).MakeGenericType( elementType );
-
-            var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
-            var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( "GetEnumerator" ) );
-            var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
-
-            // The MoveNext method's actually on IEnumerator, not IEnumerator<T>
-            var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator ).GetMethod( "MoveNext" ) );
-            var breakLabel = Expression.Label( "LoopBreak" );
-
-            if( outLoopInitializations == null )
-                outLoopInitializations = Expression.Empty();
-
-            var loop = Expression.Block
-            (
-                new[] { enumeratorVar },
-
-                enumeratorAssign,
-                outLoopInitializations,
-
-                Expression.Loop
-                (
-                    Expression.IfThenElse
-                    (
-                        Expression.Equal( moveNextCall, Expression.Constant( true ) ),
-                        Expression.Block
-                        (
-                            new[] { loopVar },
-
-                            Expression.Assign( loopVar, Expression.Property( enumeratorVar, "Current" ) ),
-                            loopContent
-                        ),
-
-                        Expression.Break( breakLabel )
-                    ),
-
-                    breakLabel
-               )
-            );
-
-            return loop;
         }
     }
 
@@ -318,41 +276,6 @@ namespace TypeMapper.Mappers
     //                addfunc( targetCollection, targetItem );
     //            }
     //        }
-    //    }
-
-    //    public static Expression ForEach( Expression collection, ParameterExpression loopVar, Expression loopContent, Expression outLoopInitializations = null )
-    //    {
-    //        var elementType = loopVar.Type;
-    //        var enumerableType = typeof( IEnumerable<> ).MakeGenericType( elementType );
-    //        var enumeratorType = typeof( IEnumerator<> ).MakeGenericType( elementType );
-
-    //        var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
-    //        var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( "GetEnumerator" ) );
-    //        var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
-
-    //        // The MoveNext method's actually on IEnumerator, not IEnumerator<T>
-    //        var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator ).GetMethod( "MoveNext" ) );
-
-    //        var breakLabel = Expression.Label( "LoopBreak" );
-
-    //        if( outLoopInitializations == null )
-    //            outLoopInitializations = Expression.Empty();
-
-    //        var loop = Expression.Block( new[] { enumeratorVar },
-    //            enumeratorAssign, outLoopInitializations,
-    //            Expression.Loop(
-    //                Expression.IfThenElse(
-    //                    Expression.Equal( moveNextCall, Expression.Constant( true ) ),
-    //                    Expression.Block( new[] { loopVar },
-    //                        Expression.Assign( loopVar, Expression.Property( enumeratorVar, "Current" ) ),
-    //                        loopContent
-    //                    ),
-    //                    Expression.Break( breakLabel )
-    //                ),
-    //            breakLabel )
-    //        );
-
-    //        return loop;
     //    }
     //}
 }

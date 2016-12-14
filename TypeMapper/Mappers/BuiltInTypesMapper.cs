@@ -17,8 +17,7 @@ namespace TypeMapper.Mappers
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
         {
-            //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
-            var returnType = typeof( List<ObjectPair> );
+            //Action<ReferenceTracking, sourceType, targetType>
 
             var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
             var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
@@ -30,7 +29,7 @@ namespace TypeMapper.Mappers
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
-            Expression valueExp = Expression.Invoke( mapping.SourceProperty.ValueGetterExpr, sourceInstance );
+            Expression valueExp = mapping.SourceProperty.ValueGetterExpr.Body;
             if( mapping.ValueConverterExp != null )
                 valueExp = Expression.Invoke( mapping.ValueConverterExp, valueExp );
             else
@@ -42,14 +41,17 @@ namespace TypeMapper.Mappers
                 }
             }
 
-            var setValueExp = Expression.Block
+            var value = Expression.Variable( targetPropertyType, "value" );
+
+            var setValueExp = (Expression)Expression.Block
             (
-                Expression.Invoke( mapping.TargetProperty.ValueSetterExpr, targetInstance, valueExp ),
-                Expression.Constant(null, returnType)
+                new[] { value },
+                Expression.Assign( value, valueExp.ReplaceParameter( sourceInstance ) ),
+                mapping.TargetProperty.ValueSetterExpr.Body.ReplaceParameter( targetInstance, "target" ).ReplaceParameter( value, "value" )
             );
 
-            var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), sourceType, targetType, returnType );
+            var delegateType = typeof( Action<,,> ).MakeGenericType(
+                typeof( ReferenceTracking ), sourceType, targetType );
 
             return Expression.Lambda( delegateType,
                 setValueExp, referenceTrack, sourceInstance, targetInstance );

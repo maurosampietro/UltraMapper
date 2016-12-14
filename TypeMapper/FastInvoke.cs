@@ -10,28 +10,9 @@ namespace TypeMapper
 {
     public static class FastInvoke
     {
-        public static Expression GetGetterExpression( this PropertyInfo propertyInfo )
-        {
-            var targetType = propertyInfo.DeclaringType;
-            var methodInfo = propertyInfo.GetGetMethod();
-
-            var targetInstance = Expression.Parameter( targetType, "target" );
-            return Expression.Call( targetInstance, methodInfo );
-        }
-
-        public static Expression GetSetterExpression( this PropertyInfo propertyInfo )
-        {
-            // (target, value) => target.set_Property( value )
-            var methodInfo = propertyInfo.GetSetMethod();
-
-            var targetInstance = Expression.Parameter( propertyInfo.DeclaringType, "target" );
-            var value = Expression.Parameter( propertyInfo.PropertyType, "value" );
-
-            return Expression.Call( targetInstance, methodInfo, value );
-        }
-
         public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
         {
+            // (target, value) => target.get_Property()
             var targetType = propertyInfo.DeclaringType;
             var methodInfo = propertyInfo.GetGetMethod();
 

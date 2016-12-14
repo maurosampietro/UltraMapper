@@ -48,6 +48,7 @@
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="FastInvoke.cs" />
     <Compile Include="Configuration\TypeConfiguration.cs" />
+    <Compile Include="Internals\ExpressionParameterReplacer.cs" />
     <Compile Include="Internals\ObjectPair.cs" />
     <Compile Include="Internals\PropertyBase.cs" />
     <Compile Include="Internals\PropertyMapping.cs" />

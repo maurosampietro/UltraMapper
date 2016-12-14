@@ -14,8 +14,8 @@ namespace TypeMapper.Internals
         //This info is evaluated at configuration level only once for performance reasons
         public Type NullableUnderlyingType { get; set; }
 
-        public Expression ValueSetterExpr { get; set; }
-        public Expression ValueGetterExpr { get; set; }
+        public LambdaExpression ValueSetterExpr { get; set; }
+        public LambdaExpression ValueGetterExpr { get; set; }
 
         public ICollectionMappingStrategy CollectionStrategy { get; set; }
 

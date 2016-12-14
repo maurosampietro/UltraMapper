@@ -25,6 +25,12 @@ namespace TypeMapper.Mappers
             referenceTracker.Add( sourceInstance, targetType, targetInstance );
         };
 
+        private static Expression<Func<ReferenceTracking, object, Type, object>> lookup =
+            ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
+
+        private static Expression<Action<ReferenceTracking, object, Type, object>> add =
+            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
+
         public bool CanHandle( PropertyMapping mapping )
         {
             bool valueTypes = !mapping.SourceProperty.PropertyInfo.PropertyType.IsValueType &&
@@ -36,11 +42,10 @@ namespace TypeMapper.Mappers
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
         {
-            //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
+            //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
 
-            var returnType = typeof( List<ObjectPair> );
-            var returnElementConstructor = typeof( ObjectPair ).GetConstructors().First();
-            var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+            var returnType = typeof( ObjectPair );
+            var returnTypeConstructor = returnType.GetConstructors().First();
 
             var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
             var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
@@ -52,35 +57,25 @@ namespace TypeMapper.Mappers
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
-            Expression<Func<ReferenceTracking, object, Type, object>> lookup =
-                ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
-
-            Expression<Action<ReferenceTracking, object, Type, object>> add =
-                ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
-
             var result = Expression.Variable( returnType, "result" );
             var newInstance = Expression.Variable( targetPropertyType, "newInstance" );
             var sourceArg = Expression.Variable( sourcePropertyType, "sourceArg" );
 
-            var nullExp = Expression.Constant( null, sourcePropertyType );
+            var nullSourceValue = Expression.Default( sourcePropertyType );
+            var nullTargetValue = Expression.Default( targetPropertyType );
 
-            var body = Expression.Block
+            var body = (Expression)Expression.Block
             (
                 new ParameterExpression[] { sourceArg, newInstance, result },
 
-                //initialize object-pairs return collection
-                Expression.Assign( result, Expression.New( returnType ) ),
-
                 //read source value
-                Expression.Assign( sourceArg, Expression.Invoke(
-                    mapping.SourceProperty.ValueGetterExpr, sourceInstance ) ),
+                Expression.Assign( sourceArg, mapping.SourceProperty.ValueGetterExpr.Body.ReplaceParameter( sourceInstance ) ),
 
                 Expression.IfThenElse
                 (
-                     Expression.Equal( sourceArg, nullExp ),
+                     Expression.Equal( sourceArg, nullSourceValue ),
 
-                     Expression.Invoke( mapping.TargetProperty.ValueSetterExpr,
-                        targetInstance, Expression.Constant( null, targetPropertyType ) ),
+                     Expression.Assign( newInstance, nullTargetValue ),
 
                      Expression.Block
                      (
@@ -90,23 +85,25 @@ namespace TypeMapper.Mappers
 
                         Expression.IfThen
                         (
-                            Expression.Equal( newInstance, Expression.Constant( null, targetPropertyType ) ),
+                            Expression.Equal( newInstance, nullTargetValue ),
                             Expression.Block
                             (
                                 Expression.Assign( newInstance, Expression.New( targetPropertyType ) ),
                                 Expression.Invoke( add, referenceTrack, sourceArg, Expression.Constant( targetPropertyType ), newInstance ),
 
                                 //add item to return collection
-                                Expression.Call( result, addMethod, Expression.New( returnElementConstructor, sourceArg, newInstance ) )
+                                Expression.Assign( result, Expression.New( returnTypeConstructor, sourceArg, newInstance ) )
                             )
-                        ),
-
-                        Expression.Invoke( mapping.TargetProperty.ValueSetterExpr, targetInstance, newInstance )
+                        )
                     )
                 ),
 
+                mapping.TargetProperty.ValueSetterExpr.Body
+                    .ReplaceParameter( targetInstance, "target" )
+                    .ReplaceParameter( newInstance, "value" ),
+
                 result
-           );
+            );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
                 typeof( ReferenceTracking ), sourceType, targetType, returnType );

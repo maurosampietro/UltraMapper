@@ -13,7 +13,7 @@ namespace TypeMapper.Internals
         //This info is evaluated at configuration level only once for performance reasons
         public bool IsEnumerable { get; set; }
 
-        public Expression ValueGetterExpr { get; set; }
+        public LambdaExpression ValueGetterExpr { get; set; }
 
         public SourceProperty( PropertyInfo propertyInfo )
             : base( propertyInfo ) { }
