@@ -83,12 +83,12 @@ namespace TypeMapper
         {
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
-
+            
             var mappings = _mappingConfiguration[ sourceType, targetType ];
 
             var references = mappings.MapperFunc( referenceTracking, source, target );
-            foreach( var refe in references )
-                this.Map( refe.Source, refe.Target, referenceTracking );
+            foreach( var reference in references )
+                this.Map( reference.Source, reference.Target, referenceTracking );
         }
     }
 }

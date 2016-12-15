@@ -69,7 +69,7 @@ namespace TypeMapper.Mappers
                 new ParameterExpression[] { sourceArg, newInstance, result },
 
                 //read source value
-                Expression.Assign( sourceArg, mapping.SourceProperty.ValueGetterExpr.Body.ReplaceParameter( sourceInstance ) ),
+                Expression.Assign( sourceArg, mapping.SourceProperty.ValueGetter.Body.ReplaceParameter( sourceInstance ) ),
 
                 Expression.IfThenElse
                 (
@@ -87,8 +87,10 @@ namespace TypeMapper.Mappers
                         (
                             Expression.Equal( newInstance, nullTargetValue ),
                             Expression.Block
-                            (
+                            (                                
                                 Expression.Assign( newInstance, Expression.New( targetPropertyType ) ),
+                                
+                                //cache reference
                                 Expression.Invoke( add, referenceTrack, sourceArg, Expression.Constant( targetPropertyType ), newInstance ),
 
                                 //add item to return collection
@@ -98,7 +100,7 @@ namespace TypeMapper.Mappers
                     )
                 ),
 
-                mapping.TargetProperty.ValueSetterExpr.Body
+                mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( targetInstance, "target" )
                     .ReplaceParameter( newInstance, "value" ),
 

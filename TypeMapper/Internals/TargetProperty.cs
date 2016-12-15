@@ -14,23 +14,15 @@ namespace TypeMapper.Internals
         //This info is evaluated at configuration level only once for performance reasons
         public Type NullableUnderlyingType { get; set; }
 
-        public LambdaExpression ValueSetterExpr { get; set; }
-        public LambdaExpression ValueGetterExpr { get; set; }
+        public LambdaExpression ValueSetter { get; set; }
+        public LambdaExpression ValueGetter { get; set; }
 
         public ICollectionMappingStrategy CollectionStrategy { get; set; }
-
-        //private Func<TTarget> _instanceCreator;
 
         public TargetProperty( PropertyInfo propertyInfo )
             : base( propertyInfo )
         {
-            //_instanceCreator = ConstructorFactory.GetOrCreateConstructor<TTarget>();
             this.CollectionStrategy = new NewCollection();
         }
-
-        //public TTarget GetDefaultValue()
-        //{
-        //    return _instanceCreator();
-        //}
     }
 }

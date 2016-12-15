@@ -28,6 +28,7 @@ namespace TypeMapper.Configuration
                     return _expression;
 
                 var returnType = typeof( List<ObjectPair> );
+                var returnElementType = typeof( ObjectPair );
 
                 var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
                 var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
@@ -40,33 +41,16 @@ namespace TypeMapper.Configuration
                 var newRefObjects = Expression.Variable( returnType, "result" );
 
                 var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+                var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
                 var addCalls = _propertyMappings.Values.Select( mapping =>
                 {
                     if( mapping.Expression.ReturnType == typeof( IEnumerable<ObjectPair> ) )
                     {
-                        var objPairs = Expression.Variable( typeof( IEnumerable<ObjectPair> ), "objPairs" );
-                        var objPair = Expression.Variable( typeof( ObjectPair ), "objPair" );
-                        var loopVar = Expression.Parameter( typeof( ObjectPair ), "loopVar" );
-
-                        var loopContent = Expression.IfThen( Expression.NotEqual( loopVar, Expression.Constant( null ) ),
-                            Expression.Call( newRefObjects, addMethod, loopVar ) );
-
-                        return (Expression)Expression.Block
-                        (
-                            new[] { objPairs },
-
-                            Expression.Assign( objPairs, mapping.Expression ),
-
-                            Expression.IfThen
-                            (
-                                Expression.NotEqual( objPairs, Expression.Constant( null ) ),
-                                ExpressionLoops.ForEach( objPairs, loopVar, loopContent )
-                            )
-                        );
+                        return Expression.Call( newRefObjects, addRangeMethod, mapping.Expression.Body );
                     }
-                    else if( mapping.Expression.ReturnType == typeof( ObjectPair ) )
+                    else if( mapping.Expression.ReturnType == returnElementType )
                     {
-                        var objPair = Expression.Variable( typeof( ObjectPair ), "objPair" );
+                        var objPair = Expression.Variable( returnElementType, "objPair" );
 
                         return (Expression)Expression.Block
                         (
@@ -190,7 +174,7 @@ namespace TypeMapper.Configuration
                 {
                     IsBuiltInType = sourcePropertyInfo.PropertyType.IsBuiltInType( true ),
                     IsEnumerable = sourcePropertyInfo.PropertyType.IsEnumerable(),
-                    ValueGetterExpr = sourcePropertyInfo.GetGetterLambdaExpression()
+                    ValueGetter = sourcePropertyInfo.GetGetterLambdaExpression()
                 };
 
                 propertyMapping = new PropertyMapping( sourceProperty );
@@ -201,8 +185,8 @@ namespace TypeMapper.Configuration
             {
                 IsBuiltInType = targetPropertyInfo.PropertyType.IsBuiltInType( true ),
                 NullableUnderlyingType = Nullable.GetUnderlyingType( targetPropertyInfo.PropertyType ),
-                ValueSetterExpr = targetPropertyInfo.GetSetterLambdaExpression(),
-                ValueGetterExpr = targetPropertyInfo.GetGetterLambdaExpression()
+                ValueSetter = targetPropertyInfo.GetSetterLambdaExpression(),
+                ValueGetter = targetPropertyInfo.GetGetterLambdaExpression()
             };
 
             propertyMapping.Mapper = _objectMappers.FirstOrDefault(

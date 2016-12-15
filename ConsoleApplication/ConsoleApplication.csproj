@@ -35,6 +35,10 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoMapper, Version=5.2.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoMapper.5.2.0\lib\net45\AutoMapper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -52,15 +56,12 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\Desktop\AutoMapper-master\src\AutoMapper.Net4\AutoMapper.Net4.csproj">
-      <Project>{8c955148-fa96-4f0d-880d-abb6770f54e9}</Project>
-      <Name>AutoMapper.Net4</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TypeMapper\TypeMapper.csproj">
       <Project>{34e9592b-27f8-45bc-be54-f90bd125b4e2}</Project>
       <Name>TypeMapper</Name>

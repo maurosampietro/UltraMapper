@@ -53,7 +53,7 @@ namespace TypeMapper.Tests
             public short Int16 { get; set; }
             public ushort UInt16 { get; set; }
             public string String { get; set; }
-            public int? NullableInt32 { get; set; }
+            public int NotNullableInt32 { get; set; }
         }
 
         [TestMethod]
@@ -73,7 +73,7 @@ namespace TypeMapper.Tests
                 .MapProperty( a => a.Single, y => y.Double )
 
                 .MapProperty( a => a.NullableInt32, d => d.Char )
-                .MapProperty( a => a.Char, d => d.NullableInt32 )
+                .MapProperty( a => a.Char, d => d.NotNullableInt32 )
                 .MapProperty( a => a.Char, d => d.Int32 );
 
             var typeMapper = new TypeMapper( config );

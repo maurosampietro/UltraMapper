@@ -29,7 +29,7 @@ namespace TypeMapper.Mappers
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
-            Expression valueExp = mapping.SourceProperty.ValueGetterExpr.Body;
+            Expression valueExp = mapping.SourceProperty.ValueGetter.Body;
             if( mapping.ValueConverterExp != null )
                 valueExp = Expression.Invoke( mapping.ValueConverterExp, valueExp );
             else
@@ -46,8 +46,11 @@ namespace TypeMapper.Mappers
             var setValueExp = (Expression)Expression.Block
             (
                 new[] { value },
-                Expression.Assign( value, valueExp.ReplaceParameter( sourceInstance ) ),
-                mapping.TargetProperty.ValueSetterExpr.Body.ReplaceParameter( targetInstance, "target" ).ReplaceParameter( value, "value" )
+                
+                Expression.Assign( value, valueExp.ReplaceParameter( sourceInstance ) ),              
+                mapping.TargetProperty.ValueSetter.Body
+                    .ReplaceParameter( targetInstance, "target" )
+                    .ReplaceParameter( value, "value" )
             );
 
             var delegateType = typeof( Action<,,> ).MakeGenericType(
