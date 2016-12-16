@@ -12,7 +12,10 @@ namespace TypeMapper.Mappers
     {
         public bool CanHandle( PropertyMapping mapping )
         {
-            return mapping.TargetProperty.IsBuiltInType;
+            return mapping.TargetProperty.IsBuiltInType ||
+
+                (mapping.TargetProperty.IsNullable &&
+                mapping.TargetProperty.NullableUnderlyingType.IsBuiltInType( true ));
         }
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
@@ -29,25 +32,44 @@ namespace TypeMapper.Mappers
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
-            Expression valueExp = mapping.SourceProperty.ValueGetter.Body;
-            if( mapping.ValueConverterExp != null )
-                valueExp = Expression.Invoke( mapping.ValueConverterExp, valueExp );
+            var value = Expression.Variable( targetPropertyType, "value" );
+            Expression getValueExp = mapping.SourceProperty.ValueGetter.Body;
+            Expression valueExp = null;
+
+            if( sourcePropertyType == targetPropertyType )
+                valueExp = Expression.Assign( value, getValueExp );
             else
             {
-                if( sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
-                    sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ) )
+                if( mapping.ValueConverterExp != null )
+                    valueExp = Expression.Assign( value, Expression.Invoke( mapping.ValueConverterExp, getValueExp ) );
+                else
                 {
-                    valueExp = Expression.Convert( valueExp, targetPropertyType );
+                    if( sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
+                        sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ) )
+                    {
+                        if( !mapping.SourceProperty.IsNullable && !mapping.TargetProperty.IsNullable )
+                            valueExp = Expression.Convert( getValueExp, targetPropertyType );
+                        else
+                        {
+                            valueExp = Expression.Block
+                            (
+                                Expression.IfThenElse
+                                (
+                                    Expression.Equal( getValueExp, Expression.Constant( null, sourcePropertyType ) ),
+                                    Expression.Assign( value, Expression.Default( targetPropertyType ) ),
+                                    Expression.Assign( value, Expression.MakeMemberAccess( getValueExp, sourcePropertyType.GetProperty( "Value" ) ) )
+                                )
+                            );
+                        }
+                    }
                 }
             }
-
-            var value = Expression.Variable( targetPropertyType, "value" );
 
             var setValueExp = (Expression)Expression.Block
             (
                 new[] { value },
-                
-                Expression.Assign( value, valueExp.ReplaceParameter( sourceInstance ) ),              
+
+                valueExp.ReplaceParameter( sourceInstance ),
                 mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( targetInstance, "target" )
                     .ReplaceParameter( value, "value" )
@@ -60,7 +82,6 @@ namespace TypeMapper.Mappers
                 setValueExp, referenceTrack, sourceInstance, targetInstance );
         }
     }
-
 
     //    public class BuiltInTypeMapper : IObjectMapper
     //    {

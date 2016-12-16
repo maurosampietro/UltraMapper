@@ -24,8 +24,8 @@ namespace TypeMapper.Configuration
         {
             get
             {
-                if( _expression != null )
-                    return _expression;
+                if( _expression != null ) return _expression;
+                if( !_propertyMappings.Any() ) return null;
 
                 var returnType = typeof( List<ObjectPair> );
                 var returnElementType = typeof( ObjectPair );
@@ -95,15 +95,15 @@ namespace TypeMapper.Configuration
         {
             get
             {
-                if( _mapperFunc != null )
-                    return _mapperFunc;
-
-                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
-                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
+                if( _mapperFunc != null ) return _mapperFunc;
+                if( !_propertyMappings.Any() ) return null;
 
                 var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
                 var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
                 var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
+
+                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
+                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
 
                 var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
                 var targetInstance = Expression.Convert( targetLambdaArg, targetType );
@@ -128,7 +128,7 @@ namespace TypeMapper.Configuration
         }
 
         public PropertyConfiguration( Type source, Type target, IEnumerable<IObjectMapperExpression> objectMappers )
-                                            : this( source, target, new DefaultMappingConvention(), objectMappers ) { }
+            : this( source, target, new DefaultMappingConvention(), objectMappers ) { }
 
         public PropertyConfiguration( Type source, Type target,
             IMappingConvention mappingConvention, IEnumerable<IObjectMapperExpression> objectMappers )
@@ -170,25 +170,13 @@ namespace TypeMapper.Configuration
             PropertyMapping propertyMapping;
             if( !_propertyMappings.TryGetValue( typePairKey, out propertyMapping ) )
             {
-                var sourceProperty = new SourceProperty( sourcePropertyInfo )
-                {
-                    IsBuiltInType = sourcePropertyInfo.PropertyType.IsBuiltInType( true ),
-                    IsEnumerable = sourcePropertyInfo.PropertyType.IsEnumerable(),
-                    ValueGetter = sourcePropertyInfo.GetGetterLambdaExpression()
-                };
+                var sourceProperty = new SourceProperty( sourcePropertyInfo );
 
                 propertyMapping = new PropertyMapping( sourceProperty );
                 _propertyMappings.Add( typePairKey, propertyMapping );
             }
 
-            propertyMapping.TargetProperty = new TargetProperty( targetPropertyInfo )
-            {
-                IsBuiltInType = targetPropertyInfo.PropertyType.IsBuiltInType( true ),
-                NullableUnderlyingType = Nullable.GetUnderlyingType( targetPropertyInfo.PropertyType ),
-                ValueSetter = targetPropertyInfo.GetSetterLambdaExpression(),
-                ValueGetter = targetPropertyInfo.GetGetterLambdaExpression()
-            };
-
+            propertyMapping.TargetProperty = new TargetProperty( targetPropertyInfo );
             propertyMapping.Mapper = _objectMappers.FirstOrDefault(
                 mapper => mapper.CanHandle( propertyMapping ) );
 

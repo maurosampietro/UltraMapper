@@ -10,12 +10,12 @@ namespace TypeMapper.Internals
 {
     public class SourceProperty : PropertyBase
     {
-        //This info is evaluated at configuration level only once for performance reasons
-        public bool IsEnumerable { get; set; }
-
         public LambdaExpression ValueGetter { get; set; }
 
         public SourceProperty( PropertyInfo propertyInfo )
-            : base( propertyInfo ) { }
+            : base( propertyInfo )
+        {
+            this.ValueGetter = propertyInfo.GetGetterLambdaExpression();
+        }
     }
 }

@@ -19,61 +19,85 @@ namespace ConsoleApplication
     {
         public class BaseTypes
         {
-            //public long NotImplicitlyConvertible { get; set; } = 31;
-            //public int ImplicitlyConvertible { get; set; } = 33;
+            public long NotImplicitlyConvertible { get; set; } = 31;
+            public int ImplicitlyConvertible { get; set; } = 33;
 
-            //public bool Boolean { get; set; } = true;
-            //public byte Byte { get; set; } = 0x1;
-            //public sbyte SByte { get; set; } = 0x2;
-            //public char Char { get; set; } = 'a';
-            //public decimal Decimal { get; set; } = 3;
-            //public double Double { get; set; } = 4.0;
-            //public float Single { get; set; } = 5.0f;
-            //public int Int32 { get; set; } = 6;
-            //public uint UInt32 { get; set; } = 7;
-            //public long Int64 { get; set; } = 8;
-            //public ulong UInt64 { get; set; } = 9;
-            //public object Object { get; set; } = null;
-            //public short Int16 { get; set; } = 10;
-            //public ushort UInt16 { get; set; } = 11;
-            //public string String { get; set; } = "12";
+            public bool Boolean { get; set; } = true;
+            public byte Byte { get; set; } = 0x1;
+            public sbyte SByte { get; set; } = 0x2;
+            public char Char { get; set; } = 'a';
+            public decimal Decimal { get; set; } = 3;
+            public double Double { get; set; } = 4.0;
+            public float Single { get; set; } = 5.0f;
+            public int Int32 { get; set; } = 6;
+            public uint UInt32 { get; set; } = 7;
+            public long Int64 { get; set; } = 8;
+            public ulong UInt64 { get; set; } = 9;
+            public object Object { get; set; } = null;
+            public short Int16 { get; set; } = 10;
+            public ushort UInt16 { get; set; } = 11;
+            public string String { get; set; } = "12";
 
-            //public int? NullableInt32 { get; set; } = 12;
-            //public int? NullNullableInt32 { get; set; } = null;
+            public int? NullableInt32 { get; set; } = 12;
+            public int? NullNullableInt32 { get; set; } = null;
 
-            //public InnerType InnerType { get; set; }
+            public InnerType InnerType { get; set; }
             public BaseTypes SelfReference { get; set; }
-            //public BaseTypes Reference { get; set; }
+            public BaseTypes Reference { get; set; }
 
-            //public List<int> ListOfInts { get; set; }
-            ////public List<InnerType> ListOfInnerType { get; set; }
+            public List<int> ListOfInts { get; set; }
+            public List<InnerType> ListOfInnerType { get; set; }
 
-            //public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
-            //public Dictionary<InnerType, InnerType> Dictionary { get; set; }
+            public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            public Dictionary<InnerType, InnerType> Dictionary { get; set; }
+            public Dictionary<InnerType, InnerTypeDto> Dictionary2 { get; set; }
+            public Dictionary<string, InnerType> Dictionary3 { get; set; }
+            public Dictionary<InnerType, int> Dictionary4 { get; set; }
 
             public BaseTypes()
             {
-                this.SelfReference = this;
-                //this.InnerType = new InnerType() { A = "vara", B = "varb", C = this };
+                //this.SelfReference = this;
+                this.InnerType = new InnerType() { A = "vara", B = "varb" };
 
-                //this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
+                this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
 
-                //this.ListOfInnerType = new List<InnerType>() {
-                //    new InnerType() { A = "a", B="b", C = this },
-                //    new InnerType(){ A = "c", B="d", C = this },
-                //};
+                this.ListOfInnerType = new List<InnerType>() {
+                    new InnerType() { A = "a", B="b", },
+                    new InnerType(){ A = "c", B="d", },
+                };
 
-                //this.DictionaryBuiltInTypes = new Dictionary<string, int>()
-                //{
-                //    {"a",1}, {"b",2}, {"c",3}
-                //};
+                this.DictionaryBuiltInTypes = new Dictionary<string, int>()
+                {
+                    {"a",1}, {"b",2}, {"c",3}
+                };
 
-                //this.Dictionary = new Dictionary<InnerType, InnerType>()
-                //{
-                //    {new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
-                //    {new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
-                //    {new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
-                //};
+                this.Dictionary = new Dictionary<InnerType, InnerType>()
+                {
+                    {new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
+                    {new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
+                    {new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
+                };
+
+                this.Dictionary2 = new Dictionary<InnerType, InnerTypeDto>()
+                {
+                    {new InnerType() { A= "aa" }, new InnerTypeDto() { A= "ab" }},
+                    {new InnerType() { B= "ba" }, new InnerTypeDto() { B= "bb" }},
+                    {new InnerType() { A= "ca" }, new InnerTypeDto() { A= "cb" }},
+                };
+
+                this.Dictionary3 = new Dictionary<string, InnerType>()
+                {
+                    {"aa", new InnerType() { A= "ab" }},
+                    {"ba", new InnerType() { B= "bb" }},
+                    {"ca", new InnerType() { A= "cb" }},
+                };
+
+                this.Dictionary4 = new Dictionary<InnerType, int>()
+                {
+                    {new InnerType() { A= "aa" }, 1},
+                    {new InnerType() { B= "ba" }, 2},
+                    {new InnerType() { A= "ca" }, 3},
+                };
             }
         }
 
@@ -110,6 +134,9 @@ namespace ConsoleApplication
 
             public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
             public Dictionary<InnerTypeDto, InnerTypeDto> Dictionary { get; set; }
+            public Dictionary<InnerTypeDto, InnerType> Dictionary2 { get; set; }
+            public Dictionary<string, InnerTypeDto> Dictionary3 { get; set; }
+            public Dictionary<InnerTypeDto, int> Dictionary4 { get; set; }
         }
 
         public class InnerType
@@ -135,37 +162,6 @@ namespace ConsoleApplication
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-            //var p = typeof( BaseTypes ).GetProperty( "Int32" );
-            //var setter1 = FastInvoke.BuildUntypedSetter<BaseTypes, int>( p );
-            //var setter2 = FastInvoke.BuildUntypedSetter<BaseTypes>( p );
-            //var setter3 = FastInvoke.BuildUntypedCastSetter( p );
-
-            //Stopwatch sw1 = new Stopwatch();
-            //sw1.Start();
-            //for( int i = 0; i < 10000000; i++ )
-            //{
-            //    setter1( temp, i );
-            //}
-            //sw1.Stop();
-            //Console.WriteLine( sw1.ElapsedMilliseconds );
-
-            //Stopwatch sw2 = new Stopwatch();
-            //sw2.Start();
-            //for( int i = 0; i < 10000000; i++ )
-            //{
-            //    setter2( temp, i );
-            //}
-            //sw2.Stop();
-            //Console.WriteLine( sw2.ElapsedMilliseconds );
-
-            //Stopwatch sw3 = new Stopwatch();
-            //sw3.Start();
-            //for( int i = 0; i < 10000000; i++ )
-            //{
-            //    setter3( temp, i );
-            //}
-            //sw3.Stop();
-            //Console.WriteLine( sw3.ElapsedMilliseconds );
 
             int iterations = (int)Math.Pow( 10, 6 );
 
@@ -191,8 +187,7 @@ namespace ConsoleApplication
             }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
-
-
+            
             //var exp = mapper._mappingConfiguration[ typeof( BaseTypes ), typeof( BaseTypesDto ) ].First().Expression;
             //var func = (Func<ReferenceTracking, BaseTypes, BaseTypesDto, IEnumerable<ObjectPair>>)exp.Compile();
             //func( new ReferenceTracking(), temp, temp2 );
@@ -205,7 +200,7 @@ namespace ConsoleApplication
             AutoMapper.Mapper.Initialize( cfg =>
             {
                 cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
+                cfg.CreateMap<BaseTypes, BaseTypesDto>();
             } );
             sw5.Start();
             for( int i = 0; i < iterations; i++ )

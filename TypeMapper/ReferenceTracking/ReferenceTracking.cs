@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -62,7 +63,7 @@ namespace TypeMapper
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {
-            var key = sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+            var key = this.GetKey( sourceInstance, targetType );
 
             if( !_mappings.ContainsKey( key ) )
                 _mappings.Add( key, targetInstance );
@@ -75,7 +76,7 @@ namespace TypeMapper
 
         public bool TryGetValue( object sourceInstance, Type targetType, out object targetInstance )
         {
-            var key = sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+            var key = this.GetKey( sourceInstance, targetType );
             return _mappings.TryGetValue( key, out targetInstance );
         }
 
@@ -83,9 +84,14 @@ namespace TypeMapper
         {
             get
             {
-                var key = sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+                var key = this.GetKey( sourceInstance, targetType );
                 return _mappings[ key ];
             }
+        }
+
+        private int GetKey( object sourceInstance, Type targetType )
+        {
+            return sourceInstance.GetHashCode() ^ targetType.GetHashCode();
         }
     }
 

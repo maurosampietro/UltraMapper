@@ -71,7 +71,6 @@ namespace TypeMapper.Mappers
             var loopVar = Expression.Parameter( sourceElementType, "loopVar" );
             var newRefObjects = Expression.Variable( returnType, "result" );
 
-
             var newInstanceExp = Expression.New( targetCollectionType );
             if( targetCollectionType.IsCollectionOfType( typeof( List<> ) ) )
             {

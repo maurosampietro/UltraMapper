@@ -12,11 +12,19 @@ namespace TypeMapper.Internals
         public readonly PropertyInfo PropertyInfo;
         private readonly Lazy<string> _toString;
 
+        //These info are evaluated at configuration level only once for performance reasons
+        public bool IsEnumerable { get; set; }
         public bool IsBuiltInType { get; set; }
+        public bool IsNullable { get { return this.NullableUnderlyingType != null; } }
+        public Type NullableUnderlyingType { get; set; }
 
         public PropertyBase( PropertyInfo propertyInfo )
         {
             this.PropertyInfo = propertyInfo;
+
+            this.IsBuiltInType = propertyInfo.PropertyType.IsBuiltInType( true );
+            this.NullableUnderlyingType = Nullable.GetUnderlyingType( propertyInfo.PropertyType );
+            this.IsEnumerable = propertyInfo.PropertyType.IsEnumerable();
 
             _toString = new Lazy<string>( () =>
             {

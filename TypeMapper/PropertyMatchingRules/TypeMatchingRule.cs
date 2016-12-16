@@ -14,14 +14,30 @@ namespace TypeMapper.MappingConventions
     public class TypeMatchingRule : PropertyMatchingRuleBase
     {
         public bool AllowImplicitConversions { get; set; } = true;
+        public bool AllowExplicitConversions { get; set; } = true;
+        public bool AllowNullableUnwrappings { get; set; } = true;
 
         public override bool IsCompliant( PropertyInfo source, PropertyInfo target )
         {
             var sourceType = source.PropertyType;
             var targetType = target.PropertyType;
 
-            return source.PropertyType == target.PropertyType || (this.AllowImplicitConversions 
-                && sourceType.IsImplicitlyConvertibleTo( targetType ));
+            return this.CanHandle( sourceType, targetType );
+            //if( !isCompliant && this.AllowNullableUnwrappings )
+            //{
+            //    if( sourceType.IsNullable() && !targetType.IsNullable() )
+            //    {
+            //        var underlyingSourceType = Nullable.GetUnderlyingType( sourceType );
+            //        isCompliant = this.CanHandle( underlyingSourceType, targetType );
+            //    }               
+            //}
+        }
+
+        private bool CanHandle( Type source, Type target )
+        {
+            return source == target || 
+                (this.AllowExplicitConversions || source.IsImplicitlyConvertibleTo( target )) ||
+                (this.AllowExplicitConversions || source.IsExplicitlyConvertibleTo( target ));
         }
     }
 }

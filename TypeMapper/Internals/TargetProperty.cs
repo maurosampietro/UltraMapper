@@ -11,9 +11,6 @@ namespace TypeMapper.Internals
 {
     public class TargetProperty : PropertyBase
     {
-        //This info is evaluated at configuration level only once for performance reasons
-        public Type NullableUnderlyingType { get; set; }
-
         public LambdaExpression ValueSetter { get; set; }
         public LambdaExpression ValueGetter { get; set; }
 
@@ -23,6 +20,9 @@ namespace TypeMapper.Internals
             : base( propertyInfo )
         {
             this.CollectionStrategy = new NewCollection();
+
+            this.ValueSetter = propertyInfo.GetSetterLambdaExpression();
+            this.ValueGetter = propertyInfo.GetGetterLambdaExpression();
         }
     }
 }

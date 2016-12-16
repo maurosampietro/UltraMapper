@@ -54,6 +54,11 @@ namespace TypeMapper
             return nullableType == null ? type : nullableType;
         }
 
+        public static bool IsNullable( this Type type )
+        {
+            return Nullable.GetUnderlyingType( type ) != null;
+        }
+
         public static bool IsEnumerable( this Type type )
         {
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
