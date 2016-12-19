@@ -14,7 +14,7 @@ namespace TypeMapper.Internals
         public SourceProperty SourceProperty { get; private set; }
         public TargetProperty TargetProperty { get; set; }
         public IObjectMapperExpression Mapper { get; set; }
-        public LambdaExpression ValueConverterExp { get; set; }
+        public LambdaExpression CustomConverter { get; set; }
 
         private LambdaExpression _expression;
         public LambdaExpression Expression
@@ -34,7 +34,7 @@ namespace TypeMapper.Internals
         {
             this.SourceProperty = sourceProperty;
             this.TargetProperty = targetProperty;
-            this.ValueConverterExp = converterExp;
+            this.CustomConverter = converterExp;
         }
 
         public override string ToString()

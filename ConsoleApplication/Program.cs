@@ -168,6 +168,7 @@ namespace ConsoleApplication
             var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
                 cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                    .Add<NullableMapper>()
                     .Add<ReferenceMapper>()
                     .Add<DictionaryMapper>()
                     .Add<CollectionMapper>();
@@ -177,6 +178,9 @@ namespace ConsoleApplication
                     .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
                     .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+
+                cfg.MapTypes<BaseTypes, BaseTypesDto>().MapProperty( b => b.InnerType, b => b.Int16 );
+
             } );
 
             Stopwatch sw4 = new Stopwatch();
@@ -187,7 +191,7 @@ namespace ConsoleApplication
             }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
-            
+
             //var exp = mapper._mappingConfiguration[ typeof( BaseTypes ), typeof( BaseTypesDto ) ].First().Expression;
             //var func = (Func<ReferenceTracking, BaseTypes, BaseTypesDto, IEnumerable<ObjectPair>>)exp.Compile();
             //func( new ReferenceTracking(), temp, temp2 );

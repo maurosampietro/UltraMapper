@@ -13,7 +13,6 @@ namespace TypeMapper.Internals
 
         public ObjectPair( object source, object target )
         {
-            //Console.WriteLine( $"new ref to recurse on: {source.GetType().Name}, {target.GetType().Name}" );
             this.Source = source;
             this.Target = target;
         }

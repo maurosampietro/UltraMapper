@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Configuration;
+using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Tests
 {
@@ -133,7 +134,11 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void NullableToBuiltInTypes()
         {
-            var soruce = new NullablePrimitiveTypes();
+            var source = new NullablePrimitiveTypes();
+
+            Assert.IsTrue( source.GetType().GetProperties()
+                .All( p => p.GetValue( source ) == null ) );
+
             var target = new BuiltInTypesDto()
             {
                 Boolean = true,
@@ -154,7 +159,26 @@ namespace TypeMapper.Tests
             };
 
             var typeMapper = new TypeMapper();
-            typeMapper.Map( soruce, target );
+            typeMapper.Map( source, target );
+        }
+
+        [TestMethod]
+        public void NullableToIncompatibleBuiltInTypes()
+        {
+            var source = new NullablePrimitiveTypes();
+            var target = new BuiltInTypesDto();
+
+            var typeMapper = new TypeMapper<DefaultMappingConvention>
+            (
+                cfg =>
+                {
+                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypesDto>()
+                        //.IgnoreConventionMapping()
+                        .MapProperty( s => s.Int32, s => s.Char );
+                }
+            );
+
+            typeMapper.Map( source, target );
         }
     }
 }

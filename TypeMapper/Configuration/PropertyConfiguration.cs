@@ -60,6 +60,7 @@ namespace TypeMapper.Configuration
 
                             Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
                                 Expression.Call( newRefObjects, addMethod, objPair ) )
+
                         );
                     }
                     else if( mapping.Expression.ReturnType == typeof( void ) )
@@ -78,7 +79,11 @@ namespace TypeMapper.Configuration
                     new[] { newRefObjects },
 
                     Expression.Assign( newRefObjects, Expression.New( returnType ) ),
-                    bodyExp.ReplaceParameter( referenceTrack ).ReplaceParameter( targetInstance, "targetInstance" ).ReplaceParameter( sourceInstance, "sourceInstance" ),
+
+                    bodyExp.ReplaceParameter( referenceTrack )
+                        .ReplaceParameter( targetInstance, "targetInstance" )
+                        .ReplaceParameter( sourceInstance, "sourceInstance" ),
+
                     newRefObjects
                 );
 
@@ -224,6 +229,39 @@ namespace TypeMapper.Configuration
         public PropertyConfiguration( IMappingConvention mappingConvention, IEnumerable<IObjectMapperExpression> objectMappers )
             : base( typeof( TSource ), typeof( TTarget ), mappingConvention, objectMappers ) { }
 
+
+        #region Type mapping overloads
+
+        /*DO NOT try to merge the following 2 methods in one using optional parameters:
+         *you lose the hint to provide a converter if a conversion is not available if you do*/
+
+        /// <summary>
+        /// Maps two properties of the same or compatible type
+        /// </summary>
+        /// <typeparam name="TSourceProperty"></typeparam>
+        /// <param name="sourcePropertySelector"></param>
+        /// <param name="targetPropertySelector"></param>
+        /// <returns></returns>
+        //public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty>(
+        //    Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
+        //    Expression<Func<TTarget, TSourceProperty>> targetPropertySelector )
+        //{
+        //    var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
+        //    var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
+
+        //    var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
+        //    return this;
+        //}
+
+        /// <summary>
+        /// Maps two properties providing a converter
+        /// </summary>
+        /// <typeparam name="TSourceProperty"></typeparam>
+        /// <typeparam name="TTargetProperty"></typeparam>
+        /// <param name="sourcePropertySelector"></param>
+        /// <param name="targetPropertySelector"></param>
+        /// <param name="converter"></param>
+        /// <returns></returns>
         public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
             Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
             Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
@@ -233,11 +271,13 @@ namespace TypeMapper.Configuration
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
             var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
-            propertyMapping.ValueConverterExp = converter;
+            propertyMapping.CustomConverter = converter;
 
             return this;
         }
+        #endregion
 
+        #region Collection overloads
         public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
            Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
            Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
@@ -250,10 +290,11 @@ namespace TypeMapper.Configuration
 
             var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
 
-            propertyMapping.ValueConverterExp = converter;
+            propertyMapping.CustomConverter = converter;
             propertyMapping.TargetProperty.CollectionStrategy = collectionStrategy;
 
             return this;
         }
+        #endregion
     }
 }

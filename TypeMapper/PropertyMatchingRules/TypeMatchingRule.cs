@@ -22,22 +22,32 @@ namespace TypeMapper.MappingConventions
             var sourceType = source.PropertyType;
             var targetType = target.PropertyType;
 
-            return this.CanHandle( sourceType, targetType );
+            var isCompliant = this.CanHandle( sourceType, targetType );
             //if( !isCompliant && this.AllowNullableUnwrappings )
             //{
+            //    isCompliant = targetType.IsAssignableFrom( sourceType );
+
             //    if( sourceType.IsNullable() && !targetType.IsNullable() )
             //    {
             //        var underlyingSourceType = Nullable.GetUnderlyingType( sourceType );
             //        isCompliant = this.CanHandle( underlyingSourceType, targetType );
-            //    }               
+            //    }
             //}
+
+            return isCompliant;
         }
 
         private bool CanHandle( Type source, Type target )
         {
-            return source == target || 
-                (this.AllowExplicitConversions || source.IsImplicitlyConvertibleTo( target )) ||
-                (this.AllowExplicitConversions || source.IsExplicitlyConvertibleTo( target ));
+            //PrimitiveType -> Nullable<PrimitiveType> always possible. No flag to disable that.
+            Lazy<bool> primitiveToNullablePrimitive = new Lazy<bool>( () =>
+            {
+                return !source.IsNullable() && target.IsNullable() && target.IsAssignableFrom( source );
+            } );
+
+            return source == target || primitiveToNullablePrimitive.Value ||
+                (this.AllowExplicitConversions && source.IsImplicitlyConvertibleTo( target )) ||
+                (this.AllowExplicitConversions && source.IsExplicitlyConvertibleTo( target ));
         }
     }
 }

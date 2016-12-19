@@ -12,10 +12,8 @@ namespace TypeMapper.Mappers
     {
         public bool CanHandle( PropertyMapping mapping )
         {
-            return mapping.TargetProperty.IsBuiltInType ||
-
-                (mapping.TargetProperty.IsNullable &&
-                mapping.TargetProperty.NullableUnderlyingType.IsBuiltInType( true ));
+            return mapping.SourceProperty.IsBuiltInType &&
+                mapping.TargetProperty.IsBuiltInType;
         }
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
@@ -33,43 +31,38 @@ namespace TypeMapper.Mappers
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
             var value = Expression.Variable( targetPropertyType, "value" );
-            Expression getValueExp = mapping.SourceProperty.ValueGetter.Body;
-            Expression valueExp = null;
 
-            if( sourcePropertyType == targetPropertyType )
-                valueExp = Expression.Assign( value, getValueExp );
-            else
+            Func<Expression> getValueAssignmentExp = () =>
             {
-                if( mapping.ValueConverterExp != null )
-                    valueExp = Expression.Assign( value, Expression.Invoke( mapping.ValueConverterExp, getValueExp ) );
-                else
+                var readValueExp = mapping.SourceProperty.ValueGetter.Body;
+
+                if( mapping.CustomConverter != null )
+                    return Expression.Invoke( mapping.CustomConverter, readValueExp );
+
+                if( sourcePropertyType == targetPropertyType )
+                    return Expression.Assign( value, readValueExp );
+
+                if( sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
+                    sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ) )
                 {
-                    if( sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
-                        sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ) )
-                    {
-                        if( !mapping.SourceProperty.IsNullable && !mapping.TargetProperty.IsNullable )
-                            valueExp = Expression.Convert( getValueExp, targetPropertyType );
-                        else
-                        {
-                            valueExp = Expression.Block
-                            (
-                                Expression.IfThenElse
-                                (
-                                    Expression.Equal( getValueExp, Expression.Constant( null, sourcePropertyType ) ),
-                                    Expression.Assign( value, Expression.Default( targetPropertyType ) ),
-                                    Expression.Assign( value, Expression.MakeMemberAccess( getValueExp, sourcePropertyType.GetProperty( "Value" ) ) )
-                                )
-                            );
-                        }
-                    }
+                    return Expression.Assign( value, Expression.Convert(
+                        readValueExp, targetPropertyType ) );
                 }
-            }
+
+                var convertMethod = typeof( Convert ).GetMethod( $"To{targetPropertyType.Name}", new[] { sourcePropertyType } );
+                return Expression.Call( convertMethod, readValueExp );
+
+
+                throw new Exception( $"Cannot handle {mapping}" );
+            };
+
+            Expression valueAssignment = getValueAssignmentExp();
 
             var setValueExp = (Expression)Expression.Block
             (
                 new[] { value },
 
-                valueExp.ReplaceParameter( sourceInstance ),
+                valueAssignment.ReplaceParameter( sourceInstance ),
                 mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( targetInstance, "target" )
                     .ReplaceParameter( value, "value" )

@@ -58,6 +58,7 @@
     <Compile Include="Mappers\CollectionMapper.cs" />
     <Compile Include="Mappers\DictionaryMapper.cs" />
     <Compile Include="Mappers\IObjectMapper.cs" />
+    <Compile Include="Mappers\NullableMapper.cs" />
     <Compile Include="Mappers\ReferenceMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
