@@ -51,6 +51,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="InheritanceTests.cs" />
     <Compile Include="ReferenceTypeTests.cs" />
     <Compile Include="BuiltInTypeTests.cs" />
     <Compile Include="TypeMapperTests.cs" />

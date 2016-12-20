@@ -41,7 +41,13 @@ namespace TypeMapper
             if( memberExpression == null )
                 throw new ArgumentException( "Invalid expression. Please select a property from your model (eg. x => x.MyProperty)" );
 
-            return (PropertyInfo)memberExpression.Member;
+            //this is the PropertyInfo retrieved through the DeclaredType, hence
+            //DelcaredType and ReflectedType are equal.
+            var lambdaMember = (PropertyInfo)memberExpression.Member;
+
+            //Requery on the actual type so that if i'm calling a inherited property
+            //that shows up in the PropertyInfo (DeclaredType != ReflectedType)
+            return lambda.Parameters.First().Type.GetProperty( lambdaMember.Name );
         }
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )
@@ -133,7 +139,7 @@ namespace TypeMapper
 
     internal static class ExpressionLoops
     {
-        public static Expression ForEach( Expression collection, 
+        public static Expression ForEach( Expression collection,
             ParameterExpression loopVar, Expression loopContent )
         {
             var elementType = loopVar.Type;

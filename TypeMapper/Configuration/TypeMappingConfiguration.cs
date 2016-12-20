@@ -30,8 +30,8 @@ namespace TypeMapper.Configuration
                 var returnType = typeof( List<ObjectPair> );
                 var returnElementType = typeof( ObjectPair );
 
-                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
-                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
+                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.ReflectedType;
+                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.ReflectedType;
                 var trackerType = typeof( ReferenceTracking );
 
                 var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
@@ -107,8 +107,8 @@ namespace TypeMapper.Configuration
                 var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
                 var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
 
-                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.DeclaringType;
-                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.DeclaringType;
+                var sourceType = _propertyMappings.Values.First().SourceProperty.PropertyInfo.ReflectedType;
+                var targetType = _propertyMappings.Values.First().TargetProperty.PropertyInfo.ReflectedType;
 
                 var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
                 var targetInstance = Expression.Convert( targetLambdaArg, targetType );

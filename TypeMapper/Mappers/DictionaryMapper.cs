@@ -51,8 +51,8 @@ namespace TypeMapper.Mappers
             var returnType = typeof( List<ObjectPair> );
             var returnElementType = typeof( ObjectPair );
 
-            var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
-            var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
+            var sourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
+            var targetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
 
             var sourceCollectionType = mapping.SourceProperty.PropertyInfo.PropertyType;
             var targetCollectionType = mapping.TargetProperty.PropertyInfo.PropertyType;

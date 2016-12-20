@@ -13,14 +13,14 @@ namespace TypeMapper
         public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
         {
             // (target, value) => target.get_Property()
-            var targetType = propertyInfo.DeclaringType;
+            var targetType = propertyInfo.ReflectedType;
             var methodInfo = propertyInfo.GetGetMethod();
 
             var targetInstance = Expression.Parameter( targetType, "target" );
             var body = Expression.Call( targetInstance, methodInfo );
 
             var delegateType = typeof( Func<,> ).MakeGenericType(
-                propertyInfo.DeclaringType, propertyInfo.PropertyType );
+                propertyInfo.ReflectedType, propertyInfo.PropertyType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
@@ -30,13 +30,13 @@ namespace TypeMapper
             // (target, value) => target.set_Property( value )
             var methodInfo = propertyInfo.GetSetMethod();
 
-            var targetInstance = Expression.Parameter( propertyInfo.DeclaringType, "target" );
+            var targetInstance = Expression.Parameter( propertyInfo.ReflectedType, "target" );
             var value = Expression.Parameter( propertyInfo.PropertyType, "value" );
 
             var body = Expression.Call( targetInstance, methodInfo, value );
 
             var delegateType = typeof( Action<,> ).MakeGenericType(
-                propertyInfo.DeclaringType, propertyInfo.PropertyType );
+                propertyInfo.ReflectedType, propertyInfo.PropertyType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
@@ -76,7 +76,7 @@ namespace TypeMapper
         {
             // (t, p) => if( p != null ) t.set_Foo( Convert(p) )
 
-            var targetType = propertyInfo.DeclaringType;
+            var targetType = propertyInfo.ReflectedType;
             var methodInfo = propertyInfo.GetSetMethod();
             var exTarget = Expression.Parameter( targetType, "t" );
             var exValue = Expression.Parameter( typeof( object ), "p" );
@@ -126,7 +126,7 @@ namespace TypeMapper
         {
             // t => Convert( t.get_Foo() )
 
-            var targetType = propertyInfo.DeclaringType;
+            var targetType = propertyInfo.ReflectedType;
             var methodInfo = propertyInfo.GetGetMethod();
             var returnType = methodInfo.ReturnType;
 

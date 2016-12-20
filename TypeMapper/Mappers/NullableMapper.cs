@@ -18,8 +18,8 @@ namespace TypeMapper.Mappers
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
         {
-            var sourceType = mapping.SourceProperty.PropertyInfo.DeclaringType;
-            var targetType = mapping.TargetProperty.PropertyInfo.DeclaringType;
+            var sourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
+            var targetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
 
             var sourcePropertyType = mapping.SourceProperty.PropertyInfo.PropertyType;
             var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
