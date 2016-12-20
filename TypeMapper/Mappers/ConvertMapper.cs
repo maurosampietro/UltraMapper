@@ -8,7 +8,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class BuiltInTypeMapper : IObjectMapperExpression
+    public class ConvertMapper : IObjectMapperExpression
     {
         public bool CanHandle( PropertyMapping mapping )
         {
@@ -18,9 +18,30 @@ namespace TypeMapper.Mappers
             bool areTypesBuiltIn = mapping.SourceProperty.IsBuiltInType &&
                 mapping.TargetProperty.IsBuiltInType;
 
-            return (areTypesBuiltIn) && (sourcePropertyType == targetPropertyType ||
-                    sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
-                    sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ));
+            var isConvertible = new Lazy<bool>( () =>
+            {
+                try
+                {
+                    if( !sourcePropertyType.ImplementsInterface( typeof( IConvertible ) ) )
+                        return false;
+
+                    //reference types are ok but if mapping to the same 
+                    //type a referencemapper should be used
+                    if( sourcePropertyType == targetPropertyType )
+                        return false;
+
+                    var testValue = InstanceFactory.CreateObject( sourcePropertyType );
+                    Convert.ChangeType( testValue, targetPropertyType );
+
+                    return true;
+                }
+                catch( InvalidCastException )
+                {
+                    return false;
+                }
+            } );
+
+            return areTypesBuiltIn || isConvertible.Value;
         }
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
@@ -38,30 +59,16 @@ namespace TypeMapper.Mappers
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
             var value = Expression.Variable( targetPropertyType, "value" );
-
-            Func<Expression> getValueAssignmentExp = () =>
-            {
-                var readValueExp = mapping.SourceProperty.ValueGetter.Body;
-
-                if( mapping.CustomConverter != null )
-                    return Expression.Invoke( mapping.CustomConverter, readValueExp );
-
-                if( sourcePropertyType == targetPropertyType )
-                    return Expression.Assign( value, readValueExp );
-
-                return Expression.Assign( value, Expression.Convert(
-                    readValueExp, targetPropertyType ) );
-
-                throw new Exception( $"Cannot handle {mapping}" );
-            };
-
-            Expression valueAssignment = getValueAssignmentExp();
+            var convertMethod = typeof( Convert ).GetMethod( $"To{targetPropertyType.Name}",
+                new[] { sourcePropertyType } );
 
             var setValueExp = (Expression)Expression.Block
             (
                 new[] { value },
 
-                valueAssignment.ReplaceParameter( sourceInstance ),
+                Expression.Call( convertMethod, mapping.SourceProperty.ValueGetter.Body )
+                    .ReplaceParameter( sourceInstance ),
+
                 mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( targetInstance, "target" )
                     .ReplaceParameter( value, "value" )

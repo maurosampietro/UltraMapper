@@ -13,11 +13,11 @@ using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Configuration
 {
-    public class PropertyConfiguration : IEnumerable<PropertyMapping>
+    public class TypeMappingConfiguration : IEnumerable<PropertyMapping>
     {
         //A source property can be mapped to multiple target properties
-        private Dictionary<PropertyInfoPair, PropertyMapping> _propertyMappings;
-        private IEnumerable<IObjectMapperExpression> _objectMappers;
+        protected Dictionary<PropertyInfoPair, PropertyMapping> _propertyMappings;
+        protected IEnumerable<IObjectMapperExpression> _objectMappers;
 
         private LambdaExpression _expression;
         public LambdaExpression MappingExpression
@@ -121,29 +121,40 @@ namespace TypeMapper.Configuration
             }
         }
 
+        public bool IgnoreConventionMappings { get; private set; }
+
         /// <summary>
         /// This constructor is only used by derived classes to allow
         /// casts from PropertyConfiguration to the derived class itself
         /// </summary>
         /// <param name="configuration">An already existing mapping configuration</param>
-        protected PropertyConfiguration( PropertyConfiguration configuration, IEnumerable<IObjectMapperExpression> objectMappers )
+        protected TypeMappingConfiguration( TypeMappingConfiguration configuration,
+            IEnumerable<IObjectMapperExpression> objectMappers, bool ignoreConventionMappings )
         {
             _propertyMappings = configuration._propertyMappings;
             _objectMappers = objectMappers;
+            this.IgnoreConventionMappings = ignoreConventionMappings;
         }
 
-        public PropertyConfiguration( Type source, Type target, IEnumerable<IObjectMapperExpression> objectMappers )
-            : this( source, target, new DefaultMappingConvention(), objectMappers ) { }
+        public TypeMappingConfiguration( Type source, Type target, IEnumerable<IObjectMapperExpression> objectMappers, bool ignoreConventionMappings )
+            : this( source, target, new DefaultMappingConvention(), objectMappers, ignoreConventionMappings ) { }
 
-        public PropertyConfiguration( Type source, Type target,
-            IMappingConvention mappingConvention, IEnumerable<IObjectMapperExpression> objectMappers )
+        public TypeMappingConfiguration( Type source, Type target, IMappingConvention mappingConvention,
+            IEnumerable<IObjectMapperExpression> objectMappers, bool ignoreConventionMappings )
         {
+            _propertyMappings = new Dictionary<PropertyInfoPair, PropertyMapping>();
+            if( this.IgnoreConventionMappings = ignoreConventionMappings ) return;
+
             if( objectMappers == null || !objectMappers.Any() )
                 throw new ArgumentException( "Please provide at least one object mapper" );
 
             _objectMappers = objectMappers;
-            _propertyMappings = new Dictionary<PropertyInfoPair, PropertyMapping>();
 
+            this.MapByConvention( source, target, mappingConvention );
+        }
+
+        private void MapByConvention( Type source, Type target, IMappingConvention mappingConvention )
+        {
             var bindingAttributes = BindingFlags.Instance | BindingFlags.Public;
 
             var sourceProperties = source.GetProperties( bindingAttributes )
@@ -168,7 +179,8 @@ namespace TypeMapper.Configuration
             }
         }
 
-        protected PropertyMapping Map( PropertyInfo sourcePropertyInfo, PropertyInfo targetPropertyInfo )
+        protected PropertyMapping Map( PropertyInfo sourcePropertyInfo, 
+            PropertyInfo targetPropertyInfo, LambdaExpression customConverter = null )
         {
             var typePairKey = new PropertyInfoPair( sourcePropertyInfo, targetPropertyInfo );
 
@@ -182,6 +194,8 @@ namespace TypeMapper.Configuration
             }
 
             propertyMapping.TargetProperty = new TargetProperty( targetPropertyInfo );
+
+            propertyMapping.CustomConverter = customConverter;
             propertyMapping.Mapper = _objectMappers.FirstOrDefault(
                 mapper => mapper.CanHandle( propertyMapping ) );
 
@@ -216,19 +230,20 @@ namespace TypeMapper.Configuration
         }
     }
 
-    public class PropertyConfiguration<TSource, TTarget> : PropertyConfiguration
+    public class TypeMappingConfiguration<TSource, TTarget> : TypeMappingConfiguration
     {
         /// <summary>
         /// This constructor is only used internally to allow
         /// casts from PropertyConfiguration to PropertyConfiguration<>
         /// </summary>
         /// <param name="map">An already existing mapping configuration</param>
-        internal PropertyConfiguration( PropertyConfiguration map, IEnumerable<IObjectMapperExpression> objectMappers )
-            : base( map, objectMappers ) { }
+        internal TypeMappingConfiguration( TypeMappingConfiguration map,
+            IEnumerable<IObjectMapperExpression> objectMappers, bool ignoreConventionMappings )
+            : base( map, objectMappers, ignoreConventionMappings ) { }
 
-        public PropertyConfiguration( IMappingConvention mappingConvention, IEnumerable<IObjectMapperExpression> objectMappers )
-            : base( typeof( TSource ), typeof( TTarget ), mappingConvention, objectMappers ) { }
-
+        public TypeMappingConfiguration( IMappingConvention mappingConvention,
+            IEnumerable<IObjectMapperExpression> objectMappers, bool ignoreConventionMappings )
+            : base( typeof( TSource ), typeof( TTarget ), mappingConvention, objectMappers, ignoreConventionMappings ) { }
 
         #region Type mapping overloads
 
@@ -242,9 +257,9 @@ namespace TypeMapper.Configuration
         /// <param name="sourcePropertySelector"></param>
         /// <param name="targetPropertySelector"></param>
         /// <returns></returns>
-        //public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty>(
+        //public TypeMappingConfiguration<TSource, TTarget> MapProperty<TSourceProperty>(
         //    Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
-        //    Expression<Func<TTarget, TSourceProperty>> targetPropertySelector )
+        //    Expression<Func<TTarget, TSourceProperty>> targetPropertySelector ) where TSourceProperty : struct
         //{
         //    var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
         //    var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
@@ -262,7 +277,7 @@ namespace TypeMapper.Configuration
         /// <param name="targetPropertySelector"></param>
         /// <param name="converter"></param>
         /// <returns></returns>
-        public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
+        public TypeMappingConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
             Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
             Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
             Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
@@ -270,15 +285,13 @@ namespace TypeMapper.Configuration
             var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
-            var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
-            propertyMapping.CustomConverter = converter;
-
+            var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo, converter );
             return this;
         }
         #endregion
 
         #region Collection overloads
-        public PropertyConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
+        public TypeMappingConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
            Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
            Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
            ICollectionMappingStrategy collectionStrategy,
@@ -288,9 +301,7 @@ namespace TypeMapper.Configuration
             var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
-            var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo );
-
-            propertyMapping.CustomConverter = converter;
+            var propertyMapping = base.Map( sourcePropertyInfo, targetPropertyInfo, converter );
             propertyMapping.TargetProperty.CollectionStrategy = collectionStrategy;
 
             return this;

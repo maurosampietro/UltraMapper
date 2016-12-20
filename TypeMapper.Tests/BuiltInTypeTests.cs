@@ -90,8 +90,8 @@ namespace TypeMapper.Tests
             var temp = new BuiltInTypes();
             var temp2 = new BuiltInTypesDto();
 
-            var config = new TypeConfiguration();
-            config.MapTypes<BuiltInTypes, BuiltInTypesDto>()
+            var config = new MappingConfiguration();
+            config.MapTypes<BuiltInTypes, BuiltInTypesDto>( ignoreConventionMappings : true )
                 //map with custom converter
                 .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
@@ -127,7 +127,15 @@ namespace TypeMapper.Tests
             var source = new BuiltInTypes();
             var target = new NullablePrimitiveTypesDto();
 
-            var typeMapper = new TypeMapper();
+            var typeMapper = new TypeMapper<DefaultMappingConvention>
+            (
+                cfg =>
+                {
+                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypesDto>( ignoreConventionMappings: true )
+                       .MapProperty( s => s.Int32, s => s.Char );
+                }
+            );
+
             typeMapper.Map( source, target );
         }
 
@@ -172,8 +180,7 @@ namespace TypeMapper.Tests
             (
                 cfg =>
                 {
-                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypesDto>()
-                        //.IgnoreConventionMapping()
+                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypesDto>( ignoreConventionMappings: true )
                         .MapProperty( s => s.Int32, s => s.Char );
                 }
             );

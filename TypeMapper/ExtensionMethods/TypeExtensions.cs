@@ -78,6 +78,14 @@ namespace TypeMapper
             return null;
         }
 
+        public static bool ImplementsInterface( this Type sourceType, Type @interface )
+        {
+            if( !@interface.IsInterface )
+                throw new ArgumentException( $"{nameof( @interface )} parameter must be an interface type" );
+
+            return sourceType.GetInterfaces().Any( type => type == @interface );
+        }
+
         public static bool IsCollectionOfType( this Type sourceType, Type testAgainstType )
         {
             return sourceType.IsGenericType && (sourceType.GetGenericTypeDefinition() == testAgainstType);

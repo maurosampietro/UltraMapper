@@ -42,18 +42,54 @@ namespace TypeMapper.Mappers
 
                 if( mapping.SourceProperty.IsNullable && !mapping.TargetProperty.IsNullable )
                 {
+                    var nullableValueAccess = Expression.MakeMemberAccess( readValueExp, sourcePropertyType.GetProperty( "Value" ) );
+
+                    var sourceUnderlyingType = mapping.SourceProperty.NullableUnderlyingType;
+                    if( sourceUnderlyingType == targetPropertyType )
+                    {
+                        return Expression.IfThenElse
+                        (
+                            Expression.Equal( readValueExp, Expression.Constant( null, sourcePropertyType ) ),
+                            Expression.Assign( value, Expression.Default( targetPropertyType ) ),
+                            Expression.Assign( value, nullableValueAccess )
+                        );
+                    }
+
+                    if( sourceUnderlyingType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
+                        sourceUnderlyingType.IsExplicitlyConvertibleTo( targetPropertyType ) )
+                    {
+                        return Expression.IfThenElse
+                        (
+                            Expression.Equal( readValueExp, Expression.Constant( null, sourcePropertyType ) ),
+                            Expression.Assign( value, Expression.Default( targetPropertyType ) ),
+                            Expression.Assign( value, Expression.Convert( nullableValueAccess, targetPropertyType ) )
+                        );
+                    }
+
+                    var convertMethod = typeof( Convert ).GetMethod( $"To{targetPropertyType.Name}", new[] { sourcePropertyType } );
                     return Expression.IfThenElse
                     (
                         Expression.Equal( readValueExp, Expression.Constant( null, sourcePropertyType ) ),
                         Expression.Assign( value, Expression.Default( targetPropertyType ) ),
-                        Expression.Assign( value, Expression.MakeMemberAccess( readValueExp, sourcePropertyType.GetProperty( "Value" ) ) )
+                        Expression.Assign( value, Expression.Call( convertMethod, nullableValueAccess ) )
                     );
                 }
 
                 if( !mapping.SourceProperty.IsNullable && mapping.TargetProperty.IsNullable )
                 {
-                    var constructor = targetPropertyType.GetConstructor( new Type[] { sourcePropertyType } );
-                    return Expression.New( constructor, readValueExp );
+                    var targetUnderlyingType = mapping.TargetProperty.NullableUnderlyingType;
+
+                    if( sourcePropertyType.IsImplicitlyConvertibleTo( targetUnderlyingType ) ||
+                      sourcePropertyType.IsExplicitlyConvertibleTo( targetUnderlyingType ) )
+                    {
+                        var constructor = targetPropertyType.GetConstructor( new Type[] { targetUnderlyingType } );
+                        return Expression.New( constructor, Expression.Convert( readValueExp, targetUnderlyingType ) );
+                    }
+                    else
+                    {
+                        var constructor = targetPropertyType.GetConstructor( new Type[] { sourcePropertyType } );
+                        return Expression.New( constructor, readValueExp );
+                    }
                 }
 
                 throw new Exception( $"Cannot handle {mapping}" );

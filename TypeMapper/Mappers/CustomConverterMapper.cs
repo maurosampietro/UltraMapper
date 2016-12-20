@@ -8,19 +8,11 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class BuiltInTypeMapper : IObjectMapperExpression
+    public class CustomConverterMapper : IObjectMapperExpression
     {
         public bool CanHandle( PropertyMapping mapping )
         {
-            var sourcePropertyType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
-
-            bool areTypesBuiltIn = mapping.SourceProperty.IsBuiltInType &&
-                mapping.TargetProperty.IsBuiltInType;
-
-            return (areTypesBuiltIn) && (sourcePropertyType == targetPropertyType ||
-                    sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
-                    sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ));
+            return mapping.CustomConverter != null;
         }
 
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
@@ -39,23 +31,8 @@ namespace TypeMapper.Mappers
 
             var value = Expression.Variable( targetPropertyType, "value" );
 
-            Func<Expression> getValueAssignmentExp = () =>
-            {
-                var readValueExp = mapping.SourceProperty.ValueGetter.Body;
-
-                if( mapping.CustomConverter != null )
-                    return Expression.Invoke( mapping.CustomConverter, readValueExp );
-
-                if( sourcePropertyType == targetPropertyType )
-                    return Expression.Assign( value, readValueExp );
-
-                return Expression.Assign( value, Expression.Convert(
-                    readValueExp, targetPropertyType ) );
-
-                throw new Exception( $"Cannot handle {mapping}" );
-            };
-
-            Expression valueAssignment = getValueAssignmentExp();
+            var readValueExp = mapping.SourceProperty.ValueGetter.Body;
+            Expression valueAssignment = Expression.Invoke( mapping.CustomConverter, readValueExp );
 
             var setValueExp = (Expression)Expression.Block
             (

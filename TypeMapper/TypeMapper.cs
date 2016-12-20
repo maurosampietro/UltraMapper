@@ -16,28 +16,28 @@ namespace TypeMapper
 {
     public class TypeMapper<T> : TypeMapper where T : IMappingConvention, new()
     {
-        public TypeMapper( Action<TypeConfiguration<T>> config )
-              : base( new TypeConfiguration<T>() )
+        public TypeMapper( Action<MappingConfiguration<T>> config )
+              : base( new MappingConfiguration<T>() )
         {
-            config?.Invoke( (TypeConfiguration<T>)_mappingConfiguration );
+            config?.Invoke( (MappingConfiguration<T>)_mappingConfiguration );
         }
     }
 
     public class TypeMapper
     {
-        public TypeConfiguration _mappingConfiguration { get; protected set; }
+        public MappingConfiguration _mappingConfiguration { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance using <see cref="DefaultMappingConvention"/> 
         /// as mapping convention
         /// </summary>
-        public TypeMapper() : this( new TypeConfiguration() ) { }
+        public TypeMapper() : this( new MappingConfiguration() ) { }
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
-        public TypeMapper( TypeConfiguration config )
+        public TypeMapper( MappingConfiguration config )
         {
             _mappingConfiguration = config;
         }
@@ -48,7 +48,7 @@ namespace TypeMapper
         /// </summary>
         /// <param name="config"></param>
         public TypeMapper( Action<DefaultMappingConvention> config )
-            : this( new TypeConfiguration( config ) ) { }
+            : this( new MappingConfiguration( config ) ) { }
 
         /// <summary>
         /// Creates a copy of the source instance.

@@ -137,7 +137,7 @@ namespace TypeMapper.Tests
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-            var config = new TypeConfiguration();
+            var config = new MappingConfiguration();
 
             var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
@@ -224,7 +224,7 @@ namespace TypeMapper.Tests
             var source = new SourceClass();
             var target = new TargetClass();
 
-            var config = new TypeConfiguration( new DefaultMappingConvention() );
+            var config = new MappingConfiguration( new DefaultMappingConvention() );
             var mapper = new TypeMapper( config );
 
             mapper.Map( source, target );
@@ -239,7 +239,7 @@ namespace TypeMapper.Tests
             var source = new SourceClass();
             var target = new TargetClass();
 
-            var config = new TypeConfiguration( cfg =>
+            var config = new MappingConfiguration( cfg =>
             {
                 cfg.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>(
                     ruleConfig => ruleConfig.AllowImplicitConversions = false );
