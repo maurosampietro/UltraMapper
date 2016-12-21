@@ -32,7 +32,8 @@ namespace TypeMapper.Mappers
             var value = Expression.Variable( targetPropertyType, "value" );
 
             var readValueExp = mapping.SourceProperty.ValueGetter.Body;
-            Expression valueAssignment = Expression.Invoke( mapping.CustomConverter, readValueExp );
+            Expression valueAssignment = Expression.Assign( value,
+                Expression.Invoke( mapping.CustomConverter, readValueExp ) );
 
             var setValueExp = (Expression)Expression.Block
             (

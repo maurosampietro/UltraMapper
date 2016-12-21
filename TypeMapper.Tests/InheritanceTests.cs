@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Configuration;
+using TypeMapper.Internals;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Tests
@@ -95,24 +96,28 @@ namespace TypeMapper.Tests
             var temp2 = new BuiltInTypesDto();
 
             var config = new MappingConfiguration();
-            config.MapTypes<BuiltInTypes, BuiltInTypesDto>( ignoreConventionMappings: false )
+            config.MapTypes<BuiltInTypes, BuiltInTypesDto>( ignoreConventionMappings: true )
                 //map with custom converter
-                //.MapProperty( a => a.Single, d => d.String, single => single.ToString() )
+                .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
                 //map same source property to many different targets
                 .MapProperty( a => a.Char, d => d.Single )
-                //.MapProperty( a => a.Char, d => d.Int32 )
+                .MapProperty( a => a.Char, d => d.Int32 )
 
-                //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
-                //.MapProperty( a => a.String, d => d.Single )
-                //.MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+                //same sourceproperty/ destinationProperty: second mapping overrides and adds the converter
+                .MapProperty( a => a.String, d => d.Single )
+                .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
 
-                //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
-                //.MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                //.MapProperty( a => a.Single, y => y.Double )
-                ;
+                //same sourceproperty/ destinationProperty: second mapping overrides and removes( set to null ) the converter
+                .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
+                .MapProperty( a => a.Single, y => y.Double );
 
             var typeMapper = new TypeMapper( config );
+
+            //var exp = typeMapper._mappingConfiguration[ temp.GetType(), temp2.GetType() ].First().Expression;
+            //var func = (Func<ReferenceTracking, BuiltInTypes, BuiltInTypesDto, IEnumerable<ObjectPair>>)exp.Compile();
+            //func( new ReferenceTracking(), temp, temp2 );
+
             typeMapper.Map( temp, temp2 );
         }
     }

@@ -29,7 +29,7 @@ namespace TypeMapper.Tests
             public ulong UInt64 { get; set; } = 9;
         }
 
-        private class BuiltInTypes 
+        private class BuiltInTypes
         {
             public bool Boolean { get; set; } = true;
             public byte Byte { get; set; } = 0x1;
@@ -108,23 +108,25 @@ namespace TypeMapper.Tests
             var temp2 = new BuiltInTypesDto();
 
             var config = new MappingConfiguration();
-            config.MapTypes<BuiltInTypes, BuiltInTypesDto>( ignoreConventionMappings: false )
-                //map with custom converter
-                .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
-                //map same source property to many different targets
-                .MapProperty( a => a.Char, d => d.Single )
-                .MapProperty( a => a.Char, d => d.Int32 )
+            var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+            {
+                cfg.MapTypes<BuiltInTypes, BuiltInTypesDto>( ignoreConventionMappings: false )
+                 //map with custom converter
+                 .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
-                //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
-                .MapProperty( a => a.String, d => d.Single )
-                .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+                 //map same source property to many different targets
+                 .MapProperty( a => a.Char, d => d.Single )
+                 .MapProperty( a => a.Char, d => d.Int32 )
 
-                //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
-                .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                .MapProperty( a => a.Single, y => y.Double );
+                 //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
+                 .MapProperty( a => a.String, d => d.Single )
+                 .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
 
-            var typeMapper = new TypeMapper( config );
+                 //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
+                 .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
+                 .MapProperty( a => a.Single, y => y.Double );
+            } );
             typeMapper.Map( temp, temp2 );
         }
 

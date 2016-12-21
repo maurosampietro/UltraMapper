@@ -11,35 +11,33 @@ namespace TypeMapper.Internals
 {
     public class PropertyMapping
     {
-        public SourceProperty SourceProperty { get; private set; }
-        public TargetProperty TargetProperty { get; set; }
+        private readonly Lazy<string> _toString;
+
+        public readonly SourceProperty SourceProperty;
+        public readonly TargetProperty TargetProperty;
+
         public IObjectMapperExpression Mapper { get; set; }
         public LambdaExpression CustomConverter { get; set; }
 
-        private LambdaExpression _expression;
         public LambdaExpression Expression
         {
-            get
-            {
-                if( _expression == null )
-                    _expression = this.Mapper.GetMappingExpression( this );
-
-                return _expression;
-            }
+            get { return this.Mapper.GetMappingExpression( this ); }
         }
 
-        public PropertyMapping( SourceProperty sourceProperty,
-            TargetProperty targetProperty = null,
-            LambdaExpression converterExp = null )
+        public PropertyMapping( PropertyInfo sourceProperty, PropertyInfo targetProperty )
         {
-            this.SourceProperty = sourceProperty;
-            this.TargetProperty = targetProperty;
-            this.CustomConverter = converterExp;
+            this.SourceProperty = new SourceProperty( sourceProperty );
+            this.TargetProperty = new TargetProperty( targetProperty );
+
+            _toString = new Lazy<string>( () =>
+            {
+                return $"{this.SourceProperty} -> {this.TargetProperty}";
+            } );
         }
 
         public override string ToString()
         {
-            return $"{this.SourceProperty} -> {this.TargetProperty}";
+            return _toString.Value;
         }
     }
 }

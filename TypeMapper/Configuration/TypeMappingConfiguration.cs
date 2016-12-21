@@ -15,8 +15,17 @@ namespace TypeMapper.Configuration
 {
     public class TypeMappingConfiguration : IEnumerable<PropertyMapping>
     {
-        //A source property can be mapped to multiple target properties
-        protected Dictionary<PropertyInfoPair, PropertyMapping> _propertyMappings;
+        /*
+         *A source property can be mapped to multiple target properties.
+         *
+         *A target property can be mapped just once and for that reason 
+         *multiple mappings override each other and the last one is used.
+         *
+         *The target property can be therefore used as the key 
+         *of property mapping dictionary
+         */
+        protected Dictionary<PropertyInfo, PropertyMapping> _propertyMappings;
+
         protected IEnumerable<IObjectMapperExpression> _objectMappers;
 
         private LambdaExpression _expression;
@@ -142,7 +151,7 @@ namespace TypeMapper.Configuration
         public TypeMappingConfiguration( Type source, Type target, IMappingConvention mappingConvention,
             IEnumerable<IObjectMapperExpression> objectMappers, bool ignoreConventionMappings )
         {
-            _propertyMappings = new Dictionary<PropertyInfoPair, PropertyMapping>();
+            _propertyMappings = new Dictionary<PropertyInfo, PropertyMapping>();
             if( this.IgnoreConventionMappings = ignoreConventionMappings ) return;
 
             if( objectMappers == null || !objectMappers.Any() )
@@ -179,22 +188,10 @@ namespace TypeMapper.Configuration
             }
         }
 
-        protected PropertyMapping Map( PropertyInfo sourcePropertyInfo, 
+        protected PropertyMapping Map( PropertyInfo sourcePropertyInfo,
             PropertyInfo targetPropertyInfo, LambdaExpression customConverter = null )
         {
-            var typePairKey = new PropertyInfoPair( sourcePropertyInfo, targetPropertyInfo );
-
-            PropertyMapping propertyMapping;
-            if( !_propertyMappings.TryGetValue( typePairKey, out propertyMapping ) )
-            {
-                var sourceProperty = new SourceProperty( sourcePropertyInfo );
-
-                propertyMapping = new PropertyMapping( sourceProperty );
-                _propertyMappings.Add( typePairKey, propertyMapping );
-            }
-
-            propertyMapping.TargetProperty = new TargetProperty( targetPropertyInfo );
-
+            var propertyMapping = new PropertyMapping( sourcePropertyInfo, targetPropertyInfo );
             propertyMapping.CustomConverter = customConverter;
             propertyMapping.Mapper = _objectMappers.FirstOrDefault(
                 mapper => mapper.CanHandle( propertyMapping ) );
@@ -202,21 +199,24 @@ namespace TypeMapper.Configuration
             if( propertyMapping.Mapper == null )
                 throw new Exception( $"No object mapper can handle {propertyMapping}" );
 
+            if( _propertyMappings.ContainsKey( targetPropertyInfo ) )
+            {
+                _propertyMappings[ targetPropertyInfo ] = propertyMapping;
+            }
+            else
+            {
+                _propertyMappings.Add( targetPropertyInfo, propertyMapping );
+            }
+
             return propertyMapping;
         }
 
-        internal PropertyMapping this[ PropertyInfo sourceProperty, PropertyInfo targetProperty ]
+        internal PropertyMapping this[ PropertyInfo targetProperty ]
         {
             get
             {
-                var typePairKey = new PropertyInfoPair( sourceProperty, targetProperty );
-                return _propertyMappings[ typePairKey ];
+                return _propertyMappings[ targetProperty ];
             }
-        }
-
-        internal PropertyMapping this[ PropertyInfoPair typePairKey ]
-        {
-            get { return _propertyMappings[ typePairKey ]; }
         }
 
         public IEnumerator<PropertyMapping> GetEnumerator()
@@ -248,7 +248,7 @@ namespace TypeMapper.Configuration
         #region Type mapping overloads
 
         /*DO NOT try to merge the following 2 methods in one using optional parameters:
-         *you lose the hint to provide a converter if a conversion is not available if you do*/
+         *if you do you lose the hint to provide a converter if a conversion is not available */
 
         /// <summary>
         /// Maps two properties of the same or compatible type

@@ -41,12 +41,15 @@ namespace TypeMapper
             if( memberExpression == null )
                 throw new ArgumentException( "Invalid expression. Please select a property from your model (eg. x => x.MyProperty)" );
 
-            //this is the PropertyInfo retrieved through the DeclaredType, hence
-            //DelcaredType and ReflectedType are equal.
+            //If the instance on which we call is a derived class and the property
+            //we select is defined in the base class, we will notice that
+            //the PropertyInfo is retrieved through the base class; hence
+            //DelcaredType and ReflectedType are equal and we basically
+            //lost information about the ReflectedType (which should be the derived class)...
             var lambdaMember = (PropertyInfo)memberExpression.Member;
 
-            //Requery on the actual type so that if i'm calling a inherited property
-            //that shows up in the PropertyInfo (DeclaredType != ReflectedType)
+            //..to fix that we do another search. 
+            //We search that property name in the actual type we meant to use for the invocation
             return lambda.Parameters.First().Type.GetProperty( lambdaMember.Name );
         }
 

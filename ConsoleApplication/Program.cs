@@ -172,9 +172,6 @@ namespace ConsoleApplication
                     .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
                     .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
-
-                cfg.MapTypes<BaseTypes, BaseTypesDto>().MapProperty( b => b.InnerType, b => b.Int16, c => 12 );
-
             } );
 
             Stopwatch sw4 = new Stopwatch();
@@ -196,7 +193,7 @@ namespace ConsoleApplication
             var temp4 = new BaseTypesDto();
 
             AutoMapper.Mapper.Initialize( cfg =>
-            {
+            {                
                 cfg.CreateMissingTypeMaps = true;
                 cfg.CreateMap<BaseTypes, BaseTypesDto>();
             } );

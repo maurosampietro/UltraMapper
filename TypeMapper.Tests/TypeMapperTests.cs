@@ -218,20 +218,18 @@ namespace TypeMapper.Tests
             public int E { get; set; }
         }
 
-        [TestMethod]
-        public void ExactNameAndImplicitlyConvertibleTypeConventionTest()
-        {
-            var source = new SourceClass();
-            var target = new TargetClass();
+        //[TestMethod]
+        //public void ExactNameAndImplicitlyConvertibleTypeConventionTest()
+        //{
+        //    var source = new SourceClass();
+        //    var target = new TargetClass();
 
-            var config = new MappingConfiguration( new DefaultMappingConvention() );
-            var mapper = new TypeMapper( config );
+        //    var mapper = new TypeMapper();
+        //    mapper.Map( source, target );
 
-            mapper.Map( source, target );
-
-            Assert.IsTrue( source.A == target.A );
-            Assert.IsTrue( source.B != target.B );
-        }
+        //    Assert.IsTrue( source.A == target.A );
+        //    Assert.IsTrue( source.B != target.B );
+        //}
 
         [TestMethod]
         public void ExactNameAndTypeConventionTest()
@@ -241,8 +239,11 @@ namespace TypeMapper.Tests
 
             var config = new MappingConfiguration( cfg =>
             {
-                cfg.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>(
-                    ruleConfig => ruleConfig.AllowImplicitConversions = false );
+                cfg.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
+                {
+                    ruleConfig.AllowImplicitConversions = false;
+                    ruleConfig.AllowExplicitConversions = false;
+                } );
             } );
 
             var mapper = new TypeMapper( config );

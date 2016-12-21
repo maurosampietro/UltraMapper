@@ -73,6 +73,7 @@
     <Compile Include="MappingConventions\PropertyMatchingRules\PropertyMatchingRuleBase.cs" />
     <Compile Include="MappingConventions\PropertyMatchingRules\SuffixMatching.cs" />
     <Compile Include="MappingConventions\PropertyMatchingRules\TypeMatchingRule.cs" />
+    <Compile Include="MappingConventions\RuleChaining.cs" />
     <Compile Include="ReferenceTracking\IReferenceTracking.cs" />
     <Compile Include="ReferenceTracking\ReferenceTracking.cs" />
     <Compile Include="ExtensionMethods\TypeExtensions.cs" />
