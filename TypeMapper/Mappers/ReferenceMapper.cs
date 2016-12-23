@@ -61,8 +61,23 @@ namespace TypeMapper.Mappers
             var newInstance = Expression.Variable( targetPropertyType, "newInstance" );
             var sourceArg = Expression.Variable( sourcePropertyType, "sourceArg" );
 
-            var nullSourceValue = Expression.Default( sourcePropertyType );
-            var nullTargetValue = Expression.Default( targetPropertyType );
+            var nullSourceValue = Expression.Constant( null, sourcePropertyType );
+            var nullTargetValue = Expression.Constant( null, targetPropertyType );
+
+            /* SOURCE (TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
+             * SOURCE (TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
+             * 
+             * SOURCE (UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
+             * SOURCE (UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
+             */
+
+            var assignNewInstanceExpression = mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE ?
+             (Expression)Expression.Assign( newInstance, Expression.New( targetPropertyType ) ) :
+                (Expression)Expression.IfThenElse(
+                    Expression.Equal( mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( targetInstance ), nullTargetValue ),
+                    Expression.Assign( newInstance, Expression.New( targetPropertyType ) ),
+                    Expression.Assign( newInstance, mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( targetInstance ) ) );
+
 
             var body = (Expression)Expression.Block
             (
@@ -87,9 +102,9 @@ namespace TypeMapper.Mappers
                         (
                             Expression.Equal( newInstance, nullTargetValue ),
                             Expression.Block
-                            (                                
-                                Expression.Assign( newInstance, Expression.New( targetPropertyType ) ),
-                                
+                            (
+                                assignNewInstanceExpression,
+
                                 //cache reference
                                 Expression.Invoke( add, referenceTrack, sourceArg, Expression.Constant( targetPropertyType ), newInstance ),
 

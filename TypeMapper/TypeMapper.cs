@@ -16,28 +16,28 @@ namespace TypeMapper
 {
     public class TypeMapper<T> : TypeMapper where T : IMappingConvention, new()
     {
-        public TypeMapper( Action<MappingConfiguration<T>> config )
-              : base( new MappingConfiguration<T>() )
+        public TypeMapper( Action<MapperConfiguration<T>> config )
+              : base( new MapperConfiguration<T>() )
         {
-            config?.Invoke( (MappingConfiguration<T>)_mappingConfiguration );
+            config?.Invoke( (MapperConfiguration<T>)_mappingConfiguration );
         }
     }
 
     public class TypeMapper
     {
-        public MappingConfiguration _mappingConfiguration { get; protected set; }
+        public MapperConfiguration _mappingConfiguration { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance using <see cref="DefaultMappingConvention"/> 
         /// as mapping convention
         /// </summary>
-        public TypeMapper() : this( new MappingConfiguration() ) { }
+        public TypeMapper() : this( new MapperConfiguration() ) { }
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
-        public TypeMapper( MappingConfiguration config )
+        public TypeMapper( MapperConfiguration config )
         {
             _mappingConfiguration = config;
         }
@@ -48,7 +48,7 @@ namespace TypeMapper
         /// </summary>
         /// <param name="config"></param>
         public TypeMapper( Action<DefaultMappingConvention> config )
-            : this( new MappingConfiguration( config ) ) { }
+            : this( new MapperConfiguration( config ) ) { }
 
         /// <summary>
         /// Creates a copy of the source instance.
@@ -85,7 +85,7 @@ namespace TypeMapper
             Type targetType = target.GetType();
 
             var mappings = _mappingConfiguration[ sourceType, targetType ];
-
+            
             var references = mappings.MapperFunc?.Invoke( referenceTracking, source, target );
             if( references != null )
             {

@@ -167,7 +167,7 @@ namespace ConsoleApplication
 
             var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
-                cfg.MappingConvention.PropertyMatchingRules
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
                     //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )

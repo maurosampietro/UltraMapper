@@ -143,7 +143,7 @@ namespace TypeMapper.Mappers
                 new[] { sourceCollection, targetCollection, newRefObjects },
 
                 Expression.Assign( newRefObjects, Expression.New( returnType ) ),
-                Expression.Assign( targetCollection, Expression.Default( targetCollectionType ) ),
+                Expression.Assign( targetCollection, Expression.Constant( null, targetCollectionType ) ),
                 Expression.Assign( sourceCollection, mapping.SourceProperty.ValueGetter.Body ),
 
                 Expression.IfThenElse

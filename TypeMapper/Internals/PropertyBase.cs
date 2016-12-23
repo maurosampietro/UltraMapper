@@ -36,10 +36,10 @@ namespace TypeMapper.Internals
 
         public override bool Equals( object obj )
         {
-            var typePair = obj as SourceProperty;
-            if( typePair == null ) return false;
+            var propertyBase = obj as PropertyBase;
+            if( propertyBase == null ) return false;
 
-            return this.PropertyInfo.Equals( typePair.PropertyInfo );
+            return this.PropertyInfo.Equals( propertyBase.PropertyInfo );
         }
 
         public override int GetHashCode()

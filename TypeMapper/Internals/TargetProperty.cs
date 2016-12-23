@@ -14,6 +14,7 @@ namespace TypeMapper.Internals
         public LambdaExpression ValueSetter { get; set; }
         public LambdaExpression ValueGetter { get; set; }
 
+        public LambdaExpression CustomConstructor { get; set; }
         public ICollectionMappingStrategy CollectionStrategy { get; set; }
 
         public TargetProperty( PropertyInfo propertyInfo )

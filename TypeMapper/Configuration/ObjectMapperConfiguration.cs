@@ -9,7 +9,7 @@ using TypeMapper.Mappers;
 
 namespace TypeMapper.Configuration
 {
-    public class ObjectMapperConfiguration : IEnumerable<IObjectMapperExpression>
+    public class ObjectMapperSet : IEnumerable<IObjectMapperExpression>
     {
         private class MapperComparer : IEqualityComparer<IObjectMapperExpression>
         {
@@ -28,20 +28,20 @@ namespace TypeMapper.Configuration
         private HashSet<IObjectMapperExpression> _objectMappers
              = new HashSet<IObjectMapperExpression>( new MapperComparer() );
 
-        public ObjectMapperConfiguration Add<T>( T item )
+        public ObjectMapperSet Add<T>( T item )
             where T : IObjectMapperExpression
         {
             _objectMappers.Add( item );
             return this;
         }
 
-        public ObjectMapperConfiguration Add<T>()
+        public ObjectMapperSet Add<T>()
             where T : IObjectMapperExpression, new()
         {
             return this.Add( new T() );
         }
 
-        public ObjectMapperConfiguration Remove<T>()
+        public ObjectMapperSet Remove<T>()
             where T : IObjectMapperExpression
         {
             var type = typeof( T );

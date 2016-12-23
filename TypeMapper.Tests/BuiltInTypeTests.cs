@@ -29,21 +29,9 @@ namespace TypeMapper.Tests
             public ulong UInt64 { get; set; } = 9;
         }
 
-        private class BuiltInTypes
+        //Inheritance is tested too
+        private class BuiltInTypes : PrimitiveTypes
         {
-            public bool Boolean { get; set; } = true;
-            public byte Byte { get; set; } = 0x1;
-            public char Char { get; set; } = 'a';
-            public decimal Decimal { get; set; } = 3;
-            public double Double { get; set; } = 4.0;
-            public short Int16 { get; set; } = 10;
-            public int Int32 { get; set; } = 6;
-            public long Int64 { get; set; } = 8;
-            public sbyte SByte { get; set; } = 0x2;
-            public float Single { get; set; } = 5.0f;
-            public ushort UInt16 { get; set; } = 11;
-            public uint UInt32 { get; set; } = 7;
-            public ulong UInt64 { get; set; } = 9;
             public object Object { get; set; } = null;
             public string String { get; set; } = "12";
         }
@@ -107,11 +95,11 @@ namespace TypeMapper.Tests
             var temp = new BuiltInTypes();
             var temp2 = new BuiltInTypesDto();
 
-            var config = new MappingConfiguration();
+            var config = new MapperConfiguration();
 
             var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
-                cfg.MapTypes<BuiltInTypes, BuiltInTypesDto>( ignoreConventionMappings: false )
+                cfg.MapTypes<BuiltInTypes, BuiltInTypesDto>()
                  //map with custom converter
                  .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
@@ -150,7 +138,7 @@ namespace TypeMapper.Tests
             (
                 cfg =>
                 {
-                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypesDto>( ignoreConventionMappings: true )
+                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypesDto>()
                        .MapProperty( s => s.Int32, s => s.Char );
                 }
             );
@@ -199,12 +187,45 @@ namespace TypeMapper.Tests
             (
                 cfg =>
                 {
-                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypesDto>( ignoreConventionMappings: true )
+                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypesDto>()
                         .MapProperty( s => s.Int32, s => s.Char );
                 }
             );
 
             typeMapper.Map( source, target );
+        }
+
+        [TestMethod]
+        public void newTest()
+        {
+            var source = new NullablePrimitiveTypes();
+            var target = new BuiltInTypesDto();
+
+
+            var temp = new BuiltInTypes();
+            var temp2 = new BuiltInTypesDto();
+
+            var config = new MapperConfiguration();
+
+            var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+            {
+                cfg.MapTypes<BuiltInTypes, BuiltInTypesDto>()
+                 //map with custom converter
+                 .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
+
+                 //map same source property to many different targets
+                 .MapProperty( a => a.Char, d => d.Single )
+                 .MapProperty( a => a.Char, d => d.Int32 )
+
+                 //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
+                 .MapProperty( a => a.String, d => d.Single )
+                 .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+
+                 //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
+                 .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
+                 .MapProperty( a => a.Single, y => y.Double );
+            } );
+            typeMapper.Map( temp, temp2 );
         }
     }
 }

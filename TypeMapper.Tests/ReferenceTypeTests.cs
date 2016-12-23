@@ -13,12 +13,12 @@ namespace TypeMapper.Tests
     [TestClass]
     public class ReferenceTypeTests
     {
-        private class BaseTypes
+        private class OuterType
         {
             public InnerType NullInnerType { get; set; }
             public InnerType InnerType { get; set; }
 
-            public BaseTypes()
+            public OuterType()
             {
                 this.InnerType = new InnerType()
                 {
@@ -28,10 +28,16 @@ namespace TypeMapper.Tests
             }
         }
 
-        private class BaseTypesDto
+        private class OuterTypeDto
         {
             public InnerTypeDto NullInnerTypeDto { get; set; }
             public InnerTypeDto InnerTypeDto { get; set; }
+
+            public OuterTypeDto()
+            {
+                this.NullInnerTypeDto = new InnerTypeDto();
+                this.InnerTypeDto = new InnerTypeDto();
+            }
         }
 
         private class InnerType
@@ -39,7 +45,7 @@ namespace TypeMapper.Tests
             public string A { get; set; }
             public string B { get; set; }
 
-            public BaseTypes C { get; set; }
+            public OuterType C { get; set; }
         }
 
         private class InnerTypeDto
@@ -47,14 +53,14 @@ namespace TypeMapper.Tests
             public string A { get; set; }
             public string B { get; set; }
 
-            public BaseTypes C { get; set; }
+            public OuterType C { get; set; }
         }
 
         [TestMethod]
         public void ReferenceTypeTest()
         {
-            var temp = new BaseTypes();
-            var temp2 = new BaseTypesDto();
+            var temp = new OuterType();
+            var temp2 = new OuterTypeDto();
 
             var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
@@ -62,8 +68,9 @@ namespace TypeMapper.Tests
                 //    .Add<ReferenceMapper>()
                 //    .Add<CollectionMapper>()
                 //    .Add<DictionaryMapper>();
+                cfg.GlobalConfiguration.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
 
-                cfg.MappingConvention.PropertyMatchingRules
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
                     //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )

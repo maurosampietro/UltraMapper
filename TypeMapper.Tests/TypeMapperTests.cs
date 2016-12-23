@@ -137,16 +137,16 @@ namespace TypeMapper.Tests
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-            var config = new MappingConfiguration();
+            var config = new MapperConfiguration();
 
             var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
-                cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                cfg.GlobalConfiguration.Mappers.Add<BuiltInTypeMapper>()
                     .Add<ReferenceMapper>();
                     //.Add<CollectionMapper>()
                     //.Add<DictionaryMapper>();
 
-                cfg.MappingConvention.PropertyMatchingRules
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
                     //.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
@@ -237,7 +237,7 @@ namespace TypeMapper.Tests
             var source = new SourceClass();
             var target = new TargetClass();
 
-            var config = new MappingConfiguration( cfg =>
+            var config = new MapperConfiguration( cfg =>
             {
                 cfg.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
                 {
@@ -261,12 +261,12 @@ namespace TypeMapper.Tests
 
             var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
-                cfg.ObjectMappers.Add<BuiltInTypeMapper>()
+                cfg.GlobalConfiguration.Mappers.Add<BuiltInTypeMapper>()
                     .Add<ReferenceMapper>();
                     //.Add<CollectionMapper>()
                     //.Add<DictionaryMapper>();
 
-                cfg.MappingConvention.PropertyMatchingRules
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
                     .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )

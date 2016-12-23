@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Internals
 {
-    internal class TypePair
+    public class TypePair
     {
         public readonly Type SourceType;
         public readonly Type TargetType;
@@ -14,10 +17,10 @@ namespace TypeMapper.Internals
         private readonly int _hashcode;
         private readonly Lazy<string> _toString;
 
-        public TypePair( Type sourceType, Type destinatinationType )
+        public TypePair( Type sourceType, Type targetType )
         {
             this.SourceType = sourceType;
-            this.TargetType = destinatinationType;
+            this.TargetType = targetType;
 
             _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
                 ^ this.TargetType.GetHashCode();
@@ -33,8 +36,7 @@ namespace TypeMapper.Internals
 
         public override bool Equals( object obj )
         {
-            var typePair = obj as TypePair;
-            if( typePair == null ) return false;
+            var typePair = (TypePair)obj;
 
             return this.SourceType.Equals( typePair.SourceType ) &&
                 this.TargetType.Equals( typePair.TargetType );
