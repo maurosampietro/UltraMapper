@@ -83,12 +83,14 @@ namespace TypeMapper.Mappers
                       sourcePropertyType.IsExplicitlyConvertibleTo( targetUnderlyingType ) )
                     {
                         var constructor = targetPropertyType.GetConstructor( new Type[] { targetUnderlyingType } );
-                        return Expression.New( constructor, Expression.Convert( readValueExp, targetUnderlyingType ) );
+                        var newNullable = Expression.New( constructor, Expression.Convert( readValueExp, targetUnderlyingType ) );
+                        return Expression.Assign( value, newNullable );
                     }
                     else
                     {
                         var constructor = targetPropertyType.GetConstructor( new Type[] { sourcePropertyType } );
-                        return Expression.New( constructor, readValueExp );
+                        var newNullable = Expression.New( constructor, readValueExp );
+                        return Expression.Assign( value, newNullable );
                     }
                 }
 

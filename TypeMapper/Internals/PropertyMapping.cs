@@ -30,21 +30,40 @@ namespace TypeMapper.Internals
         }
 
         public PropertyMapping( TypeMapping typeMapping,
-            PropertyInfo sourceProperty, PropertyInfo targetProperty )
+            PropertyInfo sourcePropertySelector,
+            PropertyInfo targetPropertySelector )
         {
             this.TypeMapping = typeMapping;
 
-            this.PropertyInfoPair = new PropertyInfoPair( 
-                sourceProperty, targetProperty );
+            this.SourceProperty = new SourceProperty( sourcePropertySelector );
+            this.TargetProperty = new TargetProperty( targetPropertySelector );
 
-            this.SourceProperty = new SourceProperty( sourceProperty );
-            this.TargetProperty = new TargetProperty( targetProperty );
+            this.PropertyInfoPair = new PropertyInfoPair(
+               this.SourceProperty.PropertyInfo, this.TargetProperty.PropertyInfo );
 
             _toString = new Lazy<string>( () =>
             {
                 return $"{this.SourceProperty} -> {this.TargetProperty}";
             } );
         }
+
+        //public PropertyMapping( TypeMapping typeMapping,
+        //  PropertyInfo sourcePropertySelector,
+        //  PropertyInfo targetPropertySelector )
+        //{
+        //    this.TypeMapping = typeMapping;
+
+        //    this.SourceProperty = new SourceProperty( sourcePropertySelector );
+        //    this.TargetProperty = new TargetProperty( targetPropertySelector );
+
+        //    this.PropertyInfoPair = new PropertyInfoPair(
+        //       this.SourceProperty.PropertyInfo, this.TargetProperty.PropertyInfo );
+
+        //    _toString = new Lazy<string>( () =>
+        //        {
+        //            return $"{this.SourceProperty} -> {this.TargetProperty}";
+        //        } );
+        //}
 
         public override string ToString()
         {

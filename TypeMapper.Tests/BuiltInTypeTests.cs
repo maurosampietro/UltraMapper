@@ -36,25 +36,6 @@ namespace TypeMapper.Tests
             public string String { get; set; } = "12";
         }
 
-        private class BuiltInTypesDto
-        {
-            public bool Boolean { get; set; }
-            public byte Byte { get; set; }
-            public char Char { get; set; }
-            public decimal Decimal { get; set; }
-            public double Double { get; set; }
-            public short Int16 { get; set; }
-            public int Int32 { get; set; }
-            public long Int64 { get; set; }
-            public object Object { get; set; }
-            public sbyte SByte { get; set; }
-            public float Single { get; set; }
-            public string String { get; set; }
-            public ushort UInt16 { get; set; }
-            public uint UInt32 { get; set; }
-            public ulong UInt64 { get; set; }
-        }
-
         private class NullablePrimitiveTypes
         {
             public bool? Boolean { get; set; } = null;
@@ -72,34 +53,21 @@ namespace TypeMapper.Tests
             public ulong? UInt64 { get; set; } = null;
         }
 
-        private class NullablePrimitiveTypesDto
+        private class NullableBuiltInTypes : NullablePrimitiveTypes
         {
-            public bool? Boolean { get; set; }
-            public byte? Byte { get; set; }
-            public char? Char { get; set; }
-            public decimal? Decimal { get; set; }
-            public double? Double { get; set; }
-            public float? Float { get; set; }
-            public short? Int16 { get; set; }
-            public int? Int32 { get; set; }
-            public long? Int64 { get; set; }
-            public sbyte? SByte { get; set; }
-            public ushort? UInt16 { get; set; }
-            public uint? UInt32 { get; set; }
-            public ulong? UInt64 { get; set; }
+            public object Object { get; set; }
+            public string String { get; set; }
         }
 
         [TestMethod]
-        public void BuiltInTest()
+        public void BuiltInToBuiltIn()
         {
-            var temp = new BuiltInTypes();
-            var temp2 = new BuiltInTypesDto();
-
-            var config = new MapperConfiguration();
+            var source = new BuiltInTypes();
+            var target = new BuiltInTypes();
 
             var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
             {
-                cfg.MapTypes<BuiltInTypes, BuiltInTypesDto>()
+                cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
                  //map with custom converter
                  .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
@@ -115,117 +83,194 @@ namespace TypeMapper.Tests
                  .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
                  .MapProperty( a => a.Single, y => y.Double );
             } );
-            typeMapper.Map( temp, temp2 );
-        }
 
-        [TestMethod]
-        public void NullableToNullableTest()
-        {
-            var source = new NullablePrimitiveTypes();
-            var target = new NullablePrimitiveTypesDto();
-
-            var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
-        public void BuiltInToNullableTypes()
+        public void BuiltInToNullable()
         {
             var source = new BuiltInTypes();
-            var target = new NullablePrimitiveTypesDto();
+            var target = new NullableBuiltInTypes();
 
             var typeMapper = new TypeMapper<DefaultMappingConvention>
             (
                 cfg =>
                 {
-                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypesDto>()
+                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypes>()
                        .MapProperty( s => s.Int32, s => s.Char );
                 }
             );
 
             typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
-        public void NullableToBuiltInTypes()
+        public void NullableToNullable()
         {
-            var source = new NullablePrimitiveTypes();
+            var source = new NullableBuiltInTypes();
+            var target = new NullableBuiltInTypes();
 
-            Assert.IsTrue( source.GetType().GetProperties()
-                .All( p => p.GetValue( source ) == null ) );
+            var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
 
-            var target = new BuiltInTypesDto()
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void NullableToBuiltIn()
+        {
+            var source = new NullableBuiltInTypes()
             {
                 Boolean = true,
                 Byte = 0x1,
-                Char = 'a',
+                Char = '2',
                 Decimal = 3,
                 Double = 4.0,
-                Int16 = 10,
+                Int16 = 5,
                 Int32 = 6,
-                Int64 = 8,
-                Object = null,
-                SByte = 0x2,
-                Single = 5.0f,
-                String = "12",
-                UInt16 = 11,
-                UInt32 = 7,
-                UInt64 = 9,
+                Int64 = 7,
+                Object = 8,
+                SByte = 0x9,
+                Single = 10,
+                String = "11",
+                UInt16 = 12,
+                UInt32 = 13,
+                UInt64 = 14
+            };
+
+            var target = new BuiltInTypes()
+            {
+                Boolean = false,
+                Byte = 15,
+                Char = (char)16,
+                Decimal = 17,
+                Double = 18,
+                Int16 = 19,
+                Int32 = 20,
+                Int64 = 21,
+                Object = 22,
+                SByte = 0x23,
+                Single = 24,
+                String = "25",
+                UInt16 = 26,
+                UInt32 = 27,
+                UInt64 = 28
             };
 
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
-        public void NullableToIncompatibleBuiltInTypes()
+        public void NullNullablesToDefaultPrimitives()
         {
-            var source = new NullablePrimitiveTypes();
-            var target = new BuiltInTypesDto();
-
-            var typeMapper = new TypeMapper<DefaultMappingConvention>
-            (
-                cfg =>
-                {
-                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypesDto>()
-                        .MapProperty( s => s.Int32, s => s.Char );
-                }
-            );
-
-            typeMapper.Map( source, target );
-        }
-
-        [TestMethod]
-        public void newTest()
-        {
-            var source = new NullablePrimitiveTypes();
-            var target = new BuiltInTypesDto();
-
-
-            var temp = new BuiltInTypes();
-            var temp2 = new BuiltInTypesDto();
-
-            var config = new MapperConfiguration();
-
-            var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+            var source = new NullableBuiltInTypes();
+            var target = new BuiltInTypes()
             {
-                cfg.MapTypes<BuiltInTypes, BuiltInTypesDto>()
-                 //map with custom converter
-                 .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
+                Boolean = true,
+                Byte = 0x1,
+                Char = (char)2,
+                Decimal = 3,
+                Double = 4.0,
+                Int16 = 5,
+                Int32 = 6,
+                Int64 = 7,
+                Object = 8,
+                SByte = 0x9,
+                Single = 10f,
+                String = "11",
+                UInt16 = 12,
+                UInt32 = 13,
+                UInt64 = 14,
+            };
 
-                 //map same source property to many different targets
-                 .MapProperty( a => a.Char, d => d.Single )
-                 .MapProperty( a => a.Char, d => d.Int32 )
+            //each property must be set to null
+            Assert.IsTrue( source.GetType().GetProperties()
+                .All( p => p.GetValue( source ) == null ) );
 
-                 //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
-                 .MapProperty( a => a.String, d => d.Single )
-                 .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+            //each property must be set to a non-default value
+            Assert.IsTrue( target.GetType().GetProperties()
+                .All( p =>
+                {
+                    object defaultValue = p.PropertyType.GetDefaultValue();
+                    return !p.GetValue( target ).Equals( defaultValue );
+                } ) );
 
-                 //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
-                 .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                 .MapProperty( a => a.Single, y => y.Double );
+            var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
+
+            var isResultOk = typeMapper.VerifyMapperResult( source, target, ( sourceValue, destinationValue ) =>
+            {
+                object defaultValue = destinationValue?.GetType().GetDefaultValue();
+
+                return Object.ReferenceEquals( destinationValue, defaultValue ) ||
+                    destinationValue.Equals( defaultValue );
             } );
-            typeMapper.Map( temp, temp2 );
+
+            Assert.IsTrue( isResultOk );
         }
+
+        //pensare meglio a testare i tipi compatibili implicitamente
+        //esplicitamente e tramite conversione
+        //[TestMethod]
+        //public void NullableToIncompatibleBuiltInTypes()
+        //{
+        //    var source = new NullableBuiltInTypes();
+        //    var target = new BuiltInTypes()
+        //    {
+        //        Boolean = true,
+        //        Byte = 0x1,
+        //        Char = 'a',
+        //        Decimal = 3,
+        //        Double = 4.0,
+        //        Int16 = 10,
+        //        Int32 = 6,
+        //        Int64 = 8,
+        //        Object = 15,
+        //        SByte = 0x2,
+        //        Single = 5.0f,
+        //        String = "12",
+        //        UInt16 = 11,
+        //        UInt32 = 7,
+        //        UInt64 = 9,
+        //    };
+
+        //    //each property must be set to null
+        //    Assert.IsTrue( source.GetType().GetProperties()
+        //        .All( p => p.GetValue( source ) == null ) );
+
+        //    //each property must be set to a non-default value
+        //    Assert.IsTrue( target.GetType().GetProperties()
+        //        .All( p =>
+        //        {
+        //            object defaultValue = p.PropertyType.GetDefaultValue();
+        //            return !p.GetValue( target ).Equals( defaultValue );
+        //        } ) );
+
+        //    var typeMapper = new TypeMapper<DefaultMappingConvention>
+        //    (
+        //        cfg =>
+        //        {
+        //            cfg.GlobalConfiguration.IgnoreConventions = true;
+
+        //            cfg.MapTypes<NullableBuiltInTypes, BuiltInTypes>()
+        //                .MapProperty( s => s.Int32, s => s.Char );
+        //        }
+        //    );
+
+        //    typeMapper.Map( source, target );
+        //    typeMapper.VerifyMapperResult( source, target );
+        //}
     }
 }

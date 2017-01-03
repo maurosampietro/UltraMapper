@@ -19,13 +19,13 @@ namespace TypeMapper
         public TypeMapper( Action<MapperConfiguration<T>> config )
               : base( new MapperConfiguration<T>() )
         {
-            config?.Invoke( (MapperConfiguration<T>)_mappingConfiguration );
+            config?.Invoke( (MapperConfiguration<T>)base.MappingConfiguration );
         }
     }
 
     public class TypeMapper
     {
-        public MapperConfiguration _mappingConfiguration { get; protected set; }
+        public MapperConfiguration MappingConfiguration { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance using <see cref="DefaultMappingConvention"/> 
@@ -39,7 +39,7 @@ namespace TypeMapper
         /// <param name="config">The mapping configuration.</param>
         public TypeMapper( MapperConfiguration config )
         {
-            _mappingConfiguration = config;
+            this.MappingConfiguration = config;
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace TypeMapper
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
-            var mappings = _mappingConfiguration[ sourceType, targetType ];
+            var mappings = this.MappingConfiguration[ sourceType, targetType ];
             
             var references = mappings.MapperFunc?.Invoke( referenceTracking, source, target );
             if( references != null )

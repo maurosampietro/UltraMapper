@@ -51,8 +51,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="CollectionTests.cs" />
     <Compile Include="ReferenceTypeTests.cs" />
     <Compile Include="BuiltInTypeTests.cs" />
+    <Compile Include="TypeMapperTestExtensions.cs" />
     <Compile Include="TypeMapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

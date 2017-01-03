@@ -59,8 +59,8 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void ReferenceTypeTest()
         {
-            var temp = new OuterType();
-            var temp2 = new OuterTypeDto();
+            var source = new OuterType();
+            var target = new OuterTypeDto();
 
             var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
@@ -77,7 +77,34 @@ namespace TypeMapper.Tests
                     .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
             } );
 
-            typeMapper.Map( temp, temp2 );
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void ManualFlattening()
+        {
+            var source = new OuterType();
+            var target = new InnerTypeDto();
+
+            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            {
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
+                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
+                    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+                    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
+                    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+
+                cfg.MapTypes<OuterType, InnerTypeDto>()
+                    .MapProperty( a => a.InnerType.A, b => b.A );
+            } );
+
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
     }
 }

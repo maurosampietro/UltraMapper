@@ -12,10 +12,11 @@ namespace TypeMapper.Internals
     {
         public LambdaExpression ValueGetter { get; set; }
 
-        public SourceProperty( PropertyInfo propertyInfo )
-            : base( propertyInfo )
+        public SourceProperty( PropertyInfo propertySelector )
+            : base( propertySelector )
         {
-            this.ValueGetter = propertyInfo.GetGetterLambdaExpression();
+            //((MemberExpression)propertySelector.Body).Member
+            this.ValueGetter = base.PropertyInfo.GetGetterLambdaExpression();
         }
     }
 }

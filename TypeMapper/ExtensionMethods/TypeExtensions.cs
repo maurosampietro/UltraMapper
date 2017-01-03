@@ -60,8 +60,16 @@ namespace TypeMapper
         }
 
         public static bool IsEnumerable( this Type type )
-        {
+        { 
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
+        }
+
+        public static object GetDefaultValue( this Type type )
+        {
+            if( type.IsValueType && Nullable.GetUnderlyingType( type ) == null )
+                return Activator.CreateInstance( type );
+
+            return null;
         }
 
         public static Type GetCollectionGenericType( this Type type )
@@ -69,7 +77,7 @@ namespace TypeMapper
             foreach( Type interfaceType in type.GetInterfaces() )
             {
                 if( interfaceType.IsGenericType &&
-                    interfaceType.GetGenericTypeDefinition() == typeof( ICollection<> ) )
+                    interfaceType.GetGenericTypeDefinition() == typeof( IEnumerable<> ) )
                 {
                     return interfaceType.GetGenericArguments()[ 0 ];
                 }

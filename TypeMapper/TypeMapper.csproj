@@ -63,6 +63,7 @@
     <Compile Include="Mappers\IObjectMapper.cs" />
     <Compile Include="Mappers\NullableMapper.cs" />
     <Compile Include="Mappers\ReferenceMapper.cs" />
+    <Compile Include="Mappers\StackMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
     <Compile Include="MappingConventions\DefaultMappingConvention.cs" />

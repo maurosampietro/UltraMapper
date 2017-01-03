@@ -162,7 +162,6 @@ namespace ConsoleApplication
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-
             int iterations = (int)Math.Pow( 10, 6 );
 
             var mapper = new TypeMapper<CustomMappingConvention>( cfg =>

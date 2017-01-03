@@ -84,7 +84,7 @@ namespace TypeMapper.Configuration
             Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
             Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
         {
-            var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
+            var sourcePropertyInfo = targetPropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
             PropertyMapping propertyMapping;

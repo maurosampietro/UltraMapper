@@ -32,6 +32,8 @@ namespace TypeMapper.Internals
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
+            this.IgnoreConventions = globalConfig.IgnoreConventions;
+
             this.TypePair = typePair;
             this.PropertyMappings = new Dictionary<PropertyInfo, PropertyMapping>();
             this.IgnoredSourceProperties = new HashSet<PropertyInfo>();

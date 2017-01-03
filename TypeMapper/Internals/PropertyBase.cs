@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace TypeMapper.Internals
 {
     public class PropertyBase
     {
+        //public readonly LambdaExpression PropertySelector;
         public readonly PropertyInfo PropertyInfo;
         private readonly Lazy<string> _toString;
 
@@ -20,6 +22,8 @@ namespace TypeMapper.Internals
 
         public PropertyBase( PropertyInfo propertyInfo )
         {
+            //this.PropertySelector = propertySelector;
+
             this.PropertyInfo = propertyInfo;
 
             this.NullableUnderlyingType = Nullable.GetUnderlyingType( propertyInfo.PropertyType );

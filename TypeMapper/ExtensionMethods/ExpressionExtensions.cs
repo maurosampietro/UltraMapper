@@ -44,13 +44,15 @@ namespace TypeMapper
             //If the instance on which we call is a derived class and the property
             //we select is defined in the base class, we will notice that
             //the PropertyInfo is retrieved through the base class; hence
-            //DelcaredType and ReflectedType are equal and we basically
-            //lost information about the ReflectedType (which should be the derived class)...
+            //DeclaredType and ReflectedType are equal and we basically
+            //lose information about the ReflectedType (which should be the derived class)...
             var lambdaMember = (PropertyInfo)memberExpression.Member;
 
             //..to fix that we do another search. 
             //We search that property name in the actual type we meant to use for the invocation
             return lambda.Parameters.First().Type.GetProperty( lambdaMember.Name );
+
+
         }
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )

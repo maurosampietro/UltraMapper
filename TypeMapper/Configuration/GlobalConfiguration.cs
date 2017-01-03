@@ -6,6 +6,8 @@ namespace TypeMapper
 {
     public class GlobalConfiguration
     {
+        public readonly MapperConfiguration Configurator;
+
         /// <summary>
         /// If set to True only explicit user-defined mappings are used.
         /// If set to False mappings are generated based on conventions
@@ -18,8 +20,12 @@ namespace TypeMapper
 
         public IMappingConvention MappingConvention { get; set; }
         public ObjectMapperSet Mappers { get; set; }
+
+        public GlobalConfiguration( MapperConfiguration configurator )
+        {
+            this.Configurator = configurator;
+        }
     }
 
     public enum ReferenceMappingStrategies { CREATE_NEW_INSTANCE, USE_TARGET_INSTANCE_IF_NOT_NULL }
-
 }

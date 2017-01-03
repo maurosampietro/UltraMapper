@@ -3,12 +3,33 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
+    /*NOTES:
+     * 
+     *- Collections that do not implement ICollection<T> must specify which method
+     *to use to 'Add' an item or must have a constructor that takes as param a IEnumerable.
+     * 
+     *- Stack<T> an other LIFO collections require the list to be read in reverse  
+     * while to preserve order and have a specular clone. This is done with Stack<T> by
+     * creating the list two times: 'new Stack( new Stack( sourceCollection ) )'
+     * 
+     *- SortedSet<T> need immediate recursion
+     *in order for the item to be added to the collection if T is a 
+     *complex type that implements IComparable<T> 
+     * 
+     * - HashSet<T> need immediate recursion
+     *in order for the item to be added to the collection if T is a 
+     *complex type that overrides GetHashCode and Equals
+     * 
+     * 
+     */
+
     public class CollectionMapper : IObjectMapperExpression
     {
         private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
@@ -32,7 +53,7 @@ namespace TypeMapper.Mappers
         private static Expression<Action<ReferenceTracking, object, Type, object>> add =
             ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
 
-        public bool CanHandle( PropertyMapping mapping )
+        public virtual bool CanHandle( PropertyMapping mapping )
         {
             //the following check avoids to treat a string as a collection
             return mapping.SourceProperty.IsEnumerable &&
@@ -42,134 +63,239 @@ namespace TypeMapper.Mappers
         public LambdaExpression GetMappingExpression( PropertyMapping mapping )
         {
             //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
-
-            var returnType = typeof( List<ObjectPair> );
-            var returnElementType = typeof( ObjectPair );
-
-            var sourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
-
-            var sourceCollectionType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetCollectionType = mapping.TargetProperty.PropertyInfo.PropertyType;
-
-            var sourceElementType = sourceCollectionType.GetCollectionGenericType();
-            var targetElementType = targetCollectionType.GetCollectionGenericType();
-
-            bool isSourceElementTypeBuiltIn = sourceCollectionType.IsBuiltInType( false );
-            bool isTargetElementTypeBuiltIn = targetElementType.IsBuiltInType( false );
-
-            var addMethod = targetCollectionType.GetMethod( "Add" );
-
-            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
-            var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
-
-            var sourceCollection = Expression.Variable( sourceCollectionType, "sourceCollection" );
-            var targetCollection = Expression.Variable( targetCollectionType, "targetCollection" );
-            var nullExp = Expression.Constant( null, sourceCollectionType );
-
-            var loopVar = Expression.Parameter( sourceElementType, "loopVar" );
-            var newRefObjects = Expression.Variable( returnType, "result" );
-
-            var newInstanceExp = Expression.New( targetCollectionType );
-            if( targetCollectionType.IsCollectionOfType( typeof( List<> ) ) )
-            {
-                var constructorWithCapacity = targetCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-                var getCountMethod = targetCollectionType.GetProperty( "Count" ).GetGetMethod();
-
-                newInstanceExp = Expression.New( constructorWithCapacity, Expression.Call( sourceCollection, getCountMethod ) );
-            }
-
+            var context = new CollectionMapperContext( mapping );
+            var addMethod = GetTargetCollectionAddMethod( context );
             Expression innerBody = null;
-            if( isTargetElementTypeBuiltIn )
+
+            if( context.IsTargetElementTypeBuiltIn )
             {
+                Expression elementsCopy =
+                    ExpressionLoops.ForEach( context.SourceCollection, context.SourceLoopingVar,
+                        Expression.Call( context.TargetCollection, addMethod, context.SourceLoopingVar ) );
+
+                var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
+                if( constructorInfo != null )
+                    elementsCopy = Expression.Assign( context.TargetCollection,
+                        GetTargetCollectionConstructorFromCollectionExpression( context ) );
+
                 innerBody = Expression.Block
                 (
-                    Expression.Assign( targetCollection, Expression.Convert( Expression.Invoke( lookup,
-                        referenceTrack, sourceCollection, Expression.Constant( targetCollectionType ) ), targetCollectionType ) ),
+                    Expression.Assign( context.TargetCollection, Expression.Convert( Expression.Invoke( lookup,
+                       context.ReferenceTrack, context.SourceCollection, Expression.Constant( context.TargetCollectionType ) ), context.TargetCollectionType ) ),
 
                     Expression.IfThen
                     (
-                        Expression.Equal( targetCollection, Expression.Constant( null, targetCollectionType ) ),
+                        Expression.Equal( context.TargetCollection, Expression.Constant( null, context.TargetCollectionType ) ),
 
                         Expression.Block
                         (
-                            Expression.Assign( targetCollection, newInstanceExp ),
-                            ExpressionLoops.ForEach( sourceCollection, loopVar, Expression.Call( targetCollection, addMethod, loopVar ) ),
+                            elementsCopy,
 
                             //cache new collection
-                            Expression.Invoke( add, referenceTrack, sourceCollection, Expression.Constant( targetCollectionType ), targetCollection )
+                            Expression.Invoke( add, context.ReferenceTrack, context.SourceCollection,
+                                Expression.Constant( context.TargetCollectionType ), context.TargetCollection )
                         )
                     )
                 );
             }
             else
             {
-                var addToRefCollectionMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-                var objectPairConstructor = returnElementType.GetConstructors().First();
-                var newElement = Expression.Variable( targetElementType, "newElement" );
+                var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+                var addRangeToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+                var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
+                var newElement = Expression.Variable( context.TargetElementType, "newElement" );
 
-                innerBody = Expression.Block
-                (
-                    Expression.Assign( targetCollection, Expression.Convert( Expression.Invoke( lookup,
-                        referenceTrack, sourceCollection, Expression.Constant( targetCollectionType ) ), targetCollectionType ) ),
+                var newInstanceExp = Expression.New( context.TargetCollectionType );
+                if( context.TargetCollectionType.IsCollectionOfType( typeof( ICollection<> ) ) )
+                {
+                    var constructorWithCapacity = context.TargetCollectionType.GetConstructor( new Type[] { typeof( int ) } );
+                    var getCountMethod = context.TargetCollectionType.GetProperty( "Count" ).GetGetMethod();
 
-                    Expression.IfThen
+                    newInstanceExp = Expression.New( constructorWithCapacity, Expression.Call( context.SourceCollection, getCountMethod ) );
+                }
+
+                //if collection needs immediate recursion on items (before adding the item to the collection itself)
+                bool needsImmediateRecursionOnItem = context.TargetCollectionType.ImplementsInterface( typeof( ISet<> )
+                    .MakeGenericType( context.TargetElementType ) );
+
+                if( needsImmediateRecursionOnItem )
+                {
+                    var itemMapping = mapping.TypeMapping.GlobalConfiguration.Configurator[
+                        context.SourceElementType, context.TargetElementType ].MappingExpression;
+
+                    innerBody = Expression.Block
                     (
-                        Expression.Equal( targetCollection, Expression.Constant( null, targetCollectionType ) ),
-                        Expression.Block
+                        Expression.Assign( context.TargetCollection, Expression.Convert( Expression.Invoke( lookup,
+                            context.ReferenceTrack, context.SourceCollection, Expression.Constant( context.TargetCollectionType ) ), context.TargetCollectionType ) ),
+
+                        Expression.IfThen
                         (
-                            new[] { newElement },
-
-                            Expression.Assign( targetCollection, newInstanceExp ),
-                            ExpressionLoops.ForEach( sourceCollection, loopVar, Expression.Block
+                            Expression.Equal( context.TargetCollection, Expression.Constant( null, context.TargetCollectionType ) ),
+                            Expression.Block
                             (
-                                Expression.Assign( newElement, Expression.New( targetElementType ) ),
-                                Expression.Call( targetCollection, addMethod, newElement ),
+                                new[] { newElement },
 
-                                Expression.Call( newRefObjects, addToRefCollectionMethod,
-                                    Expression.New( objectPairConstructor, loopVar, newElement ) )
-                            ) ),
+                                Expression.Assign( context.TargetCollection, newInstanceExp ),
+                                ExpressionLoops.ForEach( context.SourceCollection, context.SourceLoopingVar, Expression.Block
+                                (
+                                    Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
+                                    Expression.Call( context.NewRefObjects, addRangeToRefCollectionMethod, Expression.Invoke(
+                                        itemMapping, context.ReferenceTrack, context.SourceLoopingVar, newElement ) ),
 
-                            //cache new collection
-                            Expression.Invoke( add, referenceTrack, sourceCollection, Expression.Constant( targetCollectionType ), targetCollection )
+                                    Expression.Call( context.TargetCollection, addMethod, newElement )
+                                ) ),
+
+                                //cache new collection
+                                Expression.Invoke( add, context.ReferenceTrack, context.SourceCollection,
+                                    Expression.Constant( context.TargetCollectionType ), context.TargetCollection )
+                            )
                         )
-                    )
-                 );
+                     );
+                }
+                else
+                {
+                    innerBody = Expression.Block
+                    (
+                        Expression.Assign( context.TargetCollection, Expression.Convert( Expression.Invoke( lookup,
+                            context.ReferenceTrack, context.SourceCollection, Expression.Constant( context.TargetCollectionType ) ), context.TargetCollectionType ) ),
+
+                        Expression.IfThen
+                        (
+                            Expression.Equal( context.TargetCollection, Expression.Constant( null, context.TargetCollectionType ) ),
+                            Expression.Block
+                            (
+                                new[] { newElement },
+
+                                Expression.Assign( context.TargetCollection, newInstanceExp ),
+                                ExpressionLoops.ForEach( context.SourceCollection, context.SourceLoopingVar, Expression.Block
+                                (
+                                    Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
+                                    Expression.Call( context.TargetCollection, addMethod, newElement ),
+
+                                    Expression.Call( context.NewRefObjects, addToRefCollectionMethod,
+                                        Expression.New( objectPairConstructor, context.SourceLoopingVar, newElement ) )
+                                ) ),
+
+                                //cache new collection
+                                Expression.Invoke( add, context.ReferenceTrack, context.SourceCollection,
+                                    Expression.Constant( context.TargetCollectionType ), context.TargetCollection )
+                            )
+                        )
+                     );
+                }
             }
 
             var body = Expression.Block
             (
-                new[] { sourceCollection, targetCollection, newRefObjects },
+                new[] { context.SourceCollection, context.TargetCollection, context.NewRefObjects },
 
-                Expression.Assign( newRefObjects, Expression.New( returnType ) ),
-                Expression.Assign( targetCollection, Expression.Constant( null, targetCollectionType ) ),
-                Expression.Assign( sourceCollection, mapping.SourceProperty.ValueGetter.Body ),
+                Expression.Assign( context.NewRefObjects, Expression.New( context.ReturnType ) ),
+                Expression.Assign( context.TargetCollection, Expression.Constant( null, context.TargetCollectionType ) ),
+                Expression.Assign( context.SourceCollection, mapping.SourceProperty.ValueGetter.Body
+                    .ReplaceParameter( context.SourceInstance, "target" ) ),
 
                 Expression.IfThenElse
                 (
-                    Expression.Equal( sourceCollection, nullExp ),
+                    Expression.Equal( context.SourceCollection, context.SourceNull ),
 
-                    mapping.TargetProperty.ValueSetter.Body,
+                    mapping.TargetProperty.ValueSetter.Body
+                        .ReplaceParameter( context.TargetInstance, "target" ),
 
                     Expression.Block
                     (
                         innerBody,
                         mapping.TargetProperty.ValueSetter.Body
+                            .ReplaceParameter( context.TargetInstance, "target" )
                     )
                 ),
 
-                newRefObjects
+                context.NewRefObjects
             )
-            .ReplaceParameter( sourceInstance, "target" )
-            .ReplaceParameter( targetInstance, "target" )
-            .ReplaceParameter( targetCollection, "value" );
+            .ReplaceParameter( context.TargetCollection, "value" );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
+                typeof( ReferenceTracking ), context.SourceType, context.TargetType, typeof( IEnumerable<ObjectPair> ) );
 
             return Expression.Lambda( delegateType,
-                body, referenceTrack, sourceInstance, targetInstance );
+                body, context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+        }
+
+        protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )
+        {
+            var paramType = new Type[] { typeof( IEnumerable<> )
+                .MakeGenericType( context.TargetElementType ) };
+
+            return context.TargetCollectionType.GetConstructor( paramType );
+        }
+
+        protected virtual Expression GetTargetCollectionConstructorFromCollectionExpression( CollectionMapperContext context )
+        {
+            var constructor = GetTargetCollectionConstructorFromCollection( context );
+            return Expression.New( constructor, context.SourceCollection );
+        }
+
+        /// <summary>
+        /// Return the method that allows to add items to the target collection.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
+        {
+            return context.TargetCollectionType.GetMethod( "Add" );
+        }
+    }
+
+    public class CollectionMapperContext
+    {
+        public Type SourceCollectionType;
+        public Type SourceElementType;
+        public Type ReturnType { get; set; }
+        public Type ReturnElementType { get; set; }
+        public Type SourceType { get; set; }
+        public Type TargetType { get; set; }
+        public Type TargetCollectionType { get; set; }
+        public Type TargetElementType { get; set; }
+
+        public bool IsSourceElementTypeBuiltIn { get; set; }
+        public bool IsTargetElementTypeBuiltIn { get; set; }
+
+        public ParameterExpression ReferenceTrack { get; set; }
+        public ParameterExpression NewRefObjects { get; set; }
+        public ParameterExpression SourceInstance { get; set; }
+        public ParameterExpression TargetInstance { get; set; }
+        public ParameterExpression SourceCollection { get; set; }
+        public ParameterExpression TargetCollection { get; set; }
+        public ParameterExpression SourceLoopingVar { get; set; }
+        public ConstantExpression SourceNull { get; set; }
+
+        public CollectionMapperContext( PropertyMapping mapping )
+        {
+            ReturnType = typeof( List<ObjectPair> );
+            ReturnElementType = typeof( ObjectPair );
+
+            SourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
+            TargetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
+
+            SourceCollectionType = mapping.SourceProperty.PropertyInfo.PropertyType;
+            TargetCollectionType = mapping.TargetProperty.PropertyInfo.PropertyType;
+
+            SourceElementType = SourceCollectionType.GetCollectionGenericType();
+            TargetElementType = TargetCollectionType.GetCollectionGenericType();
+
+            IsSourceElementTypeBuiltIn = SourceCollectionType.IsBuiltInType( false );
+            IsTargetElementTypeBuiltIn = TargetElementType.IsBuiltInType( false );
+
+            SourceCollection = Expression.Variable( SourceCollectionType, "sourceCollection" );
+            TargetCollection = Expression.Variable( TargetCollectionType, "targetCollection" );
+            SourceNull = Expression.Constant( null, SourceCollectionType );
+
+            SourceInstance = Expression.Parameter( SourceType, "sourceInstance" );
+            TargetInstance = Expression.Parameter( TargetType, "targetInstance" );
+            ReferenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+
+            SourceLoopingVar = Expression.Parameter( SourceElementType, "loopVar" );
+            NewRefObjects = Expression.Variable( ReturnType, "result" );
         }
     }
 }
+

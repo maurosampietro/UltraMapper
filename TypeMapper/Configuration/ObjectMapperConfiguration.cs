@@ -28,17 +28,19 @@ namespace TypeMapper.Configuration
         private HashSet<IObjectMapperExpression> _objectMappers
              = new HashSet<IObjectMapperExpression>( new MapperComparer() );
 
-        public ObjectMapperSet Add<T>( T item )
+        public ObjectMapperSet Add<T>( T item, Action<T> config )
             where T : IObjectMapperExpression
         {
             _objectMappers.Add( item );
+            config?.Invoke( item );
+
             return this;
         }
 
-        public ObjectMapperSet Add<T>()
+        public ObjectMapperSet Add<T>( Action<T> config = null )
             where T : IObjectMapperExpression, new()
         {
-            return this.Add( new T() );
+            return this.Add( new T(), config );
         }
 
         public ObjectMapperSet Remove<T>()
