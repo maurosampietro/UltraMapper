@@ -93,7 +93,7 @@ namespace TypeMapper
 
             if( @interface.IsGenericTypeDefinition )
             {
-                return sourceType.GetInterfaces().Any( type =>
+                return sourceType.GetInterfaces().Any( type => type.IsGenericType &&
                     type.GetGenericTypeDefinition() == @interface );
             }
 

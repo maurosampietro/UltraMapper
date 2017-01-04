@@ -55,8 +55,9 @@ namespace TypeMapper
                     .Add<ConvertMapper>()
                     .Add<ReferenceMapper>()
                     .Add<DictionaryMapper>()
+                    .Add<SetMapper>()
                     .Add<StackMapper>()
-                    .Add<QueueMapper>()
+                    //.Add<QueueMapper>()
                     .Add<LinkedListMapper>()
                     .Add<CollectionMapper>()
             };
