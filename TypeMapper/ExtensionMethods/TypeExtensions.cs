@@ -60,7 +60,7 @@ namespace TypeMapper
         }
 
         public static bool IsEnumerable( this Type type )
-        { 
+        {
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
         }
 
@@ -90,6 +90,12 @@ namespace TypeMapper
         {
             if( !@interface.IsInterface )
                 throw new ArgumentException( $"{nameof( @interface )} parameter must be an interface type" );
+
+            if( @interface.IsGenericTypeDefinition )
+            {
+                return sourceType.GetInterfaces().Any( type =>
+                    type.GetGenericTypeDefinition() == @interface );
+            }
 
             return sourceType.GetInterfaces().Any( type => type == @interface );
         }

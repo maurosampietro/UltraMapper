@@ -23,16 +23,22 @@ namespace TypeMapper.Mappers
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        protected override Expression GetTargetCollectionConstructorFromCollectionExpression( CollectionMapperContext context )
+        protected override Expression GetTargetCollectionConstructorFromCollectionExpression( 
+            CollectionMapperContext context, ParameterExpression initCollection )
         {
             var constructor = GetTargetCollectionConstructorFromCollection( context );
             //To create an identical Stack preserving order we need to read a Stack twice
-            return Expression.New( constructor, Expression.New( constructor, context.SourceCollection ) );
+            return Expression.New( constructor, Expression.New( constructor, initCollection ) );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
             return context.TargetCollectionType.GetMethod( "Push" );
+        }
+
+        protected override bool AvoidAddCalls( CollectionMapperContext context )
+        {
+            return true;
         }
     }
 
