@@ -30,13 +30,13 @@ namespace TypeMapper.Internals
         }
 
         public PropertyMapping( TypeMapping typeMapping,
-            PropertyInfo sourcePropertySelector,
-            PropertyInfo targetPropertySelector )
+            PropertyInfo sourceProperty,
+            PropertyInfo targetProperty )
         {
             this.TypeMapping = typeMapping;
 
-            this.SourceProperty = new SourceProperty( sourcePropertySelector );
-            this.TargetProperty = new TargetProperty( targetPropertySelector );
+            this.SourceProperty = SourceProperty.GetSourceProperty( sourceProperty );
+            this.TargetProperty = TargetProperty.GetTargetProperty( targetProperty );
 
             this.PropertyInfoPair = new PropertyInfoPair(
                this.SourceProperty.PropertyInfo, this.TargetProperty.PropertyInfo );

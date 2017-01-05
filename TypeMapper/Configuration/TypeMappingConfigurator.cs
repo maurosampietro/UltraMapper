@@ -76,17 +76,11 @@ namespace TypeMapper.Configuration
             Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
             params Expression<Func<TSource, TSourceProperty>>[] sourcePropertySelectors )
         {
-            var sourcePropertyInfo = sourcePropertySelector.ExtractProperty();
-            _typeMapping.IgnoredSourceProperties.Add( sourcePropertyInfo );
+            var selectors = new[] { sourcePropertySelector }.Concat( sourcePropertySelectors );           
+            var properties = selectors.Select( prop => prop.ExtractProperty() );
 
-            if( sourcePropertySelectors != null )
-            {
-                var properties = sourcePropertySelectors
-                    .Select( prop => prop.ExtractProperty() );
-
-                foreach( var property in properties )
-                    _typeMapping.IgnoredSourceProperties.Add( property );
-            }
+            foreach( var property in properties )
+                SourceProperty.GetSourceProperty( property ).Ignore = true;
 
             return this;
         }

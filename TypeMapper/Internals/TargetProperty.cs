@@ -10,7 +10,12 @@ using TypeMapper.CollectionMappingStrategies;
 namespace TypeMapper.Internals
 {
     public class TargetProperty : PropertyBase
-    {
+    {       
+        //Each source proeprty can be instantiated only once
+        //so we can handle source property options.
+        private static readonly Dictionary<PropertyInfo, TargetProperty> _cachedProperties
+            = new Dictionary<PropertyInfo, TargetProperty>();
+
         public LambdaExpression ValueSetter { get; set; }
         public LambdaExpression ValueGetter { get; set; }
 
@@ -24,6 +29,18 @@ namespace TypeMapper.Internals
 
             this.ValueSetter = base.PropertyInfo.GetSetterLambdaExpression();
             this.ValueGetter = base.PropertyInfo.GetGetterLambdaExpression();
+        }
+
+        public static TargetProperty GetTargetProperty( PropertyInfo propertyInfo )
+        {
+            TargetProperty targetProperty;
+            if( !_cachedProperties.TryGetValue( propertyInfo, out targetProperty ) )
+            {
+                targetProperty = new TargetProperty( propertyInfo );
+                _cachedProperties.Add( propertyInfo, targetProperty );
+            }
+
+            return targetProperty;
         }
     }
 }

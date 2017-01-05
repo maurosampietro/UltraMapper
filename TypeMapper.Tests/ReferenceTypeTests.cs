@@ -21,8 +21,6 @@ namespace TypeMapper.Tests
 
             public OuterType()
             {
-                this.String = "Test";
-
                 this.InnerType = new InnerType()
                 {
                     A = "a",
@@ -60,10 +58,12 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
-        public void ReferenceTypeTest()
+        public void UseTargetInstanceIfNotNull()
         {
-            var source = new OuterType();
+            var source = new OuterType() { String = "Test" };
             var target = new OuterType() { String = "fadadfsadsffsd" };
+
+            string expectedValue = target.String;
 
             var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
@@ -75,13 +75,36 @@ namespace TypeMapper.Tests
                     .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
                     .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
 
-                //cfg.MapTypes( source, target ).IgnoreSourceProperty( s => s.String );
+                cfg.MapTypes( source, target ).IgnoreSourceProperty( s => s.String );
             } );
 
             typeMapper.Map( source, target );
+            Assert.IsTrue( target.String == expectedValue );
+        }
 
-            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
+        [TestMethod]
+        public void CreateNewInstance()
+        {
+            var source = new OuterType() { String = "Test" };
+            var target = new OuterType() { String = "fadadfsadsffsd" };
+
+            string expectedValue = target.String;
+
+            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            {
+                cfg.GlobalConfiguration.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
+                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
+                    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+                    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
+                    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+
+                cfg.MapTypes( source, target ).IgnoreSourceProperty( s => s.String );
+            } );
+
+            typeMapper.Map( source, target );
+            Assert.IsTrue( target.String == null );
         }
 
         [TestMethod]

@@ -17,39 +17,13 @@ namespace TypeMapper.Mappers
      * 
      */
 
-    public class CollectionMapper : IObjectMapperExpression
+    public class CollectionMapper : BaseReferenceObjectMapper, IObjectMapperExpression
     {
-        private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
-            ( referenceTracker, sourceInstance, targetType ) =>
-        {
-            object targetInstance;
-            referenceTracker.TryGetValue( sourceInstance, targetType, out targetInstance );
-
-            return targetInstance;
-        };
-
-        private static Action<ReferenceTracking, object, Type, object> addToTracker =
-            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-        {
-            referenceTracker.Add( sourceInstance, targetType, targetInstance );
-        };
-
-        private static Expression<Func<ReferenceTracking, object, Type, object>> lookup =
-             ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
-
-        private static Expression<Action<ReferenceTracking, object, Type, object>> add =
-            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
-
         public virtual bool CanHandle( PropertyMapping mapping )
         {
             return mapping.SourceProperty.IsEnumerable &&
                  mapping.TargetProperty.IsEnumerable;
         }
-
-        //protected virtual Expression GetComplexTypeInnerBody( PropertyMapping mapping, CollectionMapperContext context )
-        //{
-
-        //}
 
         protected virtual Expression GetSimpleTypeInnerBody( PropertyMapping mapping, CollectionMapperContext context )
         {
@@ -177,7 +151,7 @@ namespace TypeMapper.Mappers
             var lookupBody = Expression.Block
             (
                 Expression.Assign( context.TargetCollection, Expression.Convert(
-                    Expression.Invoke( lookup, context.ReferenceTrack, context.SourceCollection,
+                    Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, context.SourceCollection,
                     Expression.Constant( context.TargetCollectionType ) ), context.TargetCollectionType ) ),
 
                 Expression.IfThen
@@ -188,7 +162,7 @@ namespace TypeMapper.Mappers
                         innerBody,
 
                         //cache new collection
-                        Expression.Invoke( add, context.ReferenceTrack, context.SourceCollection,
+                        Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourceCollection,
                             Expression.Constant( context.TargetCollectionType ), context.TargetCollection )
                     )
                 )

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    public class PropertyBase
+    public abstract class PropertyBase
     {
         //public readonly LambdaExpression PropertySelector;
         public readonly PropertyInfo PropertyInfo;
@@ -19,6 +19,8 @@ namespace TypeMapper.Internals
         public bool IsBuiltInType { get; set; }
         public bool IsNullable { get; set; }
         public Type NullableUnderlyingType { get; set; }
+
+        public bool Ignore { get; set; }
 
         public PropertyBase( PropertyInfo propertyInfo )
         {

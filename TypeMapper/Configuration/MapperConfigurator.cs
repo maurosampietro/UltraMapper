@@ -114,8 +114,7 @@ namespace TypeMapper
             var targetProperties = target.GetProperties( bindingAttributes )
                 .Where( p => p.CanWrite && p.GetIndexParameters().Length == 0 ); //no indexed properties
 
-            foreach( var sourceProperty in sourceProperties.Where(
-                 sp => !typeMapping.IgnoredSourceProperties.Contains( sp ) ) )
+            foreach( var sourceProperty in sourceProperties )
             {
                 foreach( var targetProperty in targetProperties )
                 {

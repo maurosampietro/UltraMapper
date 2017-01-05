@@ -27,8 +27,6 @@ namespace TypeMapper.Internals
         public LambdaExpression CustomTargetConstructor { get; set; }
         public bool IgnoreConventions { get; set; }
 
-        public HashSet<PropertyInfo> IgnoredSourceProperties { get; private set; }
-
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
@@ -36,7 +34,6 @@ namespace TypeMapper.Internals
 
             this.TypePair = typePair;
             this.PropertyMappings = new Dictionary<PropertyInfo, PropertyMapping>();
-            this.IgnoredSourceProperties = new HashSet<PropertyInfo>();
         }
 
         private LambdaExpression _expression;
@@ -64,34 +61,37 @@ namespace TypeMapper.Internals
 
                 var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
                 var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
-                var addCalls = PropertyMappings.Values.Select( mapping =>
-                {
-                    if( mapping.Expression.ReturnType == typeof( IEnumerable<ObjectPair> ) )
+
+                var addCalls = PropertyMappings.Values
+                    .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
+                    .Select( mapping =>
                     {
-                        return Expression.Call( newRefObjects, addRangeMethod, mapping.Expression.Body );
-                    }
-                    else if( mapping.Expression.ReturnType == returnElementType )
-                    {
-                        var objPair = Expression.Variable( returnElementType, "objPair" );
+                        if( mapping.Expression.ReturnType == typeof( IEnumerable<ObjectPair> ) )
+                        {
+                            return Expression.Call( newRefObjects, addRangeMethod, mapping.Expression.Body );
+                        }
+                        else if( mapping.Expression.ReturnType == returnElementType )
+                        {
+                            var objPair = Expression.Variable( returnElementType, "objPair" );
 
-                        return (Expression)Expression.Block
-                        (
-                            new[] { objPair },
+                            return (Expression)Expression.Block
+                            (
+                                new[] { objPair },
 
-                            Expression.Assign( objPair, mapping.Expression.Body ),
+                                Expression.Assign( objPair, mapping.Expression.Body ),
 
-                            Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                                Expression.Call( newRefObjects, addMethod, objPair ) )
+                                Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                                    Expression.Call( newRefObjects, addMethod, objPair ) )
 
-                        );
-                    }
-                    else if( mapping.Expression.ReturnType == typeof( void ) )
-                    {
-                        return mapping.Expression.Body;
-                    }
+                            );
+                        }
+                        else if( mapping.Expression.ReturnType == typeof( void ) )
+                        {
+                            return mapping.Expression.Body;
+                        }
 
-                    throw new ArgumentException( "Expressions should return System.Void or ObjectPair or IEnumerable<ObjectPair>" );
-                } );
+                        throw new ArgumentException( "Expressions should return System.Void or ObjectPair or IEnumerable<ObjectPair>" );
+                    } );
 
                 var bodyExp = (addCalls?.Any() != true) ?
                         (Expression)Expression.Empty() : Expression.Block( addCalls );
