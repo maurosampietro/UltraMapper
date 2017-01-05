@@ -29,7 +29,7 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( PropertyMapping mapping )
         {
-            return mapping.TargetProperty.PropertyInfo
+            return base.CanHandle( mapping ) && mapping.TargetProperty.PropertyInfo
                 .PropertyType.ImplementsInterface( typeof( ISet<> ) );
         }
 

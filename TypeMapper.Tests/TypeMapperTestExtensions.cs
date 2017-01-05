@@ -21,22 +21,34 @@ namespace TypeMapper.Tests
 
             if( source.GetType().IsEnumerable() && target.GetType().IsEnumerable() )
             {
-                var firstPos = (source as IEnumerable).GetEnumerator();
-                var secondPos = (target as IEnumerable).GetEnumerator();
-
-                var hasFirst = firstPos.MoveNext();
-                var hasSecond = secondPos.MoveNext();
-
-                while( hasFirst && hasSecond )
+                if( source.GetType() == target.GetType() )
                 {
-                    if( !Equals( firstPos.Current, secondPos.Current ) )
-                        return false;
+                    var firstPos = (source as IEnumerable).GetEnumerator();
+                    var secondPos = (target as IEnumerable).GetEnumerator();
 
-                    hasFirst = firstPos.MoveNext();
-                    hasSecond = secondPos.MoveNext();
+                    var hasFirst = firstPos.MoveNext();
+                    var hasSecond = secondPos.MoveNext();
+
+                    while( hasFirst && hasSecond )
+                    {
+                        if( !Equals( firstPos.Current, secondPos.Current ) )
+                            return false;
+
+                        hasFirst = firstPos.MoveNext();
+                        hasSecond = secondPos.MoveNext();
+                    }
+
+                    return !hasFirst && !hasSecond;
                 }
-
-                return !hasFirst && !hasSecond;     
+                else
+                {
+                    var targetColl = (target as IEnumerable);
+                    foreach( var sVal in source as IEnumerable )
+                    {
+                        if( !targetColl.Cast<object>().Contains( sVal ) )
+                            return false;
+                    }
+                }
             }
 
             var typeMapping = typeMapper.MappingConfiguration[

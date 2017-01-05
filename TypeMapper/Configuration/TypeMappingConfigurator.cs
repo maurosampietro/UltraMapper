@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Internals;
@@ -56,7 +57,7 @@ namespace TypeMapper.Configuration
 
         public TypeMappingConfigurator<TSource, TTarget> EnableMappingConventions()
         {
-            _typeMapping.IgnoreConventions = true;
+            _typeMapping.IgnoreConventions = false;
             return this;
         }
 
@@ -87,20 +88,41 @@ namespace TypeMapper.Configuration
             var sourcePropertyInfo = targetPropertySelector.ExtractPropertyInfo();
             var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
 
-            PropertyMapping propertyMapping;
-            if( !_typeMapping.PropertyMappings.TryGetValue( targetPropertyInfo, out propertyMapping ) )
+            //PropertyMapping propertyMapping;
+            //if( !_typeMapping.PropertyMappings.TryGetValue( targetPropertyInfo, out propertyMapping ) )
+            //{
+            //    propertyMapping = new PropertyMapping( _typeMapping, sourcePropertyInfo, targetPropertyInfo )
+            //    {
+            //        MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION,
+            //        CustomConverter = converter
+            //    };
+
+            //    propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
+            //        mapper => mapper.CanHandle( propertyMapping ) );
+
+            //    _typeMapping.PropertyMappings.Add( targetPropertyInfo, propertyMapping );
+            //}
+
+            return (TypeMappingConfigurator<TSource, TTarget>)this.MapProperty(
+                sourcePropertyInfo, targetPropertyInfo, converter );
+        }
+
+        public TypeMappingConfigurator MapProperty(
+            PropertyInfo sourcePropertyInfo, PropertyInfo targetPropertyInfo, LambdaExpression converter = null )
+        {
+            var propertyMapping = new PropertyMapping( _typeMapping, sourcePropertyInfo, targetPropertyInfo )
             {
-                propertyMapping = new PropertyMapping( _typeMapping, sourcePropertyInfo, targetPropertyInfo )
-                {
-                    MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION,
-                    CustomConverter = converter
-                };
+                MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION,
+                CustomConverter = converter
+            };
 
-                propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
-                    mapper => mapper.CanHandle( propertyMapping ) );
+            propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
+                mapper => mapper.CanHandle( propertyMapping ) );
 
+            if( _typeMapping.PropertyMappings.ContainsKey( targetPropertyInfo ) )
+                _typeMapping.PropertyMappings[ targetPropertyInfo ] = propertyMapping;
+            else
                 _typeMapping.PropertyMappings.Add( targetPropertyInfo, propertyMapping );
-            }
 
             return this;
         }

@@ -101,10 +101,8 @@ namespace TypeMapper
             return typeMapping;
         }
 
-        private Dictionary<PropertyInfo, PropertyMapping> MapByConvention( TypeMapping typeMapping )
+        private void MapByConvention( TypeMapping typeMapping )
         {
-            var propertyMappings = new Dictionary<PropertyInfo, PropertyMapping>();
-
             var source = typeMapping.TypePair.SourceType;
             var target = typeMapping.TypePair.TargetType;
 
@@ -136,15 +134,16 @@ namespace TypeMapper
                             if( propertyMapping.Mapper == null )
                                 throw new Exception( $"No object mapper can handle {propertyMapping}" );
 
-                            typeMapping.PropertyMappings.Add( targetProperty, propertyMapping );
+                            if( !typeMapping.PropertyMappings.ContainsKey( targetProperty ) )
+                                typeMapping.PropertyMappings.Add( targetProperty, propertyMapping );
+                            else
+                                typeMapping.PropertyMappings[ targetProperty ] = propertyMapping;
 
                             break; //sourceProperty is now mapped, jump directly to the next sourceProperty
                         }
                     }
                 }
             }
-
-            return propertyMappings;
         }
 
         public TypeMapping this[ Type source, Type target ]

@@ -55,9 +55,8 @@ namespace TypeMapper.Mappers
 
         public virtual bool CanHandle( PropertyMapping mapping )
         {
-            //the following check avoids to treat a string as a collection
             return mapping.SourceProperty.IsEnumerable &&
-                !mapping.SourceProperty.IsBuiltInType;
+                 mapping.TargetProperty.IsEnumerable;
         }
 
         //protected virtual Expression GetComplexTypeInnerBody( PropertyMapping mapping, CollectionMapperContext context )
@@ -114,7 +113,7 @@ namespace TypeMapper.Mappers
                     var constructorWithCapacity = context.TargetCollectionType.GetConstructor( new Type[] { typeof( int ) } );
                     if( constructorWithCapacity != null )
                     {
-                        var getCountMethod = context.TargetCollectionType.GetProperty( "Count" ).GetGetMethod();
+                        var getCountMethod = context.SourceCollectionType.GetProperty( "Count" ).GetGetMethod();
                         newInstanceExp = Expression.New( constructorWithCapacity, Expression.Call( context.SourceCollection, getCountMethod ) );
                     }
                 }

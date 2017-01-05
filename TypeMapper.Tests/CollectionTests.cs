@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Tests
 {
@@ -124,6 +125,45 @@ namespace TypeMapper.Tests
 
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void FromCollectionToAnother()
+        {
+            var typeProperties = typeof( GenericCollectionsComplexArgument ).GetProperties();
+
+            foreach( var sourceProp in typeProperties )
+            {
+                var source = new GenericCollectionsComplexArgument();
+
+                //initialize source
+                for( int i = 0; i < 50; i++ )
+                {
+                    source.List.Add( new ComplexType() { A = i } );
+                    source.HashSet.Add( new ComplexType() { A = i } );
+                    source.SortedSet.Add( new ComplexType() { A = i } );
+                    source.Stack.Push( new ComplexType() { A = i } );
+                    source.Queue.Enqueue( new ComplexType() { A = i } );
+                    source.LinkedList.AddLast( new ComplexType() { A = i } );
+                    source.ObservableCollection.Add( new ComplexType() { A = i } );
+                }
+
+                var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+                {
+                    //cfg.GlobalConfiguration.IgnoreConventions = true;
+                } );
+
+                var target = new GenericCollectionsComplexArgument();
+
+                var typeMappingConfig = typeMapper.MappingConfiguration.MapTypes( source, target );
+                foreach( var targetProp in typeProperties )
+                    typeMappingConfig.MapProperty( sourceProp, targetProp );
+
+                typeMapper.Map( source, target );
+
+                bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+                Assert.IsTrue( isResultOk );
+            }
         }
     }
 }

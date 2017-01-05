@@ -20,7 +20,7 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( PropertyMapping mapping )
         {
-            return mapping.SourceProperty.PropertyInfo.PropertyType
+            return base.CanHandle( mapping ) && mapping.TargetProperty.PropertyInfo.PropertyType
                 .GetGenericTypeDefinition() == typeof( Stack<> );
         }
 
