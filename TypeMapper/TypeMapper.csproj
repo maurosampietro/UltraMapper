@@ -55,8 +55,8 @@
     <Compile Include="Internals\SourceProperty.cs" />
     <Compile Include="Internals\TargetProperty.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
-    <Compile Include="Mappers\CollectionMappers\SetMapper.cs" />
-    <Compile Include="Mappers\CollectionMappers\StackMapper.cs" />
+    <Compile Include="Mappers\SetMapper.cs" />
+    <Compile Include="Mappers\StackMapper.cs" />
     <Compile Include="Mappers\CustomConverterMapper.cs" />
     <Compile Include="Mappers\BuiltInTypesMapper.cs" />
     <Compile Include="Mappers\CollectionMapper.cs" />
@@ -64,8 +64,9 @@
     <Compile Include="Mappers\DictionaryMapper.cs" />
     <Compile Include="Mappers\IObjectMapper.cs" />
     <Compile Include="Mappers\NullableMapper.cs" />
+    <Compile Include="Mappers\BaseReferenceMapper.cs" />
     <Compile Include="Mappers\ReferenceMapper.cs" />
-    <Compile Include="Mappers\StackMapper.cs" />
+    <Compile Include="Mappers\LinkedListMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
     <Compile Include="MappingConventions\DefaultMappingConvention.cs" />

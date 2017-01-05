@@ -15,19 +15,6 @@ namespace TypeMapper.Mappers
      *- Collections that do not implement ICollection<T> must specify which method
      *to use to 'Add' an item or must have a constructor that takes as param a IEnumerable.
      * 
-     *- Stack<T> an other LIFO collections require the list to be read in reverse  
-     * while to preserve order and have a specular clone. This is done with Stack<T> by
-     * creating the list two times: 'new Stack( new Stack( sourceCollection ) )'
-     * 
-     *- SortedSet<T> need immediate recursion
-     *in order for the item to be added to the collection if T is a 
-     *complex type that implements IComparable<T> 
-     * 
-     * - HashSet<T> need immediate recursion
-     *in order for the item to be added to the collection if T is a 
-     *complex type that overrides GetHashCode and Equals
-     * 
-     * 
      */
 
     public class CollectionMapper : IObjectMapperExpression

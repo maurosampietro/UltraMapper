@@ -10,29 +10,8 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class DictionaryMapper : IObjectMapperExpression
+    public class DictionaryMapper : BaseReferenceObjectMapper, IObjectMapperExpression
     {
-        private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
-            ( referenceTracker, sourceInstance, targetType ) =>
-        {
-            object targetInstance;
-            referenceTracker.TryGetValue( sourceInstance, targetType, out targetInstance );
-
-            return targetInstance;
-        };
-
-        private static Action<ReferenceTracking, object, Type, object> addToTracker =
-            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-        {
-            referenceTracker.Add( sourceInstance, targetType, targetInstance );
-        };
-
-        private static Expression<Func<ReferenceTracking, object, Type, object>> lookup =
-             ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
-
-        private static Expression<Action<ReferenceTracking, object, Type, object>> add =
-            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
-
         public bool CanHandle( PropertyMapping mapping )
         {
             bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom(
@@ -109,7 +88,7 @@ namespace TypeMapper.Mappers
                 {
                     keyExpression = Expression.Block
                     (
-                        Expression.Assign( targetKey, Expression.Convert( Expression.Invoke( lookup,
+                        Expression.Assign( targetKey, Expression.Convert( Expression.Invoke( CacheLookupExpression,
                             referenceTrack, sourceKey, Expression.Constant( sourceKeyType ) ), targetKeyType ) ),
 
                         Expression.IfThen
@@ -120,7 +99,7 @@ namespace TypeMapper.Mappers
                                 Expression.Assign( targetKey, Expression.New( targetKeyType ) ),
 
                                 //cache new collection
-                                Expression.Invoke( add, referenceTrack, sourceKey,
+                                Expression.Invoke( CacheAddExpression, referenceTrack, sourceKey,
                                     Expression.Constant( targetKeyType ), targetKey ),
 
                                 //add to return list
@@ -138,7 +117,7 @@ namespace TypeMapper.Mappers
                 {
                     valueExpression = Expression.Block
                     (
-                        Expression.Assign( targetValue, Expression.Convert( Expression.Invoke( lookup,
+                        Expression.Assign( targetValue, Expression.Convert( Expression.Invoke( CacheLookupExpression,
                            referenceTrack, sourceValue, Expression.Constant( sourceValueType ) ), targetValueType ) ),
 
                         Expression.IfThen
@@ -149,7 +128,7 @@ namespace TypeMapper.Mappers
                                 Expression.Assign( targetValue, Expression.New( targetValueType ) ),
 
                                 //cache new collection
-                                Expression.Invoke( add, referenceTrack, sourceValue,
+                                Expression.Invoke( CacheAddExpression, referenceTrack, sourceValue,
                                     Expression.Constant( targetValueType ), targetValue ),
 
                                 //add to return list
@@ -190,7 +169,7 @@ namespace TypeMapper.Mappers
 
                     Expression.Block
                     (
-                        Expression.Assign( targetCollection, Expression.Convert( Expression.Invoke( lookup,
+                        Expression.Assign( targetCollection, Expression.Convert( Expression.Invoke( CacheLookupExpression,
                             referenceTrack, sourceCollection, Expression.Constant( targetCollectionType ) ), targetCollectionType ) ),
 
                         Expression.IfThen
@@ -203,7 +182,7 @@ namespace TypeMapper.Mappers
                                 innerBody,
 
                                 //cache new collection
-                                Expression.Invoke( add, referenceTrack, sourceCollection,
+                                Expression.Invoke( CacheAddExpression, referenceTrack, sourceCollection,
                                     Expression.Constant( targetCollectionType ), targetCollection )
                             )
                         ),

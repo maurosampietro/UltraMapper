@@ -17,9 +17,12 @@ namespace TypeMapper.Tests
         {
             public InnerType NullInnerType { get; set; }
             public InnerType InnerType { get; set; }
+            public string String { get; set; }
 
             public OuterType()
             {
+                this.String = "Test";
+
                 this.InnerType = new InnerType()
                 {
                     A = "a",
@@ -60,14 +63,10 @@ namespace TypeMapper.Tests
         public void ReferenceTypeTest()
         {
             var source = new OuterType();
-            var target = new OuterTypeDto();
+            var target = new OuterType() { String = "fadadfsadsffsd" };
 
             var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
-                //cfg.ObjectMappers.Add<BuiltInTypeMapper>()
-                //    .Add<ReferenceMapper>()
-                //    .Add<CollectionMapper>()
-                //    .Add<DictionaryMapper>();
                 cfg.GlobalConfiguration.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
 
                 cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
@@ -75,6 +74,8 @@ namespace TypeMapper.Tests
                     .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
                     .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+
+                //cfg.MapTypes( source, target ).IgnoreSourceProperty( s => s.String );
             } );
 
             typeMapper.Map( source, target );

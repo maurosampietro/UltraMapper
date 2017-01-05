@@ -13,43 +13,52 @@ namespace TypeMapper.Tests
         public static bool VerifyMapperResult( this TypeMapper typeMapper,
             object source, object target, Func<object, object, bool> verify )
         {
+            Type sourceType = source.GetType();
+            Type targetType = target.GetType();
+
             if( Object.ReferenceEquals( source, target ) )
                 return true;
 
             if( source == null || target == null )
                 return false;
 
-            if( source.GetType().IsEnumerable() && target.GetType().IsEnumerable() )
+            if( sourceType == targetType )
             {
-                if( source.GetType() == target.GetType() )
-                {
-                    var firstPos = (source as IEnumerable).GetEnumerator();
-                    var secondPos = (target as IEnumerable).GetEnumerator();
-
-                    var hasFirst = firstPos.MoveNext();
-                    var hasSecond = secondPos.MoveNext();
-
-                    while( hasFirst && hasSecond )
-                    {
-                        if( !Equals( firstPos.Current, secondPos.Current ) )
-                            return false;
-
-                        hasFirst = firstPos.MoveNext();
-                        hasSecond = secondPos.MoveNext();
-                    }
-
-                    return !hasFirst && !hasSecond;
-                }
-                else
-                {
-                    var targetColl = (target as IEnumerable);
-                    foreach( var sVal in source as IEnumerable )
-                    {
-                        if( !targetColl.Cast<object>().Contains( sVal ) )
-                            return false;
-                    }
-                }
+                if( sourceType.IsValueType )
+                    return source.Equals( target );
             }
+
+            //if( sourceType.IsEnumerable() && targetType.IsEnumerable() )
+            //{
+            //    if( sourceType == targetType )
+            //    {
+            //        var firstPos = (source as IEnumerable).GetEnumerator();
+            //        var secondPos = (target as IEnumerable).GetEnumerator();
+
+            //        var hasFirst = firstPos.MoveNext();
+            //        var hasSecond = secondPos.MoveNext();
+
+            //        while( hasFirst && hasSecond )
+            //        {
+            //            if( !Equals( firstPos.Current, secondPos.Current ) )
+            //                return false;
+
+            //            hasFirst = firstPos.MoveNext();
+            //            hasSecond = secondPos.MoveNext();
+            //        }
+
+            //        return !hasFirst && !hasSecond;
+            //    }
+            //    else
+            //    {
+            //        var targetColl = (target as IEnumerable);
+            //        foreach( var sVal in source as IEnumerable )
+            //        {
+            //            if( !targetColl.Cast<object>().Contains( sVal ) )
+            //                return false;
+            //        }
+            //    }
+            //}
 
             var typeMapping = typeMapper.MappingConfiguration[
                 source.GetType(), target.GetType() ];
@@ -63,10 +72,35 @@ namespace TypeMapper.Tests
                 if( converter != null )
                     sourceValue = converter.Compile().DynamicInvoke( sourceValue );
 
-                var destinationValue = mapping.TargetProperty
+                var targetValue = mapping.TargetProperty
                     .PropertyInfo.GetValue( target );
 
-                if( !verify( sourceValue, destinationValue ) )
+                if( Object.ReferenceEquals( sourceValue, targetValue ) )
+                    return true;
+
+                if( sourceValue == null || targetValue == null )
+                    return false;
+
+                if( sourceValue.GetType().IsEnumerable() && targetValue.GetType().IsEnumerable() )
+                {
+                    var firstPos = (sourceValue as IEnumerable).GetEnumerator();
+                    var secondPos = (targetValue as IEnumerable).GetEnumerator();
+
+                    var hasFirst = firstPos.MoveNext();
+                    var hasSecond = secondPos.MoveNext();
+
+                    while( hasFirst && hasSecond )
+                    {
+                        if( !VerifyMapperResult( typeMapper, firstPos.Current, secondPos.Current ) )
+                            return false;
+
+                        hasFirst = firstPos.MoveNext();
+                        hasSecond = secondPos.MoveNext();
+                    }
+
+                    return !hasFirst && !hasSecond;
+                }
+                else if( !verify( sourceValue, targetValue ) )
                     return false;
             }
 

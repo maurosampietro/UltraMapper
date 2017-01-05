@@ -35,54 +35,32 @@ namespace TypeMapper.Tests
             }
         }
 
-        private class GenericCollectionsPrimitiveArgument
+        private class GenericCollections<T>
         {
-            public List<int> List { get; set; }
-            public HashSet<int> HashSet { get; set; }
-            public SortedSet<int> SortedSet { get; set; }
-            public Stack<int> Stack { get; set; }
-            public Queue<int> Queue { get; set; }
-            public LinkedList<int> LinkedList { get; set; }
-            public ObservableCollection<int> ObservableCollection { get; set; }
+            public List<T> List { get; set; }
+            public HashSet<T> HashSet { get; set; }
+            public SortedSet<T> SortedSet { get; set; }
+            public Stack<T> Stack { get; set; }
+            public Queue<T> Queue { get; set; }
+            public LinkedList<T> LinkedList { get; set; }
+            public ObservableCollection<T> ObservableCollection { get; set; }
 
-            public GenericCollectionsPrimitiveArgument()
+            public GenericCollections()
             {
-                this.List = new List<int>();
-                this.HashSet = new HashSet<int>();
-                this.SortedSet = new SortedSet<int>();
-                this.Stack = new Stack<int>();
-                this.Queue = new Queue<int>();
-                this.LinkedList = new LinkedList<int>();
-                this.ObservableCollection = new ObservableCollection<int>();
-            }
-        }
-
-        private class GenericCollectionsComplexArgument
-        {
-            public List<ComplexType> List { get; set; }
-            public HashSet<ComplexType> HashSet { get; set; }
-            public SortedSet<ComplexType> SortedSet { get; set; }
-            public Stack<ComplexType> Stack { get; set; }
-            public Queue<ComplexType> Queue { get; set; }
-            public LinkedList<ComplexType> LinkedList { get; set; }
-            public ObservableCollection<ComplexType> ObservableCollection { get; set; }
-
-            public GenericCollectionsComplexArgument()
-            {
-                this.List = new List<ComplexType>();
-                this.HashSet = new HashSet<ComplexType>();
-                this.SortedSet = new SortedSet<ComplexType>();
-                this.Stack = new Stack<ComplexType>();
-                this.Queue = new Queue<ComplexType>();
-                this.LinkedList = new LinkedList<ComplexType>();
-                this.ObservableCollection = new ObservableCollection<ComplexType>();
+                this.List = new List<T>();
+                this.HashSet = new HashSet<T>();
+                this.SortedSet = new SortedSet<T>();
+                this.Stack = new Stack<T>();
+                this.Queue = new Queue<T>();
+                this.LinkedList = new LinkedList<T>();
+                this.ObservableCollection = new ObservableCollection<T>();
             }
         }
 
         [TestMethod]
-        public void CloneCollectionPrimitiveArgument()
+        public void CollectionPrimitiveArgument()
         {
-            var source = new GenericCollectionsPrimitiveArgument();
+            var source = new GenericCollections<int>();
             for( int i = 0; i < 50; i++ )
             {
                 source.List.Add( i );
@@ -94,7 +72,7 @@ namespace TypeMapper.Tests
                 source.ObservableCollection.Add( i );
             }
 
-            var target = new GenericCollectionsPrimitiveArgument();
+            var target = new GenericCollections<int>();
 
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
@@ -104,9 +82,9 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
-        public void CloneCollectionComplexArgument()
+        public void CollectionComplexArgument()
         {
-            var source = new GenericCollectionsComplexArgument();
+            var source = new GenericCollections<ComplexType>();
             for( int i = 0; i < 50; i++ )
             {
                 source.List.Add( new ComplexType() { A = i } );
@@ -118,7 +96,7 @@ namespace TypeMapper.Tests
                 source.ObservableCollection.Add( new ComplexType() { A = i } );
             }
 
-            var target = new GenericCollectionsComplexArgument();
+            var target = new GenericCollections<ComplexType>();
 
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
@@ -130,11 +108,11 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void FromCollectionToAnother()
         {
-            var typeProperties = typeof( GenericCollectionsComplexArgument ).GetProperties();
+            var typeProperties = typeof( GenericCollections<ComplexType> ).GetProperties();
 
             foreach( var sourceProp in typeProperties )
             {
-                var source = new GenericCollectionsComplexArgument();
+                var source = new GenericCollections<ComplexType>();
 
                 //initialize source
                 for( int i = 0; i < 50; i++ )
@@ -153,7 +131,7 @@ namespace TypeMapper.Tests
                     //cfg.GlobalConfiguration.IgnoreConventions = true;
                 } );
 
-                var target = new GenericCollectionsComplexArgument();
+                var target = new GenericCollections<ComplexType>();
 
                 var typeMappingConfig = typeMapper.MappingConfiguration.MapTypes( source, target );
                 foreach( var targetProp in typeProperties )

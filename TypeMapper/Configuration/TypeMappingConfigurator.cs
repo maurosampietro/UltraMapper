@@ -14,11 +14,17 @@ namespace TypeMapper.Configuration
         protected readonly TypeMapping _typeMapping;
         protected readonly GlobalConfiguration _globalConfiguration;
 
+        protected readonly PropertyInfo[] _sourceProperties;
+        protected readonly PropertyInfo[] _targetProperties;
+
         public TypeMappingConfigurator( TypeMapping typeMapping,
             GlobalConfiguration globalConfiguration )
         {
             _typeMapping = typeMapping;
             _globalConfiguration = globalConfiguration;
+
+            _sourceProperties = typeMapping.TypePair.SourceType.GetProperties();
+            _targetProperties = typeMapping.TypePair.TargetType.GetProperties();
         }
 
         public TypeMappingConfigurator( TypePair typePair,
@@ -26,14 +32,19 @@ namespace TypeMapper.Configuration
         {
             _typeMapping = new TypeMapping( _globalConfiguration, typePair );
             _globalConfiguration = globalConfiguration;
+
+            _sourceProperties = typePair.SourceType.GetProperties();
+            _targetProperties = typePair.TargetType.GetProperties();
         }
 
-        public TypeMappingConfigurator( Type source, Type target,
+        public TypeMappingConfigurator( Type sourceType, Type targetType,
             GlobalConfiguration globalConfiguration )
         {
-            var typePair = new TypePair( source, target );
-            _typeMapping = new TypeMapping( _globalConfiguration, typePair );
+            _sourceProperties = sourceType.GetProperties();
+            _targetProperties = targetType.GetProperties();
 
+            var typePair = new TypePair( sourceType, targetType );
+            _typeMapping = new TypeMapping( _globalConfiguration, typePair );
             _globalConfiguration = globalConfiguration;
         }
     }
@@ -65,13 +76,13 @@ namespace TypeMapper.Configuration
             Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
             params Expression<Func<TSource, TSourceProperty>>[] sourcePropertySelectors )
         {
-            var sourcePropertyInfo = sourcePropertySelector.ExtractPropertyInfo();
+            var sourcePropertyInfo = sourcePropertySelector.ExtractProperty();
             _typeMapping.IgnoredSourceProperties.Add( sourcePropertyInfo );
 
             if( sourcePropertySelectors != null )
             {
                 var properties = sourcePropertySelectors
-                    .Select( prop => prop.ExtractPropertyInfo() );
+                    .Select( prop => prop.ExtractProperty() );
 
                 foreach( var property in properties )
                     _typeMapping.IgnoredSourceProperties.Add( property );
@@ -85,32 +96,35 @@ namespace TypeMapper.Configuration
             Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
             Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
         {
-            var sourcePropertyInfo = targetPropertySelector.ExtractPropertyInfo();
-            var targetPropertyInfo = targetPropertySelector.ExtractPropertyInfo();
+            var sourcePropertyInfo = sourcePropertySelector.ExtractProperty();
+            var targetPropertyInfo = targetPropertySelector.ExtractProperty();
 
-            //PropertyMapping propertyMapping;
-            //if( !_typeMapping.PropertyMappings.TryGetValue( targetPropertyInfo, out propertyMapping ) )
-            //{
-            //    propertyMapping = new PropertyMapping( _typeMapping, sourcePropertyInfo, targetPropertyInfo )
-            //    {
-            //        MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION,
-            //        CustomConverter = converter
-            //    };
-
-            //    propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
-            //        mapper => mapper.CanHandle( propertyMapping ) );
-
-            //    _typeMapping.PropertyMappings.Add( targetPropertyInfo, propertyMapping );
-            //}
-
-            return (TypeMappingConfigurator<TSource, TTarget>)this.MapProperty(
-                sourcePropertyInfo, targetPropertyInfo, converter );
+            return this.MapProperty( sourcePropertyInfo, targetPropertyInfo, converter );
         }
 
-        public TypeMappingConfigurator MapProperty(
-            PropertyInfo sourcePropertyInfo, PropertyInfo targetPropertyInfo, LambdaExpression converter = null )
+        public TypeMappingConfigurator<TSource, TTarget> MapProperty( string sourcePropertyName,
+            string targetPropertyName, LambdaExpression converter = null )
         {
-            var propertyMapping = new PropertyMapping( _typeMapping, sourcePropertyInfo, targetPropertyInfo )
+            var sourcePropertyInfo = _typeMapping.TypePair
+                .SourceType.GetProperty( sourcePropertyName );
+
+            var targetPropertyInfo = _typeMapping.TypePair
+                .TargetType.GetProperty( targetPropertyName );
+
+            return this.MapProperty( sourcePropertyInfo, targetPropertyInfo, converter );
+        }
+
+        public TypeMappingConfigurator<TSource, TTarget> MapProperty( PropertyInfo sourceProperty,
+            PropertyInfo targetProperty, LambdaExpression converter = null )
+        {
+            if( sourceProperty.ReflectedType != _typeMapping.TypePair.SourceType )
+                throw new ArgumentException( $"'{sourceProperty}' does not belong to type '{_typeMapping.TypePair.SourceType}'" );
+
+            if( targetProperty.ReflectedType != _typeMapping.TypePair.TargetType )
+                throw new ArgumentException( $"'{targetProperty}' does not belong to type '{_typeMapping.TypePair.TargetType}'" );
+
+            var propertyMapping = new PropertyMapping( _typeMapping,
+                sourceProperty, targetProperty )
             {
                 MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION,
                 CustomConverter = converter
@@ -119,13 +133,14 @@ namespace TypeMapper.Configuration
             propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
                 mapper => mapper.CanHandle( propertyMapping ) );
 
-            if( _typeMapping.PropertyMappings.ContainsKey( targetPropertyInfo ) )
-                _typeMapping.PropertyMappings[ targetPropertyInfo ] = propertyMapping;
+            if( _typeMapping.PropertyMappings.ContainsKey( targetProperty ) )
+                _typeMapping.PropertyMappings[ targetProperty ] = propertyMapping;
             else
-                _typeMapping.PropertyMappings.Add( targetPropertyInfo, propertyMapping );
+                _typeMapping.PropertyMappings.Add( targetProperty, propertyMapping );
 
             return this;
         }
+
 
         //public TypeMappingConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
         //   Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,

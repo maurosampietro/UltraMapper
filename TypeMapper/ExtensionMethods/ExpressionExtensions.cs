@@ -12,7 +12,7 @@ namespace TypeMapper
 {
     internal static class ExpressionExtensions
     {
-        public static PropertyInfo ExtractPropertyInfo( this Expression method )
+        public static PropertyInfo ExtractProperty( this Expression method )
         {
             var lambda = method as LambdaExpression;
             if( lambda == null )

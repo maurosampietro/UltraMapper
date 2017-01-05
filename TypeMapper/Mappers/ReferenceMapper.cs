@@ -8,29 +8,8 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : IObjectMapperExpression
+    public class ReferenceMapper : BaseReferenceObjectMapper, IObjectMapperExpression
     {
-        private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
-            ( referenceTracker, sourceInstance, targetType ) =>
-        {
-            object targetInstance;
-            referenceTracker.TryGetValue( sourceInstance, targetType, out targetInstance );
-
-            return targetInstance;
-        };
-
-        private static Action<ReferenceTracking, object, Type, object> addToTracker =
-            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-        {
-            referenceTracker.Add( sourceInstance, targetType, targetInstance );
-        };
-
-        private static Expression<Func<ReferenceTracking, object, Type, object>> lookup =
-            ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
-
-        private static Expression<Action<ReferenceTracking, object, Type, object>> add =
-            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
-
         public bool CanHandle( PropertyMapping mapping )
         {
             bool valueTypes = !mapping.SourceProperty.PropertyInfo.PropertyType.IsValueType &&
@@ -64,11 +43,13 @@ namespace TypeMapper.Mappers
             var nullSourceValue = Expression.Constant( null, sourcePropertyType );
             var nullTargetValue = Expression.Constant( null, targetPropertyType );
 
-            /* SOURCE (TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
-             * SOURCE (TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
+            /* SOURCE (NULL) -> TARGET = NULL
              * 
-             * SOURCE (UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
-             * SOURCE (UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
+             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
+             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
+             * 
+             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
+             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
              */
 
             var assignNewInstanceExpression = mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE ?
@@ -77,7 +58,6 @@ namespace TypeMapper.Mappers
                     Expression.Equal( mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( targetInstance ), nullTargetValue ),
                     Expression.Assign( newInstance, Expression.New( targetPropertyType ) ),
                     Expression.Assign( newInstance, mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( targetInstance ) ) );
-
 
             var body = (Expression)Expression.Block
             (
@@ -95,7 +75,7 @@ namespace TypeMapper.Mappers
                      Expression.Block
                      (
                         //object lookup
-                        Expression.Assign( newInstance, Expression.Convert( Expression.Invoke( lookup,
+                        Expression.Assign( newInstance, Expression.Convert( Expression.Invoke( CacheLookupExpression,
                             referenceTrack, sourceArg, Expression.Constant( targetPropertyType ) ), targetPropertyType ) ),
 
                         Expression.IfThen
@@ -106,7 +86,7 @@ namespace TypeMapper.Mappers
                                 assignNewInstanceExpression,
 
                                 //cache reference
-                                Expression.Invoke( add, referenceTrack, sourceArg, Expression.Constant( targetPropertyType ), newInstance ),
+                                Expression.Invoke( CacheAddExpression, referenceTrack, sourceArg, Expression.Constant( targetPropertyType ), newInstance ),
 
                                 //add item to return collection
                                 Expression.Assign( result, Expression.New( returnTypeConstructor, sourceArg, newInstance ) )
