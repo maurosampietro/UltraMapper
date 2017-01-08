@@ -194,7 +194,7 @@ namespace ConsoleApplication
             AutoMapper.Mapper.Initialize( cfg =>
             {                
                 cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
+                cfg.CreateMap<BaseTypes, BaseTypesDto>();
             } );
             sw5.Start();
             for( int i = 0; i < iterations; i++ )

@@ -26,25 +26,24 @@ namespace TypeMapper.Internals
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression Expression
         {
-            get { return this.Mapper.GetMappingExpression( this ); }
+            get { return this.Mapper.GetMappingExpression(this); }
         }
 
-        public PropertyMapping( TypeMapping typeMapping,
-            PropertyInfo sourceProperty,
-            PropertyInfo targetProperty )
+        public PropertyMapping(TypeMapping typeMapping,
+            SourceProperty sourceProperty, TargetProperty targetProperty)
         {
             this.TypeMapping = typeMapping;
 
-            this.SourceProperty = SourceProperty.GetSourceProperty( sourceProperty );
-            this.TargetProperty = TargetProperty.GetTargetProperty( targetProperty );
+            this.SourceProperty = sourceProperty;
+            this.TargetProperty = targetProperty;
 
             this.PropertyInfoPair = new PropertyInfoPair(
-               this.SourceProperty.PropertyInfo, this.TargetProperty.PropertyInfo );
+               this.SourceProperty.PropertyInfo, this.TargetProperty.PropertyInfo);
 
-            _toString = new Lazy<string>( () =>
-            {
-                return $"{this.SourceProperty} -> {this.TargetProperty}";
-            } );
+            _toString = new Lazy<string>(() =>
+           {
+               return $"{this.SourceProperty} -> {this.TargetProperty}";
+           });
         }
 
         //public PropertyMapping( TypeMapping typeMapping,

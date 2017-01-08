@@ -16,24 +16,24 @@ namespace TypeMapper.Tests
         {
             public bool Boolean { get; set; } = true;
             public byte Byte { get; set; } = 0x1;
-            public char Char { get; set; } = 'a';
+            public char Char { get; set; } = (char)2;
             public decimal Decimal { get; set; } = 3;
             public double Double { get; set; } = 4.0;
-            public short Int16 { get; set; } = 10;
+            public short Int16 { get; set; } = 5;
             public int Int32 { get; set; } = 6;
-            public long Int64 { get; set; } = 8;
-            public sbyte SByte { get; set; } = 0x2;
-            public float Single { get; set; } = 5.0f;
-            public ushort UInt16 { get; set; } = 11;
-            public uint UInt32 { get; set; } = 7;
-            public ulong UInt64 { get; set; } = 9;
+            public long Int64 { get; set; } = 7;
+            public sbyte SByte { get; set; } = 0x8;
+            public float Single { get; set; } = 9.0f;
+            public ushort UInt16 { get; set; } = 10;
+            public uint UInt32 { get; set; } = 11;
+            public ulong UInt64 { get; set; } = 12;
         }
 
         //Inheritance is tested too
         private class BuiltInTypes : PrimitiveTypes
         {
-            public object Object { get; set; } = null;
-            public string String { get; set; } = "12";
+            public object Object { get; set; } = 13;
+            public string String { get; set; } = "14";
         }
 
         private class NullablePrimitiveTypes
