@@ -40,6 +40,7 @@ namespace TypeMapper.Mappers
                 new[] { value },
 
                 valueAssignment.ReplaceParameter( sourceInstance ),
+              
                 mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( targetInstance, "target" )
                     .ReplaceParameter( value, "value" )
@@ -48,8 +49,8 @@ namespace TypeMapper.Mappers
             var delegateType = typeof( Action<,,> ).MakeGenericType(
                 typeof( ReferenceTracking ), sourceType, targetType );
 
-            return Expression.Lambda( delegateType,
-                setValueExp, referenceTrack, sourceInstance, targetInstance );
+            return Expression.Lambda( delegateType, setValueExp, 
+                referenceTrack, sourceInstance, targetInstance );
         }
     }
 }

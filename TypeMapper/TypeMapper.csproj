@@ -55,6 +55,8 @@
     <Compile Include="Internals\SourceProperty.cs" />
     <Compile Include="Internals\TargetProperty.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
+    <Compile Include="Mappers\MapperContexts\ReferenceMapperContext.cs" />
+    <Compile Include="Mappers\MapperContexts\CollectionMapperContext.cs" />
     <Compile Include="Mappers\SetMapper.cs" />
     <Compile Include="Mappers\StackMapper.cs" />
     <Compile Include="Mappers\CustomConverterMapper.cs" />
@@ -91,6 +93,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

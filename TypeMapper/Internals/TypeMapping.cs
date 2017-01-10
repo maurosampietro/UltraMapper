@@ -66,7 +66,7 @@ namespace TypeMapper.Internals
                     .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
                     .Select( mapping =>
                     {
-                        if( mapping.Expression.ReturnType == typeof( IEnumerable<ObjectPair> ) )
+                        if( mapping.Expression.ReturnType.ImplementsInterface( typeof( IEnumerable<ObjectPair> ) ) )
                         {
                             return Expression.Call( newRefObjects, addRangeMethod, mapping.Expression.Body );
                         }

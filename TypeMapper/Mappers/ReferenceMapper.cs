@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Internals;
@@ -10,7 +11,7 @@ namespace TypeMapper.Mappers
 {
     public class ReferenceMapper : BaseReferenceObjectMapper, IObjectMapperExpression
     {
-        public bool CanHandle( PropertyMapping mapping )
+        public virtual bool CanHandle( PropertyMapping mapping )
         {
             bool valueTypes = !mapping.SourceProperty.PropertyInfo.PropertyType.IsValueType &&
                           !mapping.TargetProperty.PropertyInfo.PropertyType.IsValueType;
@@ -23,90 +24,112 @@ namespace TypeMapper.Mappers
         {
             //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
 
-            var returnType = typeof( ObjectPair );
-            var returnTypeConstructor = returnType.GetConstructors().First();
+            var context = this.GetMapperContext( mapping ) as ReferenceMapperContext;
+            var expressionBody = this.GetExpressionBody( context );
 
-            var sourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
+            var delegateType = typeof( Func<,,,> ).MakeGenericType(
+                typeof( ReferenceTracking ), context.SourceType, context.TargetType, context.ReturnType );
 
-            var sourcePropertyType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
+            return Expression.Lambda( delegateType, expressionBody,
+                context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+        }
 
-            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
-            var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+        protected virtual object GetMapperContext( PropertyMapping mapping )
+        {
+            return new ReferenceMapperContext( mapping );
+        }
 
-            var result = Expression.Variable( returnType, "result" );
-            var newInstance = Expression.Variable( targetPropertyType, "newInstance" );
-            var sourceArg = Expression.Variable( sourcePropertyType, "sourceArg" );
+        protected virtual Expression ReturnTypeInitialization( object contextObj )
+        {
+            var context = contextObj as ReferenceMapperContext;
+            return Expression.Assign( context.ReturnObjectVar, Expression.Constant( null, context.ReturnType ) );
+        }
 
-            var nullSourceValue = Expression.Constant( null, sourcePropertyType );
-            var nullTargetValue = Expression.Constant( null, targetPropertyType );
-
+        protected Expression GetExpressionBody( ReferenceMapperContext context )
+        {
             /* SOURCE (NULL) -> TARGET = NULL
-             * 
-             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
-             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
-             * 
-             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
-             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
-             */
-
-            var assignNewInstanceExpression = mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE ?
-             (Expression)Expression.Assign( newInstance, Expression.New( targetPropertyType ) ) :
-                (Expression)Expression.IfThenElse(
-                    Expression.Equal( mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( targetInstance ), nullTargetValue ),
-                    Expression.Assign( newInstance, Expression.New( targetPropertyType ) ),
-                    Expression.Assign( newInstance, mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( targetInstance ) ) );
+            * 
+            * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
+            * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
+            * 
+            * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
+            * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
+            */
 
             var body = (Expression)Expression.Block
             (
-                new ParameterExpression[] { sourceArg, newInstance, result },
+                new ParameterExpression[] { context.SourcePropertyVar, context.TargetPropertyVar, context.ReturnObjectVar },
+
+                ReturnTypeInitialization( context ),
 
                 //read source value
-                Expression.Assign( sourceArg, mapping.SourceProperty.ValueGetter.Body.ReplaceParameter( sourceInstance ) ),
+                Expression.Assign( context.SourcePropertyVar, context.Mapping.SourceProperty.ValueGetter.Body
+                    .ReplaceParameter( context.SourceInstance ) ),
 
                 Expression.IfThenElse
                 (
-                     Expression.Equal( sourceArg, nullSourceValue ),
+                     Expression.Equal( context.SourcePropertyVar, context.SourceNullValue ),
 
-                     Expression.Assign( newInstance, nullTargetValue ),
+                     Expression.Assign( context.TargetPropertyVar, context.TargetNullValue ),
 
                      Expression.Block
                      (
                         //object lookup
-                        Expression.Assign( newInstance, Expression.Convert( Expression.Invoke( CacheLookupExpression,
-                            referenceTrack, sourceArg, Expression.Constant( targetPropertyType ) ), targetPropertyType ) ),
+                        Expression.Assign( context.TargetPropertyVar, Expression.Convert(
+                            Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, context.SourcePropertyVar,
+                            Expression.Constant( context.TargetPropertyType ) ), context.TargetPropertyType ) ),
 
                         Expression.IfThen
                         (
-                            Expression.Equal( newInstance, nullTargetValue ),
+                            Expression.Equal( context.TargetPropertyVar, context.TargetNullValue ),
                             Expression.Block
                             (
-                                assignNewInstanceExpression,
+                                this.GetInnerBody( context ),
 
                                 //cache reference
-                                Expression.Invoke( CacheAddExpression, referenceTrack, sourceArg, Expression.Constant( targetPropertyType ), newInstance ),
-
-                                //add item to return collection
-                                Expression.Assign( result, Expression.New( returnTypeConstructor, sourceArg, newInstance ) )
+                                Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
+                                    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
                             )
                         )
                     )
                 ),
 
-                mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( targetInstance, "target" )
-                    .ReplaceParameter( newInstance, "value" ),
+                context.Mapping.TargetProperty.ValueSetter.Body
+                    .ReplaceParameter( context.TargetInstance, "target" )
+                    .ReplaceParameter( context.TargetPropertyVar, "value" ),
 
-                result
+                context.ReturnObjectVar
             );
 
-            var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), sourceType, targetType, returnType );
+            return body;
+        }
 
-            return Expression.Lambda( delegateType,
-                body, referenceTrack, sourceInstance, targetInstance );
+        protected virtual Expression GetInnerBody( object contextObj )
+        {
+            var context = contextObj as ReferenceMapperContext;
+
+            return Expression.Block
+            (
+                this.GetTargetInstanceAssignment( contextObj ),
+
+                //assign to the object to return
+                Expression.Assign( context.ReturnObjectVar, Expression.New(
+                    context.ReturnTypeConstructor, context.SourcePropertyVar, context.TargetPropertyVar ) )
+            );
+        }
+
+        private Expression GetTargetInstanceAssignment( object contextObj )
+        {
+            var context = contextObj as ReferenceMapperContext;
+            var newInstanceExp = Expression.New( context.TargetPropertyType );
+
+            if( context.Mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+                return Expression.Assign( context.TargetPropertyVar, newInstanceExp );
+
+            var getValue = context.Mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( context.TargetInstance );
+            return Expression.IfThenElse( Expression.Equal( getValue, context.TargetNullValue ),
+                    Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
+                    Expression.Assign( context.TargetPropertyVar, getValue ) );
         }
     }
 }

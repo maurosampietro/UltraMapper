@@ -19,7 +19,7 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetCollectionType.GetMethod(
+            return context.TargetPropertyType.GetMethod(
                 "AddLast", new[] { context.TargetElementType } );
         }
     }

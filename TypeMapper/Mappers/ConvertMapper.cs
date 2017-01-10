@@ -59,8 +59,8 @@ namespace TypeMapper.Mappers
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
             var value = Expression.Variable( targetPropertyType, "value" );
-            var convertMethod = typeof( Convert ).GetMethod( $"To{targetPropertyType.Name}",
-                new[] { sourcePropertyType } );
+            var convertMethod = typeof( Convert ).GetMethod( 
+                $"To{targetPropertyType.Name}", new[] { sourcePropertyType } );
 
             var setValueExp = (Expression)Expression.Block
             (
@@ -77,8 +77,8 @@ namespace TypeMapper.Mappers
             var delegateType = typeof( Action<,,> ).MakeGenericType(
                 typeof( ReferenceTracking ), sourceType, targetType );
 
-            return Expression.Lambda( delegateType,
-                setValueExp, referenceTrack, sourceInstance, targetInstance );
+            return Expression.Lambda( delegateType, setValueExp,
+                referenceTrack, sourceInstance, targetInstance );
         }
     }
 }

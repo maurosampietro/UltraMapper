@@ -112,8 +112,8 @@ namespace TypeMapper.Mappers
             var delegateType = typeof( Action<,,> ).MakeGenericType(
                 typeof( ReferenceTracking ), sourceType, targetType );
 
-            return Expression.Lambda( delegateType,
-                setValueExp, referenceTrack, sourceInstance, targetInstance );
+            return Expression.Lambda( delegateType, setValueExp, 
+                referenceTrack, sourceInstance, targetInstance );
         }
     }
 }

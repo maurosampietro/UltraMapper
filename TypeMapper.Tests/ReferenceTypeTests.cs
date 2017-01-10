@@ -17,14 +17,25 @@ namespace TypeMapper.Tests
         {
             public InnerType NullInnerType { get; set; }
             public InnerType InnerType { get; set; }
+            public List<int> PrimitiveList { get; set; }
+            public List<InnerType> ComplexList { get; set; }
+
             public string String { get; set; }
 
             public OuterType()
             {
+                this.PrimitiveList = Enumerable.Range( 0, 10 ).ToList();
+
                 this.InnerType = new InnerType()
                 {
                     A = "a",
                     B = "b"
+                };
+
+                this.ComplexList = new List<InnerType>()
+                {
+                    new InnerType() { A = "a", B = "b", },
+                    new InnerType() { A = "c", B = "d", }
                 };
             }
         }
@@ -60,51 +71,62 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void UseTargetInstanceIfNotNull()
         {
-            var source = new OuterType() { String = "Test" };
-            var target = new OuterType() { String = "fadadfsadsffsd" };
+            var innerType = new InnerType() { A = "fadadfsadsffsd" };
 
-            string expectedValue = target.String;
+            var source = new OuterType();
+            var target = new OuterType()
+            {
+                InnerType = innerType,
+                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
+                ComplexList = new List<InnerType>() { innerType }
+            };
 
-            var typeMapper = new TypeMapper<CustomMappingConvention>(cfg =>
-           {
-               cfg.GlobalConfiguration.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+            var primitiveList = target.PrimitiveList;
+            int primitiveListCount = target.PrimitiveList.Count;
 
-               cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
-                   //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
-                   .GetOrAdd<ExactNameMatching>(rule => rule.IgnoreCase = true)
-                   .GetOrAdd<SuffixMatching>(rule => rule.IgnoreCase = true)
-                   .Respect(( /*rule1,*/ rule2, rule3) => /*rule1 & */(rule2 | rule3));
+            var complexList = target.ComplexList;
+            int complexListCount = target.ComplexList.Count;
 
-               cfg.MapTypes(source, target).IgnoreSourceProperty(s => s.String);
-           });
+            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            {
+                cfg.GlobalConfiguration.ReferenceMappingStrategy =
+                    ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+            } );
 
-            typeMapper.Map(source, target);
-            Assert.IsTrue(target.String == expectedValue);
+            typeMapper.Map( source, target );
+
+            Assert.IsTrue( Object.ReferenceEquals( target.InnerType, innerType ) );
+
+            Assert.IsTrue( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
+            Assert.IsTrue( primitiveListCount + source.PrimitiveList.Count == primitiveList.Count );
+
+            Assert.IsTrue( Object.ReferenceEquals( target.ComplexList, complexList ) );
+            Assert.IsTrue( complexListCount + source.ComplexList.Count == complexList.Count );
         }
 
         [TestMethod]
         public void CreateNewInstance()
         {
+            var innerType = new InnerType() { A = "fadadfsadsffsd" };
+
             var source = new OuterType();
-            var target = new OuterType() { InnerType = new InnerType() { A = "fadadfsadsffsd" } };
-
-            string expectedValue = target.String;
-
-            var typeMapper = new TypeMapper<CustomMappingConvention>(cfg =>
+            var target = new OuterType()
             {
-                cfg.GlobalConfiguration.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+                InnerType = innerType,
+                PrimitiveList = Enumerable.Range( 20, 10 ).ToList()
+            };
 
-                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
-                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
-                    .GetOrAdd<ExactNameMatching>(rule => rule.IgnoreCase = true)
-                    .GetOrAdd<SuffixMatching>(rule => rule.IgnoreCase = true)
-                    .Respect(( /*rule1,*/ rule2, rule3) => /*rule1 & */(rule2 | rule3));
+            var primitiveList = target.PrimitiveList;
 
-                //cfg.MapTypes(source, target).IgnoreSourceProperty(s => s.InnerType.A);
-            });
+            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            {
+                cfg.GlobalConfiguration.ReferenceMappingStrategy =
+                    ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+            } );
 
-            typeMapper.Map(source, target);
-            Assert.IsTrue(target.String == null);
+            typeMapper.Map( source, target );
+            Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
+            Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
         }
 
         [TestMethod]
@@ -113,22 +135,22 @@ namespace TypeMapper.Tests
             var source = new OuterType();
             var target = new InnerTypeDto();
 
-            var typeMapper = new TypeMapper<CustomMappingConvention>(cfg =>
-           {
-               cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
-                   //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
-                   .GetOrAdd<ExactNameMatching>(rule => rule.IgnoreCase = true)
-                   .GetOrAdd<SuffixMatching>(rule => rule.IgnoreCase = true)
-                   .Respect(( /*rule1,*/ rule2, rule3) => /*rule1 & */(rule2 | rule3));
+            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            {
+                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
+                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
+                    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+                    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
+                    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
 
-               cfg.MapTypes<OuterType, InnerTypeDto>()
-                   .MapProperty(a => a.InnerType.A, b => b.A);
-           });
+                cfg.MapTypes<OuterType, InnerTypeDto>()
+                    .MapProperty( a => a.InnerType.A, b => b.A );
+            } );
 
-            typeMapper.Map(source, target);
+            typeMapper.Map( source, target );
 
-            bool isResultOk = typeMapper.VerifyMapperResult(source, target);
-            Assert.IsTrue(isResultOk);
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
     }
 }

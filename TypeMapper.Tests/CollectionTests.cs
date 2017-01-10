@@ -143,5 +143,28 @@ namespace TypeMapper.Tests
                 Assert.IsTrue( isResultOk );
             }
         }
+
+        [TestMethod]
+        public void AssignNullCollection()
+        {
+            var source = new GenericCollections<int>()
+            {
+                List = null,
+                HashSet = null,
+                SortedSet = null,
+                Stack = null,
+                Queue = null,
+                LinkedList = null,
+                ObservableCollection = null
+            };
+
+            var target = new GenericCollections<int>();
+
+            var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
     }
 }

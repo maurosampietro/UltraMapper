@@ -33,8 +33,9 @@ namespace TypeMapper.Mappers
                 .PropertyType.ImplementsInterface( typeof( ISet<> ) );
         }
 
-        protected override Expression GetInnerBody( PropertyMapping mapping, CollectionMapperContext context )
+        protected override Expression GetInnerBody( object contextObj )
         {
+            var context = contextObj as CollectionMapperContext;
             var addMethod = GetTargetCollectionAddMethod( context );
 
             if( context.IsTargetElementTypeBuiltIn )
@@ -42,38 +43,38 @@ namespace TypeMapper.Mappers
                 var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
                 if( constructorInfo == null )
                 {
-                    Expression loopBody = Expression.Call( context.TargetCollection,
+                    Expression loopBody = Expression.Call( context.TargetPropertyVar,
                         addMethod, context.SourceLoopingVar );
 
-                    return ExpressionLoops.ForEach( context.SourceCollection,
+                    return ExpressionLoops.ForEach( context.SourcePropertyVar,
                         context.SourceLoopingVar, loopBody );
                 }
 
                 var targetCollectionConstructor = Expression.New(
-                    constructorInfo, context.SourceCollection );
+                    constructorInfo, context.SourcePropertyVar );
 
-                return Expression.Assign( context.TargetCollection, targetCollectionConstructor );
+                return Expression.Assign( context.TargetPropertyVar, targetCollectionConstructor );
             }
 
             var addRangeToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
             var newElement = Expression.Variable( context.TargetElementType, "newElement" );
-            var newInstanceExp = Expression.New( context.TargetCollectionType );
+            var newInstanceExp = Expression.New( context.TargetPropertyType );
 
-            var itemMapping = mapping.TypeMapping.GlobalConfiguration.Configurator[
+            var itemMapping = context.Mapping.TypeMapping.GlobalConfiguration.Configurator[
                 context.SourceElementType, context.TargetElementType ].MappingExpression;
 
             return Expression.Block
             (
                  new[] { newElement },
 
-                 Expression.Assign( context.TargetCollection, newInstanceExp ),
-                 ExpressionLoops.ForEach( context.SourceCollection, context.SourceLoopingVar, Expression.Block
+                 Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
+                 ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar, Expression.Block
                  (
                      Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
-                     Expression.Call( context.NewRefObjects, addRangeToRefCollectionMethod, Expression.Invoke(
+                     Expression.Call( context.ReturnObjectVar, addRangeToRefCollectionMethod, Expression.Invoke(
                          itemMapping, context.ReferenceTrack, context.SourceLoopingVar, newElement ) ),
 
-                     Expression.Call( context.TargetCollection, addMethod, newElement )
+                     Expression.Call( context.TargetPropertyVar, addMethod, newElement )
                  ) )
             );
         }

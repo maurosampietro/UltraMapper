@@ -26,11 +26,13 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetCollectionType.GetMethod( "Push" );
+            return context.TargetPropertyType.GetMethod( "Push" );
         }
 
-        protected override Expression GetInnerBody( PropertyMapping mapping, CollectionMapperContext context )
+        protected override Expression GetInnerBody( object contextObj )
         {
+            var context = contextObj as CollectionMapperContext;
+
             var addMethod = GetTargetCollectionAddMethod( context );
             var constructor = GetTargetCollectionConstructorFromCollection( context );
 
@@ -39,18 +41,18 @@ namespace TypeMapper.Mappers
                 var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
                 if( constructorInfo == null )
                 {
-                    Expression loopBody = Expression.Call( context.TargetCollection,
+                    Expression loopBody = Expression.Call( context.TargetPropertyVar,
                         addMethod, context.SourceLoopingVar );
 
-                    return ExpressionLoops.ForEach( context.SourceCollection,
+                    return ExpressionLoops.ForEach( context.SourcePropertyVar,
                         context.SourceLoopingVar, loopBody );
                 }
 
                 //double contructor to read in reverse order
                 var targetCollectionConstructor = Expression.New( constructorInfo,
-                   Expression.New( constructorInfo, context.SourceCollection ) );
+                   Expression.New( constructorInfo, context.SourcePropertyVar ) );
 
-                return Expression.Assign( context.TargetCollection, targetCollectionConstructor );
+                return Expression.Assign( context.TargetPropertyVar, targetCollectionConstructor );
             }
 
             var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
@@ -66,26 +68,26 @@ namespace TypeMapper.Mappers
             var tempCollectionAddMethod = this.GetTargetCollectionAddMethod( context );
 
             var constructorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var getCountMethod = context.SourceCollectionType.GetProperty( "Count" ).GetGetMethod();
+            var getCountMethod = context.SourcePropertyType.GetProperty( "Count" ).GetGetMethod();
 
             var newTempCollectionExp = Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceCollection, getCountMethod ) );
+                Expression.Call( context.SourcePropertyVar, getCountMethod ) );
 
             return Expression.Block
             (
                 new[] { newElement, tempCollection },
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
-                ExpressionLoops.ForEach( context.SourceCollection, context.SourceLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar, Expression.Block
                 (
                     Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
                     Expression.Call( tempCollection, tempCollectionAddMethod, newElement ),
 
-                    Expression.Call( context.NewRefObjects, addToRefCollectionMethod,
+                    Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
                         Expression.New( objectPairConstructor, context.SourceLoopingVar, newElement ) )
                 ) ),
 
-                Expression.Assign( context.TargetCollection, Expression.New( constructor, tempCollection ) )
+                Expression.Assign( context.TargetPropertyVar, Expression.New( constructor, tempCollection ) )
             );
         }
     }
