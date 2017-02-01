@@ -20,9 +20,15 @@ namespace TypeMapper.MappingConventions
             this.PropertyMatchingRules = new PropertyMatchingConfiguration();
         }
 
-        public bool IsMatch( PropertyInfo source, PropertyInfo target )
+        public bool IsMatch( MemberInfo source, MemberInfo target )
         {
-            return this.PropertyMatchingRules.MatchingEvaluator( source, target );
+            if( source is PropertyInfo && target is PropertyInfo )
+            {
+                return this.PropertyMatchingRules.MatchingEvaluator(
+                    (PropertyInfo)source, (PropertyInfo)target );
+            }
+
+            throw new ArgumentException( $"Cannot handle {source} and {target}" );
         }
     }
 }

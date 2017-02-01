@@ -17,10 +17,10 @@ namespace TypeMapper.MappingConventions
         public bool AllowExplicitConversions { get; set; } = true;
         public bool AllowNullableUnwrappings { get; set; } = true;
 
-        public override bool IsCompliant( PropertyInfo source, PropertyInfo target )
+        public override bool IsCompliant( MemberInfo source, MemberInfo target )
         {
-            var sourceType = source.PropertyType;
-            var targetType = target.PropertyType;
+            var sourceType = source.GetMemberType();
+            var targetType = target.GetMemberType();
 
             var isCompliant = this.CanHandle( sourceType, targetType );
             //if( !isCompliant && this.AllowNullableUnwrappings )

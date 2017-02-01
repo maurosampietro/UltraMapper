@@ -12,7 +12,10 @@ namespace TypeMapper
 {
     internal static class ExpressionExtensions
     {
-        public static PropertyInfo ExtractProperty( this Expression method )
+        private static string invalidExpressionMsg =
+            "Invalid expression. Please select a property from your model (eg. x => x.MyProperty)";
+
+        public static MemberInfo ExtractMember( this Expression method )
         {
             var lambda = method as LambdaExpression;
             if( lambda == null )
@@ -35,24 +38,25 @@ namespace TypeMapper
                             expBody = ((UnaryExpression)expBody).Operand as Expression;
                             break;
                         }
+
+                    default:
+                        throw new ArgumentException( invalidExpressionMsg );
                 }
             }
 
             if( memberExpression == null )
-                throw new ArgumentException( "Invalid expression. Please select a property from your model (eg. x => x.MyProperty)" );
+                throw new ArgumentException( invalidExpressionMsg );
 
             //If the instance on which we call is a derived class and the property
             //we select is defined in the base class, we will notice that
             //the PropertyInfo is retrieved through the base class; hence
             //DeclaredType and ReflectedType are equal and we basically
             //lose information about the ReflectedType (which should be the derived class)...
-            var lambdaMember = (PropertyInfo)memberExpression.Member;
+            var lambdaMember = memberExpression.Member;
 
             //..to fix that we do another search. 
             //We search that property name in the actual type we meant to use for the invocation
-            return lambda.Parameters.First().Type.GetProperty( lambdaMember.Name );
-
-
+            return lambda.Parameters.First().Type.GetMember( lambdaMember.Name )[ 0 ];
         }
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )
@@ -121,7 +125,7 @@ namespace TypeMapper
         //    return e.Compile()();
         //}
 
-        public static object GetDefaultValue( this Type type )
+        public static object GetDefaultValueViaExpressionCompilation( this Type type )
         {
             if( type == null ) throw new ArgumentNullException( nameof( type ) );
 

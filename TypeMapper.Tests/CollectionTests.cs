@@ -58,7 +58,7 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
-        public void CollectionPrimitiveArgument()
+        public void PrimitiveCollection()
         {
             var source = new GenericCollections<int>();
             for( int i = 0; i < 50; i++ )
@@ -82,7 +82,7 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
-        public void CollectionComplexArgument()
+        public void ComplexCollection()
         {
             var source = new GenericCollections<ComplexType>();
             for( int i = 0; i < 50; i++ )
@@ -106,7 +106,44 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
-        public void FromCollectionToAnother()
+        public void FromPrimitiveCollectionToAnother()
+        {
+            var sourceProperties = typeof( GenericCollections<int> ).GetProperties();
+            var targetProperties = typeof( GenericCollections<double> ).GetProperties();
+
+            foreach( var sourceProp in sourceProperties )
+            {
+                var source = new GenericCollections<int>();
+
+                //initialize source
+                for( int i = 0; i < 50; i++ )
+                {
+                    source.List.Add( i );
+                    source.HashSet.Add( i );
+                    source.SortedSet.Add( i );
+                    source.Stack.Push( i );
+                    source.Queue.Enqueue( i );
+                    source.LinkedList.AddLast( i );
+                    source.ObservableCollection.Add( i );
+                }
+
+                var target = new GenericCollections<double>();
+
+                var typeMapper = new TypeMapper();
+                var typeMappingConfig = typeMapper.MappingConfiguration.MapTypes( source, target );
+
+                foreach( var targetProp in targetProperties )
+                    typeMappingConfig.MapProperty( sourceProp, targetProp );
+
+                typeMapper.Map( source, target );
+
+                bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+                Assert.IsTrue( isResultOk );
+            }
+        }
+
+        [TestMethod]
+        public void FromComplexCollectionToAnother()
         {
             var typeProperties = typeof( GenericCollections<ComplexType> ).GetProperties();
 

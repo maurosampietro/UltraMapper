@@ -9,21 +9,21 @@ using TypeMapper.CollectionMappingStrategies;
 
 namespace TypeMapper.Internals
 {
-    public class TargetProperty : PropertyBase
-    {       
+    public class MappingTarget : MappingMemberBase
+    {
         public LambdaExpression ValueSetter { get; set; }
         public LambdaExpression ValueGetter { get; set; }
 
         public LambdaExpression CustomConstructor { get; set; }
         public ICollectionMappingStrategy CollectionStrategy { get; set; }
 
-        internal TargetProperty( PropertyInfo propertySelector )
-            : base( propertySelector )
+        internal MappingTarget( MemberInfo memberInfo )
+            : base( memberInfo )
         {
-            this.CollectionStrategy = new NewCollection();
+            //this.CollectionStrategy = new NewCollection();
 
-            this.ValueSetter = base.PropertyInfo.GetSetterLambdaExpression();
-            this.ValueGetter = base.PropertyInfo.GetGetterLambdaExpression();
+            this.ValueSetter = memberInfo.GetSetterLambdaExpression();
+            this.ValueGetter = memberInfo.GetGetterLambdaExpression();
         }
     }
 }

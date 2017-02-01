@@ -64,7 +64,7 @@ namespace TypeMapper
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
         }
 
-        public static object GetDefaultValue( this Type type )
+        public static object GetDefaultValueViaActivator( this Type type )
         {
             if( type.IsValueType && Nullable.GetUnderlyingType( type ) == null )
                 return Activator.CreateInstance( type );

@@ -25,7 +25,7 @@ namespace TypeMapper.MappingConventions
             this.Suffixes = suffixes;
         }
 
-        public override bool IsCompliant( PropertyInfo source, PropertyInfo target )
+        public override bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

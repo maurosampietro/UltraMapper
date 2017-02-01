@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TypeMapper.Configuration;
 using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
+using System.Collections;
 
 namespace TypeMapper.Tests
 {

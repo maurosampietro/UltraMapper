@@ -5,6 +5,6 @@ namespace TypeMapper.CollectionMappingStrategies
 {
     public interface ICollectionMappingStrategy
     {
-        TReturn GetTargetCollection<TReturn>( object targetInstance, PropertyMapping mapping );
+        TReturn GetTargetCollection<TReturn>( object targetInstance, MemberMapping mapping );
     }
 }

@@ -203,7 +203,7 @@ namespace TypeMapper.Tests
             Assert.IsTrue( target.GetType().GetProperties()
                 .All( p =>
                 {
-                    object defaultValue = p.PropertyType.GetDefaultValue();
+                    object defaultValue = p.PropertyType.GetDefaultValueViaActivator();
                     return !p.GetValue( target ).Equals( defaultValue );
                 } ) );
 
@@ -212,7 +212,7 @@ namespace TypeMapper.Tests
 
             var isResultOk = typeMapper.VerifyMapperResult( source, target, ( sourceValue, destinationValue ) =>
             {
-                object defaultValue = destinationValue?.GetType().GetDefaultValue();
+                object defaultValue = destinationValue?.GetType().GetDefaultValueViaActivator();
 
                 return Object.ReferenceEquals( destinationValue, defaultValue ) ||
                     destinationValue.Equals( defaultValue );

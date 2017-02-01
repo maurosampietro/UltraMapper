@@ -1,26 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : BaseReferenceObjectMapper, IObjectMapperExpression
+    public class ReferenceMapper : IObjectMapperExpression
     {
-        public virtual bool CanHandle( PropertyMapping mapping )
+        private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
+         ( referenceTracker, sourceInstance, targetType ) =>
+         {
+             object targetInstance;
+             referenceTracker.TryGetValue( sourceInstance, targetType, out targetInstance );
+
+             return targetInstance;
+         };
+
+        private static Action<ReferenceTracking, object, Type, object> addToTracker =
+            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
+            {
+                referenceTracker.Add( sourceInstance, targetType, targetInstance );
+            };
+
+        protected static readonly Expression<Func<ReferenceTracking, object, Type, object>> CacheLookupExpression =
+            ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
+
+        protected static readonly Expression<Action<ReferenceTracking, object, Type, object>> CacheAddExpression =
+            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
+
+        public virtual bool CanHandle( MemberMapping mapping )
         {
-            bool valueTypes = !mapping.SourceProperty.PropertyInfo.PropertyType.IsValueType &&
-                          !mapping.TargetProperty.PropertyInfo.PropertyType.IsValueType;
+            bool valueTypes = !mapping.SourceProperty.MemberInfo.GetMemberType().IsValueType &&
+                          !mapping.TargetProperty.MemberInfo.GetMemberType().IsValueType;
 
             return valueTypes && !mapping.TargetProperty.IsBuiltInType &&
                 !mapping.SourceProperty.IsBuiltInType && !mapping.SourceProperty.IsEnumerable;
         }
 
-        public LambdaExpression GetMappingExpression( PropertyMapping mapping )
+        public LambdaExpression GetMappingExpression( MemberMapping mapping )
         {
             //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
 
@@ -34,7 +50,7 @@ namespace TypeMapper.Mappers
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
         }
 
-        protected virtual object GetMapperContext( PropertyMapping mapping )
+        protected virtual object GetMapperContext( MemberMapping mapping )
         {
             return new ReferenceMapperContext( mapping );
         }

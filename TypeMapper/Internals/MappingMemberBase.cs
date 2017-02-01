@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    public abstract class PropertyBase
+    public abstract class MappingMemberBase
     {
         //public readonly LambdaExpression PropertySelector;
-        public readonly PropertyInfo PropertyInfo;
+        public readonly MemberInfo MemberInfo;
         private readonly Lazy<string> _toString;
 
         //These info are evaluated at configuration level only once for performance reasons
@@ -22,35 +22,34 @@ namespace TypeMapper.Internals
 
         public bool Ignore { get; set; }
 
-        public PropertyBase( PropertyInfo propertyInfo )
+        public MappingMemberBase( MemberInfo memberInfo )
         {
-            //this.PropertySelector = propertySelector;
+            this.MemberInfo = memberInfo;
+            var memberType = memberInfo.GetMemberType();
 
-            this.PropertyInfo = propertyInfo;
-
-            this.NullableUnderlyingType = Nullable.GetUnderlyingType( propertyInfo.PropertyType );
-            this.IsBuiltInType = propertyInfo.PropertyType.IsBuiltInType( false );
+            this.NullableUnderlyingType = Nullable.GetUnderlyingType( memberType );
             this.IsNullable = this.NullableUnderlyingType != null;
-            this.IsEnumerable = propertyInfo.PropertyType.IsEnumerable();
+            this.IsBuiltInType = memberType.IsBuiltInType( false );
+            this.IsEnumerable = memberType.IsEnumerable();
 
             _toString = new Lazy<string>( () =>
             {
-                string typeName = propertyInfo.PropertyType.GetPrettifiedName();
-                return $"{typeName} {propertyInfo.Name}";
+                string typeName = memberType.GetPrettifiedName();
+                return $"{typeName} {memberInfo.Name}";
             } );
         }
 
         public override bool Equals( object obj )
         {
-            var propertyBase = obj as PropertyBase;
+            var propertyBase = obj as MappingMemberBase;
             if( propertyBase == null ) return false;
 
-            return this.PropertyInfo.Equals( propertyBase.PropertyInfo );
+            return this.MemberInfo.Equals( propertyBase.MemberInfo );
         }
 
         public override int GetHashCode()
         {
-            return this.PropertyInfo.GetHashCode();
+            return this.MemberInfo.GetHashCode();
         }
 
         public override string ToString()

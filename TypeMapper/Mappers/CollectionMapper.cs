@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Internals;
+using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Mappers
 {
@@ -19,18 +20,18 @@ namespace TypeMapper.Mappers
 
     public class CollectionMapper : ReferenceMapper, IObjectMapperExpression
     {
-        public override bool CanHandle( PropertyMapping mapping )
+        public override bool CanHandle( MemberMapping mapping )
         {
             return mapping.SourceProperty.IsEnumerable &&
                  mapping.TargetProperty.IsEnumerable;
         }
 
-        protected override object GetMapperContext( PropertyMapping mapping )
+        protected override object GetMapperContext( MemberMapping mapping )
         {
             return new CollectionMapperContext( mapping );
         }
 
-        protected virtual Expression GetSimpleTypeInnerBody( PropertyMapping mapping, CollectionMapperContext context )
+        protected virtual Expression GetSimpleTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {
             /*If reference mapping strategy is USE_TARGET_INSTANCE_IF_NOT_NULL
              * we can only use the item-insertion method to map cause we are not allowed not create new instances.
@@ -48,9 +49,14 @@ namespace TypeMapper.Mappers
                 return Expression.New( context.TargetPropertyType );
             };
 
+            //- Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
+            //- Must also need the case where SourceElementType and TargetElementType differ:
+            // cannot use directly the target constructor: use add method or temp collection.
+
             var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
             if( constructorInfo == null || context.Mapping.TypeMapping.GlobalConfiguration
-                    .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
+                    .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL
+                    || context.SourceElementType != context.TargetElementType )
             {
                 var addMethod = GetTargetCollectionAddMethod( context );
                 if( addMethod == null )
@@ -61,8 +67,13 @@ namespace TypeMapper.Mappers
                     throw new Exception( msg );
                 }
 
+                var typeMapping = mapping.TypeMapping.GlobalConfiguration.Configurator[
+                          context.SourceElementType, context.TargetElementType ];
+
+                var convert = new BuiltInTypeMapper().GetMappingExpression( typeMapping );
+
                 Expression loopBody = Expression.Call( context.TargetPropertyVar,
-                    addMethod, context.SourceLoopingVar );
+                    addMethod, Expression.Invoke( convert, context.SourceLoopingVar ) );
 
                 return Expression.Block
                 (
@@ -79,7 +90,7 @@ namespace TypeMapper.Mappers
             return Expression.Assign( context.TargetPropertyVar, targetCollectionConstructor );
         }
 
-        protected virtual Expression GetComplexTypeInnerBody( PropertyMapping mapping, CollectionMapperContext context )
+        protected virtual Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {
             Func<Expression> GetTargetInstanceExpression = () =>
             {

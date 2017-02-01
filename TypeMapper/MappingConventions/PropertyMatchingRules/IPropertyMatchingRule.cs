@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.MappingConventions
 {
-    public interface IPropertyMatchingRule
+    public interface IMatchingRule
     {
-        bool IsCompliant( PropertyInfo source, PropertyInfo target );
+        bool IsCompliant( MemberInfo source, MemberInfo target );
     }
 }

@@ -11,6 +11,6 @@ namespace TypeMapper.MappingConventions
     public interface IMappingConvention
     {
         PropertyMatchingConfiguration PropertyMatchingRules { get; }
-        bool IsMatch( PropertyInfo source, PropertyInfo target );
+        bool IsMatch( MemberInfo source, MemberInfo target );
     }
 }

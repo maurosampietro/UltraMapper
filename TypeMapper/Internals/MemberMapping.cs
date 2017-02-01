@@ -11,14 +11,14 @@ namespace TypeMapper.Internals
 {
     public enum MappingResolution { RESOLVED_BY_CONVENTION, USER_DEFINED }
 
-    public class PropertyMapping
+    public class MemberMapping
     {
         private readonly Lazy<string> _toString;
 
         public readonly TypeMapping TypeMapping;
-        public readonly PropertyInfoPair PropertyInfoPair;
-        public readonly SourceProperty SourceProperty;
-        public readonly TargetProperty TargetProperty;
+        public readonly MemberInfoPair PropertyInfoPair;
+        public readonly MappingSource SourceProperty;
+        public readonly MappingTarget TargetProperty;
 
         public MappingResolution MappingResolution { get; internal set; }
         public IObjectMapperExpression Mapper { get; set; }
@@ -29,16 +29,16 @@ namespace TypeMapper.Internals
             get { return this.Mapper.GetMappingExpression(this); }
         }
 
-        public PropertyMapping(TypeMapping typeMapping,
-            SourceProperty sourceProperty, TargetProperty targetProperty)
+        public MemberMapping(TypeMapping typeMapping,
+            MappingSource sourceProperty, MappingTarget targetProperty)
         {
             this.TypeMapping = typeMapping;
 
             this.SourceProperty = sourceProperty;
             this.TargetProperty = targetProperty;
 
-            this.PropertyInfoPair = new PropertyInfoPair(
-               this.SourceProperty.PropertyInfo, this.TargetProperty.PropertyInfo);
+            this.PropertyInfoPair = new MemberInfoPair(
+               this.SourceProperty.MemberInfo, this.TargetProperty.MemberInfo);
 
             _toString = new Lazy<string>(() =>
            {

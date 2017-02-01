@@ -16,64 +16,52 @@ namespace TypeMapper.Tests
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
+            //sharing the same reference or both null
             if( Object.ReferenceEquals( source, target ) )
                 return true;
 
+            //either source or target is null 
             if( source == null || target == null )
                 return false;
 
-            if( sourceType == targetType )
+            //same value type: just compare their values
+            if( sourceType == targetType && sourceType.IsValueType )
+                return source.Equals( target );           
+
+            if( sourceType.IsEnumerable() && targetType.IsEnumerable() )
             {
-                if( sourceType.IsValueType )
-                    return source.Equals( target );
+                var firstPos = (source as IEnumerable).GetEnumerator();
+                var secondPos = (target as IEnumerable).GetEnumerator();
+
+                var hasFirst = firstPos.MoveNext();
+                var hasSecond = secondPos.MoveNext();
+
+                while( hasFirst && hasSecond )
+                {
+                    if( !Equals( firstPos.Current, secondPos.Current ) )
+                        return false;
+
+                    hasFirst = firstPos.MoveNext();
+                    hasSecond = secondPos.MoveNext();
+                }
+
+                return !hasFirst && !hasSecond;
             }
-
-            //if( sourceType.IsEnumerable() && targetType.IsEnumerable() )
-            //{
-            //    if( sourceType == targetType )
-            //    {
-            //        var firstPos = (source as IEnumerable).GetEnumerator();
-            //        var secondPos = (target as IEnumerable).GetEnumerator();
-
-            //        var hasFirst = firstPos.MoveNext();
-            //        var hasSecond = secondPos.MoveNext();
-
-            //        while( hasFirst && hasSecond )
-            //        {
-            //            if( !Equals( firstPos.Current, secondPos.Current ) )
-            //                return false;
-
-            //            hasFirst = firstPos.MoveNext();
-            //            hasSecond = secondPos.MoveNext();
-            //        }
-
-            //        return !hasFirst && !hasSecond;
-            //    }
-            //    else
-            //    {
-            //        var targetColl = (target as IEnumerable);
-            //        foreach( var sVal in source as IEnumerable )
-            //        {
-            //            if( !targetColl.Cast<object>().Contains( sVal ) )
-            //                return false;
-            //        }
-            //    }
-            //}
 
             var typeMapping = typeMapper.MappingConfiguration[
                 source.GetType(), target.GetType() ];
 
-            foreach( var mapping in typeMapping.PropertyMappings.Select( m => m.Value ) )
+            foreach( var mapping in typeMapping.MemberMappings.Select( m => m.Value ) )
             {
                 var sourceValue = mapping.SourceProperty
-                    .PropertyInfo.GetValue( source );
+                    .MemberInfo.GetValue( source );
 
                 var converter = mapping.CustomConverter;
                 if( converter != null )
                     sourceValue = converter.Compile().DynamicInvoke( sourceValue );
 
                 var targetValue = mapping.TargetProperty
-                    .PropertyInfo.GetValue( target );
+                    .MemberInfo.GetValue( target );
 
                 if( Object.ReferenceEquals( sourceValue, targetValue ) )
                     return true;

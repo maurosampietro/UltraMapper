@@ -10,10 +10,10 @@ namespace TypeMapper.Mappers
 {
     public class ConvertMapper : IObjectMapperExpression
     {
-        public bool CanHandle( PropertyMapping mapping )
+        public bool CanHandle( MemberMapping mapping )
         {
-            var sourcePropertyType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
+            var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
+            var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
             bool areTypesBuiltIn = mapping.SourceProperty.IsBuiltInType &&
                 mapping.TargetProperty.IsBuiltInType;
@@ -44,15 +44,15 @@ namespace TypeMapper.Mappers
             return areTypesBuiltIn || isConvertible.Value;
         }
 
-        public LambdaExpression GetMappingExpression( PropertyMapping mapping )
+        public LambdaExpression GetMappingExpression( MemberMapping mapping )
         {
             //Action<ReferenceTracking, sourceType, targetType>
 
-            var sourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
+            var sourceType = mapping.SourceProperty.MemberInfo.ReflectedType;
+            var targetType = mapping.TargetProperty.MemberInfo.ReflectedType;
 
-            var sourcePropertyType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetPropertyType = mapping.TargetProperty.PropertyInfo.PropertyType;
+            var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
+            var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
             var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );

@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
-    public class SourceProperty : PropertyBase
+    public class MappingSource : MappingMemberBase
     {
         public LambdaExpression ValueGetter { get; set; }
 
-        internal SourceProperty( PropertyInfo propertyInfo )
-            : base( propertyInfo )
+        internal MappingSource( MemberInfo memberInfo )
+            : base( memberInfo )
         {
             //((MemberExpression)propertySelector.Body).Member
-            this.ValueGetter = base.PropertyInfo.GetGetterLambdaExpression();
+            this.ValueGetter = memberInfo.GetGetterLambdaExpression();
         }
     }
 }

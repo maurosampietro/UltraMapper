@@ -9,26 +9,27 @@ using TypeMapper.MappingConventions;
 
 namespace TypeMapper.MappingConventions
 {
-    public class PropertyMatchingConfiguration : IEnumerable<IPropertyMatchingRule>
+    public class PropertyMatchingConfiguration : IEnumerable<IMatchingRule>
     {
-        protected Dictionary<Type, IPropertyMatchingRule> _propertyMatchingRules;
+        protected Dictionary<Type, IMatchingRule> _propertyMatchingRules;
 
-        public Func<PropertyInfo, PropertyInfo, bool> MatchingEvaluator { get; set; }
+        public Func<MemberInfo, MemberInfo, bool> MatchingEvaluator { get; set; }
 
         public PropertyMatchingConfiguration( Action<PropertyMatchingConfiguration> config )
                 : this() { config?.Invoke( this ); }
 
         public PropertyMatchingConfiguration()
         {
-            _propertyMatchingRules = new Dictionary<Type, IPropertyMatchingRule>();
+            _propertyMatchingRules = new Dictionary<Type, IMatchingRule>();
             this.RespectAll();
         }
 
-        public PropertyMatchingConfiguration<T> GetOrAdd<T>( Action<T> ruleConfig = null ) where T : IPropertyMatchingRule, new()
+        public PropertyMatchingConfiguration<T> GetOrAdd<T>( 
+            Action<T> ruleConfig = null ) where T : IMatchingRule, new()
         {
             var type = typeof( T );
 
-            IPropertyMatchingRule instance;
+            IMatchingRule instance;
             if( !_propertyMatchingRules.TryGetValue( type, out instance ) )
                 _propertyMatchingRules.Add( type, instance = new T() );
 
@@ -36,7 +37,7 @@ namespace TypeMapper.MappingConventions
             return new PropertyMatchingConfiguration<T>( this );
         }
 
-        public PropertyMatchingConfiguration Remove<T>() where T : IPropertyMatchingRule
+        public PropertyMatchingConfiguration Remove<T>() where T : IMatchingRule
         {
             _propertyMatchingRules.Remove( typeof( T ) );
             return this;
@@ -44,17 +45,17 @@ namespace TypeMapper.MappingConventions
 
         public void RespectAll()
         {
-            MatchingEvaluator = new Func<PropertyInfo, PropertyInfo, bool>( ( source, target ) =>
+            MatchingEvaluator = new Func<MemberInfo, MemberInfo, bool>( ( source, target ) =>
                _propertyMatchingRules.Values.All( rule => rule.IsCompliant( source, target ) ) );
         }
 
         public void RespectAny()
         {
-            MatchingEvaluator = new Func<PropertyInfo, PropertyInfo, bool>( ( source, target ) =>
+            MatchingEvaluator = new Func<MemberInfo, MemberInfo, bool>( ( source, target ) =>
                _propertyMatchingRules.Values.Any( rule => rule.IsCompliant( source, target ) ) );
         }
 
-        public IEnumerator<IPropertyMatchingRule> GetEnumerator()
+        public IEnumerator<IMatchingRule> GetEnumerator()
         {
             return _propertyMatchingRules.Values.GetEnumerator();
         }
@@ -64,7 +65,7 @@ namespace TypeMapper.MappingConventions
             return this.GetEnumerator();
         }
 
-        public IPropertyMatchingRule this[ Type type ]
+        public IMatchingRule this[ Type type ]
         {
             get { return _propertyMatchingRules[ type ]; }
         }
@@ -90,7 +91,7 @@ namespace TypeMapper.MappingConventions
         }
 
         public PropertyMatchingConfiguration<T1, T2> GetOrAdd<T2>(
-            Action<T2> ruleConfig = null ) where T2 : IPropertyMatchingRule, new()
+            Action<T2> ruleConfig = null ) where T2 : IMatchingRule, new()
         {
             _baseConfig.GetOrAdd( ruleConfig );
             return new PropertyMatchingConfiguration<T1, T2>( this );
@@ -103,7 +104,7 @@ namespace TypeMapper.MappingConventions
             : base( baseConfig ) { }
 
         new public PropertyMatchingConfiguration<T1, T2, T3> GetOrAdd<T3>(
-            Action<T3> ruleConfig = null ) where T3 : IPropertyMatchingRule, new()
+            Action<T3> ruleConfig = null ) where T3 : IMatchingRule, new()
         {
             _baseConfig.GetOrAdd( ruleConfig );
             return new PropertyMatchingConfiguration<T1, T2, T3>( this );
@@ -125,7 +126,7 @@ namespace TypeMapper.MappingConventions
             : base( baseConfig ) { }
 
         new public PropertyMatchingConfiguration<T1, T2, T3, T4> GetOrAdd<T4>(
-            Action<T4> ruleConfig = null ) where T4 : IPropertyMatchingRule, new()
+            Action<T4> ruleConfig = null ) where T4 : IMatchingRule, new()
         {
             _baseConfig.GetOrAdd( ruleConfig );
             return new PropertyMatchingConfiguration<T1, T2, T3, T4>( this );
@@ -148,7 +149,7 @@ namespace TypeMapper.MappingConventions
             : base( baseConfig ) { }
 
         new public PropertyMatchingConfiguration<T1, T2, T3, T4> GetOrAdd<T5>(
-            Action<T5> ruleConfig = null ) where T5 : IPropertyMatchingRule, new()
+            Action<T5> ruleConfig = null ) where T5 : IMatchingRule, new()
         {
             _baseConfig.GetOrAdd( ruleConfig );
             return this;

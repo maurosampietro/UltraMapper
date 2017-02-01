@@ -28,9 +28,10 @@ namespace TypeMapper.MappingConventions
             } );
         }
 
-        public bool IsMatch( PropertyInfo source, PropertyInfo target )
+        public bool IsMatch( MemberInfo source, MemberInfo target )
         {
-            return this.PropertyMatchingRules.MatchingEvaluator( source, target );
+            return this.PropertyMatchingRules
+                .MatchingEvaluator( source, target );
         }
     }
 }

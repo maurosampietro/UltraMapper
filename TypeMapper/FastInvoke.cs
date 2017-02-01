@@ -10,6 +10,28 @@ namespace TypeMapper
 {
     public static class FastInvoke
     {
+        public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
+        {
+            if( memberInfo is FieldInfo )
+                return GetGetterLambdaExpression( (FieldInfo)memberInfo );
+
+            if( memberInfo is PropertyInfo )
+                return GetGetterLambdaExpression( (PropertyInfo)memberInfo );
+
+            throw new ArgumentException( $"Cannot handle {memberInfo}" );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
+        {
+            if( memberInfo is FieldInfo )
+                return GetSetterLambdaExpression( (FieldInfo)memberInfo );
+
+            if( memberInfo is PropertyInfo )
+                return GetSetterLambdaExpression( (PropertyInfo)memberInfo );
+
+            throw new ArgumentException( $"Cannot handle {memberInfo}" );
+        }
+
         public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
         {
             // (target, value) => target.get_Property()
@@ -29,6 +51,8 @@ namespace TypeMapper
         {
             // (target, value) => target.set_Property( value )
             var methodInfo = propertyInfo.GetSetMethod();
+            if( methodInfo == null )
+                throw new ArgumentException( $"'{propertyInfo}' does not provide a setter method." );
 
             var targetInstance = Expression.Parameter( propertyInfo.ReflectedType, "target" );
             var value = Expression.Parameter( propertyInfo.PropertyType, "value" );
@@ -37,6 +61,35 @@ namespace TypeMapper
 
             var delegateType = typeof( Action<,> ).MakeGenericType(
                 propertyInfo.ReflectedType, propertyInfo.PropertyType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+        }
+
+        public static LambdaExpression GetGetterLambdaExpression( this FieldInfo fieldInfo )
+        {
+            // (target, value) => target.field;
+
+            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
+            var body = Expression.Field( targetInstance, fieldInfo );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType(
+                fieldInfo.ReflectedType, fieldInfo.FieldType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this FieldInfo fieldInfo )
+        {
+            // (target, value) => target.field = value;
+
+            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
+            var value = Expression.Parameter( fieldInfo.FieldType, "value" );
+
+            var fieldExp = Expression.Field( targetInstance, fieldInfo );
+            var body = Expression.Assign( fieldExp, value );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+                fieldInfo.ReflectedType, fieldInfo.FieldType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }

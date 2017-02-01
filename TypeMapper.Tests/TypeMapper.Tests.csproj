@@ -52,11 +52,14 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CollectionTests.cs" />
+    <Compile Include="FiledAccessTests.cs" />
+    <Compile Include="DirectMappings.cs" />
     <Compile Include="ReferenceTypeTests.cs" />
     <Compile Include="BuiltInTypeTests.cs" />
     <Compile Include="TypeMapperTestExtensions.cs" />
     <Compile Include="TypeMapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnwirtableTargetMembers.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TypeMapper\TypeMapper.csproj">

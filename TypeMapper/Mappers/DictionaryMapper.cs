@@ -10,31 +10,31 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class DictionaryMapper : BaseReferenceObjectMapper, IObjectMapperExpression
+    public class DictionaryMapper : ReferenceMapper
     {
-        public bool CanHandle( PropertyMapping mapping )
+        public override bool CanHandle( MemberMapping mapping )
         {
             bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom(
-                mapping.SourceProperty.PropertyInfo.PropertyType );
+                mapping.SourceProperty.MemberInfo.GetMemberType() );
 
             bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom(
-                mapping.TargetProperty.PropertyInfo.PropertyType );
+                mapping.TargetProperty.MemberInfo.GetMemberType() );
 
             return sourceIsDictionary || targetIsDictionary;
         }
 
-        public LambdaExpression GetMappingExpression( PropertyMapping mapping )
+        public LambdaExpression GetMappingExpression( MemberMapping mapping )
         {
             //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
 
             var returnType = typeof( List<ObjectPair> );
             var returnElementType = typeof( ObjectPair );
 
-            var sourceType = mapping.SourceProperty.PropertyInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.PropertyInfo.ReflectedType;
+            var sourceType = mapping.SourceProperty.MemberInfo.ReflectedType;
+            var targetType = mapping.TargetProperty.MemberInfo.ReflectedType;
 
-            var sourceCollectionType = mapping.SourceProperty.PropertyInfo.PropertyType;
-            var targetCollectionType = mapping.TargetProperty.PropertyInfo.PropertyType;
+            var sourceCollectionType = mapping.SourceProperty.MemberInfo.GetMemberType();
+            var targetCollectionType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
             var sourceElementType = sourceCollectionType.GetCollectionGenericType();
             var targetElementType = targetCollectionType.GetCollectionGenericType();

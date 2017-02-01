@@ -47,16 +47,18 @@
     <Compile Include="Configuration\TypeMappingConfigurator.cs" />
     <Compile Include="Configuration\ObjectMapperConfiguration.cs" />
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
+    <Compile Include="ExtensionMethods\MemberInfoExtensions.cs" />
     <Compile Include="FastInvoke.cs" />
     <Compile Include="Internals\ExpressionParameterReplacer.cs" />
     <Compile Include="Internals\ObjectPair.cs" />
-    <Compile Include="Internals\PropertyBase.cs" />
-    <Compile Include="Internals\PropertyMapping.cs" />
-    <Compile Include="Internals\SourceProperty.cs" />
-    <Compile Include="Internals\TargetProperty.cs" />
+    <Compile Include="Internals\MappingMemberBase.cs" />
+    <Compile Include="Internals\MemberMapping.cs" />
+    <Compile Include="Internals\MappingSource.cs" />
+    <Compile Include="Internals\MappingTarget.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
     <Compile Include="Mappers\MapperContexts\ReferenceMapperContext.cs" />
     <Compile Include="Mappers\MapperContexts\CollectionMapperContext.cs" />
+    <Compile Include="Mappers\QueueMapper.cs" />
     <Compile Include="Mappers\SetMapper.cs" />
     <Compile Include="Mappers\StackMapper.cs" />
     <Compile Include="Mappers\CustomConverterMapper.cs" />
@@ -66,9 +68,10 @@
     <Compile Include="Mappers\DictionaryMapper.cs" />
     <Compile Include="Mappers\IObjectMapper.cs" />
     <Compile Include="Mappers\NullableMapper.cs" />
-    <Compile Include="Mappers\BaseReferenceMapper.cs" />
     <Compile Include="Mappers\ReferenceMapper.cs" />
     <Compile Include="Mappers\LinkedListMapper.cs" />
+    <Compile Include="Mappers\TypeMappers\CollectionMapperTypeMapper.cs" />
+    <Compile Include="Mappers\TypeMappers\ReferenceTypeMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
     <Compile Include="MappingConventions\DefaultMappingConvention.cs" />
@@ -87,7 +90,7 @@
     <Compile Include="ExtensionMethods\TypeExtensions.cs" />
     <Compile Include="TypeMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Internals\PropertyInfoPair.cs" />
+    <Compile Include="Internals\MemberInfoPair.cs" />
     <Compile Include="Internals\TypePair.cs" />
   </ItemGroup>
   <ItemGroup>

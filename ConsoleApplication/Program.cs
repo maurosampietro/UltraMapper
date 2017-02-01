@@ -159,6 +159,18 @@ namespace ConsoleApplication
 
         static void Main( string[] args )
         {
+            AutoMapper.Mapper.Initialize( cfg => { } );
+
+            int v = 10;
+            int w = 13;
+
+            AutoMapper.Mapper.Map( v, w );
+
+            List<int> a = Enumerable.Range( 0, 10 ).ToList();
+            List<double?> b = new List<double?>() { null, null, null };
+
+            AutoMapper.Mapper.Map( b, a );
+
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
@@ -192,7 +204,7 @@ namespace ConsoleApplication
             var temp4 = new BaseTypesDto();
 
             AutoMapper.Mapper.Initialize( cfg =>
-            {                
+            {
                 cfg.CreateMissingTypeMaps = true;
                 cfg.CreateMap<BaseTypes, BaseTypesDto>();
             } );

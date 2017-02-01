@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.Mappers;
+using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
 {
@@ -22,10 +25,12 @@ namespace TypeMapper.Internals
          *The target property can be therefore used as the key 
          *of this dictionary
          */
-        public readonly Dictionary<PropertyInfo, PropertyMapping> PropertyMappings;
+        public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
 
         public LambdaExpression CustomTargetConstructor { get; set; }
         public bool IgnoreConventions { get; set; }
+
+        public LambdaExpression CustomConverter { get; set; }
 
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
         {
@@ -33,7 +38,7 @@ namespace TypeMapper.Internals
             this.IgnoreConventions = globalConfig.IgnoreConventions;
 
             this.TypePair = typePair;
-            this.PropertyMappings = new Dictionary<PropertyInfo, PropertyMapping>();
+            this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
         }
 
         private LambdaExpression _expression;
@@ -42,15 +47,12 @@ namespace TypeMapper.Internals
             get
             {
                 if( _expression != null ) return _expression;
-                if( !this.PropertyMappings.Any() ) return null;
 
                 var returnType = typeof( List<ObjectPair> );
                 var returnElementType = typeof( ObjectPair );
 
-                var firstMapping = this.PropertyMappings.Values.First();
-
-                var sourceType = firstMapping.SourceProperty.PropertyInfo.ReflectedType;
-                var targetType = firstMapping.TargetProperty.PropertyInfo.ReflectedType;
+                var sourceType = TypePair.SourceType;
+                var targetType = TypePair.TargetType;
                 var trackerType = typeof( ReferenceTracking );
 
                 var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
@@ -59,42 +61,65 @@ namespace TypeMapper.Internals
 
                 var newRefObjects = Expression.Variable( returnType, "result" );
 
+                LambdaExpression typeMappingExp = null;
+
+                if( new CollectionMapperTypeMapping().CanHandle( this ) )
+                    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
+                else if( new BuiltInTypeMapper().CanHandle( this ) )
+                    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
+
+
                 var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
                 var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
 
-                var addCalls = PropertyMappings.Values
+                Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
+                 {
+                     if( lambdaExp.ReturnType.ImplementsInterface( typeof( IEnumerable<ObjectPair> ) ) )
+                         return Expression.Call( newRefObjects, addRangeMethod, lambdaExp.Body );
+
+                     if( lambdaExp.ReturnType == returnElementType )
+                     {
+                         var objPair = Expression.Variable( returnElementType, "objPair" );
+
+                         return (Expression)Expression.Block
+                         (
+                             new[] { objPair },
+
+                             Expression.Assign( objPair, lambdaExp.Body ),
+
+                             Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                                 Expression.Call( newRefObjects, addMethod, objPair ) )
+
+                         );
+                     }
+
+                     if( lambdaExp.ReturnType == typeof( void ) )
+                         return lambdaExp.Body;
+
+                     throw new ArgumentException( "Expressions should return System.Void or ObjectPair or IEnumerable<ObjectPair>" );
+                 };
+
+                var addCalls = MemberMappings.Values
                     .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
-                    .Select( mapping =>
-                    {
-                        if( mapping.Expression.ReturnType.ImplementsInterface( typeof( IEnumerable<ObjectPair> ) ) )
-                        {
-                            return Expression.Call( newRefObjects, addRangeMethod, mapping.Expression.Body );
-                        }
-                        else if( mapping.Expression.ReturnType == returnElementType )
-                        {
-                            var objPair = Expression.Variable( returnElementType, "objPair" );
-
-                            return (Expression)Expression.Block
-                            (
-                                new[] { objPair },
-
-                                Expression.Assign( objPair, mapping.Expression.Body ),
-
-                                Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                                    Expression.Call( newRefObjects, addMethod, objPair ) )
-
-                            );
-                        }
-                        else if( mapping.Expression.ReturnType == typeof( void ) )
-                        {
-                            return mapping.Expression.Body;
-                        }
-
-                        throw new ArgumentException( "Expressions should return System.Void or ObjectPair or IEnumerable<ObjectPair>" );
-                    } );
+                    .Select( mapping => createAddCalls( mapping.Expression ) );
 
                 var bodyExp = (addCalls?.Any() != true) ?
                         (Expression)Expression.Empty() : Expression.Block( addCalls );
+
+                // Parameter for the catch block
+                var exception = Expression.Parameter( typeof( Exception ) );
+                var logExceptionMethod = this.GetType().GetMethod( "LogException", BindingFlags.Static | BindingFlags.Public );
+
+                if( typeMappingExp != null )
+                {
+                    var typeMappingBodyExp = createAddCalls( typeMappingExp );
+
+                    bodyExp = Expression.Block
+                    (
+                        typeMappingBodyExp,
+                        bodyExp
+                    );
+                }
 
                 var body = (Expression)Expression.Block
                 (
@@ -124,16 +149,13 @@ namespace TypeMapper.Internals
             get
             {
                 if( _mapperFunc != null ) return _mapperFunc;
-                if( !this.PropertyMappings.Any() ) return null;
 
                 var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
                 var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
                 var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
 
-                var firstMapping = this.PropertyMappings.Values.First();
-
-                var sourceType = firstMapping.SourceProperty.PropertyInfo.ReflectedType;
-                var targetType = firstMapping.TargetProperty.PropertyInfo.ReflectedType;
+                var sourceType = TypePair.SourceType;
+                var targetType = TypePair.TargetType;
 
                 var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
                 var targetInstance = Expression.Convert( targetLambdaArg, targetType );
@@ -145,6 +167,5 @@ namespace TypeMapper.Internals
                     bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
             }
         }
-
     }
 }

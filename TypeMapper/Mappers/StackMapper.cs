@@ -18,10 +18,10 @@ namespace TypeMapper.Mappers
     */
     public class StackMapper : CollectionMapper
     {
-        public override bool CanHandle( PropertyMapping mapping )
+        public override bool CanHandle( MemberMapping mapping )
         {
-            return base.CanHandle( mapping ) && mapping.TargetProperty.PropertyInfo
-                .PropertyType.GetGenericTypeDefinition() == typeof( Stack<> );
+            return base.CanHandle( mapping ) && mapping.TargetProperty.MemberInfo
+                .GetMemberType().GetGenericTypeDefinition() == typeof( Stack<> );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
@@ -29,31 +29,10 @@ namespace TypeMapper.Mappers
             return context.TargetPropertyType.GetMethod( "Push" );
         }
 
-        protected override Expression GetInnerBody( object contextObj )
+        protected override Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {
-            var context = contextObj as CollectionMapperContext;
-
             var addMethod = GetTargetCollectionAddMethod( context );
-            var constructor = GetTargetCollectionConstructorFromCollection( context );
-
-            if( context.IsTargetElementTypeBuiltIn )
-            {
-                var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
-                if( constructorInfo == null )
-                {
-                    Expression loopBody = Expression.Call( context.TargetPropertyVar,
-                        addMethod, context.SourceLoopingVar );
-
-                    return ExpressionLoops.ForEach( context.SourcePropertyVar,
-                        context.SourceLoopingVar, loopBody );
-                }
-
-                //double contructor to read in reverse order
-                var targetCollectionConstructor = Expression.New( constructorInfo,
-                   Expression.New( constructorInfo, context.SourcePropertyVar ) );
-
-                return Expression.Assign( context.TargetPropertyVar, targetCollectionConstructor );
-            }
+            var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
 
             var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
             var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
@@ -87,7 +66,7 @@ namespace TypeMapper.Mappers
                         Expression.New( objectPairConstructor, context.SourceLoopingVar, newElement ) )
                 ) ),
 
-                Expression.Assign( context.TargetPropertyVar, Expression.New( constructor, tempCollection ) )
+                Expression.Assign( context.TargetPropertyVar, Expression.New( constructorInfo, tempCollection ) )
             );
         }
     }

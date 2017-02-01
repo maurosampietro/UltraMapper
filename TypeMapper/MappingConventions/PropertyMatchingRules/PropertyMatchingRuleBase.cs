@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.MappingConventions
 {
-    public abstract class PropertyMatchingRuleBase : IPropertyMatchingRule
+    public abstract class PropertyMatchingRuleBase : IMatchingRule
     {
-        public abstract bool IsCompliant( PropertyInfo source, PropertyInfo target );
+        public abstract bool IsCompliant( MemberInfo source, MemberInfo target );
 
         public static RuleChaining operator &( PropertyMatchingRuleBase lhs, PropertyMatchingRuleBase rhs )
         {

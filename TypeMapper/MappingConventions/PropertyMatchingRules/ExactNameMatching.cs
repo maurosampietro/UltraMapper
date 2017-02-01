@@ -15,7 +15,7 @@ namespace TypeMapper.MappingConventions
     {
         public bool IgnoreCase { get; set; } = false;
 
-        public override bool IsCompliant( PropertyInfo source, PropertyInfo target )
+        public override bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var comparisonType = this.IgnoreCase ?
               StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

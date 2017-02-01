@@ -27,35 +27,16 @@ namespace TypeMapper.Mappers
     /// </summary>
     public class SetMapper : CollectionMapper
     {
-        public override bool CanHandle( PropertyMapping mapping )
+        public override bool CanHandle( MemberMapping mapping )
         {
-            return base.CanHandle( mapping ) && mapping.TargetProperty.PropertyInfo
-                .PropertyType.ImplementsInterface( typeof( ISet<> ) );
+            return base.CanHandle( mapping ) && mapping.TargetProperty.MemberInfo
+                .GetMemberType().ImplementsInterface( typeof( ISet<> ) );
         }
 
-        protected override Expression GetInnerBody( object contextObj )
+        protected override Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {
-            var context = contextObj as CollectionMapperContext;
             var addMethod = GetTargetCollectionAddMethod( context );
-
-            if( context.IsTargetElementTypeBuiltIn )
-            {
-                var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
-                if( constructorInfo == null )
-                {
-                    Expression loopBody = Expression.Call( context.TargetPropertyVar,
-                        addMethod, context.SourceLoopingVar );
-
-                    return ExpressionLoops.ForEach( context.SourcePropertyVar,
-                        context.SourceLoopingVar, loopBody );
-                }
-
-                var targetCollectionConstructor = Expression.New(
-                    constructorInfo, context.SourcePropertyVar );
-
-                return Expression.Assign( context.TargetPropertyVar, targetCollectionConstructor );
-            }
-
+   
             var addRangeToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
             var newElement = Expression.Variable( context.TargetElementType, "newElement" );
             var newInstanceExp = Expression.New( context.TargetPropertyType );
