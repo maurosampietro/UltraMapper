@@ -23,7 +23,15 @@ namespace TypeMapper.Internals
             //this.CollectionStrategy = new NewCollection();
 
             this.ValueSetter = memberInfo.GetSetterLambdaExpression();
-            this.ValueGetter = memberInfo.GetGetterLambdaExpression();
+            try
+            {
+                this.ValueGetter = memberInfo.GetGetterLambdaExpression();
+            }
+            catch( Exception ex )
+            {
+                Console.WriteLine( ex );
+
+            }
         }
     }
 }

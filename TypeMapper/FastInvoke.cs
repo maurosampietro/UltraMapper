@@ -18,7 +18,10 @@ namespace TypeMapper
             if( memberInfo is PropertyInfo )
                 return GetGetterLambdaExpression( (PropertyInfo)memberInfo );
 
-            throw new ArgumentException( $"Cannot handle {memberInfo}" );
+            if( memberInfo is MethodInfo )
+                return GetGetterLambdaExpression( (MethodInfo)memberInfo );
+
+            throw new ArgumentException( $"'{memberInfo}' is not supported." );
         }
 
         public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
@@ -29,7 +32,39 @@ namespace TypeMapper
             if( memberInfo is PropertyInfo )
                 return GetSetterLambdaExpression( (PropertyInfo)memberInfo );
 
-            throw new ArgumentException( $"Cannot handle {memberInfo}" );
+            if( memberInfo is MethodInfo )
+                return GetSetterLambdaExpression( (MethodInfo)memberInfo );
+
+            throw new ArgumentException( $"'{memberInfo}' is not supported." );
+        }
+
+        public static LambdaExpression GetGetterLambdaExpression( this FieldInfo fieldInfo )
+        {
+            // (target, value) => target.field;
+
+            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
+            var body = Expression.Field( targetInstance, fieldInfo );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType(
+                fieldInfo.ReflectedType, fieldInfo.FieldType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this FieldInfo fieldInfo )
+        {
+            // (target, value) => target.field = value;
+
+            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
+            var value = Expression.Parameter( fieldInfo.FieldType, "value" );
+
+            var fieldExp = Expression.Field( targetInstance, fieldInfo );
+            var body = Expression.Assign( fieldExp, value );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+                fieldInfo.ReflectedType, fieldInfo.FieldType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
 
         public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
@@ -65,31 +100,34 @@ namespace TypeMapper
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
 
-        public static LambdaExpression GetGetterLambdaExpression( this FieldInfo fieldInfo )
+        public static LambdaExpression GetGetterLambdaExpression( this MethodInfo methodInfo )
         {
-            // (target, value) => target.field;
+            if( methodInfo.GetParameters().Length > 0 )
+                throw new NotImplementedException( "Only parameterless methods are currently supported" );
 
-            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
-            var body = Expression.Field( targetInstance, fieldInfo );
+            var targetType = methodInfo.ReflectedType;
+
+            var targetInstance = Expression.Parameter( targetType, "target" );
+            var body = Expression.Call( targetInstance, methodInfo );
 
             var delegateType = typeof( Func<,> ).MakeGenericType(
-                fieldInfo.ReflectedType, fieldInfo.FieldType );
+                methodInfo.ReflectedType, methodInfo.ReturnType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
 
-        public static LambdaExpression GetSetterLambdaExpression( this FieldInfo fieldInfo )
+        public static LambdaExpression GetSetterLambdaExpression( this MethodInfo methodInfo )
         {
-            // (target, value) => target.field = value;
+            if( methodInfo.GetParameters().Length != 1 )
+                throw new NotImplementedException( $"Only methods taking as input exactly one parameter are currently supported." );
 
-            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
-            var value = Expression.Parameter( fieldInfo.FieldType, "value" );
+            var targetInstance = Expression.Parameter( methodInfo.ReflectedType, "target" );
+            var value = Expression.Parameter( methodInfo.GetParameters()[0].ParameterType, "value" );
 
-            var fieldExp = Expression.Field( targetInstance, fieldInfo );
-            var body = Expression.Assign( fieldExp, value );
+            var body = Expression.Call( targetInstance, methodInfo, value );
 
             var delegateType = typeof( Action<,> ).MakeGenericType(
-                fieldInfo.ReflectedType, fieldInfo.FieldType );
+                methodInfo.ReflectedType, methodInfo.GetParameters()[ 0 ].ParameterType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }

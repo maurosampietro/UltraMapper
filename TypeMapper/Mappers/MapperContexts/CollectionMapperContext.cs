@@ -61,7 +61,7 @@ namespace TypeMapper.Mappers
             SourceElementType = SourcePropertyType.GetCollectionGenericType();
             TargetElementType = TargetPropertyType.GetCollectionGenericType();
 
-            IsSourceElementTypeBuiltIn = SourcePropertyType.IsBuiltInType( false );
+            IsSourceElementTypeBuiltIn = SourceElementType.IsBuiltInType( false );
             IsTargetElementTypeBuiltIn = TargetElementType.IsBuiltInType( false );
 
             SourceLoopingVar = Expression.Parameter( SourceElementType, "loopVar" );

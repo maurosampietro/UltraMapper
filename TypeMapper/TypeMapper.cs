@@ -28,12 +28,6 @@ namespace TypeMapper
         public MapperConfiguration MappingConfiguration { get; protected set; }
 
         /// <summary>
-        /// Initialize a new instance using <see cref="DefaultMappingConvention"/> 
-        /// as mapping convention
-        /// </summary>
-        public TypeMapper() : this( new MapperConfiguration() ) { }
-
-        /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
@@ -47,8 +41,11 @@ namespace TypeMapper
         /// as mapping convention allowing inline editing of the configuraton itself.
         /// </summary>
         /// <param name="config"></param>
-        public TypeMapper( Action<DefaultMappingConvention> config )
-            : this( new MapperConfiguration( config ) ) { }
+        public TypeMapper( Action<MapperConfiguration<DefaultMappingConvention>> config = null )
+        {
+            this.MappingConfiguration = new MapperConfiguration<DefaultMappingConvention>();
+            config?.Invoke( (MapperConfiguration<DefaultMappingConvention>)this.MappingConfiguration );
+        }
 
         /// <summary>
         /// Creates a copy of the source instance.
@@ -61,6 +58,28 @@ namespace TypeMapper
             var target = new TSource();
             this.Map( source, target );
             return target;
+        }
+
+        public void Map<TSource, TTarget>( TSource source, ref TTarget target )
+            where TSource : struct
+            where TTarget : struct
+        {
+            //Non è il massimo: salta la funzione di map principale
+            // e non tiene in cache le espressioni generate.
+            //Il problema è sempre lo stesso: gestire il mapping delle instanze stesse
+            //(il valore in caso di structs o primitives e le collection 
+            //implementate direttamente sull'istanza in caso di classi)
+            //oltre che delle proprietà e dei campi
+
+            Type sourceType = source.GetType();
+            Type targetType = target.GetType();
+
+            var mapping = this.MappingConfiguration[ sourceType, targetType ];
+
+            var method = (Func<TSource,TTarget>)new BuiltInTypeMapper()
+                .GetMappingExpression( mapping ).Compile();
+
+            target = method.Invoke( source );
         }
 
         /// <summary>
@@ -84,9 +103,9 @@ namespace TypeMapper
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
-            var mappings = this.MappingConfiguration[ sourceType, targetType ];
-            
-            var references = mappings.MapperFunc?.Invoke( referenceTracking, source, target );
+            var mapping = this.MappingConfiguration[ sourceType, targetType ];
+
+            var references = mapping.MapperFunc?.Invoke( referenceTracking, source, target );
             if( references != null )
             {
                 foreach( var reference in references )

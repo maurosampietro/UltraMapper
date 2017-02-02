@@ -52,7 +52,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CollectionTests.cs" />
-    <Compile Include="FiledAccessTests.cs" />
+    <Compile Include="StructTests.cs" />
+    <Compile Include="ValuesAccessTests.cs" />
     <Compile Include="DirectMappings.cs" />
     <Compile Include="ReferenceTypeTests.cs" />
     <Compile Include="BuiltInTypeTests.cs" />

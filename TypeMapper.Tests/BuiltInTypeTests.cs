@@ -65,7 +65,7 @@ namespace TypeMapper.Tests
             var source = new BuiltInTypes();
             var target = new BuiltInTypes();
 
-            var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+            var typeMapper = new TypeMapper( cfg =>
             {
                 cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
                  //map with custom converter
@@ -96,7 +96,7 @@ namespace TypeMapper.Tests
             var source = new BuiltInTypes();
             var target = new NullableBuiltInTypes();
 
-            var typeMapper = new TypeMapper<DefaultMappingConvention>
+            var typeMapper = new TypeMapper
             (
                 cfg =>
                 {
@@ -258,7 +258,7 @@ namespace TypeMapper.Tests
         //            return !p.GetValue( target ).Equals( defaultValue );
         //        } ) );
 
-        //    var typeMapper = new TypeMapper<DefaultMappingConvention>
+        //    var typeMapper = new TypeMapper
         //    (
         //        cfg =>
         //        {

@@ -163,7 +163,7 @@ namespace TypeMapper.Tests
                     source.ObservableCollection.Add( new ComplexType() { A = i } );
                 }
 
-                var typeMapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+                var typeMapper = new TypeMapper( cfg =>
                 {
                     //cfg.GlobalConfiguration.IgnoreConventions = true;
                 } );

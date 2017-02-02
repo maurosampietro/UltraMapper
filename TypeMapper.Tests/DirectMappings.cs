@@ -17,6 +17,7 @@ namespace TypeMapper.Tests
     {
         private class ComplexType
         {
+            public int GetPropertyA() { return this.PropertyA; }
             public int PropertyA { get; set; }
 
             public override bool Equals( object obj )
@@ -39,7 +40,7 @@ namespace TypeMapper.Tests
             Assert.IsTrue( source != target );
 
             var typeMapper = new TypeMapper();
-            typeMapper.Map( source, target );
+            typeMapper.Map( source, ref target );
 
             Assert.IsTrue( source == target );
         }
@@ -53,7 +54,7 @@ namespace TypeMapper.Tests
             Assert.IsTrue( source != target );
 
             var typeMapper = new TypeMapper();
-            typeMapper.Map( source, target );
+            typeMapper.Map( source, ref target );
 
             Assert.IsTrue( source == target );
         }
@@ -115,21 +116,21 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void FromPrimitiveCollectionToComplexCollection()
         {
-            var source = new List<int>() { 11, 13, 17 };
+            //var source = new List<int>() { 11, 13, 17 };
 
-            var target = new List<ComplexType>()
-            {
-                new ComplexType() { PropertyA = 1 },
-                new ComplexType() { PropertyA = 2 }
-            };
+            //var target = new List<ComplexType>()
+            //{
+            //    new ComplexType() { PropertyA = 1 },
+            //    new ComplexType() { PropertyA = 2 }
+            //};
 
-            var typeMapper = new TypeMapper<DefaultMappingConvention>
-            (
-                cfg => cfg.MapTypes<int, ComplexType>().MapProperty( a => a, c => c.PropertyA )
-            );
+            //var typeMapper = new TypeMapper
+            //(
+            //    cfg => cfg.MapTypes<int, ComplexType>().MapProperty( a => a, c => c.PropertyA )
+            //);
 
-            typeMapper.Map( source, target );
-            typeMapper.VerifyMapperResult( source, target );
+            //typeMapper.Map( source, target );
+            //typeMapper.VerifyMapperResult( source, target );
         }
 
         [TestMethod]
@@ -143,9 +144,13 @@ namespace TypeMapper.Tests
 
             var target = new List<int>() { 11, 13, 17 };
 
-            var typeMapper = new TypeMapper();
-            typeMapper.Map( source, target );
+            var typeMapper = new TypeMapper
+            (
+                cfg => cfg.MapTypes<ComplexType, ComplexType>()
+                    .MapProperty( a => a.PropertyA, c => c.PropertyA )
+            );
 
+            typeMapper.Map( source, target );
             typeMapper.VerifyMapperResult( source, target );
         }
     }

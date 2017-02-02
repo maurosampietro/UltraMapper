@@ -83,7 +83,7 @@ namespace TypeMapper.Tests
             var source = new SourceClass();
             var target = new TargetClassDto();
 
-            var mapper = new TypeMapper<DefaultMappingConvention>( cfg =>
+            var mapper = new TypeMapper( cfg =>
             {
                 cfg.GlobalConfiguration.Mappers.Add<BuiltInTypeMapper>()
                     .Add<ReferenceMapper>();

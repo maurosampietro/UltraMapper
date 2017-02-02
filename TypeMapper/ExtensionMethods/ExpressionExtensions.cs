@@ -31,18 +31,12 @@ namespace TypeMapper
 
             while( (memberExpression = expBody as MemberExpression) == null )
             {
-                switch( expBody.NodeType )
-                {
-                    case ExpressionType.Convert:
-                        {
-                            expBody = ((UnaryExpression)expBody).Operand as Expression;
-                            break;
-                        }
+                if( expBody.NodeType == ExpressionType.Convert )
+                    expBody = ((UnaryExpression)expBody).Operand as Expression;
 
-                    default:
-                        throw new ArgumentException( invalidExpressionMsg );
-                }
-            }
+                else if( expBody.NodeType == ExpressionType.Call)
+                    return ((MethodCallExpression)expBody).Method;
+            }            
 
             if( memberExpression == null )
                 throw new ArgumentException( invalidExpressionMsg );

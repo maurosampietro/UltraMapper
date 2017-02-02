@@ -65,9 +65,6 @@ namespace TypeMapper.Internals
 
                 if( new CollectionMapperTypeMapping().CanHandle( this ) )
                     typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
-                else if( new BuiltInTypeMapper().CanHandle( this ) )
-                    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
-
 
                 var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
                 var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );

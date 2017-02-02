@@ -56,7 +56,7 @@ namespace ConsoleApplication
 
             public BaseTypes()
             {
-                //this.SelfReference = this;
+                this.SelfReference = this;
                 this.InnerType = new InnerType() { A = "vara", B = "varb" };
 
                 this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
@@ -132,11 +132,11 @@ namespace ConsoleApplication
 
             public BindingList<InnerTypeDto> ListOfInnerType { get; set; }
 
-            public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
-            public Dictionary<InnerTypeDto, InnerTypeDto> Dictionary { get; set; }
-            public Dictionary<InnerTypeDto, InnerType> Dictionary2 { get; set; }
-            public Dictionary<string, InnerTypeDto> Dictionary3 { get; set; }
-            public Dictionary<InnerTypeDto, int> Dictionary4 { get; set; }
+            //public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            //public Dictionary<InnerTypeDto, InnerTypeDto> Dictionary { get; set; }
+            //public Dictionary<InnerTypeDto, InnerType> Dictionary2 { get; set; }
+            //public Dictionary<string, InnerTypeDto> Dictionary3 { get; set; }
+            //public Dictionary<InnerTypeDto, int> Dictionary4 { get; set; }
         }
 
         public class InnerType
@@ -206,7 +206,7 @@ namespace ConsoleApplication
             AutoMapper.Mapper.Initialize( cfg =>
             {
                 cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>();
+                cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
             } );
             sw5.Start();
             for( int i = 0; i < iterations; i++ )
@@ -215,10 +215,6 @@ namespace ConsoleApplication
             }
             sw5.Stop();
             Console.WriteLine( sw5.ElapsedMilliseconds );
-
-
-
-            var type = typeof( KeyValuePair<string, int> );
 
             Console.ReadKey();
         }

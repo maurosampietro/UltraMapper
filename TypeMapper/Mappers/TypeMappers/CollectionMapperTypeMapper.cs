@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -84,9 +85,15 @@ namespace TypeMapper.Mappers.TypeMappers
                 throw new Exception( msg );
             }
 
-            Expression loopingVar = context.SourceLoopingVar;
+            //in case of a struct 
+            Expression loopingVarToObject = context.SourceLoopingVar;
             if( context.SourceElementType.IsPrimitive )
-                loopingVar = Expression.Convert( context.SourceLoopingVar, typeof( object ) );
+                loopingVarToObject = Expression.Convert( context.SourceLoopingVar, typeof( object ) );
+
+            //in case of a struct 
+            Expression targetVarToObject = newElement;
+            if( context.TargetElementType.IsPrimitive )
+                targetVarToObject = Expression.Convert( newElement, typeof( object ) );
 
             return Expression.Block
             (
@@ -99,7 +106,7 @@ namespace TypeMapper.Mappers.TypeMappers
                     Expression.Call( context.TargetInstance, addMethod, newElement ),
 
                     Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
-                        Expression.New( objectPairConstructor, loopingVar, newElement ) )
+                        Expression.New( objectPairConstructor, loopingVarToObject, targetVarToObject ) )
                 ) )
             );
         }
@@ -108,7 +115,7 @@ namespace TypeMapper.Mappers.TypeMappers
         {
             var context = contextObj as CollectionMapperContextTypeMapping;
 
-            if( context.IsTargetElementTypeBuiltIn )
+            if( context.IsSourceElementTypeBuiltIn && context.IsTargetElementTypeBuiltIn )
                 return GetSimpleTypeInnerBody( context.Mapping, context );
 
             return GetComplexTypeInnerBody( context.Mapping, context );

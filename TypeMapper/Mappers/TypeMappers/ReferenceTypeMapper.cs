@@ -94,18 +94,18 @@ namespace TypeMapper.Mappers.TypeMappers
                         //    Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, context.SourcePropertyVar,
                         //    Expression.Constant( context.TargetPropertyType ) ), context.TargetPropertyType ) ),
 
-                        //Expression.IfThen
-                        //(
-                            //Expression.Equal( context.TargetPropertyVar, context.TargetNullValue ),
+                        Expression.IfThen
+                        (
+                            Expression.Equal( context.TargetPropertyVar, context.TargetNullValue ),
                             Expression.Block
                             (
                                 this.GetInnerBody( context )
-
+                                
                                 //cache reference
                                 //Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
                                 //    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
                             )
-                        //)
+                        )
                     )
                 ),
 
