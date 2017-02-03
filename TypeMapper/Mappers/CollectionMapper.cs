@@ -70,6 +70,9 @@ namespace TypeMapper.Mappers
                 var typeMapping = mapping.TypeMapping.GlobalConfiguration.Configurator[
                           context.SourceElementType, context.TargetElementType ];
 
+                //TODO: bisogna determinare quale mapper
+                //(Nullable, Convert, CustomConverter, BuiltInType) possa gestire il mapping. 
+                //non è sempre BuiltIn quello giusto
                 var convert = new BuiltInTypeMapper().GetMappingExpression( typeMapping );
 
                 Expression loopBody = Expression.Call( context.TargetPropertyVar,

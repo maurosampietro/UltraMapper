@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace TypeMapper
 {
+    //STUB
     public class InstanceFactory
     {
         public static T CreateObject<T>( params object[] constructorValues )
@@ -25,6 +26,7 @@ namespace TypeMapper
             }
             else // with parameters
             {
+                //var paramTypes = constructorValues.Select( v => v.GetType() );
                 var instanceCreator = ConstructorFactory.GetOrCreateConstructor( type );
                 return instanceCreator();
             }

@@ -25,120 +25,88 @@ namespace TypeMapper.Mappers
 
         protected override object GetMapperContext( MemberMapping mapping )
         {
-            return new CollectionMapperContext( mapping );
+            return new DictionaryMapperContext( mapping );
+        }
+
+        protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
+           MemberExpression sourceParam, ParameterExpression targetParam, Type sourceParamType, Type targetParamType )
+        {
+            bool isSourceKeyTypeBuiltIn = context.SourceKeyType.IsBuiltInType( false );
+            bool isTargetKeyTypeBuiltIne = context.TargetKeyType.IsBuiltInType( false );
+
+            if( sourceParamType.IsBuiltInType( false ) && targetParamType.IsBuiltInType( false ) )
+            {
+                if( sourceParamType == targetParamType )
+                    return sourceParam;
+
+                var typeMapping = context.Mapping.TypeMapping
+                    .GlobalConfiguration.Configurator[ sourceParamType, targetParamType ];
+
+                var convert = new BuiltInTypeMapper().GetMappingExpression( typeMapping );
+                return Expression.Assign( targetParam, Expression.Invoke( convert, sourceParam ) );
+            }
+
+            var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+            var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
+
+            return Expression.Block
+            (
+                Expression.Assign( targetParam, Expression.Convert(
+                    Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, sourceParam,
+                    Expression.Constant( sourceParamType ) ), targetParamType ) ),
+
+                Expression.IfThen
+                (
+                    Expression.Equal( targetParam, Expression.Constant( null, targetParamType ) ),
+                    Expression.Block
+                    (
+                        Expression.Assign( targetParam, Expression.New( targetParamType ) ),
+
+                        //cache new collection
+                        Expression.Invoke( CacheAddExpression, context.ReferenceTrack, sourceParam,
+                            Expression.Constant( targetParamType ), targetParam ),
+
+                        //add to return list
+                        Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
+                            Expression.New( objectPairConstructor, sourceParam, targetParam ) )
+                    )
+                )
+            );
         }
 
         protected override Expression GetInnerBody( object contextObj )
         {
-            var context = contextObj as CollectionMapperContext;
+            var context = contextObj as DictionaryMapperContext;
             //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
 
-            var sourceKey = Expression.Property( context.SourceLoopingVar, nameof( DictionaryEntry.Key ) );
-            var sourceValue = Expression.Property( context.SourceLoopingVar, nameof( DictionaryEntry.Value ) );
-
-            var sourceKeyType = context.SourceElementType.GetGenericArguments()[ 0 ];
-            var sourceValueType = context.SourceElementType.GetGenericArguments()[ 1 ];
-
-            var targetKeyType = context.TargetElementType.GetGenericArguments()[ 0 ];
-            var targetValueType = context.TargetElementType.GetGenericArguments()[ 1 ];
-
-            bool keyIsBuiltInType = targetKeyType.IsBuiltInType( false );
-            bool valueIsBuiltInType = targetValueType.IsBuiltInType( false );
+            bool keyIsBuiltInType = context.TargetKeyType.IsBuiltInType( false );
+            bool valueIsBuiltInType = context.TargetValueType.IsBuiltInType( false );
 
             var addMethod = context.TargetPropertyType.GetMethod( "Add" );
 
-            Expression innerBody = null;
-            if( keyIsBuiltInType && valueIsBuiltInType )
-            {
-                innerBody = ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar,
-                    Expression.Call( context.TargetPropertyVar, addMethod, sourceKey, sourceValue ) );
-            }
-            else
-            {
-                var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-                var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
+            var keyExpression = GetKeyOrValueExpression( context, context.SourceKey,
+                context.TargetKey, context.SourceKeyType, context.TargetKeyType );
 
-                var targetKey = Expression.Variable( targetKeyType, "targetKey" );
-                var targetValue = Expression.Variable( targetValueType, "targetValue" );
-
-                Expression keyExpression = null;
-                if( keyIsBuiltInType )
-                    keyExpression = Expression.Assign( targetKey, sourceKey );
-                else
-                {
-                    keyExpression = Expression.Block
-                    (
-                        Expression.Assign( targetKey, Expression.Convert( Expression.Invoke( CacheLookupExpression,
-                          context.ReferenceTrack, sourceKey, Expression.Constant( sourceKeyType ) ), targetKeyType ) ),
-
-                        Expression.IfThen
-                        (
-                            Expression.Equal( targetKey, Expression.Constant( null, targetKeyType ) ),
-                            Expression.Block
-                            (
-                                Expression.Assign( targetKey, Expression.New( targetKeyType ) ),
-
-                                //cache new collection
-                                Expression.Invoke( CacheAddExpression, context.ReferenceTrack, sourceKey,
-                                    Expression.Constant( targetKeyType ), targetKey ),
-
-                                //add to return list
-                                Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
-                                    Expression.New( objectPairConstructor, sourceKey, targetKey ) )
-                            )
-                        )
-                    );
-                }
-
-                Expression valueExpression = null;
-                if( valueIsBuiltInType )
-                    valueExpression = Expression.Assign( targetValue, sourceValue );
-                else
-                {
-                    valueExpression = Expression.Block
-                    (
-                        Expression.Assign( targetValue, Expression.Convert( Expression.Invoke( CacheLookupExpression,
-                          context.ReferenceTrack, sourceValue, Expression.Constant( sourceValueType ) ), targetValueType ) ),
-
-                        Expression.IfThen
-                        (
-                            Expression.Equal( targetValue, Expression.Constant( null, targetValueType ) ),
-                            Expression.Block
-                            (
-                                Expression.Assign( targetValue, Expression.New( targetValueType ) ),
-
-                                //cache new collection
-                                Expression.Invoke( CacheAddExpression, context.ReferenceTrack, sourceValue,
-                                    Expression.Constant( targetValueType ), targetValue ),
-
-                                //add to return list
-                                Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
-                                    Expression.New( objectPairConstructor, sourceValue, targetValue ) )
-                            )
-                        )
-                    );
-                }
-
-                innerBody = Expression.Block
-                (
-                    new[] { targetKey, targetValue },
-
-                    ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar, Expression.Block
-                    (
-                        keyExpression,
-                        valueExpression,
-                        Expression.Call( context.TargetPropertyVar, addMethod, targetKey, targetValue )
-                    ) )
-                );
-            }
+            var valueExpression = GetKeyOrValueExpression( context, context.SourceValue,
+                context.TargetValue, context.SourceValueType, context.TargetValueType );
 
             return Expression.Block
             (
+                new[] { context.TargetKey, context.TargetValue },
+
                 Expression.Assign( context.TargetPropertyVar,
                     Expression.New( context.TargetPropertyType ) ),
 
-                innerBody
+                ExpressionLoops.ForEach( context.SourcePropertyVar, 
+                    context.SourceLoopingVar, Expression.Block
+                (
+                    keyExpression,
+                    valueExpression,
+
+                    Expression.Call( context.TargetPropertyVar,
+                        addMethod, context.TargetKey, context.TargetValue )
+                ) )
             );
-        }    
+        }
     }
 }

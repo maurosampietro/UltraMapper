@@ -45,6 +45,12 @@ namespace TypeMapper.Tests
             public LinkedList<T> LinkedList { get; set; }
             public ObservableCollection<T> ObservableCollection { get; set; }
 
+            public GenericCollections( bool initializeRandomly )
+                : this()
+            {
+                InitializeRandomly();
+            }
+
             public GenericCollections()
             {
                 this.List = new List<T>();
@@ -55,30 +61,71 @@ namespace TypeMapper.Tests
                 this.LinkedList = new LinkedList<T>();
                 this.ObservableCollection = new ObservableCollection<T>();
             }
+
+            private void InitializeRandomly()
+            {
+                var elementType = typeof( T );
+
+                for( int i = 0; i < 10; i++ )
+                {
+                    T value = (T)Convert.ChangeType( i, elementType );
+
+                    this.List.Add( value );
+                    this.HashSet.Add( value );
+                    this.SortedSet.Add( value );
+                    this.Stack.Push( value );
+                    this.Queue.Enqueue( value );
+                    this.LinkedList.AddLast( value );
+                    this.ObservableCollection.Add( value );
+                }
+            }
         }
 
         [TestMethod]
         public void PrimitiveCollection()
         {
-            var source = new GenericCollections<int>();
-            for( int i = 0; i < 50; i++ )
+            var excludeTypes = new TypeCode[]
             {
-                source.List.Add( i );
-                source.HashSet.Add( i );
-                source.SortedSet.Add( i );
-                source.Stack.Push( i );
-                source.Queue.Enqueue( i );
-                source.LinkedList.AddLast( i );
-                source.ObservableCollection.Add( i );
+                TypeCode.Empty,
+                TypeCode.DBNull,
+                TypeCode.DateTime,
+                TypeCode.Object
+            };
+
+            var types = Enum.GetValues( typeof( TypeCode ) ).Cast<TypeCode>()
+                .Where( typeCode => !excludeTypes.Contains( typeCode ) )
+                .Select( typeCode => TypeExtensions.GetType( typeCode ) );
+
+            foreach( var sourceElementType in types )
+            {
+                foreach( var targetElementType in types )
+                {
+                    try
+                    {
+                        var sourceType = typeof( GenericCollections<> )
+                            .MakeGenericType( sourceElementType );
+
+                        var targetType = typeof( GenericCollections<> )
+                            .MakeGenericType( targetElementType );
+
+                        var sourceTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( sourceType );
+                        var targetTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( targetType );
+
+                        var source = sourceTypeCtor( true );
+                        var target = targetTypeCtor( true );
+
+                        var typeMapper = new TypeMapper();
+                        typeMapper.Map( source, target );
+
+                        bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+                        Assert.IsTrue( isResultOk );
+                    }
+                    catch( Exception ex )
+                    {
+
+                    }
+                }
             }
-
-            var target = new GenericCollections<int>();
-
-            var typeMapper = new TypeMapper();
-            typeMapper.Map( source, target );
-
-            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
