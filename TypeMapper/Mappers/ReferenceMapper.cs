@@ -6,6 +6,13 @@ namespace TypeMapper.Mappers
 {
     public class ReferenceMapper : IObjectMapperExpression
     {
+#if DEBUG
+        private static void debug( object o ) => Console.WriteLine( o );
+
+        protected static readonly Expression<Action<object>> debugExp =
+            ( o ) => debug( o );
+#endif
+
         private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
          ( referenceTracker, sourceInstance, targetType ) =>
          {
@@ -101,6 +108,8 @@ namespace TypeMapper.Mappers
                             Expression.Block
                             (
                                 this.GetInnerBody( context ),
+
+                                Expression.Invoke( debugExp, context.TargetPropertyVar ),
 
                                 //cache reference
                                 Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,

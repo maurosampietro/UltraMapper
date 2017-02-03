@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Akka.Actor;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TypeMapper;
 using TypeMapper.Configuration;
@@ -218,5 +220,60 @@ namespace ConsoleApplication
 
             Console.ReadKey();
         }
+
+        //// Create an (immutable) message type that your actor will respond to
+        //public class Greet
+        //{
+        //    public Greet( string who )
+        //    {
+        //        Who = who;
+        //    }
+        //    public string Who { get; private set; }
+        //}
+
+        //// Create the actor class
+        //public class GreetingActor : ReceiveActor
+        //{
+        //    public static int i = 0;
+        //    private List<int> threads = new List<int>();
+
+        //    public GreetingActor()
+        //    {
+        //        // Tell the actor to respond to the Greet message
+        //        Receive<Greet>( greet =>
+        //        {
+        //            int currentThread = Thread.CurrentThread.ManagedThreadId;
+        //            if( !threads.Contains( currentThread ) )
+        //                threads.Add( currentThread );
+
+        //            Console.SetCursorPosition( 0, threads.IndexOf( currentThread ) );
+        //            Console.WriteLine( $"{currentThread}: Hello {greet.Who}" );
+        //            i++;
+        //        } );
+        //    }
+        //}
+
+        //private static void InitActor()
+        //{
+        //    // Create a new actor system (a container for your actors)
+        //    var system = ActorSystem.Create( "MySystem" );
+
+        //    // Create your actor and get a reference to it.
+        //    // This will be an "ActorRef", which is not a
+        //    // reference to the actual actor instance
+        //    // but rather a client or proxy to it.
+        //    var greeter = system.ActorOf<GreetingActor>( "greeter" );
+
+        //    // Send a message to the actor
+        //    Parallel.For( 0, 10000, ( i ) =>
+        //    {
+        //        greeter.Tell( new Greet( "World_" + i ) );
+        //    } );
+
+
+        //    // This prevents the app from exiting
+        //    // before the async work is done
+        //    Console.ReadLine();  
+        //}
     }
 }

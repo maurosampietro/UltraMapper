@@ -21,7 +21,6 @@ namespace TypeMapper
               : base( new T() ) { config?.Invoke( (T)GlobalConfiguration.MappingConvention ); }
     }
 
-
     public class MapperConfiguration
     {
         protected readonly Dictionary<TypePair, TypeMapping> _typeMappings =

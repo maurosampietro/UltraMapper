@@ -24,7 +24,7 @@ namespace TypeMapper.MappingConventions
             this.PropertyMatchingRules = new PropertyMatchingConfiguration( cfg =>
             {
                 cfg.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = false );
-                cfg.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true );
+                //cfg.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true );
             } );
         }
 
