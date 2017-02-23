@@ -68,7 +68,8 @@ namespace TypeMapper.Tests
 
                 for( int i = 0; i < 10; i++ )
                 {
-                    T value = (T)Convert.ChangeType( i, elementType );
+                    T value = (T)Convert.ChangeType( i, 
+                        elementType.GetUnderlyingTypeIfNullable() );
 
                     this.List.Add( value );
                     this.HashSet.Add( value );
@@ -88,42 +89,122 @@ namespace TypeMapper.Tests
             {
                 TypeCode.Empty,
                 TypeCode.DBNull,
-                TypeCode.DateTime,
-                TypeCode.Object
+                TypeCode.DateTime, //DateTime is not managed
+                TypeCode.Object,
             };
 
             var types = Enum.GetValues( typeof( TypeCode ) ).Cast<TypeCode>()
-                .Where( typeCode => !excludeTypes.Contains( typeCode ) )
-                .Select( typeCode => TypeExtensions.GetType( typeCode ) );
+                .Except( excludeTypes )
+                .Select( typeCode => TypeExtensions.GetType( typeCode ) ).ToList();
 
             foreach( var sourceElementType in types )
             {
                 foreach( var targetElementType in types )
                 {
-                    try
-                    {
-                        var sourceType = typeof( GenericCollections<> )
-                            .MakeGenericType( sourceElementType );
+                    //for the following pairs a conversion is known
+                    //to be harder (not possible or convention-based), 
+                    //so here we just skip that few cases
 
-                        var targetType = typeof( GenericCollections<> )
-                            .MakeGenericType( targetElementType );
+                    if( sourceElementType == typeof( string ) &&
+                        targetElementType == typeof( bool ) ) continue;
 
-                        var sourceTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( sourceType );
-                        var targetTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( targetType );
+                    if( sourceElementType == typeof( char ) &&
+                        targetElementType == typeof( bool ) ) continue;
 
-                        var source = sourceTypeCtor( true );
-                        var target = targetTypeCtor( true );
+                    if( sourceElementType == typeof( bool ) &&
+                        targetElementType == typeof( char ) ) continue;
 
-                        var typeMapper = new TypeMapper();
-                        typeMapper.Map( source, target );
 
-                        bool isResultOk = typeMapper.VerifyMapperResult( source, target );
-                        Assert.IsTrue( isResultOk );
-                    }
-                    catch( Exception ex )
-                    {
+                    var sourceType = typeof( GenericCollections<> )
+                        .MakeGenericType( sourceElementType );
 
-                    }
+                    var targetType = typeof( GenericCollections<> )
+                        .MakeGenericType( targetElementType );
+
+                    var sourceTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( sourceType );
+                    var targetTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( targetType );
+
+                    var source = sourceTypeCtor( true );
+                    var target = targetTypeCtor( true );
+
+                    var typeMapper = new TypeMapper();
+                    typeMapper.Map( source, target );
+
+                    bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+                    Assert.IsTrue( isResultOk );
+                }
+            }
+        }
+
+        [TestMethod]
+        public void NullablePrimitiveCollection()
+        {
+            //DateTime is not managed
+            var nullableTypes = new Type[]
+            {
+                typeof( bool? ),
+                typeof( char? ),
+                typeof( sbyte? ),
+                typeof( byte? ),
+                typeof( int? ),
+                typeof( uint? ),
+                typeof( int? ),
+                typeof( uint? ),
+                typeof( int? ),
+                typeof( uint? ),
+                typeof( float? ),
+                typeof( double? ),
+                typeof( decimal? ),
+                //typeof( string )
+            };
+
+            foreach( var sourceElementType in nullableTypes )
+            {
+                foreach( var targetElementType in nullableTypes )
+                {
+                    if( sourceElementType == typeof( bool? ) &&
+                        targetElementType == typeof( string ) ) continue;
+
+                    //if( sourceElementType == typeof( string ) &&
+                    //    targetElementType == typeof( bool?) ) continue;
+
+                    if( sourceElementType == typeof( char? ) &&
+                        targetElementType == typeof( bool? ) ) continue;
+
+                    if( sourceElementType == typeof( bool? ) &&
+                        targetElementType == typeof( char? ) ) continue;
+
+                    //for the following pairs a conversion is known
+                    //to be harder (not possible or convention-based), 
+                    //so here we just skip that few cases
+
+                    if( sourceElementType == typeof( string ) &&
+                        targetElementType == typeof( bool ) ) continue;
+
+                    if( sourceElementType == typeof( char ) &&
+                        targetElementType == typeof( bool ) ) continue;
+
+                    if( sourceElementType == typeof( bool ) &&
+                        targetElementType == typeof( char ) ) continue;
+
+
+                    var sourceType = typeof( GenericCollections<> )
+                        .MakeGenericType( sourceElementType );
+
+                    var targetType = typeof( GenericCollections<> )
+                        .MakeGenericType( targetElementType );
+
+                    var sourceTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( sourceType );
+                    var targetTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( targetType );
+
+                    var source = sourceTypeCtor( true );
+                    var target = targetTypeCtor( true );
+
+                    var typeMapper = new TypeMapper();
+                    typeMapper.Map( source, target );
+
+                    bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+                    Assert.IsTrue( isResultOk );
                 }
             }
         }
@@ -212,8 +293,8 @@ namespace TypeMapper.Tests
 
                 var typeMapper = new TypeMapper( cfg =>
                 {
-                    //cfg.GlobalConfiguration.IgnoreConventions = true;
-                } );
+            //cfg.GlobalConfiguration.IgnoreConventions = true;
+        } );
 
                 var target = new GenericCollections<ComplexType>();
 

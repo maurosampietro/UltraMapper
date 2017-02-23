@@ -29,14 +29,15 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( MemberMapping mapping )
         {
-            return base.CanHandle( mapping ) && mapping.TargetProperty.MemberInfo
-                .GetMemberType().ImplementsInterface( typeof( ISet<> ) );
+            var memberType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            return base.CanHandle( mapping ) && memberType.IsGenericType
+                && memberType.ImplementsInterface( typeof( ISet<> ) );
         }
 
         protected override Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {
             var addMethod = GetTargetCollectionAddMethod( context );
-   
+
             var addRangeToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
             var newElement = Expression.Variable( context.TargetElementType, "newElement" );
             var newInstanceExp = Expression.New( context.TargetPropertyType );

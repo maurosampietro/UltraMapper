@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.Configuration;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
@@ -42,13 +43,11 @@ namespace TypeMapper.Mappers.TypeMappers
                 throw new Exception( msg );
             }
 
-            var typeMapping = mapping.GlobalConfiguration.Configurator[
-                context.SourceElementType, context.TargetElementType ];
-
-            var convert = new BuiltInTypeMapper().GetMappingExpression( typeMapping );
+            var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
+                context.SourceElementType, context.TargetElementType );
 
             Expression loopBody = Expression.Call( context.TargetInstance,
-                addMethod, Expression.Invoke( convert, context.SourceLoopingVar ) );
+                addMethod, Expression.Invoke( conversion, context.SourceLoopingVar ) );
 
             return Expression.Block
             (

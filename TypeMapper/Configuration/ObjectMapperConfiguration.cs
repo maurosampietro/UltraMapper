@@ -3,27 +3,64 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Mappers;
 
 namespace TypeMapper.Configuration
 {
-    public class ObjectMapperSet : IEnumerable<IObjectMapperExpression>
+    public class MappingExpressionBuilderFactory
     {
-        private class MapperComparer : IEqualityComparer<IObjectMapperExpression>
+        private static HashSet<IMapperExpression> _mappers
+            = new HashSet<IMapperExpression>()
         {
-            public bool Equals( IObjectMapperExpression x, IObjectMapperExpression y )
-            {
-                return x.GetType() == y.GetType();
-            }
+            //new CustomConverterMapper() ,
+            new BuiltInTypeMapper()     ,
+            new NullableMapper()        ,
+            new ConvertMapper()         ,
+            //new ReferenceMapper()       ,
+            //new DictionaryMapper()      ,
+            //new SetMapper()             ,
+            //new StackMapper()           ,
+            //new QueueMapper()           ,
+            //new LinkedListMapper()      ,
+            //new CollectionMapper()
+        };
 
-            public int GetHashCode( IObjectMapperExpression obj )
-            {
-                return obj.GetType().GetHashCode();
-            }
+        //public static IMapperExpression GetExpressionBuilder( Type source, Type target )
+        //{
+        //    return _mappers.First( mapper =>
+        //        mapper.CanHandle( source, target ) );
+        //}
+
+        public static LambdaExpression GetMappingExpression( Type source, Type target )
+        {
+            var selectedMapper = _mappers.FirstOrDefault( mapper =>
+                mapper.CanHandle( source, target ) );
+
+            if( selectedMapper == null )
+                throw new Exception( $"No mapper can handle {source} -> {target}" );
+
+            return selectedMapper.GetMappingExpression( source, target );
+        }
+    }
+
+    internal class MapperComparer : IEqualityComparer<IObjectMapperExpression>
+    {
+        public bool Equals( IObjectMapperExpression x, IObjectMapperExpression y )
+        {
+            return x.GetType() == y.GetType();
         }
 
+        public int GetHashCode( IObjectMapperExpression obj )
+        {
+            return obj.GetType().GetHashCode();
+        }
+    }
+
+    public class ObjectMapperSet : IEnumerable<IObjectMapperExpression>
+    {
         //it is mandatory to use a collection that preserves insertion order
         private HashSet<IObjectMapperExpression> _objectMappers
              = new HashSet<IObjectMapperExpression>( new MapperComparer() );

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.Configuration;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -28,8 +29,43 @@ namespace TypeMapper.Mappers
             return new DictionaryMapperContext( mapping );
         }
 
+        protected override Expression GetInnerBody( object contextObj )
+        {
+            var context = contextObj as DictionaryMapperContext;
+            //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
+
+            bool keyIsBuiltInType = context.TargetKeyType.IsBuiltInType( false );
+            bool valueIsBuiltInType = context.TargetValueType.IsBuiltInType( false );
+
+            var addMethod = context.TargetPropertyType.GetMethod( "Add" );
+
+            var keyExpression = GetKeyOrValueExpression( context, context.SourceKey,
+                context.TargetKey, context.SourceKeyType, context.TargetKeyType );
+
+            var valueExpression = GetKeyOrValueExpression( context, context.SourceValue,
+                context.TargetValue, context.SourceValueType, context.TargetValueType );
+
+            return Expression.Block
+            (
+                new[] { context.TargetKey, context.TargetValue },
+
+                Expression.Assign( context.TargetPropertyVar,
+                    Expression.New( context.TargetPropertyType ) ),
+
+                ExpressionLoops.ForEach( context.SourcePropertyVar,
+                    context.SourceLoopingVar, Expression.Block
+                (
+                    keyExpression,
+                    valueExpression,
+
+                    Expression.Call( context.TargetPropertyVar,
+                        addMethod, context.TargetKey, context.TargetValue )
+                ) )
+            );
+        }
+
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
-           MemberExpression sourceParam, ParameterExpression targetParam, Type sourceParamType, Type targetParamType )
+            MemberExpression sourceParam, ParameterExpression targetParam, Type sourceParamType, Type targetParamType )
         {
             bool isSourceKeyTypeBuiltIn = context.SourceKeyType.IsBuiltInType( false );
             bool isTargetKeyTypeBuiltIne = context.TargetKeyType.IsBuiltInType( false );
@@ -37,13 +73,12 @@ namespace TypeMapper.Mappers
             if( sourceParamType.IsBuiltInType( false ) && targetParamType.IsBuiltInType( false ) )
             {
                 if( sourceParamType == targetParamType )
-                    return sourceParam;
+                    return Expression.Assign( targetParam, sourceParam );
 
-                var typeMapping = context.Mapping.TypeMapping
-                    .GlobalConfiguration.Configurator[ sourceParamType, targetParamType ];
+                var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
+                    sourceParamType, targetParamType );
 
-                var convert = new BuiltInTypeMapper().GetMappingExpression( typeMapping );
-                return Expression.Assign( targetParam, Expression.Invoke( convert, sourceParam ) );
+                return Expression.Assign( targetParam, Expression.Invoke( conversion, sourceParam ) );
             }
 
             var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
@@ -71,41 +106,6 @@ namespace TypeMapper.Mappers
                             Expression.New( objectPairConstructor, sourceParam, targetParam ) )
                     )
                 )
-            );
-        }
-
-        protected override Expression GetInnerBody( object contextObj )
-        {
-            var context = contextObj as DictionaryMapperContext;
-            //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
-
-            bool keyIsBuiltInType = context.TargetKeyType.IsBuiltInType( false );
-            bool valueIsBuiltInType = context.TargetValueType.IsBuiltInType( false );
-
-            var addMethod = context.TargetPropertyType.GetMethod( "Add" );
-
-            var keyExpression = GetKeyOrValueExpression( context, context.SourceKey,
-                context.TargetKey, context.SourceKeyType, context.TargetKeyType );
-
-            var valueExpression = GetKeyOrValueExpression( context, context.SourceValue,
-                context.TargetValue, context.SourceValueType, context.TargetValueType );
-
-            return Expression.Block
-            (
-                new[] { context.TargetKey, context.TargetValue },
-
-                Expression.Assign( context.TargetPropertyVar,
-                    Expression.New( context.TargetPropertyType ) ),
-
-                ExpressionLoops.ForEach( context.SourcePropertyVar, 
-                    context.SourceLoopingVar, Expression.Block
-                (
-                    keyExpression,
-                    valueExpression,
-
-                    Expression.Call( context.TargetPropertyVar,
-                        addMethod, context.TargetKey, context.TargetValue )
-                ) )
             );
         }
     }

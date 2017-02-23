@@ -126,7 +126,9 @@ namespace TypeMapper.Tests
 
             //var typeMapper = new TypeMapper
             //(
-            //    cfg => cfg.MapTypes<int, ComplexType>().MapProperty( a => a, c => c.PropertyA )
+            //    cfg => cfg.MapTypes<int, ComplexType>()
+            //    //loop infinito causato dalla selezione di se stessi 'a =>a'
+            //        .MapProperty( a => a, c => c.PropertyA )
             //);
 
             //typeMapper.Map( source, target );

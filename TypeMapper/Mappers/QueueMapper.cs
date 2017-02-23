@@ -8,8 +8,9 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( MemberMapping mapping )
         {
-            return mapping.TargetProperty.MemberInfo.GetMemberType()
-                .GetGenericTypeDefinition() == typeof( Queue<> );
+            var memberType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            return base.CanHandle( mapping ) && memberType.IsGenericType
+                && memberType.GetGenericTypeDefinition() == typeof( Queue<> );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )

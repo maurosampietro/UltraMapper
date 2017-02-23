@@ -8,34 +8,43 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ConvertMapper : IObjectMapperExpression
+    public class ConvertMapper : IObjectMapperExpression, IMapperExpression
     {
         public bool CanHandle( MemberMapping mapping )
         {
             var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
             var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
-            bool areTypesBuiltIn = mapping.SourceProperty.IsBuiltInType &&
-                mapping.TargetProperty.IsBuiltInType;
+            return CanHandle( sourcePropertyType, targetPropertyType );
+        }
+
+        public bool CanHandle( Type source, Type target )
+        {
+            bool areTypesBuiltIn = source.IsBuiltInType( false ) &&
+                target.IsBuiltInType( false );
 
             var isConvertible = new Lazy<bool>( () =>
             {
                 try
                 {
-                    if( !sourcePropertyType.ImplementsInterface( typeof( IConvertible ) ) )
+                    if( !source.ImplementsInterface( typeof( IConvertible ) ) )
                         return false;
 
                     //reference types are ok but if mapping to the same 
                     //type a referencemapper should be used
-                    if( sourcePropertyType == targetPropertyType )
+                    if( source == target )
                         return false;
 
-                    var testValue = InstanceFactory.CreateObject( sourcePropertyType );
-                    Convert.ChangeType( testValue, targetPropertyType );
+                    var testValue = InstanceFactory.CreateObject( source );
+                    Convert.ChangeType( testValue, target );
 
                     return true;
                 }
                 catch( InvalidCastException )
+                {
+                    return false;
+                }
+                catch( Exception ex )
                 {
                     return false;
                 }
@@ -59,15 +68,18 @@ namespace TypeMapper.Mappers
             var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
             var value = Expression.Variable( targetPropertyType, "value" );
-            var convertMethod = typeof( Convert ).GetMethod( 
+
+            var convertMethod = typeof( Convert ).GetMethod(
                 $"To{targetPropertyType.Name}", new[] { sourcePropertyType } );
+
+            var valueAssignment = Expression.Assign( value,
+                Expression.Call( convertMethod, mapping.SourceProperty.ValueGetter.Body ) );
 
             var setValueExp = (Expression)Expression.Block
             (
                 new[] { value },
 
-                Expression.Call( convertMethod, mapping.SourceProperty.ValueGetter.Body )
-                    .ReplaceParameter( sourceInstance ),
+                valueAssignment.ReplaceParameter( sourceInstance ),
 
                 mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( targetInstance, "target" )
@@ -79,6 +91,27 @@ namespace TypeMapper.Mappers
 
             return Expression.Lambda( delegateType, setValueExp,
                 referenceTrack, sourceInstance, targetInstance );
+        }
+
+        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
+        {
+            //Func<SourceType, TargetType>
+
+            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+            var value = Expression.Variable( targetType, "value" );
+
+            var convertMethod = typeof( Convert ).GetMethod(
+                $"To{targetType.Name}", new[] { sourceType } );
+
+            var conversionExp = Expression.Call( convertMethod, sourceInstance );
+            var valueAssignment = Expression.Assign( value, conversionExp );
+            var body = Expression.Block( new[] { value }, valueAssignment );
+
+            var delegateType = typeof( Func<,> )
+                .MakeGenericType( sourceType, targetType );
+
+            return Expression.Lambda( delegateType, body,
+                sourceInstance );
         }
     }
 }

@@ -1,0 +1,6 @@
+﻿
+
+TODO:
+
+- DateTime mapping,
+- Abstract and base classes map with derived types inheriting the configuration

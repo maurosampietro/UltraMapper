@@ -36,11 +36,18 @@ namespace TypeMapper.Mappers
 
         public virtual bool CanHandle( MemberMapping mapping )
         {
-            bool valueTypes = !mapping.SourceProperty.MemberInfo.GetMemberType().IsValueType &&
-                          !mapping.TargetProperty.MemberInfo.GetMemberType().IsValueType;
+            var sourceType = mapping.SourceProperty.MemberInfo.GetMemberType();
+            var targetType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
-            return valueTypes && !mapping.TargetProperty.IsBuiltInType &&
-                !mapping.SourceProperty.IsBuiltInType && !mapping.SourceProperty.IsEnumerable;
+            return this.CanHandle( sourceType, targetType );
+        }
+
+        public virtual bool CanHandle( Type sourceType, Type targetType )
+        {
+            bool valueTypes = sourceType.IsValueType && targetType.IsValueType;
+            bool builtInTypes = sourceType.IsBuiltInType( false ) && targetType.IsBuiltInType( false );
+
+            return !valueTypes && !builtInTypes && !sourceType.IsEnumerable();
         }
 
         public LambdaExpression GetMappingExpression( MemberMapping mapping )
@@ -109,8 +116,6 @@ namespace TypeMapper.Mappers
                             (
                                 this.GetInnerBody( context ),
 
-                                Expression.Invoke( debugExp, context.TargetPropertyVar ),
-
                                 //cache reference
                                 Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
                                     Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
@@ -155,6 +160,11 @@ namespace TypeMapper.Mappers
             return Expression.IfThenElse( Expression.Equal( getValue, context.TargetNullValue ),
                     Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
                     Expression.Assign( context.TargetPropertyVar, getValue ) );
+        }
+
+        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
+        {
+            throw new NotImplementedException();
         }
     }
 }

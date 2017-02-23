@@ -35,7 +35,9 @@ namespace TypeMapper.Internals
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
-            this.IgnoreConventions = globalConfig.IgnoreConventions;
+
+            if( globalConfig != null )
+                this.IgnoreConventions = globalConfig.IgnoreConventions;
 
             this.TypePair = typePair;
             this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
@@ -63,8 +65,8 @@ namespace TypeMapper.Internals
 
                 LambdaExpression typeMappingExp = null;
 
-                //if( new CollectionMapperTypeMapping().CanHandle( this ) )
-                //    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
+                if( new CollectionMapperTypeMapping().CanHandle( this ) )
+                    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
 
                 var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
                 var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
@@ -78,7 +80,7 @@ namespace TypeMapper.Internals
                      {
                          var objPair = Expression.Variable( returnElementType, "objPair" );
 
-                         return (Expression)Expression.Block
+                         return Expression.Block
                          (
                              new[] { objPair },
 
@@ -100,8 +102,12 @@ namespace TypeMapper.Internals
                     .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
                     .Select( mapping => createAddCalls( mapping.Expression ) );
 
+                //var temp = MemberMappings.Values.Select( mapping =>
+                // GlobalConfiguration.Configurator[ mapping.SourceProperty.MemberType,
+                //     mapping.TargetProperty.MemberType ].MappingExpression ).ToList();
+
                 var bodyExp = (addCalls?.Any() != true) ?
-                        (Expression)Expression.Empty() : Expression.Block( addCalls );
+                            (Expression)Expression.Empty() : Expression.Block( addCalls );
 
                 if( typeMappingExp != null )
                 {

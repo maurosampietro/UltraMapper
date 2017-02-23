@@ -58,7 +58,7 @@ namespace ConsoleApplication
 
             public BaseTypes()
             {
-                this.SelfReference = this;
+                //this.SelfReference = this;
                 this.InnerType = new InnerType() { A = "vara", B = "varb" };
 
                 this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );

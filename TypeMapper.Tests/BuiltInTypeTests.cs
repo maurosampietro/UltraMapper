@@ -67,21 +67,25 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper( cfg =>
             {
+                cfg.MapTypes<bool, string>( null, b => b ? "1" : "0" );
+
                 cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
-                 //map with custom converter
-                 .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
+                    //map with custom converter
+                    .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
 
-                 //map same source property to many different targets
-                 .MapProperty( a => a.Char, d => d.Single )
-                 .MapProperty( a => a.Char, d => d.Int32 )
+                    //map same source property to many different targets
+                    .MapProperty( a => a.Char, d => d.Single )
+                    .MapProperty( a => a.Char, d => d.Int32 )
 
-                 //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
-                 .MapProperty( a => a.String, d => d.Single )
-                 .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+                    //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
+                    .MapProperty( a => a.String, d => d.Single )
+                    .MapProperty( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
 
-                 //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
-                 .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                 .MapProperty( a => a.Single, y => y.Double );
+                    //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
+                    .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
+                    .MapProperty( a => a.Single, y => y.Double )
+
+                    .MapProperty( a => a.Boolean, y => y.String );
             } );
 
             typeMapper.Map( source, target );

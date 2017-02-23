@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.Configuration;
 using TypeMapper.Internals;
 using TypeMapper.Mappers.TypeMappers;
 
@@ -70,10 +71,8 @@ namespace TypeMapper.Mappers
                 var typeMapping = mapping.TypeMapping.GlobalConfiguration.Configurator[
                           context.SourceElementType, context.TargetElementType ];
 
-                //TODO: bisogna determinare quale mapper
-                //(Nullable, Convert, CustomConverter, BuiltInType) possa gestire il mapping. 
-                //non è sempre BuiltIn quello giusto
-                var convert = new BuiltInTypeMapper().GetMappingExpression( typeMapping );
+                var convert = MappingExpressionBuilderFactory.GetMappingExpression
+                    ( typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
 
                 Expression loopBody = Expression.Call( context.TargetPropertyVar,
                     addMethod, Expression.Invoke( convert, context.SourceLoopingVar ) );
@@ -91,7 +90,7 @@ namespace TypeMapper.Mappers
             var targetCollectionConstructor = Expression.New( constructor, context.SourcePropertyVar );
 
             return Expression.Assign( context.TargetPropertyVar, targetCollectionConstructor );
-        }
+        }  
 
         protected virtual Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {

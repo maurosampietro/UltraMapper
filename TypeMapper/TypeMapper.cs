@@ -76,8 +76,8 @@ namespace TypeMapper
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
 
-            var method = (Func<TSource,TTarget>)new BuiltInTypeMapper()
-                .GetMappingExpression( mapping ).Compile();
+            var method = (Func<TSource, TTarget>)MappingExpressionBuilderFactory
+                .GetMappingExpression( sourceType, targetType ).Compile();
 
             target = method.Invoke( source );
         }

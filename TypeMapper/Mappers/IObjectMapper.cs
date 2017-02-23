@@ -8,24 +8,30 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public interface ITypeMapperExpression
+    public interface IMapperExpression
     {
         /// <summary>
-        /// Gets a value indicating whether the mapper can handle <paramref name="mapping"/>
+        /// Gets a value indicating whether the mapper can handle
+        /// the mapping from <param name="sourceType">source</param>
+        /// to <param name="targetType">target</param>.
         /// </summary>
-        /// <param name="mapping"></param>
-        /// <returns>True if the mapping can be handled by the mapper, False otherwise.</returns>
-        bool CanHandle( TypeMapping mapping );
+        /// <param name="sourceType">source type</param>
+        /// <param name="targetType">target type</param>
+        /// <returns>True if this mapper can handle the mapping from <param name="sourceType">source</param>
+        /// to <param name="targetType">target</param>, False otherwise.</returns>
+        bool CanHandle( Type sourceType, Type targetType );
 
         /// <summary>
-        /// Gets an expression that can handle <paramref name="mapping"/>
+        /// Gets the expression to map from <param name="sourceType">source</param>
+        /// to <param name="targetType">target</param>.
         /// </summary>
-        /// <param name="mapping">the property mapping to handle</param>
-        /// <returns>Returns a list of objects that need to be recursively mapped</returns>
-        LambdaExpression GetMappingExpression( TypeMapping mapping );
+        /// <param name="sourceType"></param>
+        /// <param name="targetType"></param>
+        /// <returns>The mapping expression</returns>
+        LambdaExpression GetMappingExpression( Type sourceType, Type targetType );
     }
 
-    public interface IObjectMapperExpression
+    public interface IObjectMapperExpression 
     {
         /// <summary>
         /// Gets a value indicating whether the mapper can handle <paramref name="mapping"/>

@@ -8,34 +8,24 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public sealed class BuiltInTypeMapper : IObjectMapperExpression, ITypeMapperExpression
+    public sealed class BuiltInTypeMapper : IObjectMapperExpression, IMapperExpression
     {
-        public bool CanHandle( TypeMapping mapping )
-        {
-            var sourceType = mapping.TypePair.SourceType;
-            var targetType = mapping.TypePair.TargetType;
-
-            bool areTypesBuiltIn = sourceType.IsBuiltInType( false ) &&
-                targetType.IsBuiltInType( false );
-
-            bool areSameTypeOrConvertible = (sourceType == targetType ||
-                    sourceType.IsImplicitlyConvertibleTo( targetType ) ||
-                    sourceType.IsExplicitlyConvertibleTo( targetType ));
-
-            return areTypesBuiltIn && areSameTypeOrConvertible;
-        }
-
         public bool CanHandle( MemberMapping mapping )
         {
             var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
             var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
-            bool areTypesBuiltIn = mapping.SourceProperty.IsBuiltInType &&
-                mapping.TargetProperty.IsBuiltInType;
+            return this.CanHandle( sourcePropertyType, targetPropertyType );
+        }
 
-            return (areTypesBuiltIn) && (sourcePropertyType == targetPropertyType ||
-                    sourcePropertyType.IsImplicitlyConvertibleTo( targetPropertyType ) ||
-                    sourcePropertyType.IsExplicitlyConvertibleTo( targetPropertyType ));
+        public bool CanHandle( Type source, Type target )
+        {
+            bool areTypesBuiltIn = source.IsBuiltInType( false )
+                && target.IsBuiltInType( false );
+
+            return (areTypesBuiltIn) && (source == target ||
+                    source.IsImplicitlyConvertibleTo( target ) ||
+                    source.IsExplicitlyConvertibleTo( target ));
         }
 
         public LambdaExpression GetMappingExpression( MemberMapping mapping )
@@ -61,18 +51,18 @@ namespace TypeMapper.Mappers
                 if( sourcePropertyType == targetPropertyType )
                     return Expression.Assign( value, readValueExp );
 
-                try
-                {
-                    return Expression.Assign( value, Expression.Convert(
-                        readValueExp, targetPropertyType ) );
-                }
-                catch( Exception ex )
-                {
-                    throw new Exception( $"Cannot handle {mapping}", ex );
-                }
+                var conversionExp = Expression.Convert(
+                    readValueExp, targetPropertyType );
+
+                return Expression.Assign( value, conversionExp );
             };
 
             Expression valueAssignment = getValueAssignmentExp();
+            
+            //var mapExp= this.GetMappingExpression( sourcePropertyType, targetPropertyType );
+            //var readValueExp = mapping.SourceProperty.ValueGetter.Body;
+            //Expression valueAssignment = Expression.Assign( value,
+            //    Expression.Invoke( mapExp, readValueExp ) );
 
             var setValueExp = (Expression)Expression.Block
             (
@@ -92,13 +82,8 @@ namespace TypeMapper.Mappers
                 referenceTrack, sourceInstance, targetInstance );
         }
 
-        public LambdaExpression GetMappingExpression( TypeMapping mapping )
+        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
         {
-            //Func<sourceType, targetType>
-
-            var sourceType = mapping.TypePair.SourceType;
-            var targetType = mapping.TypePair.TargetType;
-
             var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
             var targetInstance = Expression.Parameter( targetType, "targetInstance" );
 

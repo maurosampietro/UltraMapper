@@ -26,7 +26,7 @@ namespace TypeMapper.Tests
 
             //same value type: just compare their values
             if( sourceType == targetType && sourceType.IsValueType )
-                return source.Equals( target );           
+                return source.Equals( target );
 
             if( sourceType.IsEnumerable() && targetType.IsEnumerable() )
             {
@@ -64,9 +64,14 @@ namespace TypeMapper.Tests
                     .MemberInfo.GetValue( target );
 
                 if( Object.ReferenceEquals( sourceValue, targetValue ) )
-                    return true;
+                    continue;
 
-                if( sourceValue == null || targetValue == null )
+                if( mapping.SourceProperty.IsNullable &&
+                    !mapping.TargetProperty.IsNullable && sourceValue == null
+                    && targetValue.Equals( mapping.TargetProperty.MemberType.GetDefaultValueViaActivator() ) )
+                    continue;
+
+                if( sourceValue == null ^ targetValue == null )
                     return false;
 
                 if( sourceValue.GetType().IsEnumerable() && targetValue.GetType().IsEnumerable() )

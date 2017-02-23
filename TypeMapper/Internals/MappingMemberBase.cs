@@ -12,6 +12,8 @@ namespace TypeMapper.Internals
     {
         //public readonly LambdaExpression PropertySelector;
         public readonly MemberInfo MemberInfo;
+        public readonly Type MemberType;
+
         private readonly Lazy<string> _toString;
 
         //These info are evaluated at configuration level only once for performance reasons
@@ -25,16 +27,16 @@ namespace TypeMapper.Internals
         public MappingMemberBase( MemberInfo memberInfo )
         {
             this.MemberInfo = memberInfo;
-            var memberType = memberInfo.GetMemberType();
+            this.MemberType = memberInfo.GetMemberType();
 
-            this.NullableUnderlyingType = Nullable.GetUnderlyingType( memberType );
+            this.NullableUnderlyingType = Nullable.GetUnderlyingType( this.MemberType );
             this.IsNullable = this.NullableUnderlyingType != null;
-            this.IsBuiltInType = memberType.IsBuiltInType( false );
-            this.IsEnumerable = memberType.IsEnumerable();
+            this.IsBuiltInType = this.MemberType.IsBuiltInType( false );
+            this.IsEnumerable = this.MemberType.IsEnumerable();
 
             _toString = new Lazy<string>( () =>
             {
-                string typeName = memberType.GetPrettifiedName();
+                string typeName = this.MemberType.GetPrettifiedName();
                 return $"{typeName} {memberInfo.Name}";
             } );
         }

@@ -13,8 +13,9 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( MemberMapping mapping )
         {
-            return mapping.TargetProperty.MemberInfo.GetMemberType()
-                .GetGenericTypeDefinition() == typeof( LinkedList<> );
+            var memberType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            return base.CanHandle( mapping ) && memberType.IsGenericType
+                && memberType.GetGenericTypeDefinition() == typeof( LinkedList<> );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
