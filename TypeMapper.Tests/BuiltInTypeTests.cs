@@ -65,6 +65,8 @@ namespace TypeMapper.Tests
             var source = new BuiltInTypes();
             var target = new BuiltInTypes();
 
+            bool booleanValue = source.Boolean;
+
             var typeMapper = new TypeMapper( cfg =>
             {
                 cfg.MapTypes<bool, string>( null, b => b ? "1" : "0" );
@@ -92,6 +94,9 @@ namespace TypeMapper.Tests
 
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+
+            Assert.IsTrue( source.Boolean ? target.String == "1"
+                : target.String == "0" );
         }
 
         [TestMethod]

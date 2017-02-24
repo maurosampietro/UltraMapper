@@ -92,8 +92,13 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper
             (
-                cfg => cfg.MapTypes<TestType, TestType>()
-                    .MapProperty( s => s.FieldA, t => t.FieldA )
+                cfg =>
+                {
+                    cfg.GlobalConfiguration.IgnoreConventions = true;
+
+                    cfg.MapTypes<TestType, TestType>()
+                            .MapProperty( s => s.FieldA, t => t.FieldA );
+                }
             );
             typeMapper.Map( source, target );
 

@@ -57,8 +57,8 @@ namespace TypeMapper.Mappers
         {
             //Action<ReferenceTracking, sourceType, targetType>
 
-            var sourceType = mapping.SourceProperty.MemberInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.MemberInfo.ReflectedType;
+            var sourceType = mapping.TypeMapping.TypePair.SourceType;
+            var targetType = mapping.TypeMapping.TypePair.TargetType;
 
             var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
             var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
@@ -72,8 +72,11 @@ namespace TypeMapper.Mappers
             var convertMethod = typeof( Convert ).GetMethod(
                 $"To{targetPropertyType.Name}", new[] { sourcePropertyType } );
 
+            var readValueExp = mapping.SourceProperty.ValueGetter.Body
+                    .ReplaceParameter( sourceInstance, mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name );
+
             var valueAssignment = Expression.Assign( value,
-                Expression.Call( convertMethod, mapping.SourceProperty.ValueGetter.Body ) );
+                Expression.Call( convertMethod, readValueExp ) );
 
             var setValueExp = (Expression)Expression.Block
             (
@@ -82,8 +85,8 @@ namespace TypeMapper.Mappers
                 valueAssignment.ReplaceParameter( sourceInstance ),
 
                 mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( targetInstance, "target" )
-                    .ReplaceParameter( value, "value" )
+                    .ReplaceParameter( targetInstance, mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
+                    .ReplaceParameter( value, mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name )
             );
 
             var delegateType = typeof( Action<,,> ).MakeGenericType(

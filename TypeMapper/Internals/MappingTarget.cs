@@ -17,21 +17,13 @@ namespace TypeMapper.Internals
         public LambdaExpression CustomConstructor { get; set; }
         public ICollectionMappingStrategy CollectionStrategy { get; set; }
 
-        internal MappingTarget( MemberInfo memberInfo )
-            : base( memberInfo )
+        internal MappingTarget( LambdaExpression memberGetter, LambdaExpression memberSetter )
+            : base( memberGetter.ExtractMember() )
         {
             //this.CollectionStrategy = new NewCollection();
 
-            this.ValueSetter = memberInfo.GetSetterLambdaExpression();
-            try
-            {
-                this.ValueGetter = memberInfo.GetGetterLambdaExpression();
-            }
-            catch( Exception ex )
-            {
-                Console.WriteLine( ex );
-
-            }
+            this.ValueGetter = memberGetter;
+            this.ValueSetter = memberSetter;
         }
     }
 }

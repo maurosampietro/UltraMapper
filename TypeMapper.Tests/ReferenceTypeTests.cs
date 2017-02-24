@@ -138,12 +138,6 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
-                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
-                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
-                    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
-                    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
-                    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
-
                 cfg.MapTypes<OuterType, InnerTypeDto>()
                     .MapProperty( a => a.InnerType.A, b => b.A );
             } );

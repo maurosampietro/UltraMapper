@@ -24,8 +24,8 @@ namespace TypeMapper.Mappers
 
         public LambdaExpression GetMappingExpression( MemberMapping mapping )
         {
-            var sourceType = mapping.SourceProperty.MemberInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.MemberInfo.ReflectedType;
+            var sourceType = mapping.TypeMapping.TypePair.SourceType;
+            var targetType = mapping.TypeMapping.TypePair.TargetType;
 
             var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
             var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
@@ -38,8 +38,8 @@ namespace TypeMapper.Mappers
 
             Func<Expression> getValueAssignmentExp = () =>
             {
-                var readValueExp = mapping.SourceProperty.ValueGetter.Body;
-
+                var readValueExp = mapping.SourceProperty.ValueGetter.Body
+                    .ReplaceParameter( sourceInstance, mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name );
                 //if( mapping.CustomConverter != null )
                 //    return Expression.Invoke( mapping.CustomConverter, readValueExp );
 
@@ -111,9 +111,10 @@ namespace TypeMapper.Mappers
                 new[] { value },
 
                 valueAssignment.ReplaceParameter( sourceInstance ),
+                
                 mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( targetInstance, "target" )
-                    .ReplaceParameter( value, "value" )
+                    .ReplaceParameter( targetInstance, mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
+                    .ReplaceParameter( value, mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name )
             );
 
             var delegateType = typeof( Action<,,> ).MakeGenericType(

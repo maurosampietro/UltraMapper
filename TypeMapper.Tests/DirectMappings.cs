@@ -133,6 +133,7 @@ namespace TypeMapper.Tests
 
             //typeMapper.Map( source, target );
             //typeMapper.VerifyMapperResult( source, target );
+            throw new NotImplementedException();
         }
 
         [TestMethod]

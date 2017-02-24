@@ -10,7 +10,6 @@ namespace TypeMapper.Internals
 {
     public abstract class MappingMemberBase
     {
-        //public readonly LambdaExpression PropertySelector;
         public readonly MemberInfo MemberInfo;
         public readonly Type MemberType;
 
@@ -27,7 +26,7 @@ namespace TypeMapper.Internals
         public MappingMemberBase( MemberInfo memberInfo )
         {
             this.MemberInfo = memberInfo;
-            this.MemberType = memberInfo.GetMemberType();
+            this.MemberType = this.MemberInfo.GetMemberType();
 
             this.NullableUnderlyingType = Nullable.GetUnderlyingType( this.MemberType );
             this.IsNullable = this.NullableUnderlyingType != null;
@@ -37,7 +36,7 @@ namespace TypeMapper.Internals
             _toString = new Lazy<string>( () =>
             {
                 string typeName = this.MemberType.GetPrettifiedName();
-                return $"{typeName} {memberInfo.Name}";
+                return $"{typeName} {this.MemberInfo.Name}";
             } );
         }
 

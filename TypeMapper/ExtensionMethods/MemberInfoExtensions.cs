@@ -5,6 +5,11 @@ namespace TypeMapper
 {
     public static class MemberInfoExtensions
     {
+        /// <summary>
+        /// Gets the type of the accessed member (last member) of the expression.
+        /// </summary>
+        /// <param name="memberInfo"></param>
+        /// <returns></returns>
         public static Type GetMemberType( this MemberInfo memberInfo )
         {
             var field = (memberInfo as FieldInfo);

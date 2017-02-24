@@ -94,7 +94,7 @@ namespace TypeMapper.Mappers
 
                 //read source value
                 Expression.Assign( context.SourcePropertyVar, context.Mapping.SourceProperty.ValueGetter.Body
-                    .ReplaceParameter( context.SourceInstance ) ),
+                    .ReplaceParameter(context.SourceInstance, context.Mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name ) ),
 
                 Expression.IfThenElse
                 (
@@ -125,8 +125,8 @@ namespace TypeMapper.Mappers
                 ),
 
                 context.Mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( context.TargetInstance, "target" )
-                    .ReplaceParameter( context.TargetPropertyVar, "value" ),
+                    .ReplaceParameter( context.TargetInstance, context.Mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
+                    .ReplaceParameter( context.TargetPropertyVar, context.Mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name ),
 
                 context.ReturnObjectVar
             );

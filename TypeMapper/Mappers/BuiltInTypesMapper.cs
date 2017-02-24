@@ -32,8 +32,8 @@ namespace TypeMapper.Mappers
         {
             //Action<sourceType, targetType>
 
-            var sourceType = mapping.SourceProperty.MemberInfo.ReflectedType;
-            var targetType = mapping.TargetProperty.MemberInfo.ReflectedType;
+            var sourceType = mapping.TypeMapping.TypePair.SourceType;
+            var targetType = mapping.TypeMapping.TypePair.TargetType;
 
             var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
             var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
@@ -46,7 +46,8 @@ namespace TypeMapper.Mappers
 
             Func<Expression> getValueAssignmentExp = () =>
             {
-                var readValueExp = mapping.SourceProperty.ValueGetter.Body;
+                var readValueExp = mapping.SourceProperty.ValueGetter.Body
+                    .ReplaceParameter( sourceInstance, mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name );
 
                 if( sourcePropertyType == targetPropertyType )
                     return Expression.Assign( value, readValueExp );
@@ -58,11 +59,6 @@ namespace TypeMapper.Mappers
             };
 
             Expression valueAssignment = getValueAssignmentExp();
-            
-            //var mapExp= this.GetMappingExpression( sourcePropertyType, targetPropertyType );
-            //var readValueExp = mapping.SourceProperty.ValueGetter.Body;
-            //Expression valueAssignment = Expression.Assign( value,
-            //    Expression.Invoke( mapExp, readValueExp ) );
 
             var setValueExp = (Expression)Expression.Block
             (
@@ -71,8 +67,8 @@ namespace TypeMapper.Mappers
                 valueAssignment.ReplaceParameter( sourceInstance ),
 
                 mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( targetInstance, "target" )
-                    .ReplaceParameter( value, "value" )
+                    .ReplaceParameter( targetInstance, mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
+                    .ReplaceParameter( value, mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name )
             );
 
             var delegateType = typeof( Action<,,> ).MakeGenericType(

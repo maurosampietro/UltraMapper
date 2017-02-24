@@ -42,18 +42,18 @@ namespace TypeMapper.Tests
             public int E { get; set; }
         }
 
-        //[TestMethod]
-        //public void ExactNameAndImplicitlyConvertibleTypeConventionTest()
-        //{
-        //    var source = new SourceClass();
-        //    var target = new TargetClass();
+        [TestMethod]
+        public void ExactNameAndImplicitlyConvertibleTypeConventionTest()
+        {
+            var source = new SourceClass();
+            var target = new TargetClass();
 
-        //    var mapper = new TypeMapper();
-        //    mapper.Map( source, target );
+            var mapper = new TypeMapper();
+            mapper.Map( source, target );
 
-        //    Assert.IsTrue( source.A == target.A );
-        //    Assert.IsTrue( source.B != target.B );
-        //}
+            Assert.IsTrue( source.A == target.A );
+            Assert.IsTrue( source.B != target.B );
+        }
 
         [TestMethod]
         public void ExactNameAndTypeConventionTest()

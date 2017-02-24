@@ -51,17 +51,17 @@ namespace TypeMapper.Tests
             var typeMapping = typeMapper.MappingConfiguration[
                 source.GetType(), target.GetType() ];
 
-            foreach( var mapping in typeMapping.MemberMappings.Select( m => m.Value ) )
+            foreach( var mapping in typeMapping.MemberMappings.Values )
             {
                 var sourceValue = mapping.SourceProperty
-                    .MemberInfo.GetValue( source );
+                    .ValueGetter.Compile().DynamicInvoke( source );
 
                 var converter = mapping.CustomConverter;
                 if( converter != null )
                     sourceValue = converter.Compile().DynamicInvoke( sourceValue );
 
                 var targetValue = mapping.TargetProperty
-                    .MemberInfo.GetValue( target );
+                    .ValueGetter.Compile().DynamicInvoke( target );
 
                 if( Object.ReferenceEquals( sourceValue, targetValue ) )
                     continue;

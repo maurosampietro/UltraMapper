@@ -39,8 +39,8 @@ namespace TypeMapper.Mappers
             ReturnType = typeof( ObjectPair );
             ReturnTypeConstructor = ReturnType.GetConstructors().First();
 
-            SourceType = mapping.SourceProperty.MemberInfo.ReflectedType;
-            TargetType = mapping.TargetProperty.MemberInfo.ReflectedType;
+            SourceType = mapping.TypeMapping.TypePair.SourceType;
+            TargetType = mapping.TypeMapping.TypePair.TargetType;
 
             SourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
             TargetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();

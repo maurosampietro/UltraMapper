@@ -34,9 +34,9 @@ namespace TypeMapper
                 if( expBody.NodeType == ExpressionType.Convert )
                     expBody = ((UnaryExpression)expBody).Operand as Expression;
 
-                else if( expBody.NodeType == ExpressionType.Call)
+                else if( expBody.NodeType == ExpressionType.Call )
                     return ((MethodCallExpression)expBody).Method;
-            }            
+            }
 
             if( memberExpression == null )
                 throw new ArgumentException( invalidExpressionMsg );
@@ -48,9 +48,18 @@ namespace TypeMapper
             //lose information about the ReflectedType (which should be the derived class)...
             var lambdaMember = memberExpression.Member;
 
-            //..to fix that we do another search. 
-            //We search that property name in the actual type we meant to use for the invocation
-            return lambda.Parameters.First().Type.GetMember( lambdaMember.Name )[ 0 ];
+            try
+            {
+                //..to fix that we do another search. 
+                //We search that property name in the actual type we meant to use for the invocation
+                return lambda.Parameters.First().Type.GetMember( lambdaMember.Name )[ 0 ];
+            }
+            catch( Exception ex )
+            {
+                //if the property we searched for do not exists we probably are 
+                //selecting a nested property, so just return that
+                return lambdaMember;
+            }
         }
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )
