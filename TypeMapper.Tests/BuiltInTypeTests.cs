@@ -65,12 +65,8 @@ namespace TypeMapper.Tests
             var source = new BuiltInTypes();
             var target = new BuiltInTypes();
 
-            bool booleanValue = source.Boolean;
-
             var typeMapper = new TypeMapper( cfg =>
             {
-                cfg.MapTypes<bool, string>( null, b => b ? "1" : "0" );
-
                 cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
                     //map with custom converter
                     .MapProperty( a => a.Single, d => d.String, single => single.ToString() )
@@ -85,18 +81,13 @@ namespace TypeMapper.Tests
 
                     //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
                     .MapProperty( a => a.Single, y => y.Double, a => a + 254 )
-                    .MapProperty( a => a.Single, y => y.Double )
-
-                    .MapProperty( a => a.Boolean, y => y.String );
+                    .MapProperty( a => a.Single, y => y.Double );
             } );
 
             typeMapper.Map( source, target );
 
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
-
-            Assert.IsTrue( source.Boolean ? target.String == "1"
-                : target.String == "0" );
         }
 
         [TestMethod]

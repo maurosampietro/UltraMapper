@@ -52,7 +52,7 @@ namespace TypeMapper.Tests
             mapper.Map( source, target );
 
             Assert.IsTrue( source.A == target.A );
-            Assert.IsTrue( source.B != target.B );
+            Assert.IsTrue( source.B == target.B );
         }
 
         [TestMethod]

@@ -56,7 +56,9 @@
     <Compile Include="Internals\MappingSource.cs" />
     <Compile Include="Internals\MappingTarget.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
+    <Compile Include="Mappers\BaseMapper.cs" />
     <Compile Include="Mappers\MapperContexts\DictionaryMapperContext.cs" />
+    <Compile Include="Mappers\MapperContexts\MapperContext.cs" />
     <Compile Include="Mappers\MapperContexts\ReferenceMapperContext.cs" />
     <Compile Include="Mappers\MapperContexts\CollectionMapperContext.cs" />
     <Compile Include="Mappers\QueueMapper.cs" />

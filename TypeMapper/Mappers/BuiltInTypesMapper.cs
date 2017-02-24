@@ -8,7 +8,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public sealed class BuiltInTypeMapper : IObjectMapperExpression, IMapperExpression
+    public sealed class BuiltInTypeMapper : BaseMapper, IObjectMapperExpression, IMapperExpression
     {
         public bool CanHandle( MemberMapping mapping )
         {
@@ -26,56 +26,6 @@ namespace TypeMapper.Mappers
             return (areTypesBuiltIn) && (source == target ||
                     source.IsImplicitlyConvertibleTo( target ) ||
                     source.IsExplicitlyConvertibleTo( target ));
-        }
-
-        public LambdaExpression GetMappingExpression( MemberMapping mapping )
-        {
-            //Action<sourceType, targetType>
-
-            var sourceType = mapping.TypeMapping.TypePair.SourceType;
-            var targetType = mapping.TypeMapping.TypePair.TargetType;
-
-            var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
-
-            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
-            var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
-
-            var value = Expression.Variable( targetPropertyType, "value" );
-
-            Func<Expression> getValueAssignmentExp = () =>
-            {
-                var readValueExp = mapping.SourceProperty.ValueGetter.Body
-                    .ReplaceParameter( sourceInstance, mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name );
-
-                if( sourcePropertyType == targetPropertyType )
-                    return Expression.Assign( value, readValueExp );
-
-                var conversionExp = Expression.Convert(
-                    readValueExp, targetPropertyType );
-
-                return Expression.Assign( value, conversionExp );
-            };
-
-            Expression valueAssignment = getValueAssignmentExp();
-
-            var setValueExp = (Expression)Expression.Block
-            (
-                new[] { value },
-
-                valueAssignment.ReplaceParameter( sourceInstance ),
-
-                mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( targetInstance, mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
-                    .ReplaceParameter( value, mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name )
-            );
-
-            var delegateType = typeof( Action<,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), sourceType, targetType );
-
-            return Expression.Lambda( delegateType, setValueExp,
-                referenceTrack, sourceInstance, targetInstance );
         }
 
         public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
@@ -102,6 +52,20 @@ namespace TypeMapper.Mappers
                 .MakeGenericType( sourceType, targetType );
 
             return Expression.Lambda( delegateType, body, sourceInstance );
+        }
+
+        protected override Expression GetValueAssignment( MapperContext context )
+        {
+            var readValueExp = context.Mapping.SourceProperty.ValueGetter.Body
+                .ReplaceParameter(context.SourceInstance, context.Mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name );
+
+            if( context.SourcePropertyType == context.TargetPropertyType )
+                return Expression.Assign( context.TargetValue, readValueExp );
+
+            var conversionExp = Expression.Convert(
+                readValueExp, context.TargetPropertyType );
+
+            return Expression.Assign( context.TargetValue, conversionExp );
         }
     }
 }
