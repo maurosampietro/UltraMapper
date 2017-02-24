@@ -11,14 +11,14 @@ namespace TypeMapper.Mappers
 {
     public class CustomConverterMapper : BaseMapper, IObjectMapperExpression
     {
-        protected override MapperContext GetContext( MemberMapping mapping )
-        {
-            return new CustomConverterContext( mapping );
-        }
-
         public bool CanHandle( MemberMapping mapping )
         {
             return mapping.CustomConverter != null;
+        }
+
+        protected override MapperContext GetContext( MemberMapping mapping )
+        {
+            return new CustomConverterContext( mapping );
         }
 
         protected override Expression GetValueAssignment( MapperContext context )

@@ -161,10 +161,5 @@ namespace TypeMapper.Mappers
                     Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
                     Expression.Assign( context.TargetPropertyVar, getValue ) );
         }
-
-        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
-        {
-            throw new NotImplementedException();
-        }
     }
 }
