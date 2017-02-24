@@ -14,7 +14,7 @@ namespace TypeMapper.Mappers
         {
             //Action<sourceType, targetType>
 
-            var context = new MapperContext( mapping );
+            var context = this.GetContext( mapping );
             var valueAssignment = this.GetValueAssignment( context );
 
             var targetSetter = mapping.TargetProperty.ValueSetter;
@@ -34,10 +34,41 @@ namespace TypeMapper.Mappers
             );
 
             var delegateType = typeof( Action<,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceType, context.TargetType );
+                typeof( ReferenceTracking ), context.SourceInstanceType, context.TargetInstanceType );
 
             return Expression.Lambda( delegateType, body, context.ReferenceTrack,
                 context.SourceInstance, context.TargetInstance );
+        }
+
+        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
+        {
+            var context = this.GetContext( sourceType, targetType );
+            var valueAssignment = this.GetValueAssignment( context );
+
+            var body = Expression.Block
+            (
+                new[] { context.TargetValue },
+                
+                valueAssignment,
+
+                //return this value
+                context.TargetValue
+            );
+
+            var delegateType = typeof( Func<,> )
+                .MakeGenericType( sourceType, targetType );
+
+            return Expression.Lambda( delegateType, body, context.SourceInstance );
+        }
+
+        protected virtual MapperContext GetContext( MemberMapping mapping )
+        {
+            return new MapperContext( mapping );
+        }
+
+        protected virtual MapperContext GetContext( Type sourceType, Type targetType )
+        {
+            return new MapperContext( sourceType, targetType );
         }
 
         protected abstract Expression GetValueAssignment( MapperContext context );

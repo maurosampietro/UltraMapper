@@ -11,37 +11,58 @@ namespace TypeMapper.Mappers
 {
     public class MapperContext
     {
-        public readonly MemberMapping Mapping;
+        protected readonly MemberMapping Mapping;
 
-        public Type SourceType { get; protected set; }
-        public Type TargetType { get; protected set; }
+        public Type SourceInstanceType { get; protected set; }
+        public Type TargetInstanceType { get; protected set; }
 
-        public Type SourcePropertyType { get; protected set; }
-        public Type TargetPropertyType { get; protected set; }
+        public Type SourceValueType { get; protected set; }
+        public Type TargetValueType { get; protected set; }
 
         public ParameterExpression SourceInstance { get; protected set; }
         public ParameterExpression TargetInstance { get; protected set; }
         public ParameterExpression ReferenceTrack { get; protected set; }
 
         public ParameterExpression TargetValue { get; protected set; }
-        public ParameterExpression SourceValue { get; protected set; }
+        public Expression SourceValue { get; protected set; }
 
         public MapperContext( MemberMapping mapping )
         {
             Mapping = mapping;
 
-            SourceType = mapping.TypeMapping.TypePair.SourceType;
-            TargetType = mapping.TypeMapping.TypePair.TargetType;
+            SourceInstanceType = mapping.TypeMapping.TypePair.SourceType;
+            TargetInstanceType = mapping.TypeMapping.TypePair.TargetType;
 
-            SourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            TargetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            SourceValueType = mapping.SourceProperty.MemberInfo.GetMemberType();
+            TargetValueType = mapping.TargetProperty.MemberInfo.GetMemberType();
 
-            SourceInstance = Expression.Parameter( SourceType, "sourceInstance" );
-            TargetInstance = Expression.Parameter( TargetType, "targetInstance" );
+            SourceInstance = Expression.Parameter( SourceInstanceType, "sourceInstance" );
+            TargetInstance = Expression.Parameter( TargetInstanceType, "targetInstance" );
             ReferenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
-            SourceValue = Expression.Variable( SourcePropertyType, "sourceArg" );
-            TargetValue = Expression.Variable( TargetPropertyType, "targetArg" );
+            TargetValue = Expression.Variable( TargetValueType, "targetValue" );
+
+            var sourceGetterInstanceParamName = Mapping.SourceProperty
+                .ValueGetter.Parameters[ 0 ].Name;
+
+            SourceValue = Mapping.SourceProperty.ValueGetter.Body
+                .ReplaceParameter( SourceInstance, sourceGetterInstanceParamName );
+        }
+
+        public MapperContext( Type source, Type target )
+        {
+            SourceInstanceType = source;
+            TargetInstanceType = target;
+
+            SourceValueType = source;
+            TargetValueType = target;
+
+            SourceInstance = Expression.Parameter( SourceInstanceType, "sourceInstance" );
+            TargetInstance = Expression.Parameter( TargetInstanceType, "targetInstance" );
+            ReferenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+
+            TargetValue = Expression.Variable( TargetValueType, "targetValue" );
+            SourceValue = SourceInstance;
         }
     }
 }

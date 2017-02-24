@@ -28,42 +28,13 @@ namespace TypeMapper.Mappers
                     source.IsExplicitlyConvertibleTo( target ));
         }
 
-        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
-        {
-            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
-
-            var value = Expression.Variable( targetType, "value" );
-
-            Func<Expression> getValueExp = () =>
-            {
-                if( sourceType == targetType )
-                    return Expression.Assign( value, sourceInstance );
-
-                var conversionExp = Expression.Convert(
-                    sourceInstance, targetType );
-
-                return Expression.Assign( value, conversionExp );
-            };
-
-            var body = Expression.Block( new[] { value }, getValueExp() );
-
-            var delegateType = typeof( Func<,> )
-                .MakeGenericType( sourceType, targetType );
-
-            return Expression.Lambda( delegateType, body, sourceInstance );
-        }
-
         protected override Expression GetValueAssignment( MapperContext context )
         {
-            var readValueExp = context.Mapping.SourceProperty.ValueGetter.Body
-                .ReplaceParameter(context.SourceInstance, context.Mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name );
-
-            if( context.SourcePropertyType == context.TargetPropertyType )
-                return Expression.Assign( context.TargetValue, readValueExp );
+            if( context.SourceValueType == context.TargetValueType )
+                return Expression.Assign( context.TargetValue, context.SourceValue );
 
             var conversionExp = Expression.Convert(
-                readValueExp, context.TargetPropertyType );
+                context.SourceValue, context.TargetValueType );
 
             return Expression.Assign( context.TargetValue, conversionExp );
         }

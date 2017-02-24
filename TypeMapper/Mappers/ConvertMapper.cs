@@ -53,40 +53,13 @@ namespace TypeMapper.Mappers
             return areTypesBuiltIn || isConvertible.Value;
         }
 
-        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
-        {
-            //Func<SourceType, TargetType>
-
-            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-            var value = Expression.Variable( targetType, "value" );
-
-            var convertMethod = typeof( Convert ).GetMethod(
-                $"To{targetType.Name}", new[] { sourceType } );
-
-            var conversionExp = Expression.Call( convertMethod, sourceInstance );
-            var valueAssignment = Expression.Assign( value, conversionExp );
-            var body = Expression.Block( new[] { value }, valueAssignment );
-
-            var delegateType = typeof( Func<,> )
-                .MakeGenericType( sourceType, targetType );
-
-            return Expression.Lambda( delegateType, body,
-                sourceInstance );
-        }
-
         protected override Expression GetValueAssignment( MapperContext context )
         {
             var convertMethod = typeof( Convert ).GetMethod(
-                $"To{context.TargetPropertyType.Name}", new[] { context.SourcePropertyType } );
-
-            var sourceGetterInstanceParamName = context.Mapping.SourceProperty
-                .ValueGetter.Parameters[ 0 ].Name;
-
-            var readValueExp = context.Mapping.SourceProperty.ValueGetter.Body
-                    .ReplaceParameter( context.SourceInstance, sourceGetterInstanceParamName );
+                $"To{context.TargetValueType.Name}", new[] { context.SourceValueType } );
 
             return Expression.Assign( context.TargetValue,
-                Expression.Call( convertMethod, readValueExp ) );
+                Expression.Call( convertMethod, context.SourceValue ) );
         }
     }
 }

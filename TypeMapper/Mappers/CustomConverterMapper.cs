@@ -5,11 +5,17 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Internals;
+using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
     public class CustomConverterMapper : BaseMapper, IObjectMapperExpression
     {
+        protected override MapperContext GetContext( MemberMapping mapping )
+        {
+            return new CustomConverterContext( mapping );
+        }
+
         public bool CanHandle( MemberMapping mapping )
         {
             return mapping.CustomConverter != null;
@@ -17,14 +23,12 @@ namespace TypeMapper.Mappers
 
         protected override Expression GetValueAssignment( MapperContext context )
         {
-            var sourceGetterInstanceParamName = context.Mapping.SourceProperty
-                .ValueGetter.Parameters[ 0 ].Name;
+            var converterContext = context as CustomConverterContext;
 
-            var readValueExp = context.Mapping.SourceProperty.ValueGetter.Body
-                .ReplaceParameter( context.SourceInstance, sourceGetterInstanceParamName );
+            var value = Expression.Invoke( converterContext.CustomConverter,
+                    converterContext.SourceValue );
 
-            return Expression.Assign( context.TargetValue,
-                Expression.Invoke( context.Mapping.CustomConverter, readValueExp ) );
+            return Expression.Assign( converterContext.TargetValue, value );
         }
     }
 }
