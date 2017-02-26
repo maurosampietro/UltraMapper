@@ -162,12 +162,6 @@ namespace TypeMapper.Tests
             {
                 foreach( var targetElementType in nullableTypes )
                 {
-                    if( sourceElementType == typeof( bool? ) &&
-                        targetElementType == typeof( string ) ) continue;
-
-                    //if( sourceElementType == typeof( string ) &&
-                    //    targetElementType == typeof( bool?) ) continue;
-
                     if( sourceElementType == typeof( char? ) &&
                         targetElementType == typeof( bool? ) ) continue;
 
@@ -177,16 +171,11 @@ namespace TypeMapper.Tests
                     //for the following pairs a conversion is known
                     //to be harder (not possible or convention-based), 
                     //so here we just skip that few cases
+                    if (sourceElementType == typeof(bool?) &&
+                        targetElementType == typeof(string)) continue;
 
-                    if( sourceElementType == typeof( string ) &&
-                        targetElementType == typeof( bool ) ) continue;
-
-                    if( sourceElementType == typeof( char ) &&
-                        targetElementType == typeof( bool ) ) continue;
-
-                    if( sourceElementType == typeof( bool ) &&
-                        targetElementType == typeof( char ) ) continue;
-
+                    if ( sourceElementType == typeof( string ) &&
+                        targetElementType == typeof( bool? ) ) continue;
 
                     var sourceType = typeof( GenericCollections<> )
                         .MakeGenericType( sourceElementType );

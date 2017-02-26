@@ -59,11 +59,6 @@ namespace TypeMapper.Tests
             Assert.IsTrue( source == target );
         }
 
-        public void temp( List<int> source, List<int> target )
-        {
-            target.RemoveAt( 0 );
-        }
-
         [TestMethod]
         public void ListToListSameElementSimpleType()
         {
