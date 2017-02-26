@@ -129,23 +129,5 @@ namespace TypeMapper.Tests
             Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
             Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
         }
-
-        [TestMethod]
-        public void ManualFlattening()
-        {
-            var source = new OuterType();
-            var target = new InnerTypeDto();
-
-            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
-            {
-                cfg.MapTypes<OuterType, InnerTypeDto>()
-                    .MapProperty( a => a.InnerType.A, b => b.A );
-            } );
-
-            typeMapper.Map( source, target );
-
-            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
-        }
     }
 }
