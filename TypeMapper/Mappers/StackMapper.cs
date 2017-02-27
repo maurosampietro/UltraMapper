@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -26,7 +24,7 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetPropertyType.GetMethod( "Push" );
+            return context.TargetMemberType.GetMethod( "Push" );
         }
 
         protected override Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
@@ -36,37 +34,37 @@ namespace TypeMapper.Mappers
 
             var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
             var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
-            var newElement = Expression.Variable( context.TargetElementType, "newElement" );
+            var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
 
             //avoids add calls on the Stack because the source and target collection
             //will not be identical (one will be reversed).
             //avoids add calls by creating a temporary list.
 
-            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.TargetElementType );
+            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.TargetCollectionElementType );
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
             var tempCollectionAddMethod = this.GetTargetCollectionAddMethod( context );
 
             var constructorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var getCountMethod = context.SourcePropertyType.GetProperty( "Count" ).GetGetMethod();
+            var getCountMethod = context.SourceMemberType.GetProperty( "Count" ).GetGetMethod();
 
             var newTempCollectionExp = Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourcePropertyVar, getCountMethod ) );
+                Expression.Call( context.SourceMember, getCountMethod ) );
 
             return Expression.Block
             (
                 new[] { newElement, tempCollection },
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
-                ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
+                    Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
                     Expression.Call( tempCollection, tempCollectionAddMethod, newElement ),
 
-                    Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
-                        Expression.New( objectPairConstructor, context.SourceLoopingVar, newElement ) )
+                    Expression.Call( context.ReturnObject, addToRefCollectionMethod,
+                        Expression.New( objectPairConstructor, context.SourceCollectionLoopingVar, newElement ) )
                 ) ),
 
-                Expression.Assign( context.TargetPropertyVar, Expression.New( constructorInfo, tempCollection ) )
+                Expression.Assign( context.TargetMember, Expression.New( constructorInfo, tempCollection ) )
             );
         }
     }

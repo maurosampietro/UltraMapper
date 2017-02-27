@@ -27,7 +27,6 @@ namespace TypeMapper.Tests
             public string A { get; set; }
         }
 
-
         [TestMethod]
         public void ManualFlattening()
         {
@@ -37,7 +36,9 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper( cfg =>
             {
                 cfg.MapTypes<FirstLevel, FirstLevel>()
-                    .MapProperty( a => a.SecondLevel.ThirdLevel.A, b => b.A );
+                    .MapProperty( a => a.SecondLevel.ThirdLevel.A, b => b.A )
+                    .MapProperty( a => a.SecondLevel.ThirdLevel, b => b.SecondLevel.ThirdLevel )
+                    .MapProperty( a => a.SecondLevel, b => b.SecondLevel );
             } );
 
             typeMapper.Map( source, target );

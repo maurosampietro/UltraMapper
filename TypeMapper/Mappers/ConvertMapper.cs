@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
     public class ConvertMapper : BaseMapper, IObjectMapperExpression, IMapperExpression
     {
+        private static Type _convertType = typeof( Convert );
+
         public bool CanHandle( MemberMapping mapping )
         {
             var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
@@ -53,13 +51,15 @@ namespace TypeMapper.Mappers
             return areTypesBuiltIn || isConvertible.Value;
         }
 
-        protected override Expression GetValueAssignment( MapperContext context )
+        protected override Expression GetTargetValueAssignment( MapperContext context )
         {
-            var convertMethod = typeof( Convert ).GetMethod(
-                $"To{context.TargetValueType.Name}", new[] { context.SourceValueType } );
+            var methodName = $"To{context.TargetMemberType.Name}";
+            var methodParams = new[] { context.SourceMemberType };
 
-            return Expression.Assign( context.TargetValue,
-                Expression.Call( convertMethod, context.SourceValue ) );
+            var convertMethod = _convertType.GetMethod( methodName, methodParams );
+            var convertMethodCall = Expression.Call( convertMethod, context.SourceMemberValue );
+
+            return Expression.Assign( context.TargetMember, convertMethodCall );
         }
     }
 }

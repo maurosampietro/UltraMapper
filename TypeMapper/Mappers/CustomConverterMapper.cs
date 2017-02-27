@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TypeMapper.Internals;
 using TypeMapper.Mappers.MapperContexts;
 
@@ -21,14 +16,14 @@ namespace TypeMapper.Mappers
             return new CustomConverterContext( mapping );
         }
 
-        protected override Expression GetValueAssignment( MapperContext context )
+        protected override Expression GetTargetValueAssignment( MapperContext context )
         {
             var converterContext = context as CustomConverterContext;
 
             var value = Expression.Invoke( converterContext.CustomConverter,
-                    converterContext.SourceValue );
+                    converterContext.SourceMemberValue );
 
-            return Expression.Assign( converterContext.TargetValue, value );
+            return Expression.Assign( converterContext.TargetMember, value );
         }
     }
 }

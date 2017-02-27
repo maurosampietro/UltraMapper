@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -39,24 +34,44 @@ namespace TypeMapper.Mappers
             var addMethod = GetTargetCollectionAddMethod( context );
 
             var addRangeToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
-            var newElement = Expression.Variable( context.TargetElementType, "newElement" );
-            var newInstanceExp = Expression.New( context.TargetPropertyType );
+            var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
+            var newInstanceExp = Expression.New( context.TargetMemberType );
 
             var itemMapping = context.Mapping.TypeMapping.GlobalConfiguration.Configurator[
-                context.SourceElementType, context.TargetElementType ].MappingExpression;
+                context.SourceCollectionElementType, context.TargetCollectionElementType ].MappingExpression;
+
+            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method, context.ReferenceTrack, context.SourceCollectionLoopingVar,
+                    Expression.Constant( context.TargetCollectionElementType ) );
+
+            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+                addToTracker.Method, context.ReferenceTrack, context.SourceCollectionLoopingVar,
+                Expression.Constant( context.TargetCollectionElementType ), newElement );
 
             return Expression.Block
             (
                  new[] { newElement },
 
-                 Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
-                 ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar, Expression.Block
+                 Expression.Assign( context.TargetMember, newInstanceExp ),
+                 ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                  (
-                     Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
-                     Expression.Call( context.ReturnObjectVar, addRangeToRefCollectionMethod, Expression.Invoke(
-                         itemMapping, context.ReferenceTrack, context.SourceLoopingVar, newElement ) ),
-
-                     Expression.Call( context.TargetPropertyVar, addMethod, newElement )
+                     Expression.Assign( newElement, Expression.Convert( lookupCall, context.TargetCollectionElementType ) ),
+                     Expression.IfThen
+                     (
+                         Expression.Equal( newElement, Expression.Constant( null, context.TargetCollectionElementType ) ),
+                         Expression.Block
+                         (
+                             Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
+                     
+                             //cache new collection
+                             addToLookupCall,
+                     
+                             Expression.Call( context.ReturnObject, addRangeToRefCollectionMethod, Expression.Invoke(
+                                 itemMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ) )
+                         )
+                     ),
+                     
+                     Expression.Call( context.TargetMember, addMethod, newElement )
                  ) )
             );
         }

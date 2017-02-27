@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -20,8 +15,12 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetPropertyType.GetMethod(
-                "AddLast", new[] { context.TargetElementType } );
+            //LinkedList<int> is used only because it is forbidden to use nameof with open generics.
+            //Any other type instead of int would work.
+            var methodName = nameof( LinkedList<int>.AddLast );
+            var methodParams = new[] { context.TargetCollectionElementType };
+
+            return context.TargetMemberType.GetMethod( methodName, methodParams );
         }
     }
 }

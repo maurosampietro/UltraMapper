@@ -13,7 +13,7 @@ namespace TypeMapper.Mappers
             ( o ) => debug( o );
 #endif
 
-        private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
+        protected static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
          ( referenceTracker, sourceInstance, targetType ) =>
          {
              object targetInstance;
@@ -22,17 +22,11 @@ namespace TypeMapper.Mappers
              return targetInstance;
          };
 
-        private static Action<ReferenceTracking, object, Type, object> addToTracker =
+        protected static Action<ReferenceTracking, object, Type, object> addToTracker =
             ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-            {
-                referenceTracker.Add( sourceInstance, targetType, targetInstance );
-            };
-
-        protected static readonly Expression<Func<ReferenceTracking, object, Type, object>> CacheLookupExpression =
-            ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
-
-        protected static readonly Expression<Action<ReferenceTracking, object, Type, object>> CacheAddExpression =
-            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
+        {
+            referenceTracker.Add( sourceInstance, targetType, targetInstance );
+        };
 
         public virtual bool CanHandle( MemberMapping mapping )
         {
@@ -58,7 +52,7 @@ namespace TypeMapper.Mappers
             var expressionBody = this.GetExpressionBody( context );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceType, context.TargetType, context.ReturnType );
+                typeof( ReferenceTracking ), context.SourceInstanceType, context.TargetInstanceType, context.ReturnType );
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
@@ -72,7 +66,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression ReturnTypeInitialization( object contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
-            return Expression.Assign( context.ReturnObjectVar, Expression.Constant( null, context.ReturnType ) );
+            return Expression.Assign( context.ReturnObject, Expression.Constant( null, context.ReturnType ) );
         }
 
         protected Expression GetExpressionBody( ReferenceMapperContext context )
@@ -86,39 +80,44 @@ namespace TypeMapper.Mappers
             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
             */
 
+            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method, context.ReferenceTrack,
+                context.SourceMember, Expression.Constant( context.TargetMemberType ) );
+
+            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+                addToTracker.Method, context.ReferenceTrack, context.SourceMember,
+                Expression.Constant( context.TargetMemberType ), context.TargetMember );
+
             var body = (Expression)Expression.Block
             (
-                new ParameterExpression[] { context.SourcePropertyVar, context.TargetPropertyVar, context.ReturnObjectVar },
+                new ParameterExpression[] { context.SourceMember, context.TargetMember, context.ReturnObject },
 
                 ReturnTypeInitialization( context ),
 
                 //read source value
-                Expression.Assign( context.SourcePropertyVar, context.Mapping.SourceProperty.ValueGetter.Body
-                    .ReplaceParameter(context.SourceInstance, context.Mapping.SourceProperty.ValueGetter.Parameters[ 0 ].Name ) ),
+                Expression.Assign( context.SourceMember, context.SourceMemberValue ),
 
                 Expression.IfThenElse
                 (
-                     Expression.Equal( context.SourcePropertyVar, context.SourceNullValue ),
+                     Expression.Equal( context.SourceMember, context.SourceNullValue ),
 
-                     Expression.Assign( context.TargetPropertyVar, context.TargetNullValue ),
+                     Expression.Assign( context.TargetMember, context.TargetNullValue ),
 
                      Expression.Block
                      (
                         //object lookup
-                        Expression.Assign( context.TargetPropertyVar, Expression.Convert(
-                            Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                            Expression.Constant( context.TargetPropertyType ) ), context.TargetPropertyType ) ),
+                        Expression.Assign( context.TargetMember,
+                            Expression.Convert( lookupCall, context.TargetMemberType ) ),
 
                         Expression.IfThen
                         (
-                            Expression.Equal( context.TargetPropertyVar, context.TargetNullValue ),
+                            Expression.Equal( context.TargetMember, context.TargetNullValue ),
                             Expression.Block
                             (
                                 this.GetInnerBody( context ),
 
                                 //cache reference
-                                Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                                    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
+                                addToLookupCall
                             )
                         )
                     )
@@ -126,9 +125,9 @@ namespace TypeMapper.Mappers
 
                 context.Mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( context.TargetInstance, context.Mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
-                    .ReplaceParameter( context.TargetPropertyVar, context.Mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name ),
+                    .ReplaceParameter( context.TargetMember, context.Mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name ),
 
-                context.ReturnObjectVar
+                context.ReturnObject
             );
 
             return body;
@@ -143,23 +142,22 @@ namespace TypeMapper.Mappers
                 this.GetTargetInstanceAssignment( contextObj ),
 
                 //assign to the object to return
-                Expression.Assign( context.ReturnObjectVar, Expression.New(
-                    context.ReturnTypeConstructor, context.SourcePropertyVar, context.TargetPropertyVar ) )
+                Expression.Assign( context.ReturnObject, Expression.New(
+                    context.ReturnTypeConstructor, context.SourceMember, context.TargetMember ) )
             );
         }
 
         private Expression GetTargetInstanceAssignment( object contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
-            var newInstanceExp = Expression.New( context.TargetPropertyType );
+            var newInstanceExp = Expression.New( context.TargetMemberType );
 
             if( context.Mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
-                return Expression.Assign( context.TargetPropertyVar, newInstanceExp );
+                return Expression.Assign( context.TargetMember, newInstanceExp );
 
-            var getValue = context.Mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( context.TargetInstance );
-            return Expression.IfThenElse( Expression.Equal( getValue, context.TargetNullValue ),
-                    Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
-                    Expression.Assign( context.TargetPropertyVar, getValue ) );
+            return Expression.IfThenElse( Expression.Equal( context.TargetMemberValue, context.TargetNullValue ),
+                    Expression.Assign( context.TargetMember, newInstanceExp ),
+                    Expression.Assign( context.TargetMember, context.TargetMemberValue ) );
         }
     }
 }

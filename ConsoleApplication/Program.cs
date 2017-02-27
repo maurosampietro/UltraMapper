@@ -43,63 +43,65 @@ namespace ConsoleApplication
             public int? NullableInt32 { get; set; } = 12;
             public int? NullNullableInt32 { get; set; } = null;
 
-            public InnerType InnerType { get; set; }
-            public BaseTypes SelfReference { get; set; }
-            public BaseTypes Reference { get; set; }
+            //public InnerType InnerType { get; set; }
+            //public BaseTypes SelfReference { get; set; }
+            //public BaseTypes Reference { get; set; }
 
-            public List<int> ListOfInts { get; set; }
-            public List<InnerType> ListOfInnerType { get; set; }
+            //public List<int> ListOfInts { get; set; }
+            //public List<InnerType> ListOfInnerType { get; set; }
 
-            public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
-            public Dictionary<InnerType, InnerType> Dictionary { get; set; }
-            public Dictionary<InnerType, InnerTypeDto> Dictionary2 { get; set; }
-            public Dictionary<string, InnerType> Dictionary3 { get; set; }
-            public Dictionary<InnerType, int> Dictionary4 { get; set; }
+            //public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
+            //public Dictionary<InnerType, InnerType> Dictionary { get; set; }
+            //public Dictionary<InnerType, InnerTypeDto> Dictionary2 { get; set; }
+            //public Dictionary<string, InnerType> Dictionary3 { get; set; }
+            //public Dictionary<InnerType, int> Dictionary4 { get; set; }
 
             public BaseTypes()
             {
                 //this.SelfReference = this;
-                this.InnerType = new InnerType() { A = "vara", B = "varb" };
+                //this.InnerType = new InnerType() { A = "vara", B = "suka" };
 
-                this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
+                //this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
 
-                this.ListOfInnerType = new List<InnerType>() {
-                    new InnerType() { A = "a", B="b", },
-                    new InnerType(){ A = "c", B="d", },
-                };
+                //this.ListOfInnerType = new List<InnerType>() {
+                    //new InnerType() { A = "a", B="b", },
+                    //new InnerType(){ A = "c", B="d", },
+                //    this.InnerType,
+                //};
 
-                this.DictionaryBuiltInTypes = new Dictionary<string, int>()
-                {
-                    {"a",1}, {"b",2}, {"c",3}
-                };
+                //this.DictionaryBuiltInTypes = new Dictionary<string, int>()
+                //{
+                //    {"a",1}, {"b",2}, {"c",3}
+                //};
 
-                this.Dictionary = new Dictionary<InnerType, InnerType>()
-                {
-                    {new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
-                    {new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
-                    {new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
-                };
+                //this.Dictionary = new Dictionary<InnerType, InnerType>()
+                //{
+                //    //{new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
+                //    //{new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
+                //    //{new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
+                //    { this.InnerType, this.InnerType}
+                //};
 
-                this.Dictionary2 = new Dictionary<InnerType, InnerTypeDto>()
-                {
-                    {new InnerType() { A= "aa" }, new InnerTypeDto() { A= "ab" }},
-                    {new InnerType() { B= "ba" }, new InnerTypeDto() { B= "bb" }},
-                    {new InnerType() { A= "ca" }, new InnerTypeDto() { A= "cb" }},
-                };
+                //this.Dictionary2 = new Dictionary<InnerType, InnerTypeDto>()
+                //{
+                //    {new InnerType() { A= "aa" }, new InnerTypeDto() { A= "ab" }},
+                //    {new InnerType() { B= "ba" }, new InnerTypeDto() { B= "bb" }},
+                //    {new InnerType() { A= "ca" }, new InnerTypeDto() { A= "cb" }},
+                //};
 
-                this.Dictionary3 = new Dictionary<string, InnerType>()
-                {
-                    {"aa", new InnerType() { A= "ab" }},
-                    {"ba", new InnerType() { B= "bb" }},
-                    {"ca", new InnerType() { A= "cb" }},
-                };
+                //this.Dictionary3 = new Dictionary<string, InnerType>()
+                //{
+                //    {"aa", new InnerType() { A= "ab" }},
+                //    {"ba", new InnerType() { B= "bb" }},
+                //    {"ca", new InnerType() { A= "cb" }},
+                //};
 
-                this.Dictionary4 = new Dictionary<InnerType, int>()
-                {
-                    {new InnerType() { A= "aa" }, 1},
-                    {new InnerType() { B= "ba" }, 2},
-                    {new InnerType() { A= "ca" }, 3},
-                };
+                //this.Dictionary4 = new Dictionary<InnerType, int>()
+                //{
+                //    {new InnerType() { A= "aa" }, 1},
+                //    {new InnerType() { B= "ba" }, 2},
+                //    {new InnerType() { A= "ca" }, 3},
+                //};
             }
         }
 
@@ -125,14 +127,14 @@ namespace ConsoleApplication
             public string String { get; set; }
             public int? NullableInt32 { get; set; }
 
-            public InnerTypeDto InnerType { get; set; }
-            public BaseTypesDto SelfReference { get; set; }
+            //public InnerTypeDto InnerType { get; set; }
+            //public BaseTypesDto SelfReference { get; set; }
 
-            public BaseTypes Reference { get; set; }
+            //public BaseTypes Reference { get; set; }
 
-            public List<int> ListOfInts { get; set; }
+            //public List<int> ListOfInts { get; set; }
 
-            public BindingList<InnerTypeDto> ListOfInnerType { get; set; }
+            //public BindingList<InnerTypeDto> ListOfInnerType { get; set; }
 
             //public Dictionary<string, int> DictionaryBuiltInTypes { get; set; }
             //public Dictionary<InnerTypeDto, InnerTypeDto> Dictionary { get; set; }
@@ -161,30 +163,18 @@ namespace ConsoleApplication
 
         static void Main( string[] args )
         {
-            AutoMapper.Mapper.Initialize( cfg => { } );
-
-            int v = 10;
-            int w = 13;
-
-            AutoMapper.Mapper.Map( v, w );
-
-            List<int> a = Enumerable.Range( 0, 10 ).ToList();
-            List<double?> b = new List<double?>() { null, null, null };
-
-            AutoMapper.Mapper.Map( b, a );
-
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-            int iterations = (int)Math.Pow( 10, 6 );
+            int iterations = (int)Math.Pow( 10, 7 );
 
             var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
-                cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
-                    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
-                    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
-                    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
-                    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+                //cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
+                //    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
+                //    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+                //    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
+                //    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
             } );
 
             Stopwatch sw4 = new Stopwatch();
@@ -208,7 +198,7 @@ namespace ConsoleApplication
             AutoMapper.Mapper.Initialize( cfg =>
             {
                 cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
+                cfg.CreateMap<BaseTypes, BaseTypesDto>();
             } );
             sw5.Start();
             for( int i = 0; i < iterations; i++ )

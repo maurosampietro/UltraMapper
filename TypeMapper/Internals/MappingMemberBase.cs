@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TypeMapper.Internals
 {
@@ -23,7 +18,7 @@ namespace TypeMapper.Internals
 
         public bool Ignore { get; set; }
 
-        public MappingMemberBase( MemberInfo memberInfo )
+        internal MappingMemberBase( MemberInfo memberInfo )
         {
             this.MemberInfo = memberInfo;
             this.MemberType = this.MemberInfo.GetMemberType();

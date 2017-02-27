@@ -3,9 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Configuration;
 using TypeMapper.Internals;
 
@@ -34,32 +31,32 @@ namespace TypeMapper.Mappers
             var context = contextObj as DictionaryMapperContext;
             //Func<ReferenceTracking, sourceType, targetType, IEnumerable<ObjectPair>>
 
-            bool keyIsBuiltInType = context.TargetKeyType.IsBuiltInType( false );
-            bool valueIsBuiltInType = context.TargetValueType.IsBuiltInType( false );
+            bool keyIsBuiltInType = context.TargetCollectionElementKeyType.IsBuiltInType( false );
+            bool valueIsBuiltInType = context.TargetCollectionElementValueType.IsBuiltInType( false );
 
-            var addMethod = context.TargetPropertyType.GetMethod( "Add" );
+            var addMethod = context.TargetMemberType.GetMethod( "Add" );
 
-            var keyExpression = GetKeyOrValueExpression( context, context.SourceKey,
-                context.TargetKey, context.SourceKeyType, context.TargetKeyType );
+            var keyExpression = GetKeyOrValueExpression( context, context.SourceCollectionElementKey,
+                context.TargetCollectionElementKey, context.SourceCollectionElementKeyType, context.TargetCollectionElementKeyType );
 
-            var valueExpression = GetKeyOrValueExpression( context, context.SourceValue,
-                context.TargetValue, context.SourceValueType, context.TargetValueType );
+            var valueExpression = GetKeyOrValueExpression( context, context.SourceCollectionElementValue,
+                context.TargetCollectionElementValue, context.SourceCollectionElementValueType, context.TargetCollectionElementValueType );
 
             return Expression.Block
             (
-                new[] { context.TargetKey, context.TargetValue },
+                new[] { context.TargetCollectionElementKey, context.TargetCollectionElementValue },
 
-                Expression.Assign( context.TargetPropertyVar,
-                    Expression.New( context.TargetPropertyType ) ),
+                Expression.Assign( context.TargetMember,
+                    Expression.New( context.TargetMemberType ) ),
 
-                ExpressionLoops.ForEach( context.SourcePropertyVar,
-                    context.SourceLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( context.SourceMember,
+                    context.SourceCollectionLoopingVar, Expression.Block
                 (
                     keyExpression,
                     valueExpression,
 
-                    Expression.Call( context.TargetPropertyVar,
-                        addMethod, context.TargetKey, context.TargetValue )
+                    Expression.Call( context.TargetMember,
+                        addMethod, context.TargetCollectionElementKey, context.TargetCollectionElementValue )
                 ) )
             );
         }
@@ -67,8 +64,8 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             MemberExpression sourceParam, ParameterExpression targetParam, Type sourceParamType, Type targetParamType )
         {
-            bool isSourceKeyTypeBuiltIn = context.SourceKeyType.IsBuiltInType( false );
-            bool isTargetKeyTypeBuiltIne = context.TargetKeyType.IsBuiltInType( false );
+            bool isSourceKeyTypeBuiltIn = context.SourceCollectionElementKeyType.IsBuiltInType( false );
+            bool isTargetKeyTypeBuiltIne = context.TargetCollectionElementKeyType.IsBuiltInType( false );
 
             if( sourceParamType.IsBuiltInType( false ) && targetParamType.IsBuiltInType( false ) )
             {
@@ -81,14 +78,20 @@ namespace TypeMapper.Mappers
                 return Expression.Assign( targetParam, Expression.Invoke( conversion, sourceParam ) );
             }
 
+            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method, context.ReferenceTrack, sourceParam,
+                    Expression.Constant( targetParamType ) );
+
+            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+                addToTracker.Method, context.ReferenceTrack, sourceParam,
+                Expression.Constant( targetParamType ), targetParam );
+
             var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
             var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
 
             return Expression.Block
             (
-                Expression.Assign( targetParam, Expression.Convert(
-                    Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, sourceParam,
-                    Expression.Constant( sourceParamType ) ), targetParamType ) ),
+                Expression.Assign( targetParam, Expression.Convert( lookupCall, targetParamType ) ),
 
                 Expression.IfThen
                 (
@@ -98,11 +101,10 @@ namespace TypeMapper.Mappers
                         Expression.Assign( targetParam, Expression.New( targetParamType ) ),
 
                         //cache new collection
-                        Expression.Invoke( CacheAddExpression, context.ReferenceTrack, sourceParam,
-                            Expression.Constant( targetParamType ), targetParam ),
+                        addToLookupCall,
 
                         //add to return list
-                        Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
+                        Expression.Call( context.ReturnObject, addToRefCollectionMethod,
                             Expression.New( objectPairConstructor, sourceParam, targetParam ) )
                     )
                 )

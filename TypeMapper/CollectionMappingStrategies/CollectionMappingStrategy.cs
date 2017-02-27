@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TypeMapper.Internals;
-
-namespace TypeMapper.CollectionMappingStrategies
+﻿namespace TypeMapper.CollectionMappingStrategies
 {
     /// <summary>
     /// Creates a new collection

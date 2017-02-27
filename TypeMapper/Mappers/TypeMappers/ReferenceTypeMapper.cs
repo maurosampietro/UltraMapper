@@ -100,10 +100,10 @@ namespace TypeMapper.Mappers.TypeMappers
                             Expression.Block
                             (
                                 this.GetInnerBody( context )
-                                
-                                //cache reference
-                                //Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                                //    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
+
+                            //cache reference
+                            //Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
+                            //    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
                             )
                         )
                     )
@@ -147,64 +147,6 @@ namespace TypeMapper.Mappers.TypeMappers
             //        Expression.Assign( context.TargetPropertyVar, getValue ) );
 
             return newInstanceExp;
-        }
-
-        private Expression GetBodyGeneral( ReferenceMapperContextTypeMapping context, Expression sourceReadValue, Expression targetAssignValue )
-        {
-            /* SOURCE (NULL) -> TARGET = NULL
-           * 
-           * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
-           * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
-           * 
-           * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
-           * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
-           */
-
-            var body = (Expression)Expression.Block
-            (
-                new ParameterExpression[] { context.SourcePropertyVar, context.TargetPropertyVar, context.ReturnObjectVar },
-
-                ReturnTypeInitialization( context ),
-
-                //read source value
-                Expression.Assign( context.SourcePropertyVar, sourceReadValue ),
-
-                Expression.IfThenElse
-                (
-                     Expression.Equal( context.SourcePropertyVar, context.SourceNullValue ),
-
-                     Expression.Assign( context.TargetPropertyVar, context.TargetNullValue ),
-
-                     Expression.Block
-                     (
-                        //object lookup
-                        Expression.Assign( context.TargetPropertyVar, Expression.Convert(
-                            Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                            Expression.Constant( context.TargetPropertyType ) ), context.TargetPropertyType ) ),
-
-                        Expression.IfThen
-                        (
-                            Expression.Equal( context.TargetPropertyVar, context.TargetNullValue ),
-                            Expression.Block
-                            (
-                                this.GetInnerBody( context ),
-
-                                //cache reference
-                                Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                                    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
-                            )
-                        )
-                    )
-                ),
-
-                //context.Mapping.TargetProperty.ValueSetter.Body
-                //    .ReplaceParameter( context.TargetInstance, "target" )
-                //    .ReplaceParameter( context.TargetPropertyVar, "value" ),
-
-                context.ReturnObjectVar
-            );
-
-            return body;
         }
     }
 }

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Configuration;
 using TypeMapper.Internals;
 
@@ -24,93 +20,93 @@ namespace TypeMapper.Mappers
             return source.IsNullable() || target.IsNullable();
         }
 
-        protected override Expression GetValueAssignment( MapperContext context )
+        protected override Expression GetTargetValueAssignment( MapperContext context )
         {
-            if( context.SourceValueType == context.TargetValueType )
-                return Expression.Assign( context.TargetValue, context.SourceValue );
+            if( context.SourceMemberType == context.TargetMemberType )
+                return Expression.Assign( context.TargetMember, context.SourceMemberValue );
 
-            if( context.SourceValueType.IsNullable() && context.TargetValueType.IsNullable() )
+            if( context.SourceMemberType.IsNullable() && context.TargetMemberType.IsNullable() )
             {
-                var sourceUnderlyingType = Nullable.GetUnderlyingType( context.SourceValueType );
-                var targetUnderlyingType = Nullable.GetUnderlyingType( context.TargetValueType );
+                var sourceUnderlyingType = Nullable.GetUnderlyingType( context.SourceMemberType );
+                var targetUnderlyingType = Nullable.GetUnderlyingType( context.TargetMemberType );
 
                 //Nullable<int> is used only because it is forbidden to use nameof with open generics.
                 //Any other struct type instead of int would work.
                 var nullableValueAccess = Expression.MakeMemberAccess( context.SourceInstance,
-                    context.SourceValueType.GetProperty( nameof( Nullable<int>.Value ) ) );
+                    context.SourceMemberType.GetProperty( nameof( Nullable<int>.Value ) ) );
 
                 var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
                     sourceUnderlyingType, targetUnderlyingType );
 
-                var constructor = context.TargetValueType.GetConstructor( new Type[] { targetUnderlyingType } );
+                var constructor = context.TargetMemberType.GetConstructor( new Type[] { targetUnderlyingType } );
                 var newNullable = Expression.New( constructor, Expression.Invoke( conversion, nullableValueAccess ) );
 
                 return Expression.IfThenElse
                 (
-                    Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceValueType ) ),
-                    Expression.Assign( context.TargetValue, Expression.Default( context.TargetValueType ) ),
-                    Expression.Assign( context.TargetValue, newNullable )
+                    Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceMemberType ) ),
+                    Expression.Assign( context.TargetMember, Expression.Default( context.TargetMemberType ) ),
+                    Expression.Assign( context.TargetMember, newNullable )
                 );
             }
 
-            if( context.SourceValueType.IsNullable() && !context.TargetValueType.IsNullable() )
+            if( context.SourceMemberType.IsNullable() && !context.TargetMemberType.IsNullable() )
             {
                 //Nullable<int> is used only because it is forbidden to use nameof with open generics.
                 //Any other struct type instead of int would work.
-                var nullableValueAccess = Expression.MakeMemberAccess( context.SourceValue,
-                    context.SourceValueType.GetProperty( nameof( Nullable<int>.Value ) ) );
+                var nullableValueAccess = Expression.MakeMemberAccess( context.SourceMemberValue,
+                    context.SourceMemberType.GetProperty( nameof( Nullable<int>.Value ) ) );
 
-                var sourceUnderlyingType = context.SourceValueType.GetUnderlyingTypeIfNullable();
-                if( sourceUnderlyingType == context.TargetValueType )
+                var sourceUnderlyingType = context.SourceMemberType.GetUnderlyingTypeIfNullable();
+                if( sourceUnderlyingType == context.TargetMemberType )
                 {
                     return Expression.IfThenElse
                     (
-                        Expression.Equal( context.SourceValue, Expression.Constant( null, context.SourceValueType ) ),
-                        Expression.Assign( context.TargetValue, Expression.Default( context.TargetValueType ) ),
-                        Expression.Assign( context.TargetValue, nullableValueAccess )
+                        Expression.Equal( context.SourceMemberValue, Expression.Constant( null, context.SourceMemberType ) ),
+                        Expression.Assign( context.TargetMember, Expression.Default( context.TargetMemberType ) ),
+                        Expression.Assign( context.TargetMember, nullableValueAccess )
                     );
                 }
 
-                if( sourceUnderlyingType.IsImplicitlyConvertibleTo( context.TargetValueType ) ||
-                    sourceUnderlyingType.IsExplicitlyConvertibleTo( context.TargetValueType ) )
+                if( sourceUnderlyingType.IsImplicitlyConvertibleTo( context.TargetMemberType ) ||
+                    sourceUnderlyingType.IsExplicitlyConvertibleTo( context.TargetMemberType ) )
                 {
                     return Expression.IfThenElse
                     (
-                        Expression.Equal( context.SourceValue, Expression.Constant( null, context.SourceValueType ) ),
-                        Expression.Assign( context.TargetValue, Expression.Default( context.TargetValueType ) ),
-                        Expression.Assign( context.TargetValue, Expression.Convert( nullableValueAccess, context.TargetValueType ) )
+                        Expression.Equal( context.SourceMemberValue, Expression.Constant( null, context.SourceMemberType ) ),
+                        Expression.Assign( context.TargetMember, Expression.Default( context.TargetMemberType ) ),
+                        Expression.Assign( context.TargetMember, Expression.Convert( nullableValueAccess, context.TargetMemberType ) )
                     );
                 }
 
-                var convertMethod = typeof( Convert ).GetMethod( $"To{context.TargetValueType.Name}", new[] { context.SourceValueType } );
+                var convertMethod = typeof( Convert ).GetMethod( $"To{context.TargetMemberType.Name}", new[] { context.SourceMemberType } );
                 return Expression.IfThenElse
                 (
-                    Expression.Equal( context.SourceValue, Expression.Constant( null, context.SourceValueType ) ),
-                    Expression.Assign( context.TargetValue, Expression.Default( context.TargetValueType ) ),
-                    Expression.Assign( context.TargetValue, Expression.Call( convertMethod, nullableValueAccess ) )
+                    Expression.Equal( context.SourceMemberValue, Expression.Constant( null, context.SourceMemberType ) ),
+                    Expression.Assign( context.TargetMember, Expression.Default( context.TargetMemberType ) ),
+                    Expression.Assign( context.TargetMember, Expression.Call( convertMethod, nullableValueAccess ) )
                 );
             }
 
-            if( !context.SourceValueType.IsNullable() && context.TargetValueType.IsNullable() )
+            if( !context.SourceMemberType.IsNullable() && context.TargetMemberType.IsNullable() )
             {
-                var targetUnderlyingType = context.TargetValueType.GetUnderlyingTypeIfNullable();
+                var targetUnderlyingType = context.TargetMemberType.GetUnderlyingTypeIfNullable();
 
-                if( context.SourceValueType.IsImplicitlyConvertibleTo( targetUnderlyingType ) ||
-                  context.SourceValueType.IsExplicitlyConvertibleTo( targetUnderlyingType ) )
+                if( context.SourceMemberType.IsImplicitlyConvertibleTo( targetUnderlyingType ) ||
+                  context.SourceMemberType.IsExplicitlyConvertibleTo( targetUnderlyingType ) )
                 {
-                    var constructor = context.TargetValueType.GetConstructor( new Type[] { targetUnderlyingType } );
-                    var newNullable = Expression.New( constructor, Expression.Convert( context.SourceValue, targetUnderlyingType ) );
-                    return Expression.Assign( context.TargetValue, newNullable );
+                    var constructor = context.TargetMemberType.GetConstructor( new Type[] { targetUnderlyingType } );
+                    var newNullable = Expression.New( constructor, Expression.Convert( context.SourceMemberValue, targetUnderlyingType ) );
+                    return Expression.Assign( context.TargetMember, newNullable );
                 }
                 else
                 {
-                    var constructor = context.TargetValueType.GetConstructor( new Type[] { context.SourceValueType } );
-                    var newNullable = Expression.New( constructor, context.SourceValue );
-                    return Expression.Assign( context.TargetValue, newNullable );
+                    var constructor = context.TargetMemberType.GetConstructor( new Type[] { context.SourceMemberType } );
+                    var newNullable = Expression.New( constructor, context.SourceMemberValue );
+                    return Expression.Assign( context.TargetMember, newNullable );
                 }
             }
 
-            throw new Exception( $"Cannot handle {context.SourceValue} -> {context.TargetValue}" );
+            throw new Exception( $"Cannot handle {context.SourceMemberValue} -> {context.TargetMember}" );
         }
     }
 }

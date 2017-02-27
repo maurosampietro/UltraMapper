@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -12,10 +8,10 @@ namespace TypeMapper.Mappers
     {
         public LambdaExpression GetMappingExpression( MemberMapping mapping )
         {
-            //Action<sourceType, targetType>
+            //Action<SourceType, TargetType>
 
             var context = this.GetContext( mapping );
-            var valueAssignment = this.GetValueAssignment( context );
+            var valueAssignment = this.GetTargetValueAssignment( context );
 
             var targetSetter = mapping.TargetProperty.ValueSetter;
             var targetSetterInstanceParamName = targetSetter.Parameters[ 0 ].Name;
@@ -23,18 +19,19 @@ namespace TypeMapper.Mappers
 
             var body = (Expression)Expression.Block
             (
-                new[] { context.TargetValue },
+                new[] { context.TargetMember },
 
                 valueAssignment
                     .ReplaceParameter( context.SourceInstance ),
 
                 mapping.TargetProperty.ValueSetter.Body
                     .ReplaceParameter( context.TargetInstance, targetSetterInstanceParamName )
-                    .ReplaceParameter( context.TargetValue, targetSetterValueParamName )
+                    .ReplaceParameter( context.TargetMember, targetSetterValueParamName )
             );
 
             var delegateType = typeof( Action<,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceInstanceType, context.TargetInstanceType );
+                typeof( ReferenceTracking ), context.SourceInstanceType, 
+                context.TargetInstanceType );
 
             return Expression.Lambda( delegateType, body, context.ReferenceTrack,
                 context.SourceInstance, context.TargetInstance );
@@ -42,23 +39,26 @@ namespace TypeMapper.Mappers
 
         public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
         {
+            //Func<SourceType, TargetType>
+
             var context = this.GetContext( sourceType, targetType );
-            var valueAssignment = this.GetValueAssignment( context );
+            var targetValueAssignment = this.GetTargetValueAssignment( context );
 
             var body = Expression.Block
             (
-                new[] { context.TargetValue },
+                new[] { context.TargetMember },
                 
-                valueAssignment,
+                targetValueAssignment,
 
-                //return this value
-                context.TargetValue
+                //return the value assigned to TargetValue param
+                context.TargetMember
             );
 
             var delegateType = typeof( Func<,> )
                 .MakeGenericType( sourceType, targetType );
 
-            return Expression.Lambda( delegateType, body, context.SourceInstance );
+            return Expression.Lambda( delegateType, 
+                body, context.SourceInstance );
         }
 
         protected virtual MapperContext GetContext( MemberMapping mapping )
@@ -71,6 +71,6 @@ namespace TypeMapper.Mappers
             return new MapperContext( sourceType, targetType );
         }
 
-        protected abstract Expression GetValueAssignment( MapperContext context );
+        protected abstract Expression GetTargetValueAssignment( MapperContext context );
     }
 }

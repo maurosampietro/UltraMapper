@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using TypeMapper.Internals;
+﻿using TypeMapper.Internals;
 
 namespace TypeMapper.CollectionMappingStrategies
 {

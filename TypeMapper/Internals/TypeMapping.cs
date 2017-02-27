@@ -1,18 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using TypeMapper.Mappers;
 using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
 {
+    public class MemberMappingComparer : IComparer<MemberMapping>
+    {
+        public int Compare( MemberMapping x, MemberMapping y )
+        {
+            var xGetter = x.TargetProperty.ValueGetter.ToString();
+            var yGetter = y.TargetProperty.ValueGetter.ToString();
+
+            int xCount = xGetter.Split( '.' ).Count();
+            int yCount = yGetter.Split( '.' ).Count();
+
+            if( xCount > yCount ) return 1;
+            if( xCount < yCount ) return -1;
+
+            return 0;
+        }
+    }
+
     public class TypeMapping
     {
+        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+
         public readonly GlobalConfiguration GlobalConfiguration;
         public readonly TypePair TypePair;
 
@@ -98,7 +113,13 @@ namespace TypeMapper.Internals
                      throw new ArgumentException( "Expressions should return System.Void or ObjectPair or IEnumerable<ObjectPair>" );
                  };
 
-                var addCalls = MemberMappings.Values
+
+                //since nested selectors are supported, we have to grant
+                //that we assign outer objects first
+                var correctMappingOrder = MemberMappings.Values.OrderBy( mm =>
+                     mm, _memberComparer ).ToList();
+
+                var addCalls = correctMappingOrder
                     .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
                     .Select( mapping => createAddCalls( mapping.Expression ) );
 

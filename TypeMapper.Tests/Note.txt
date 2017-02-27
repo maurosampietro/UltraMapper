@@ -4,3 +4,5 @@ TODO:
 
 - DateTime mapping,
 - Abstract and base classes map with derived types inheriting the configuration
+- VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
+  that on the target those objects are mapped to a single object sharing the same reference

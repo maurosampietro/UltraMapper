@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -28,15 +24,15 @@ namespace TypeMapper.Mappers
                     source.IsExplicitlyConvertibleTo( target ));
         }
 
-        protected override Expression GetValueAssignment( MapperContext context )
+        protected override Expression GetTargetValueAssignment( MapperContext context )
         {
-            if( context.SourceValueType == context.TargetValueType )
-                return Expression.Assign( context.TargetValue, context.SourceValue );
+            if( context.SourceMemberType == context.TargetMemberType )
+                return Expression.Assign( context.TargetMember, context.SourceMemberValue );
 
             var conversionExp = Expression.Convert(
-                context.SourceValue, context.TargetValueType );
+                context.SourceMemberValue, context.TargetMemberType );
 
-            return Expression.Assign( context.TargetValue, conversionExp );
+            return Expression.Assign( context.TargetMember, conversionExp );
         }
     }
 }
