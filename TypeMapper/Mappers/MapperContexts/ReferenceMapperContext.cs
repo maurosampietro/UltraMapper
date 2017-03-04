@@ -13,8 +13,8 @@ namespace TypeMapper.Mappers
 
         public ParameterExpression ReturnObject { get; protected set; }
 
-        public ConstantExpression SourceNullValue { get; protected set; }
-        public ConstantExpression TargetNullValue { get; protected set; }
+        public ConstantExpression SourceMemberNullValue { get; protected set; }
+        public ConstantExpression TargetMemberNullValue { get; protected set; }
 
         public ReferenceMapperContext( MemberMapping mapping )
             : base( mapping )
@@ -24,8 +24,8 @@ namespace TypeMapper.Mappers
           
             ReturnObject = Expression.Variable( ReturnType, "result" );
 
-            SourceNullValue = Expression.Constant( null, SourceMemberType );
-            TargetNullValue = Expression.Constant( null, TargetMemberType );
+            SourceMemberNullValue = Expression.Constant( null, SourceMemberType );
+            TargetMemberNullValue = Expression.Constant( null, TargetMemberType );
         }
     }
 

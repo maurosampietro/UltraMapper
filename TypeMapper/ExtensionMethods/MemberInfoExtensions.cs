@@ -27,13 +27,13 @@ namespace TypeMapper
                 if( isGetterMethod )
                     return method.ReturnType;
 
-                bool isSetterMethod = method.ReturnType == typeof( void ) &&
-                    method.GetParameters().Length == 1;
+                //it is not mandatory to return void for the setter
+                bool isSetterMethod = method.GetParameters().Length == 1;
 
                 if( isSetterMethod )
                     return method.GetParameters()[ 0 ].ParameterType;
 
-                throw new ArgumentException( "Only methods in the form of (T)Get_Value() or (void)Set_Value(T value) are supported." );
+                throw new ArgumentException( "Only methods in the form of (T)Get_Value() or (anything)Set_Value(T value) are supported." );
             }
 
             throw new ArgumentException( $"'{memberInfo}' is not supported." );

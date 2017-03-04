@@ -99,9 +99,9 @@ namespace TypeMapper.Mappers
 
                 Expression.IfThenElse
                 (
-                     Expression.Equal( context.SourceMember, context.SourceNullValue ),
+                     Expression.Equal( context.SourceMember, context.SourceMemberNullValue ),
 
-                     Expression.Assign( context.TargetMember, context.TargetNullValue ),
+                     Expression.Assign( context.TargetMember, context.TargetMemberNullValue ),
 
                      Expression.Block
                      (
@@ -111,7 +111,7 @@ namespace TypeMapper.Mappers
 
                         Expression.IfThen
                         (
-                            Expression.Equal( context.TargetMember, context.TargetNullValue ),
+                            Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
                             Expression.Block
                             (
                                 this.GetInnerBody( context ),
@@ -155,9 +155,12 @@ namespace TypeMapper.Mappers
             if( context.Mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
                 return Expression.Assign( context.TargetMember, newInstanceExp );
 
-            return Expression.IfThenElse( Expression.Equal( context.TargetMemberValue, context.TargetNullValue ),
-                    Expression.Assign( context.TargetMember, newInstanceExp ),
-                    Expression.Assign( context.TargetMember, context.TargetMemberValue ) );
+            return Expression.IfThenElse
+            ( 
+                Expression.Equal( context.TargetMemberValue, context.TargetMemberNullValue ),
+                Expression.Assign( context.TargetMember, newInstanceExp ),
+                Expression.Assign( context.TargetMember, context.TargetMemberValue ) 
+            );
         }
     }
 }

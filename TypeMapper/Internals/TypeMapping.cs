@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using TypeMapper.Configuration;
 using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
@@ -79,6 +80,16 @@ namespace TypeMapper.Internals
                 var newRefObjects = Expression.Variable( returnType, "result" );
 
                 LambdaExpression typeMappingExp = null;
+
+                //try
+                //{
+                //    typeMappingExp = MappingExpressionBuilderFactory.GetMappingExpression
+                //                ( TypePair.SourceType, TypePair.TargetType );
+                //}
+                //catch( Exception )
+                //{
+
+                //}
 
                 if( new CollectionMapperTypeMapping().CanHandle( this ) )
                     typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );

@@ -14,12 +14,17 @@ namespace TypeMapper.Tests
         {
             public bool Boolean { get; set; }
             public string String { get; set; }
+            public List<string> Strings { get; set; } = new List<string>();
+            public List<bool> Booleans { get; set; } = new List<bool>();
         }
 
         [TestMethod]
         public void InheritMapping()
         {
             var source = new TestClass();
+            source.Booleans.Add( true );
+            source.Booleans.Add( false );
+
             var target = new TestClass();
 
             var typeMapper = new TypeMapper( cfg =>
@@ -27,7 +32,8 @@ namespace TypeMapper.Tests
                 cfg.MapTypes<bool, string>( null, b => b ? "1" : "0" );
 
                 cfg.MapTypes<TestClass, TestClass>()
-                    .MapProperty( a => a.Boolean, y => y.String );
+                    .MapProperty( a => a.Boolean, y => y.String )
+                    .MapProperty( a => a.Booleans, y => y.Strings );
             } );
 
             typeMapper.Map( source, target );
