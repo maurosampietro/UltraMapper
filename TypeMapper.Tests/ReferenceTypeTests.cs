@@ -70,6 +70,30 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
+        public void ReferenceSimpleTest()
+        {
+            var innerType = new InnerType() { A = "fadadfsadsffsd" };
+
+            var source = new OuterType()
+            {
+                InnerType = innerType,
+                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
+                ComplexList = new List<InnerType>() { innerType }
+            };
+
+            source.InnerType.C = source;
+
+            var target = new OuterType();
+
+            var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
+
+            throw new Exception( "verifyMapper result stackoverflows. implement object caching for visited objects" );
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
         public void UseTargetInstanceIfNotNull()
         {
             var innerType = new InnerType() { A = "fadadfsadsffsd" };

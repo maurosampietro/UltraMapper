@@ -11,7 +11,7 @@ namespace TypeMapper.Mappers
     /*NOTES:
      * 
      *- Collections that do not implement ICollection<T> must specify which method
-     *to use to 'Add' an item or must have a constructor that takes as param a IEnumerable.
+     *to use to 'Add' an item or must have a constructor that takes as param an IEnumerable.
      * 
      */
 
@@ -128,8 +128,7 @@ namespace TypeMapper.Mappers
              * an exception is thrown
              */
 
-            var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-            var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
+            //var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
 
             var addMethod = GetTargetCollectionAddMethod( context );
             if( addMethod != null || context.Mapping.TypeMapping.GlobalConfiguration
@@ -175,18 +174,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
             ParameterExpression targetCollection, MethodInfo targetCollectionAddMethod )
         {
-            var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-            var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
-
             var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
-
-            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
-                refTrackingLookup.Method, context.ReferenceTrack, context.SourceCollectionLoopingVar,
-                    Expression.Constant( context.TargetCollectionElementType ) );
-
-            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
-                addToTracker.Method, context.ReferenceTrack, context.SourceCollectionLoopingVar,
-                Expression.Constant( context.TargetCollectionElementType ), newElement );
 
             return Expression.Block
             (
@@ -194,26 +182,46 @@ namespace TypeMapper.Mappers
 
                 ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                     Expression.Assign( newElement, Expression.Convert( lookupCall, context.TargetCollectionElementType ) ),
-
-                     Expression.IfThen
-                     (
-                         Expression.Equal( newElement, Expression.Constant( null, context.TargetCollectionElementType ) ),
-                         Expression.Block
-                         (
-                             Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
-
-                             //cache new collection
-                             addToLookupCall,
-
-                             Expression.Call( context.ReturnObject, addToRefCollectionMethod,
-                                 Expression.New( objectPairConstructor, context.SourceCollectionLoopingVar, newElement ) )
-                         )
-                     ),
-
-                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
+                    LookUpBlock( context.Mapping.TypeMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
+                    Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
+        }
+
+        protected BlockExpression LookUpBlock( TypeMapping typeMapping, ParameterExpression referenceTracker,
+           Expression sourceParam, ParameterExpression targetParam )
+        {
+            var itemMapping = typeMapping.GlobalConfiguration.Configurator
+             [ sourceParam.Type, targetParam.Type ].MappingExpression;
+
+            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method, referenceTracker, sourceParam,
+                    Expression.Constant( targetParam.Type ) );
+
+            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+                addToTracker.Method, referenceTracker, sourceParam,
+                Expression.Constant( targetParam.Type ), targetParam );
+
+            return Expression.Block
+            (
+                Expression.Assign( targetParam, Expression.Convert( lookupCall, targetParam.Type ) ),
+
+                Expression.IfThen
+                (
+                    Expression.Equal( targetParam, Expression.Constant( null, targetParam.Type ) ),
+
+                    Expression.Block
+                    (
+                        Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
+
+                        //cache new collection
+                        addToLookupCall,
+
+                        Expression.Invoke( itemMapping, referenceTracker,
+                            sourceParam, targetParam )
+                    )
+                )
+            );
         }
 
         protected override Expression GetInnerBody( object contextObj )
@@ -224,13 +232,6 @@ namespace TypeMapper.Mappers
                 return GetSimpleTypeInnerBody( context.Mapping, context );
 
             return GetComplexTypeInnerBody( context.Mapping, context );
-        }
-
-        protected override Expression ReturnTypeInitialization( object contextObj )
-        {
-            var context = contextObj as CollectionMapperContext;
-            return Expression.Assign( context.ReturnObject,
-                Expression.New( context.ReturnType ) );
         }
 
         protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )

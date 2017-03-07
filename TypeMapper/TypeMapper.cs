@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using TypeMapper.Configuration;
+using TypeMapper.Internals;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper
@@ -95,6 +96,8 @@ namespace TypeMapper
             Type targetType = target.GetType();
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
+
+            //var temp = MemberMappingExpressionMerger.Merge( mapping.MemberMappings.Values );
 
             var references = mapping.MapperFunc?.Invoke( referenceTracking, source, target );
             if( references != null )

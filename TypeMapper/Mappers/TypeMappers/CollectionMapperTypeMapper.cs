@@ -8,13 +8,13 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
 {
-
     public class CollectionMapperTypeMapping : ReferenceMapperTypeMapping
     {
         public override bool CanHandle( TypeMapping mapping )
         {
             return mapping.TypePair.SourceType.IsEnumerable() &&
-                 mapping.TypePair.TargetType.IsEnumerable();
+                 mapping.TypePair.TargetType.IsEnumerable() &&
+                 !mapping.TypePair.SourceType.IsBuiltInType( false ); //avoid strings
         }
 
         protected override object GetMapperContext( TypeMapping mapping )
@@ -41,16 +41,16 @@ namespace TypeMapper.Mappers.TypeMappers
             }
 
             var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
-                context.SourceElementType, context.TargetElementType );
+                context.SourceCollectionElementType, context.TargetCollectionElementType );
 
             Expression loopBody = Expression.Call( context.TargetInstance,
-                addMethod, Expression.Invoke( conversion, context.SourceLoopingVar ) );
+                addMethod, Expression.Invoke( conversion, context.SourceCollectionLoopingVar ) );
 
             return Expression.Block
             (
                 Expression.Call( context.TargetInstance, clearMethod ),
                 ExpressionLoops.ForEach( context.SourcePropertyVar,
-                    context.SourceLoopingVar, loopBody )
+                    context.SourceCollectionLoopingVar, loopBody )
             );
         }
 
@@ -61,9 +61,10 @@ namespace TypeMapper.Mappers.TypeMappers
 
         protected virtual Expression GetComplexTypeInnerBody( TypeMapping mapping, CollectionMapperContextTypeMapping context )
         {
-            var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-            var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
-            var newElement = Expression.Variable( context.TargetElementType, "newElement" );
+            var itemMapping = mapping.GlobalConfiguration.Configurator[
+                context.SourceCollectionElementType, context.TargetCollectionElementType ].MappingExpression;
+
+            var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
 
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null )
@@ -82,27 +83,26 @@ namespace TypeMapper.Mappers.TypeMappers
             }
 
             //in case of a struct 
-            Expression loopingVarToObject = context.SourceLoopingVar;
-            if( context.SourceElementType.IsPrimitive )
-                loopingVarToObject = Expression.Convert( context.SourceLoopingVar, typeof( object ) );
+            Expression loopingVarToObject = context.SourceCollectionLoopingVar;
+            if( context.SourceCollectionElementType.IsPrimitive )
+                loopingVarToObject = Expression.Convert( context.SourceCollectionLoopingVar, typeof( object ) );
 
             //in case of a struct 
             Expression targetVarToObject = newElement;
-            if( context.TargetElementType.IsPrimitive )
-                targetVarToObject = Expression.Convert( newElement, typeof( object ) );
+            //if( context.TargetElementType.IsPrimitive )
+            //    targetVarToObject = Expression.Convert( newElement, typeof( object ) );
 
             return Expression.Block
             (
                 new[] { newElement },
 
                 Expression.Call( context.TargetInstance, clearMethod ),
-                ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    Expression.Assign( newElement, Expression.New( context.TargetElementType ) ),
+                    Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
                     Expression.Call( context.TargetInstance, addMethod, newElement ),
 
-                    Expression.Call( context.ReturnObjectVar, addToRefCollectionMethod,
-                        Expression.New( objectPairConstructor, loopingVarToObject, targetVarToObject ) )
+                    Expression.Invoke( itemMapping, context.ReferenceTrack, loopingVarToObject, targetVarToObject )
                 ) )
             );
         }
@@ -115,13 +115,6 @@ namespace TypeMapper.Mappers.TypeMappers
                 return GetSimpleTypeInnerBody( context.Mapping, context );
 
             return GetComplexTypeInnerBody( context.Mapping, context );
-        }
-
-        protected override Expression ReturnTypeInitialization( object contextObj )
-        {
-            var context = contextObj as CollectionMapperContextTypeMapping;
-            return Expression.Assign( context.ReturnObjectVar,
-                Expression.New( context.ReturnType ) );
         }
 
         /// <summary>

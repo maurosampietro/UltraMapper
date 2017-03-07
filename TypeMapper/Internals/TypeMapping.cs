@@ -98,32 +98,28 @@ namespace TypeMapper.Internals
                 var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
 
                 Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
-                 {
-                     if( lambdaExp.ReturnType.ImplementsInterface( typeof( IEnumerable<ObjectPair> ) ) )
-                         return Expression.Call( newRefObjects, addRangeMethod, lambdaExp.Body );
+                {
+                    if( lambdaExp.ReturnType == returnElementType )
+                    {
+                        var objPair = Expression.Variable( returnElementType, "objPair" );
 
-                     if( lambdaExp.ReturnType == returnElementType )
-                     {
-                         var objPair = Expression.Variable( returnElementType, "objPair" );
+                        return Expression.Block
+                        (
+                            new[] { objPair },
 
-                         return Expression.Block
-                         (
-                             new[] { objPair },
+                            Expression.Assign( objPair, lambdaExp.Body ),
 
-                             Expression.Assign( objPair, lambdaExp.Body ),
+                            Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                                Expression.Call( newRefObjects, addMethod, objPair ) )
 
-                             Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                                 Expression.Call( newRefObjects, addMethod, objPair ) )
+                        );
+                    }
 
-                         );
-                     }
+                    if( lambdaExp.ReturnType == typeof( void ) )
+                        return lambdaExp.Body;
 
-                     if( lambdaExp.ReturnType == typeof( void ) )
-                         return lambdaExp.Body;
-
-                     throw new ArgumentException( "Expressions should return System.Void or ObjectPair or IEnumerable<ObjectPair>" );
-                 };
-
+                    throw new ArgumentException( "Expressions should return System.Void or ObjectPair" );
+                };
 
                 //since nested selectors are supported, we have to grant
                 //that we assign outer objects first
@@ -134,12 +130,8 @@ namespace TypeMapper.Internals
                     .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
                     .Select( mapping => createAddCalls( mapping.Expression ) );
 
-                //var temp = MemberMappings.Values.Select( mapping =>
-                // GlobalConfiguration.Configurator[ mapping.SourceProperty.MemberType,
-                //     mapping.TargetProperty.MemberType ].MappingExpression ).ToList();
-
                 var bodyExp = (addCalls?.Any() != true) ?
-                            (Expression)Expression.Empty() : Expression.Block( addCalls );
+                    (Expression)Expression.Empty() : Expression.Block( addCalls );
 
                 if( typeMappingExp != null )
                 {
@@ -199,4 +191,32 @@ namespace TypeMapper.Internals
             }
         }
     }
+
+    //public class MemberMappingExpressionMerger
+    //{
+    //    private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+
+    //    public static Expression Merge( IEnumerable<MemberMapping> mappings )
+    //    {
+    //        if( mappings?.Any() != true ) return null;
+
+    //        //since nested selectors are supported, we have to grant
+    //        //that we deal with selector accessing deeper members last
+    //        //(eg when members upper in the hierarchy have been assigned)
+    //        var sortedMappings = mappings.OrderBy( mapping =>
+    //             mapping, _memberComparer ).ToList();
+
+    //        var mappingExpressions = sortedMappings
+    //            .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
+    //            .Select( mapping =>
+    //            {
+    //                var item = mapping.TypeMapping.GlobalConfiguration.Configurator
+    //                    [ mapping.SourceProperty.MemberType, mapping.TargetProperty.MemberType ];
+
+    //                return item.MappingExpression.Body;
+    //            } );
+
+    //        return Expression.Block( mappingExpressions );
+    //    }
+    //}
 }

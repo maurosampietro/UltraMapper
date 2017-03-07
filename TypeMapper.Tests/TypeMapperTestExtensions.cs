@@ -91,7 +91,8 @@ namespace TypeMapper.Tests
                         hasSecond = secondPos.MoveNext();
                     }
 
-                    return !hasFirst && !hasSecond;
+                    if( hasFirst ^ hasSecond )
+                        return false;
                 }
                 else if( !verify( sourceValue, targetValue ) )
                     return false;

@@ -2,29 +2,28 @@
 
 namespace TypeMapper.Internals
 {
-    public class TypePair
+    public struct TypePair
     {
         public readonly Type SourceType;
         public readonly Type TargetType;
 
-        private readonly int _hashcode;
         private readonly Lazy<string> _toString;
+        private int _hashcode;
 
         public TypePair( Type sourceType, Type targetType )
         {
             this.SourceType = sourceType;
             this.TargetType = targetType;
 
-            _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
-                ^ this.TargetType.GetHashCode();
-
             _toString = new Lazy<string>( () =>
             {
-                string sourceTypeName = this.SourceType.GetPrettifiedName();
-                string targetTypeName = this.TargetType.GetPrettifiedName();
+                string sourceTypeName = sourceType.GetPrettifiedName();
+                string targetTypeName = targetType.GetPrettifiedName();
 
                 return $"[{sourceTypeName}, {targetTypeName}]";
             } );
+
+            _hashcode = 0;
         }
 
         public override bool Equals( object obj )
@@ -37,6 +36,12 @@ namespace TypeMapper.Internals
 
         public override int GetHashCode()
         {
+            if( _hashcode == 0 )
+            {
+                _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
+                    ^ this.TargetType.GetHashCode();
+            }
+
             return _hashcode;
         }
 

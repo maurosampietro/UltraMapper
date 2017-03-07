@@ -6,12 +6,7 @@ using TypeMapper.Internals;
 namespace TypeMapper.Mappers
 {
     public class DictionaryMapperContext : CollectionMapperContext
-    {
-        public Type SourceCollectionElementKeyType { get; private set; }
-        public Type SourceCollectionElementValueType { get; private set; }
-        public Type TargetCollectionElementKeyType { get; private set; }
-        public Type TargetCollectionElementValueType { get; private set; }
-
+    {  
         public MemberExpression SourceCollectionElementKey { get; private set; }
         public MemberExpression SourceCollectionElementValue { get; private set; }
 
@@ -21,17 +16,17 @@ namespace TypeMapper.Mappers
         public DictionaryMapperContext( MemberMapping mapping )
             : base( mapping )
         {
-            SourceCollectionElementKeyType = SourceCollectionElementType.GetGenericArguments()[ 0 ];
-            SourceCollectionElementValueType = SourceCollectionElementType.GetGenericArguments()[ 1 ];
+            var sourceCollectionElementKeyType = SourceCollectionElementType.GetGenericArguments()[ 0 ];
+            var sourceCollectionElementValueType = SourceCollectionElementType.GetGenericArguments()[ 1 ];
 
-            TargetCollectionElementKeyType = TargetCollectionElementType.GetGenericArguments()[ 0 ];
-            TargetCollectionElementValueType = TargetCollectionElementType.GetGenericArguments()[ 1 ];
+            var targetCollectionElementKeyType = TargetCollectionElementType.GetGenericArguments()[ 0 ];
+            var targetCollectionElementValueType = TargetCollectionElementType.GetGenericArguments()[ 1 ];
 
             SourceCollectionElementKey = Expression.Property( SourceCollectionLoopingVar, nameof( DictionaryEntry.Key ) );
             SourceCollectionElementValue = Expression.Property( SourceCollectionLoopingVar, nameof( DictionaryEntry.Value ) );
 
-            TargetCollectionElementKey = Expression.Variable( TargetCollectionElementKeyType, "targetKey" );
-            TargetCollectionElementValue = Expression.Variable( TargetCollectionElementValueType, "targetValue" );
+            TargetCollectionElementKey = Expression.Variable( targetCollectionElementKeyType, "targetKey" );
+            TargetCollectionElementValue = Expression.Variable( targetCollectionElementValueType, "targetValue" );
         }
     }
 }

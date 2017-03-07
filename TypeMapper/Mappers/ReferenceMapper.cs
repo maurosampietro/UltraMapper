@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using TypeMapper.Internals;
 
@@ -156,10 +157,10 @@ namespace TypeMapper.Mappers
                 return Expression.Assign( context.TargetMember, newInstanceExp );
 
             return Expression.IfThenElse
-            ( 
+            (
                 Expression.Equal( context.TargetMemberValue, context.TargetMemberNullValue ),
                 Expression.Assign( context.TargetMember, newInstanceExp ),
-                Expression.Assign( context.TargetMember, context.TargetMemberValue ) 
+                Expression.Assign( context.TargetMember, context.TargetMemberValue )
             );
         }
     }

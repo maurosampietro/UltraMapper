@@ -49,7 +49,7 @@ namespace TypeMapper
                     .Add<ConvertMapper>()
                     .Add<ReferenceMapper>()
                     .Add<DictionaryMapper>()
-                    .Add<SetMapper>()
+                    //.Add<SetMapper>()
                     .Add<StackMapper>()
                     .Add<QueueMapper>()
                     .Add<LinkedListMapper>()

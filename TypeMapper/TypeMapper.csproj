@@ -63,7 +63,6 @@
     <Compile Include="Mappers\MapperContexts\ReferenceMapperContext.cs" />
     <Compile Include="Mappers\MapperContexts\CollectionMapperContext.cs" />
     <Compile Include="Mappers\QueueMapper.cs" />
-    <Compile Include="Mappers\SetMapper.cs" />
     <Compile Include="Mappers\StackMapper.cs" />
     <Compile Include="Mappers\CustomConverterMapper.cs" />
     <Compile Include="Mappers\BuiltInTypesMapper.cs" />

@@ -27,14 +27,23 @@ namespace TypeMapper.Mappers
             return context.TargetMemberType.GetMethod( "Push" );
         }
 
+        protected override Expression GetSimpleTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
+        {
+            var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );
+
+            var body = Expression.Block
+            (
+                base.GetSimpleTypeInnerBody( mapping, context ),
+                Expression.Assign( context.TargetMember, Expression.New( constructorInfo, context.TargetMember ) )
+            );
+
+            return body;
+        }
+
         protected override Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
         {
-            var addMethod = GetTargetCollectionAddMethod( context );
-            var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
-
-            var addToRefCollectionMethod = context.ReturnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-            var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
-            var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
+            var addMethod = this.GetTargetCollectionAddMethod( context );
+            var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );
 
             //avoids add calls on the Stack because the source and target collection
             //will not be identical (one will be reversed).
@@ -42,7 +51,6 @@ namespace TypeMapper.Mappers
 
             var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.TargetCollectionElementType );
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
-            var tempCollectionAddMethod = this.GetTargetCollectionAddMethod( context );
 
             var constructorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
             var getCountMethod = context.SourceMemberType.GetProperty( "Count" ).GetGetMethod();
@@ -52,18 +60,10 @@ namespace TypeMapper.Mappers
 
             return Expression.Block
             (
-                new[] { newElement, tempCollection },
+                new[] { tempCollection },
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
-                ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
-                (
-                    Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
-                    Expression.Call( tempCollection, tempCollectionAddMethod, newElement ),
-
-                    Expression.Call( context.ReturnObject, addToRefCollectionMethod,
-                        Expression.New( objectPairConstructor, context.SourceCollectionLoopingVar, newElement ) )
-                ) ),
-
+                CollectionLoopWithReferenceTracking( context, tempCollection, addMethod ),
                 Expression.Assign( context.TargetMember, Expression.New( constructorInfo, tempCollection ) )
             );
         }

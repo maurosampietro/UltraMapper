@@ -9,7 +9,6 @@ namespace TypeMapper.Mappers
     {
         public Type SourceCollectionElementType { get; set; }
         public Type TargetCollectionElementType { get; set; }
-        public Type ReturnElementType { get; set; }
 
         public bool IsSourceElementTypeBuiltIn { get; set; }
         public bool IsTargetElementTypeBuiltIn { get; set; }
@@ -19,12 +18,6 @@ namespace TypeMapper.Mappers
         public CollectionMapperContext( MemberMapping mapping )
             : base( mapping )
         {
-            //base values override
-            ReturnType = typeof( List<ObjectPair> );
-            ReturnElementType = typeof( ObjectPair );
-            ReturnObject = Expression.Variable( ReturnType, "result" );
-
-            //new properties
             SourceCollectionElementType = SourceMemberType.GetCollectionGenericType();
             TargetCollectionElementType = TargetMemberType.GetCollectionGenericType();
 
@@ -37,31 +30,25 @@ namespace TypeMapper.Mappers
 
     public class CollectionMapperContextTypeMapping : ReferenceMapperContextTypeMapping
     {
-        public Type SourceElementType { get; set; }
-        public Type TargetElementType { get; set; }
-        public Type ReturnElementType { get; set; }
+        public Type SourceCollectionElementType { get; set; }
+        public Type TargetCollectionElementType { get; set; }
 
         public bool IsSourceElementTypeBuiltIn { get; set; }
         public bool IsTargetElementTypeBuiltIn { get; set; }
 
-        public ParameterExpression SourceLoopingVar { get; set; }
+        public ParameterExpression SourceCollectionLoopingVar { get; set; }
 
         public CollectionMapperContextTypeMapping( TypeMapping mapping )
             : base( mapping )
         {
-            //base values override
-            ReturnType = typeof( List<ObjectPair> );
-            ReturnElementType = typeof( ObjectPair );
-            ReturnObjectVar = Expression.Variable( ReturnType, "result" );
-
             //new properties
-            SourceElementType = SourcePropertyType.GetCollectionGenericType();
-            TargetElementType = TargetPropertyType.GetCollectionGenericType();
+            SourceCollectionElementType = SourcePropertyType.GetCollectionGenericType();
+            TargetCollectionElementType = TargetPropertyType.GetCollectionGenericType();
 
-            IsSourceElementTypeBuiltIn = SourceElementType.IsBuiltInType( false );
-            IsTargetElementTypeBuiltIn = TargetElementType.IsBuiltInType( false );
+            IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltInType( false );
+            IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( false );
 
-            SourceLoopingVar = Expression.Parameter( SourceElementType, "loopVar" );
+            SourceCollectionLoopingVar = Expression.Parameter( SourceCollectionElementType, "loopVar" );
         }
     }
 }

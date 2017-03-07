@@ -61,7 +61,7 @@ namespace ConsoleApplication
                 //this.SelfReference = this;
                 this.InnerType = new InnerType() { A = "vara", B = "suka" };
 
-                this.ListOfInts = new List<int>(Enumerable.Range(1, (int)Math.Pow(10, 2)));
+                this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
 
                 this.ListOfInnerType = new List<InnerType>() {
                     new InnerType() { A = "a", B="b", },
@@ -76,9 +76,9 @@ namespace ConsoleApplication
 
                 this.Dictionary = new Dictionary<InnerType, InnerType>()
                 {
-                    //{new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
-                    //{new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
-                    //{new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
+                    {new InnerType() { A= "aa" }, new InnerType() { A= "ab" }},
+                    {new InnerType() { B= "ba" }, new InnerType() { B= "bb" }},
+                    {new InnerType() { A= "ca" }, new InnerType() { A= "cb" }},
                     { this.InnerType, this.InnerType}
                 };
 
@@ -166,7 +166,7 @@ namespace ConsoleApplication
             var temp = new BaseTypes();
             var temp2 = new BaseTypesDto();
 
-            int iterations = (int)Math.Pow( 10, 6);
+            int iterations = (int)Math.Pow( 10, 6 );
 
             var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
             {
