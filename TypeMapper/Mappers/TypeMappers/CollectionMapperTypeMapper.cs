@@ -82,16 +82,6 @@ namespace TypeMapper.Mappers.TypeMappers
                 throw new Exception( msg );
             }
 
-            //in case of a struct 
-            Expression loopingVarToObject = context.SourceCollectionLoopingVar;
-            if( context.SourceCollectionElementType.IsPrimitive )
-                loopingVarToObject = Expression.Convert( context.SourceCollectionLoopingVar, typeof( object ) );
-
-            //in case of a struct 
-            Expression targetVarToObject = newElement;
-            //if( context.TargetElementType.IsPrimitive )
-            //    targetVarToObject = Expression.Convert( newElement, typeof( object ) );
-
             return Expression.Block
             (
                 new[] { newElement },
@@ -102,7 +92,7 @@ namespace TypeMapper.Mappers.TypeMappers
                     Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
                     Expression.Call( context.TargetInstance, addMethod, newElement ),
 
-                    Expression.Invoke( itemMapping, context.ReferenceTrack, loopingVarToObject, targetVarToObject )
+                    Expression.Invoke( itemMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement )
                 ) )
             );
         }

@@ -5,17 +5,9 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class NullableMapper : BaseMapper, IObjectMapperExpression, IMapperExpression
+    public class NullableMapper : BaseMapper, IMemberMappingMapperExpression, IMapperExpression, ITypeMappingMapperExpression
     {
-        public bool CanHandle( MemberMapping mapping )
-        {
-            var sourceValueType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            var targetValueType = mapping.TargetProperty.MemberInfo.GetMemberType();
-
-            return this.CanHandle( sourceValueType, targetValueType );
-        }
-
-        public bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Type source, Type target )
         {
             return source.IsNullable() || target.IsNullable();
         }
@@ -35,11 +27,13 @@ namespace TypeMapper.Mappers
                 var nullableValueAccess = Expression.MakeMemberAccess( context.SourceInstance,
                     context.SourceMemberType.GetProperty( nameof( Nullable<int>.Value ) ) );
 
-                var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
-                    sourceUnderlyingType, targetUnderlyingType );
+                var typeMapping = context.MapperConfiguration.Configurator[
+                     sourceUnderlyingType, targetUnderlyingType ];
+
+                var convert = typeMapping.MappingExpression;
 
                 var constructor = context.TargetMemberType.GetConstructor( new Type[] { targetUnderlyingType } );
-                var newNullable = Expression.New( constructor, Expression.Invoke( conversion, nullableValueAccess ) );
+                var newNullable = Expression.New( constructor, Expression.Invoke( convert, nullableValueAccess ) );
 
                 return Expression.IfThenElse
                 (

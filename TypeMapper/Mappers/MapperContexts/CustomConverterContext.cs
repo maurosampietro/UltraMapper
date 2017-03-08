@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.MapperContexts
@@ -9,6 +10,12 @@ namespace TypeMapper.Mappers.MapperContexts
 
         public CustomConverterContext( MemberMapping mapping )
             : base( mapping )
+        {
+            this.CustomConverter = mapping.CustomConverter;
+        }
+
+        public CustomConverterContext( TypeMapping mapping )
+            : base( mapping.TypePair.SourceType, mapping.TypePair.TargetType )
         {
             this.CustomConverter = mapping.CustomConverter;
         }

@@ -111,24 +111,24 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void FromPrimitiveCollectionToComplexCollection()
         {
-            //var source = new List<int>() { 11, 13, 17 };
+            var source = new List<int>() { 11, 13, 17 };
 
-            //var target = new List<ComplexType>()
-            //{
-            //    new ComplexType() { PropertyA = 1 },
-            //    new ComplexType() { PropertyA = 2 }
-            //};
+            var target = new List<ComplexType>()
+            {
+                new ComplexType() { PropertyA = 1 },
+                new ComplexType() { PropertyA = 2 }
+            };
 
-            //var typeMapper = new TypeMapper
-            //(
-            //    cfg => cfg.MapTypes<int, ComplexType>()
-            //    //loop infinito causato dalla selezione di se stessi 'a =>a'
-            //        .MapProperty( a => a, c => c.PropertyA )
-            //);
+            var typeMapper = new TypeMapper
+            (
+                cfg => cfg.MapTypes<int, ComplexType>()
+                    .MapProperty( a => a, c => c.PropertyA )
+            );
 
-            //typeMapper.Map( source, target );
-            //typeMapper.VerifyMapperResult( source, target );
-            throw new NotImplementedException();
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -144,12 +144,14 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper
             (
-                cfg => cfg.MapTypes<ComplexType, ComplexType>()
-                    .MapProperty( a => a.PropertyA, c => c.PropertyA )
+                cfg => cfg.MapTypes<ComplexType, int>()
+                    .MapProperty( a => a.PropertyA, c => c )
             );
 
             typeMapper.Map( source, target );
-            typeMapper.VerifyMapperResult( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
     }
 }

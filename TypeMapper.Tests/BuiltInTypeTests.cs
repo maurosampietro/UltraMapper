@@ -210,14 +210,7 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
 
-            var isResultOk = typeMapper.VerifyMapperResult( source, target, ( sourceValue, destinationValue ) =>
-            {
-                object defaultValue = destinationValue?.GetType().GetDefaultValueViaActivator();
-
-                return Object.ReferenceEquals( destinationValue, defaultValue ) ||
-                    destinationValue.Equals( defaultValue );
-            } );
-
+            var isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
 

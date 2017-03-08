@@ -65,13 +65,15 @@ namespace TypeMapper.Mappers
                 if( sourceParam.Type == targetParam.Type )
                     return Expression.Assign( targetParam, sourceParam );
 
-                var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
-                    sourceParam.Type, targetParam.Type );
+                var typeMapping = context.MapperConfiguration.Configurator[
+                        sourceParam.Type, targetParam.Type ];
 
-                return Expression.Assign( targetParam, Expression.Invoke( conversion, sourceParam ) );
+                var convert = typeMapping.MappingExpression;
+
+                return Expression.Assign( targetParam, Expression.Invoke( convert, sourceParam ) );
             }
 
-            return base.LookUpBlock( context.Mapping.TypeMapping, 
+            return base.LookUpBlock( context.TypeMapping, 
                 context.ReferenceTrack, sourceParam, targetParam );
         }
     }

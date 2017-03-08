@@ -94,7 +94,7 @@ namespace TypeMapper.Tests
             (
                 cfg =>
                 {
-                    cfg.GlobalConfiguration.IgnoreConventions = true;
+                    //cfg.GlobalConfiguration.IgnoreConventions = true;
 
                     cfg.MapTypes<TestType, TestType>()
                             .MapProperty( s => s.FieldA, t => t.FieldA );

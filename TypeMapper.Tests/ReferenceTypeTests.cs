@@ -88,7 +88,6 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
 
-            throw new Exception( "verifyMapper result stackoverflows. implement object caching for visited objects" );
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }

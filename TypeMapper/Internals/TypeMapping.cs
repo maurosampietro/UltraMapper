@@ -4,10 +4,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeMapper.Configuration;
+using TypeMapper.Mappers;
 using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
 {
+    #region WORKING VERSION WITH RETURN OF THE ITEMS THAT NEED RECURSION 
     public class MemberMappingComparer : IComparer<MemberMapping>
     {
         public int Compare( MemberMapping x, MemberMapping y )
@@ -81,18 +83,16 @@ namespace TypeMapper.Internals
 
                 LambdaExpression typeMappingExp = null;
 
-                //try
-                //{
-                //    typeMappingExp = MappingExpressionBuilderFactory.GetMappingExpression
-                //                ( TypePair.SourceType, TypePair.TargetType );
-                //}
-                //catch( Exception )
-                //{
+                if( MappingExpressionBuilderFactory.CanHandle( this ) )
+                {
+                    return MappingExpressionBuilderFactory.GetMappingExpression( this );
+                }
 
-                //}
-
-                if( new CollectionMapperTypeMapping().CanHandle( this ) )
-                    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
+                if( typeMappingExp == null )
+                {
+                    if( new CollectionMapperTypeMapping().CanHandle( this ) )
+                        typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
+                }
 
                 var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
                 var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
@@ -111,12 +111,11 @@ namespace TypeMapper.Internals
 
                             Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
                                 Expression.Call( newRefObjects, addMethod, objPair ) )
-
                         );
                     }
 
-                    if( lambdaExp.ReturnType == typeof( void ) )
-                        return lambdaExp.Body;
+                    //if( lambdaExp.ReturnType == typeof( void ) )
+                    return lambdaExp.Body;
 
                     throw new ArgumentException( "Expressions should return System.Void or ObjectPair" );
                 };
@@ -191,12 +190,174 @@ namespace TypeMapper.Internals
             }
         }
     }
+    #endregion
+
+    //public class TypeMapping
+    //{
+    //    public readonly GlobalConfiguration GlobalConfiguration;
+    //    public readonly TypePair TypePair;
+
+    //    /*
+    //     *A source property can be mapped to multiple target properties.
+    //     *
+    //     *A target property can be mapped just once and for that reason 
+    //     *multiple mappings override each other and the last one is used.
+    //     *
+    //     *The target property can be therefore used as the key 
+    //     *of this dictionary
+    //     */
+    //    public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
+
+    //    public LambdaExpression CustomTargetConstructor { get; set; }
+    //    public bool IgnoreConventions { get; set; }
+
+    //    public LambdaExpression CustomConverter { get; set; }
+
+    //    public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
+    //    {
+    //        this.GlobalConfiguration = globalConfig;
+
+    //        if( globalConfig != null )
+    //            this.IgnoreConventions = globalConfig.IgnoreConventions;
+
+    //        this.TypePair = typePair;
+    //        this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
+    //    }
+
+    //    private LambdaExpression _expression;
+    //    public LambdaExpression MappingExpression
+    //    {
+    //        get
+    //        {
+    //            if( _expression != null ) return _expression;
+    //            return _expression = MemberMappingExpressionMerger.GetExpression( this );
+
+    //            //var returnType = typeof( List<ObjectPair> );
+    //            //var returnElementType = typeof( ObjectPair );
+
+    //            //var sourceType = TypePair.SourceType;
+    //            //var targetType = TypePair.TargetType;
+    //            //var trackerType = typeof( ReferenceTracking );
+
+    //            //var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+    //            //var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+    //            //var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
+
+    //            //var newRefObjects = Expression.Variable( returnType, "result" );
+
+    //            //LambdaExpression typeMappingExp = null;
+
+    //            //if( new CollectionMapperTypeMapping().CanHandle( this ) )
+    //            //    typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
+
+    //            //var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+    //            //var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+
+    //            //Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
+    //            //{
+    //            //    if( lambdaExp.ReturnType == returnElementType )
+    //            //    {
+    //            //        var objPair = Expression.Variable( returnElementType, "objPair" );
+
+    //            //        return Expression.Block
+    //            //        (
+    //            //            new[] { objPair },
+
+    //            //            Expression.Assign( objPair, lambdaExp.Body ),
+
+    //            //            Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+    //            //                Expression.Call( newRefObjects, addMethod, objPair ) )
+
+    //            //        );
+    //            //    }
+
+    //            //    if( lambdaExp.ReturnType == typeof( void ) )
+    //            //        return lambdaExp.Body;
+
+    //            //    throw new ArgumentException( "Expressions should return System.Void or ObjectPair" );
+    //            //};
+
+    //            //if( typeMappingExp != null )
+    //            //{
+    //            //    var typeMappingBodyExp = createAddCalls( typeMappingExp );
+
+    //            //    bodyExp = Expression.Block
+    //            //    (
+    //            //        typeMappingBodyExp,
+    //            //        bodyExp
+    //            //    );
+    //            //}
+
+    //            //var body = (Expression)Expression.Block
+    //            //(
+    //            //    new[] { newRefObjects },
+
+    //            //    Expression.Assign( newRefObjects, Expression.New( returnType ) ),
+
+    //            //    bodyExp.ReplaceParameter( referenceTrack )
+    //            //        .ReplaceParameter( targetInstance, "targetInstance" )
+    //            //        .ReplaceParameter( sourceInstance, "sourceInstance" ),
+
+    //            //    newRefObjects
+    //            //);
+
+    //            //var delegateType = typeof( Func<,,,> ).MakeGenericType(
+    //            //    trackerType, sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
+
+    //            //return _expression = Expression.Lambda( delegateType,
+    //            //    body, referenceTrack, sourceInstance, targetInstance );
+    //        }
+    //    }
+
+    //    //private Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> _mapperFunc;
+
+    //    //public Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MapperFunc
+    //    //{
+    //    //    get
+    //    //    {
+    //    //        if( _mapperFunc != null ) return _mapperFunc;
+
+    //    //        var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+    //    //        var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
+    //    //        var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
+
+    //    //        var sourceType = TypePair.SourceType;
+    //    //        var targetType = TypePair.TargetType;
+
+    //    //        var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
+    //    //        var targetInstance = Expression.Convert( targetLambdaArg, targetType );
+
+    //    //        var bodyExp = Expression.Invoke( this.MappingExpression,
+    //    //            referenceTrack, sourceInstance, targetInstance );
+
+    //    //        return _mapperFunc = Expression.Lambda<Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>>>(
+    //    //            bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
+    //    //    }
+    //    //}
+    //}
 
     //public class MemberMappingExpressionMerger
     //{
+    //    private class MemberMappingComparer : IComparer<MemberMapping>
+    //    {
+    //        public int Compare( MemberMapping x, MemberMapping y )
+    //        {
+    //            var xGetter = x.TargetProperty.ValueGetter.ToString();
+    //            var yGetter = y.TargetProperty.ValueGetter.ToString();
+
+    //            int xCount = xGetter.Split( '.' ).Count();
+    //            int yCount = yGetter.Split( '.' ).Count();
+
+    //            if( xCount > yCount ) return 1;
+    //            if( xCount < yCount ) return -1;
+
+    //            return 0;
+    //        }
+    //    }
+
     //    private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
 
-    //    public static Expression Merge( IEnumerable<MemberMapping> mappings )
+    //    private static Expression Merge( IEnumerable<MemberMapping> mappings )
     //    {
     //        if( mappings?.Any() != true ) return null;
 
@@ -210,13 +371,38 @@ namespace TypeMapper.Internals
     //            .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
     //            .Select( mapping =>
     //            {
-    //                var item = mapping.TypeMapping.GlobalConfiguration.Configurator
-    //                    [ mapping.SourceProperty.MemberType, mapping.TargetProperty.MemberType ];
+    //                if( mapping.Mapper.GetType().IsAssignableFrom( typeof( ReferenceMapper ) ) )
+    //                {
+    //                    var item = mapping.TypeMapping.GlobalConfiguration.Configurator
+    //                        [ mapping.SourceProperty.MemberType, mapping.TargetProperty.MemberType ];
 
-    //                return item.MappingExpression.Body;
+    //                    return item.MappingExpression.Body;
+    //                }
+
+    //                return mapping.Expression.Body;
     //            } );
 
     //        return Expression.Block( mappingExpressions );
+    //    }
+
+    //    public static LambdaExpression GetExpression( TypeMapping mapping )
+    //    {
+    //        var trackerType = typeof( ReferenceTracking );
+
+    //        var sourceInstance = Expression.Parameter( mapping.TypePair.SourceType, "sourceInstance" );
+    //        var targetInstance = Expression.Parameter( mapping.TypePair.TargetType, "targetInstance" );
+    //        var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
+
+    //        var bodyExp = Merge( mapping.MemberMappings.Values );
+    //        bodyExp = bodyExp.ReplaceParameter( referenceTrack )
+    //            .ReplaceParameter( sourceInstance, "sourceInstance" )
+    //            .ReplaceParameter( targetInstance, "targetInstance" );
+
+    //        var delegateType = typeof( Action<,,> ).MakeGenericType(
+    //            trackerType, mapping.TypePair.SourceType, mapping.TypePair.TargetType );
+
+    //        return Expression.Lambda( delegateType, bodyExp,
+    //            referenceTrack, sourceInstance, targetInstance );
     //    }
     //}
 }

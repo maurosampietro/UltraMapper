@@ -34,6 +34,9 @@ namespace TypeMapper
 
                 else if( expBody.NodeType == ExpressionType.Call )
                     return ((MethodCallExpression)expBody).Method;
+
+                else if( expBody.NodeType == ExpressionType.Parameter )
+                    return ((ParameterExpression)expBody).Type;
             }
 
             if( memberExpression == null )

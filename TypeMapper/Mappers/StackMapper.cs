@@ -27,20 +27,20 @@ namespace TypeMapper.Mappers
             return context.TargetMemberType.GetMethod( "Push" );
         }
 
-        protected override Expression GetSimpleTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
+        protected override Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
             var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );
 
             var body = Expression.Block
             (
-                base.GetSimpleTypeInnerBody( mapping, context ),
+                base.GetSimpleTypeInnerBody( context ),
                 Expression.Assign( context.TargetMember, Expression.New( constructorInfo, context.TargetMember ) )
             );
 
             return body;
         }
 
-        protected override Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
+        protected override Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
             var addMethod = this.GetTargetCollectionAddMethod( context );
             var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );

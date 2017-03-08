@@ -67,7 +67,8 @@ namespace TypeMapper
 
         public bool Contains( object sourceInstance, Type targetType )
         {
-            return this.Contains( sourceInstance, targetType );
+            var key = this.GetKey( sourceInstance, targetType );
+            return _mappings.ContainsKey( key );
         }
 
         public bool TryGetValue( object sourceInstance, Type targetType, out object targetInstance )

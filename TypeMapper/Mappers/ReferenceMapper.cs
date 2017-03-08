@@ -5,7 +5,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : IObjectMapperExpression
+    public class ReferenceMapper : IMemberMappingMapperExpression
     {
 #if DEBUG
         private static void debug( object o ) => Console.WriteLine( o );
@@ -37,7 +37,7 @@ namespace TypeMapper.Mappers
             return this.CanHandle( sourceType, targetType );
         }
 
-        public virtual bool CanHandle( Type sourceType, Type targetType )
+        protected virtual bool CanHandle( Type sourceType, Type targetType )
         {
             bool valueTypes = sourceType.IsValueType && targetType.IsValueType;
             bool builtInTypes = sourceType.IsBuiltInType( false ) && targetType.IsBuiltInType( false );
@@ -124,10 +124,7 @@ namespace TypeMapper.Mappers
                     )
                 ),
 
-                context.Mapping.TargetProperty.ValueSetter.Body
-                    .ReplaceParameter( context.TargetInstance, context.Mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name )
-                    .ReplaceParameter( context.TargetMember, context.Mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name ),
-
+                context.TargetMemberValueSetter,
                 context.ReturnObject
             );
 
@@ -153,7 +150,7 @@ namespace TypeMapper.Mappers
             var context = contextObj as ReferenceMapperContext;
             var newInstanceExp = Expression.New( context.TargetMemberType );
 
-            if( context.Mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+            if( context.MapperConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
                 return Expression.Assign( context.TargetMember, newInstanceExp );
 
             return Expression.IfThenElse

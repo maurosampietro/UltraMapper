@@ -4,17 +4,9 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public sealed class BuiltInTypeMapper : BaseMapper, IObjectMapperExpression, IMapperExpression
+    public sealed class BuiltInTypeMapper : BaseMapper, IMemberMappingMapperExpression, IMapperExpression, ITypeMappingMapperExpression
     {
-        public bool CanHandle( MemberMapping mapping )
-        {
-            var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
-
-            return this.CanHandle( sourcePropertyType, targetPropertyType );
-        }
-
-        public bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Type source, Type target )
         {
             bool areTypesBuiltIn = source.IsBuiltInType( false )
                 && target.IsBuiltInType( false );

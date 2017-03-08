@@ -10,11 +10,25 @@ namespace TypeMapper.Tests
 {
     public static class TypeMapperTestExtensions
     {
-        public static bool VerifyMapperResult( this TypeMapper typeMapper,
-            object source, object target, Func<object, object, bool> verify )
+        public static bool VerifyMapperResult( this TypeMapper typeMapper, object source, object target )
+        {
+            return VerifyMapperResultHelper( typeMapper, source, target, new ReferenceTracking() );
+        }
+
+        private static bool VerifyMapperResultHelper( this TypeMapper typeMapper,
+            object source, object target, ReferenceTracking referenceTracking )
         {
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
+
+            if( !sourceType.IsValueType && source != null )
+            {
+                if( referenceTracking.Contains( source, targetType ) )
+                    return true;
+
+                if( !sourceType.IsValueType )
+                    referenceTracking.Add( source, targetType, target );
+            }
 
             //sharing the same reference or both null
             if( Object.ReferenceEquals( source, target ) )
@@ -38,14 +52,15 @@ namespace TypeMapper.Tests
 
                 while( hasFirst && hasSecond )
                 {
-                    if( !Equals( firstPos.Current, secondPos.Current ) )
+                    if( !VerifyMapperResultHelper( typeMapper, firstPos.Current, secondPos.Current, referenceTracking ) )
                         return false;
 
                     hasFirst = firstPos.MoveNext();
                     hasSecond = secondPos.MoveNext();
                 }
 
-                return !hasFirst && !hasSecond;
+                if( hasFirst ^ hasSecond )
+                    return false;
             }
 
             var typeMapping = typeMapper.MappingConfiguration[
@@ -62,6 +77,14 @@ namespace TypeMapper.Tests
 
                 var targetValue = mapping.TargetProperty
                     .ValueGetter.Compile().DynamicInvoke( target );
+
+                if( !mapping.SourceProperty.MemberType.IsValueType && sourceValue != null )
+                {
+                    if( referenceTracking.Contains( sourceValue, mapping.TargetProperty.MemberType ) )
+                        continue;
+
+                    referenceTracking.Add( sourceValue, mapping.TargetProperty.MemberType, targetValue );
+                }
 
                 if( Object.ReferenceEquals( sourceValue, targetValue ) )
                     continue;
@@ -84,7 +107,7 @@ namespace TypeMapper.Tests
 
                     while( hasFirst && hasSecond )
                     {
-                        if( !VerifyMapperResult( typeMapper, firstPos.Current, secondPos.Current ) )
+                        if( !VerifyMapperResultHelper( typeMapper, firstPos.Current, secondPos.Current, referenceTracking ) )
                             return false;
 
                         hasFirst = firstPos.MoveNext();
@@ -94,25 +117,16 @@ namespace TypeMapper.Tests
                     if( hasFirst ^ hasSecond )
                         return false;
                 }
-                else if( !verify( sourceValue, targetValue ) )
-                    return false;
+
+                //same value type: just compare their values
+                if( sourceValue.GetType() == targetValue.GetType() && sourceValue.GetType().IsValueType )
+                {
+                    if( !sourceValue.Equals( targetValue ) )
+                        return false;
+                }
             }
 
             return true;
-        }
-
-        public static bool VerifyMapperResult( this TypeMapper typeMapper, object source, object target )
-        {
-            return VerifyMapperResult( typeMapper, source, target, ( sourceValue, destinationValue ) =>
-            {
-                if( Object.ReferenceEquals( sourceValue, destinationValue ) )
-                    return true;
-
-                if( sourceValue.GetType().IsBuiltInType( false ) )
-                    sourceValue.Equals( destinationValue );
-
-                return typeMapper.VerifyMapperResult( sourceValue, destinationValue );
-            } );
         }
     }
 }

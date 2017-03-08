@@ -22,6 +22,9 @@ namespace TypeMapper.Tests
         public void InheritMapping()
         {
             var source = new TestClass();
+            source.Strings.Clear();
+            source.Booleans.Clear();
+
             source.Booleans.Add( true );
             source.Booleans.Add( false );
 
@@ -40,6 +43,9 @@ namespace TypeMapper.Tests
 
             Assert.IsTrue( source.Boolean ? target.String == "1"
                 : target.String == "0" );
+
+            Assert.IsTrue( target.Strings.Contains( "1" ) &&
+                target.String.Contains( "0" ) );
         }
     }
 }

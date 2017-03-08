@@ -12,6 +12,9 @@ namespace TypeMapper
         /// <returns></returns>
         public static Type GetMemberType( this MemberInfo memberInfo )
         {
+            var type = memberInfo as Type;
+            if( type != null ) return type;
+
             var field = (memberInfo as FieldInfo);
             if( field != null ) return field.FieldType;
 

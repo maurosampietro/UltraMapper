@@ -36,19 +36,7 @@ namespace TypeMapper.Configuration
         public TypeMappingConfigurator( Type sourceType, Type targetType, GlobalConfiguration globalConfiguration )
             : this( new TypeMapping( globalConfiguration, new TypePair( sourceType, targetType ) ), globalConfiguration ) { }
 
-        //public TypeMappingConfigurator MapProperty( string sourcePropertyName,
-        //    string targetPropertyName, LambdaExpression converter = null )
-        //{
-        //    var sourceMemberInfo = _typeMapping.TypePair
-        //        .SourceType.GetProperty( sourcePropertyName );
-
-        //    var targetMemberInfo = _typeMapping.TypePair
-        //        .TargetType.GetProperty( targetPropertyName );
-
-        //    return this.MapProperty( sourceMemberInfo, targetMemberInfo, converter );
-        //}
-
-        public TypeMappingConfigurator MapProperty( LambdaExpression sourceSelector,
+        public TypeMappingConfigurator MapMember( LambdaExpression sourceSelector,
             LambdaExpression targetSelector, LambdaExpression converter = null )
         {
             var targetMember = targetSelector.ExtractMember();
@@ -61,9 +49,6 @@ namespace TypeMapper.Configuration
                 MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION,
                 CustomConverter = converter
             };
-
-            propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
-                mapper => mapper.CanHandle( propertyMapping ) );
 
             if( _typeMapping.MemberMappings.ContainsKey( targetMember ) )
                 _typeMapping.MemberMappings[ targetMember ] = propertyMapping;
@@ -139,12 +124,6 @@ namespace TypeMapper.Configuration
                             MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION
                         };
 
-                        propertyMapping.Mapper = _globalConfiguration.Mappers.FirstOrDefault(
-                            mapper => mapper.CanHandle( propertyMapping ) );
-
-                        if( propertyMapping.Mapper == null )
-                            throw new Exception( $"No object mapper can handle {propertyMapping}" );
-
                         if( !typeMapping.MemberMappings.ContainsKey( targetMember ) )
                             typeMapping.MemberMappings.Add( targetMember, propertyMapping );
                         else
@@ -201,7 +180,7 @@ namespace TypeMapper.Configuration
             Expression<Action<TTarget, TSourceProperty>> targetPropertySelector )
         {
             return (TypeMappingConfigurator<TSource, TTarget>)
-                base.MapProperty( sourcePropertySelector, targetPropertySelector, null );
+                base.MapMember( sourcePropertySelector, targetPropertySelector, null );
         }
 
         public TypeMappingConfigurator<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
@@ -210,7 +189,7 @@ namespace TypeMapper.Configuration
             Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
         {
             return (TypeMappingConfigurator<TSource, TTarget>)
-                base.MapProperty( sourceSelector, targetSelector, converter );
+                base.MapMember( sourceSelector, targetSelector, converter );
         }
 
         ////source instance directly to property.

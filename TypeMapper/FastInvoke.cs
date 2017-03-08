@@ -22,6 +22,22 @@ namespace TypeMapper
 
         public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
         {
+            if( memberInfo is Type )
+            {
+                var type = (Type)memberInfo;
+                // (target, value) => target.field;
+
+                var targetInstance = Expression.Parameter( type, "target" );
+                var value = Expression.Parameter( type, "value" );
+
+                var body = Expression.Assign( targetInstance, value );
+
+                var delegateType = typeof( Action<,> ).MakeGenericType(
+                    type, type );
+
+                return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+            }
+
             if( memberInfo is FieldInfo )
                 return GetSetterLambdaExpression( (FieldInfo)memberInfo );
 
@@ -118,7 +134,7 @@ namespace TypeMapper
                 throw new NotImplementedException( $"Only methods taking as input exactly one parameter are currently supported." );
 
             var targetInstance = Expression.Parameter( methodInfo.ReflectedType, "target" );
-            var value = Expression.Parameter( methodInfo.GetParameters()[0].ParameterType, "value" );
+            var value = Expression.Parameter( methodInfo.GetParameters()[ 0 ].ParameterType, "value" );
 
             var body = Expression.Call( targetInstance, methodInfo, value );
 

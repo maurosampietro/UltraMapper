@@ -73,7 +73,7 @@ namespace TypeMapper
 
             target = method.Invoke( source );
         }
-       
+
         /// <summary>
         /// Read the values from <paramref name="source"/> and writes them to <paramref name="target"/>
         /// </summary>
@@ -96,8 +96,6 @@ namespace TypeMapper
             Type targetType = target.GetType();
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
-
-            //var temp = MemberMappingExpressionMerger.Merge( mapping.MemberMappings.Values );
 
             var references = mapping.MapperFunc?.Invoke( referenceTracking, source, target );
             if( references != null )

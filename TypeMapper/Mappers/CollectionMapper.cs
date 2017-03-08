@@ -15,7 +15,7 @@ namespace TypeMapper.Mappers
      * 
      */
 
-    public class CollectionMapper : ReferenceMapper, IObjectMapperExpression
+    public class CollectionMapper : ReferenceMapper, IMemberMappingMapperExpression
     {
         public override bool CanHandle( MemberMapping mapping )
         {
@@ -28,7 +28,7 @@ namespace TypeMapper.Mappers
             return new CollectionMapperContext( mapping );
         }
 
-        protected virtual Expression GetSimpleTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
+        protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
             /*If reference mapping strategy is USE_TARGET_INSTANCE_IF_NOT_NULL
              * we can only use the item-insertion method to map cause we are not allowed not create new instances.
@@ -36,7 +36,7 @@ namespace TypeMapper.Mappers
 
             Func<Expression> GetTargetInstanceExpression = () =>
             {
-                if( context.Mapping.TypeMapping.GlobalConfiguration
+                if( context.MapperConfiguration
                     .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
                 {
                     return context.TargetMemberValue;
@@ -50,7 +50,7 @@ namespace TypeMapper.Mappers
             // cannot use directly the target constructor: use add method or temp collection.
 
             var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
-            if( constructorInfo == null || context.Mapping.TypeMapping.GlobalConfiguration
+            if( constructorInfo == null || context.MapperConfiguration
                     .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL
                     || context.SourceCollectionElementType != context.TargetCollectionElementType )
             {
@@ -63,13 +63,10 @@ namespace TypeMapper.Mappers
                     throw new Exception( msg );
                 }
 
-                var typeMapping = mapping.TypeMapping.GlobalConfiguration.Configurator[
+                var typeMapping = context.MapperConfiguration.Configurator[
                           context.SourceCollectionElementType, context.TargetCollectionElementType ];
 
-                var temp = typeMapping.MappingExpression;
-
-                var convert = MappingExpressionBuilderFactory.GetMappingExpression
-                    ( typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+                var convert = typeMapping.MappingExpression;
 
                 Expression loopBody = Expression.Call( context.TargetMember,
                     addMethod, Expression.Invoke( convert, context.SourceCollectionLoopingVar ) );
@@ -91,11 +88,11 @@ namespace TypeMapper.Mappers
             return Expression.Assign( context.TargetMember, targetCollectionConstructor );
         }
 
-        protected virtual Expression GetComplexTypeInnerBody( MemberMapping mapping, CollectionMapperContext context )
+        protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
             Func<Expression> GetTargetInstanceExpression = () =>
             {
-                if( context.Mapping.TypeMapping.GlobalConfiguration
+                if( context.MapperConfiguration
                     .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
                 {
                     return context.TargetMemberValue;
@@ -131,7 +128,7 @@ namespace TypeMapper.Mappers
             //var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
 
             var addMethod = GetTargetCollectionAddMethod( context );
-            if( addMethod != null || context.Mapping.TypeMapping.GlobalConfiguration
+            if( addMethod != null || context.MapperConfiguration
                 .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
             {
                 return Expression.Block
@@ -182,7 +179,7 @@ namespace TypeMapper.Mappers
 
                 ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( context.Mapping.TypeMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( context.TypeMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
@@ -229,9 +226,9 @@ namespace TypeMapper.Mappers
             var context = contextObj as CollectionMapperContext;
 
             if( context.IsTargetElementTypeBuiltIn )
-                return GetSimpleTypeInnerBody( context.Mapping, context );
+                return GetSimpleTypeInnerBody( context );
 
-            return GetComplexTypeInnerBody( context.Mapping, context );
+            return GetComplexTypeInnerBody( context );
         }
 
         protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )

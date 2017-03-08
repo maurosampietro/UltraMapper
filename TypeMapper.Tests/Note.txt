@@ -3,6 +3,8 @@
 TODO:
 
 - DateTime and Dynamic mapping,
+- Object to Object mapping should inspect object types and use ReferenceMapper.
+  At this time it copies the reference value (no mapping at all). Remove obejct from built in types.
 - Abstract and base classes map with derived types inheriting the configuration
 - VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
