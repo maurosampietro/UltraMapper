@@ -6,7 +6,6 @@ namespace TypeMapper.Mappers
 {
     public class MapperContext
     {
-        public readonly TypeMapping TypeMapping;
         public readonly GlobalConfiguration MapperConfiguration;
 
         public Type SourceInstanceType { get; protected set; }
@@ -29,7 +28,6 @@ namespace TypeMapper.Mappers
 
         public MapperContext( MemberMapping mapping )
         {
-            TypeMapping = mapping.InstanceTypeMapping;
             MapperConfiguration = mapping.InstanceTypeMapping.GlobalConfiguration;
 
             SourceInstanceType = mapping.InstanceTypeMapping.TypePair.SourceType;
@@ -77,7 +75,9 @@ namespace TypeMapper.Mappers
             TargetInstance = Expression.Parameter( TargetInstanceType, "targetInstance" );
             ReferenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 
+            SourceMember = Expression.Variable( SourceMemberType, "sourceValue" );
             TargetMember = Expression.Variable( TargetMemberType, "targetValue" );
+
             SourceMemberValue = SourceInstance;
         }
 
@@ -85,7 +85,6 @@ namespace TypeMapper.Mappers
             : this( mapping.TypePair.SourceType, mapping.TypePair.TargetType )
         {
             this.MapperConfiguration = mapping.GlobalConfiguration;
-            this.TypeMapping = mapping;
         }
     }
 }

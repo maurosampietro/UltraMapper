@@ -16,37 +16,18 @@ namespace TypeMapper.Mappers
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
 
         public CollectionMapperContext( MemberMapping mapping )
-            : base( mapping )
+            : base( mapping ) { Initialize(); }
+
+        public CollectionMapperContext( TypeMapping mapping )
+            : base( mapping ) { Initialize(); }
+
+        private void Initialize()
         {
             SourceCollectionElementType = SourceMemberType.GetCollectionGenericType();
             TargetCollectionElementType = TargetMemberType.GetCollectionGenericType();
 
-            IsSourceElementTypeBuiltIn = SourceMemberType.IsBuiltInType( true );
+            IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltInType( true );
             IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( true );
-
-            SourceCollectionLoopingVar = Expression.Parameter( SourceCollectionElementType, "loopVar" );
-        }
-    }
-
-    public class CollectionMapperContextTypeMapping : ReferenceMapperContextTypeMapping
-    {
-        public Type SourceCollectionElementType { get; set; }
-        public Type TargetCollectionElementType { get; set; }
-
-        public bool IsSourceElementTypeBuiltIn { get; set; }
-        public bool IsTargetElementTypeBuiltIn { get; set; }
-
-        public ParameterExpression SourceCollectionLoopingVar { get; set; }
-
-        public CollectionMapperContextTypeMapping( TypeMapping mapping )
-            : base( mapping )
-        {
-            //new properties
-            SourceCollectionElementType = SourcePropertyType.GetCollectionGenericType();
-            TargetCollectionElementType = TargetPropertyType.GetCollectionGenericType();
-
-            IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltInType( false );
-            IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( false );
 
             SourceCollectionLoopingVar = Expression.Parameter( SourceCollectionElementType, "loopVar" );
         }

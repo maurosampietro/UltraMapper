@@ -58,6 +58,11 @@ namespace TypeMapper.Configuration
             return this;
         }
 
+        internal void MapMember( MemberInfo sourceProp, MemberInfo targetProp )
+        {
+            throw new NotImplementedException();
+        }
+
         protected MappingSource GetOrAddMappingSource( LambdaExpression memberSelector )
         {
             MemberInfo memberInfo = memberSelector.ExtractMember();

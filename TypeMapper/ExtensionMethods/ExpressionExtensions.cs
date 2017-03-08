@@ -139,10 +139,10 @@ namespace TypeMapper
             return expression.Compile()();
         }
 
-        public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter )
-        {
-            return new ExpressionParameterReplacer( parameter ).Visit( expression );
-        }
+        //public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter )
+        //{
+        //    return new ExpressionParameterReplacer( parameter ).Visit( expression );
+        //}
 
         public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter, string name )
         {

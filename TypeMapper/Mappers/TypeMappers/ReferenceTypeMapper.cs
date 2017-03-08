@@ -4,29 +4,8 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
 {
-    public class ReferenceMapperTypeMapping
+    public class ReferenceMapperTypeMapping : ReferenceMapper
     {
-        private static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
-         ( referenceTracker, sourceInstance, targetType ) =>
-         {
-             object targetInstance;
-             referenceTracker.TryGetValue( sourceInstance, targetType, out targetInstance );
-
-             return targetInstance;
-         };
-
-        private static Action<ReferenceTracking, object, Type, object> addToTracker =
-            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-            {
-                referenceTracker.Add( sourceInstance, targetType, targetInstance );
-            };
-
-        protected static readonly Expression<Func<ReferenceTracking, object, Type, object>> CacheLookupExpression =
-            ( rT, sI, tT ) => refTrackingLookup( rT, sI, tT );
-
-        protected static readonly Expression<Action<ReferenceTracking, object, Type, object>> CacheAddExpression =
-            ( rT, sI, tT, tI ) => addToTracker( rT, sI, tT, tI );
-
         public virtual bool CanHandle( TypeMapping mapping )
         {
             return !mapping.TypePair.SourceType.IsValueType &&
@@ -40,11 +19,12 @@ namespace TypeMapper.Mappers.TypeMappers
         {
             //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
 
-            var context = this.GetMapperContext( mapping ) as ReferenceMapperContextTypeMapping;
+            var context = this.GetMapperContext( mapping ) as ReferenceMapperContext;
             var expressionBody = this.GetExpressionBody( context );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceType, context.TargetType, context.ReturnType );
+                typeof( ReferenceTracking ), context.SourceInstanceType,
+                context.TargetInstanceType, context.ReturnType );
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
@@ -52,16 +32,10 @@ namespace TypeMapper.Mappers.TypeMappers
 
         protected virtual object GetMapperContext( TypeMapping mapping )
         {
-            return new ReferenceMapperContextTypeMapping( mapping );
+            return new ReferenceMapperContext( mapping );
         }
 
-        protected virtual Expression ReturnTypeInitialization( object contextObj )
-        {
-            var context = contextObj as ReferenceMapperContextTypeMapping;
-            return Expression.Assign( context.ReturnObjectVar, Expression.Constant( null, context.ReturnType ) );
-        }
-
-        protected Expression GetExpressionBody( ReferenceMapperContextTypeMapping context )
+        protected override Expression GetExpressionBody( ReferenceMapperContext context )
         {
             /* SOURCE (NULL) -> TARGET = NULL
             * 
@@ -74,18 +48,18 @@ namespace TypeMapper.Mappers.TypeMappers
 
             var body = (Expression)Expression.Block
             (
-                new ParameterExpression[] { context.SourcePropertyVar, context.TargetPropertyVar, context.ReturnObjectVar },
+                new ParameterExpression[] { context.SourceMember, context.TargetMember, context.ReturnObject },
 
                 ReturnTypeInitialization( context ),
 
                 //read source value
-                Expression.Assign( context.SourcePropertyVar, context.SourceInstance ),
+                Expression.Assign( context.SourceMember, context.SourceInstance ),
 
                 Expression.IfThenElse
                 (
-                     Expression.Equal( context.SourcePropertyVar, context.SourceNullValue ),
+                     Expression.Equal( context.SourceMember, context.SourceMemberNullValue ),
 
-                     Expression.Assign( context.TargetPropertyVar, context.TargetNullValue ),
+                     Expression.Assign( context.TargetMember, context.TargetMemberNullValue ),
 
                      Expression.Block
                      (
@@ -96,7 +70,7 @@ namespace TypeMapper.Mappers.TypeMappers
 
                         Expression.IfThen
                         (
-                            Expression.Equal( context.TargetPropertyVar, context.TargetNullValue ),
+                            Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
                             Expression.Block
                             (
                                 this.GetInnerBody( context )
@@ -113,40 +87,10 @@ namespace TypeMapper.Mappers.TypeMappers
                 //    .ReplaceParameter( context.TargetInstance, "target" )
                 //    .ReplaceParameter( context.TargetPropertyVar, "value" ),
 
-                context.ReturnObjectVar
+                context.ReturnObject
             );
 
             return body;
-        }
-
-        protected virtual Expression GetInnerBody( object contextObj )
-        {
-            var context = contextObj as ReferenceMapperContextTypeMapping;
-
-            return Expression.Block
-            (
-                this.GetTargetInstanceAssignment( contextObj ),
-
-                //assign to the object to return
-                Expression.Assign( context.ReturnObjectVar, Expression.New(
-                    context.ReturnTypeConstructor, context.SourcePropertyVar, context.TargetPropertyVar ) )
-            );
-        }
-
-        private Expression GetTargetInstanceAssignment( object contextObj )
-        {
-            var context = contextObj as ReferenceMapperContextTypeMapping;
-            var newInstanceExp = Expression.New( context.TargetPropertyType );
-
-            //if( context.Mapping.TypeMapping.GlobalConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
-            //    return Expression.Assign( context.TargetPropertyVar, newInstanceExp );
-
-            //var getValue = context.Mapping.TargetProperty.ValueGetter.Body.ReplaceParameter( context.TargetInstance );
-            //return Expression.IfThenElse( Expression.Equal( getValue, context.TargetNullValue ),
-            //        Expression.Assign( context.TargetPropertyVar, newInstanceExp ),
-            //        Expression.Assign( context.TargetPropertyVar, getValue ) );
-
-            return newInstanceExp;
         }
     }
 }

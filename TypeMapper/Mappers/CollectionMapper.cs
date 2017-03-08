@@ -23,10 +23,21 @@ namespace TypeMapper.Mappers
                  mapping.TargetProperty.IsEnumerable;
         }
 
+        //public bool CanHandle( TypeMapping mapping )
+        //{
+        //    return mapping.TypePair.SourceType.IsEnumerable() &&
+        //         mapping.TypePair.TargetType.IsEnumerable();
+        //}
+
         protected override object GetMapperContext( MemberMapping mapping )
         {
             return new CollectionMapperContext( mapping );
         }
+
+        //protected object GetMapperContext( TypeMapping mapping )
+        //{
+        //    return new CollectionMapperContext( mapping );
+        //}
 
         protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
@@ -179,16 +190,16 @@ namespace TypeMapper.Mappers
 
                 ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( context.TypeMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( context, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
         }
 
-        protected BlockExpression LookUpBlock( TypeMapping typeMapping, ParameterExpression referenceTracker,
+        protected BlockExpression LookUpBlock( CollectionMapperContext context, ParameterExpression referenceTracker,
            Expression sourceParam, ParameterExpression targetParam )
         {
-            var itemMapping = typeMapping.GlobalConfiguration.Configurator
+            var itemMapping = context.MapperConfiguration.Configurator
              [ sourceParam.Type, targetParam.Type ].MappingExpression;
 
             Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),

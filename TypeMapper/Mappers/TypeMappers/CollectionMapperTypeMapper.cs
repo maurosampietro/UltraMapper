@@ -19,22 +19,22 @@ namespace TypeMapper.Mappers.TypeMappers
 
         protected override object GetMapperContext( TypeMapping mapping )
         {
-            return new CollectionMapperContextTypeMapping( mapping );
+            return new CollectionMapperContext( mapping );
         }
 
-        protected virtual Expression GetSimpleTypeInnerBody( TypeMapping mapping, CollectionMapperContextTypeMapping context )
+        protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null )
             {
-                string msg = $@"Cannot map to type '{nameof( context.TargetPropertyType )}' does not provide a clear method";
+                string msg = $@"Cannot map to type '{nameof( context.TargetMemberType )}' does not provide a clear method";
                 throw new Exception( msg );
             }
 
             var addMethod = GetTargetCollectionAddMethod( context );
             if( addMethod == null )
             {
-                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetPropertyType )}' does not provide an item-insertion method " +
+                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMemberType )}' does not provide an item-insertion method " +
                     $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
 
                 throw new Exception( msg );
@@ -49,19 +49,14 @@ namespace TypeMapper.Mappers.TypeMappers
             return Expression.Block
             (
                 Expression.Call( context.TargetInstance, clearMethod ),
-                ExpressionLoops.ForEach( context.SourcePropertyVar,
+                ExpressionLoops.ForEach( context.SourceMember,
                     context.SourceCollectionLoopingVar, loopBody )
             );
         }
 
-        private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContextTypeMapping context )
+        protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
-            return context.TargetPropertyType.GetMethod( "Clear" );
-        }
-
-        protected virtual Expression GetComplexTypeInnerBody( TypeMapping mapping, CollectionMapperContextTypeMapping context )
-        {
-            var itemMapping = mapping.GlobalConfiguration.Configurator[
+            var itemMapping = context.MapperConfiguration.Configurator[
                 context.SourceCollectionElementType, context.TargetCollectionElementType ].MappingExpression;
 
             var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
@@ -69,14 +64,14 @@ namespace TypeMapper.Mappers.TypeMappers
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null )
             {
-                string msg = $@"Cannot map to type '{nameof( context.TargetPropertyType )}' does not provide a clear method";
+                string msg = $@"Cannot map to type '{nameof( context.TargetMemberType )}' does not provide a clear method";
                 throw new Exception( msg );
             }
 
             var addMethod = GetTargetCollectionAddMethod( context );
             if( addMethod == null )
             {
-                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetPropertyType )}' does not provide an item-insertion method " +
+                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMemberType )}' does not provide an item-insertion method " +
                       $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
 
                 throw new Exception( msg );
@@ -87,7 +82,7 @@ namespace TypeMapper.Mappers.TypeMappers
                 new[] { newElement },
 
                 Expression.Call( context.TargetInstance, clearMethod ),
-                ExpressionLoops.ForEach( context.SourcePropertyVar, context.SourceCollectionLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
                     Expression.Assign( newElement, Expression.New( context.TargetCollectionElementType ) ),
                     Expression.Call( context.TargetInstance, addMethod, newElement ),
@@ -99,12 +94,12 @@ namespace TypeMapper.Mappers.TypeMappers
 
         protected override Expression GetInnerBody( object contextObj )
         {
-            var context = contextObj as CollectionMapperContextTypeMapping;
+            var context = contextObj as CollectionMapperContext;
 
             if( context.IsSourceElementTypeBuiltIn && context.IsTargetElementTypeBuiltIn )
-                return GetSimpleTypeInnerBody( context.Mapping, context );
+                return GetSimpleTypeInnerBody( context );
 
-            return GetComplexTypeInnerBody( context.Mapping, context );
+            return GetComplexTypeInnerBody( context );
         }
 
         /// <summary>
@@ -112,9 +107,14 @@ namespace TypeMapper.Mappers.TypeMappers
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContextTypeMapping context )
+        protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetPropertyType.GetMethod( "Add" );
+            return context.TargetMemberType.GetMethod( "Add" );
+        }
+
+        private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
+        {
+            return context.TargetMemberType.GetMethod( "Clear" );
         }
     }
 }

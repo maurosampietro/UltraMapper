@@ -73,7 +73,7 @@ namespace TypeMapper.Mappers
                 return Expression.Assign( targetParam, Expression.Invoke( convert, sourceParam ) );
             }
 
-            return base.LookUpBlock( context.TypeMapping, 
+            return base.LookUpBlock( context, 
                 context.ReferenceTrack, sourceParam, targetParam );
         }
     }

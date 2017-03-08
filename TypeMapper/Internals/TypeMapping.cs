@@ -149,9 +149,9 @@ namespace TypeMapper.Internals
 
                     Expression.Assign( newRefObjects, Expression.New( returnType ) ),
 
-                    bodyExp.ReplaceParameter( referenceTrack )
-                        .ReplaceParameter( targetInstance, "targetInstance" )
-                        .ReplaceParameter( sourceInstance, "sourceInstance" ),
+                    bodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
+                        .ReplaceParameter( targetInstance, targetInstance.Name )
+                        .ReplaceParameter( sourceInstance, sourceInstance.Name ),
 
                     newRefObjects
                 );

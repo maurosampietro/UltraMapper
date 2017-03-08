@@ -18,7 +18,7 @@ namespace TypeMapper.Internals
             return base.VisitParameter( node );
         }
 
-        internal ExpressionParameterReplacer( ParameterExpression parameter, string name = null )
+        internal ExpressionParameterReplacer( ParameterExpression parameter, string name )
         {
             _parameter = parameter;
             _name = name;

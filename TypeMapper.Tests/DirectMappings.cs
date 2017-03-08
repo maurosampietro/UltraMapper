@@ -144,14 +144,17 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper
             (
-                cfg => cfg.MapTypes<ComplexType, int>()
-                    .MapProperty( a => a.PropertyA, c => c )
+                //cfg => cfg.MapTypes<ComplexType, int>()
+                //    .MapProperty( a => a.PropertyA, c => c )
             );
 
             typeMapper.Map( source, target );
 
+            throw new Exception( "Il verifier non verifica correttamente ed il mapping non funziona" );
+
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+
         }
     }
 }

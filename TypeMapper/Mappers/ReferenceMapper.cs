@@ -53,7 +53,8 @@ namespace TypeMapper.Mappers
             var expressionBody = this.GetExpressionBody( context );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceInstanceType, context.TargetInstanceType, context.ReturnType );
+                typeof( ReferenceTracking ), context.SourceInstanceType,
+                context.TargetInstanceType, context.ReturnType );
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
@@ -70,7 +71,7 @@ namespace TypeMapper.Mappers
             return Expression.Assign( context.ReturnObject, Expression.Constant( null, context.ReturnType ) );
         }
 
-        protected Expression GetExpressionBody( ReferenceMapperContext context )
+        protected virtual Expression GetExpressionBody( ReferenceMapperContext context )
         {
             /* SOURCE (NULL) -> TARGET = NULL
             * 
@@ -124,7 +125,7 @@ namespace TypeMapper.Mappers
                     )
                 ),
 
-                context.TargetMemberValueSetter,
+                context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) : context.TargetMemberValueSetter,
                 context.ReturnObject
             );
 
@@ -145,7 +146,7 @@ namespace TypeMapper.Mappers
             );
         }
 
-        private Expression GetTargetInstanceAssignment( object contextObj )
+        protected virtual Expression GetTargetInstanceAssignment( object contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
             var newInstanceExp = Expression.New( context.TargetMemberType );
