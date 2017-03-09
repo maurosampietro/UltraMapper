@@ -35,15 +35,28 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void ManualFlattening()
         {
-            var source = new FirstLevel() { SecondLevel = new SecondLevel() { ThirdLevel = new ThirdLevel() } };
-            var target = new FirstLevel() { SecondLevel = new SecondLevel() { ThirdLevel = new ThirdLevel() } };
+            var source = new FirstLevel()
+            {
+                A = "first",
+
+                SecondLevel = new SecondLevel()
+                {
+                    A = "second",
+
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "third"
+                    }
+                }
+            };
+
+            var target = new FirstLevel();
 
             var typeMapper = new TypeMapper( cfg =>
             {
                 cfg.MapTypes<FirstLevel, FirstLevel>()
-                    .MapProperty( a => a.SecondLevel.ThirdLevel.A, b => b.A )
-                    .MapMethod( a => a.GetSecond().ThirdLevel, ( b, value ) => b.SecondLevel.SetThird( value ) )
-                    .MapProperty( a => a.SecondLevel, b => b.SecondLevel );
+                    .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A );
+                    //.MapMember( a => a.GetSecond().ThirdLevel, ( b, value ) => b.SecondLevel.SetThird( value ) )
             } );
 
             typeMapper.Map( source, target );

@@ -51,13 +51,13 @@ namespace TypeMapper.Mappers
                 mapping.TypePair.TargetType );
         }
 
-        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
-        {
-            //Func<SourceType, TargetType>
+        //public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
+        //{
+        //    //Func<SourceType, TargetType>
 
-            var context = this.GetContext( sourceType, targetType );
-            return GetMappingExpression( context, sourceType, targetType );
-        }
+        //    var context = this.GetContext( sourceType, targetType );
+        //    return GetMappingExpression( context, sourceType, targetType );
+        //}
 
         private LambdaExpression GetMappingExpression( MapperContext context, Type sourceType, Type targetType )
         {
@@ -85,10 +85,10 @@ namespace TypeMapper.Mappers
             return new MapperContext( mapping );
         }
 
-        protected virtual MapperContext GetContext( Type sourceType, Type targetType )
-        {
-            return new MapperContext( sourceType, targetType );
-        }
+        //protected virtual MapperContext GetContext( Type sourceType, Type targetType )
+        //{
+        //    return new MapperContext( sourceType, targetType );
+        //}
 
         protected virtual MapperContext GetContext( TypeMapping mapping )
         {

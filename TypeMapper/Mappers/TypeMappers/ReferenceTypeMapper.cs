@@ -8,26 +8,16 @@ namespace TypeMapper.Mappers.TypeMappers
     {
         public virtual bool CanHandle( TypeMapping mapping )
         {
-            return !mapping.TypePair.SourceType.IsValueType &&
-                !mapping.TypePair.TargetType.IsValueType &&
-                !mapping.TypePair.SourceType.IsBuiltInType( false ) &&
-                !mapping.TypePair.TargetType.IsBuiltInType( false ) &&
-                !mapping.TypePair.SourceType.IsEnumerable();
+            var sourceType = mapping.TypePair.SourceType;
+            var targetType = mapping.TypePair.TargetType;
+
+            return this.CanHandle( sourceType, targetType );
         }
 
         public LambdaExpression GetMappingExpression( TypeMapping mapping )
         {
-            //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
-
             var context = this.GetMapperContext( mapping ) as ReferenceMapperContext;
-            var expressionBody = this.GetExpressionBody( context );
-
-            var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceInstanceType,
-                context.TargetInstanceType, context.ReturnType );
-
-            return Expression.Lambda( delegateType, expressionBody,
-                context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+            return this.GetMappingExpression( context );
         }
 
         protected virtual object GetMapperContext( TypeMapping mapping )
@@ -46,6 +36,15 @@ namespace TypeMapper.Mappers.TypeMappers
             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW OBJECT
             */
 
+
+            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method, context.ReferenceTrack,
+                context.SourceMember, Expression.Constant( context.TargetMemberType ) );
+
+            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+                addToTracker.Method, context.ReferenceTrack, context.SourceMember,
+                Expression.Constant( context.TargetMemberType ), context.TargetMember );
+
             var body = (Expression)Expression.Block
             (
                 new ParameterExpression[] { context.SourceMember, context.TargetMember, context.ReturnObject },
@@ -63,10 +62,13 @@ namespace TypeMapper.Mappers.TypeMappers
 
                      Expression.Block
                      (
-                        //object lookup
-                        //Expression.Assign( context.TargetPropertyVar, Expression.Convert(
-                        //    Expression.Invoke( CacheLookupExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                        //    Expression.Constant( context.TargetPropertyType ) ), context.TargetPropertyType ) ),
+                         //Il lookup incasina tutto perchè source e target sono inseriti in cache
+                         //inizialmente, in questo caso operando sulle stessi oggetti di input
+                         //direttamente vengono ritornate le istanze non ancora mappate.
+
+                        ////object lookup
+                        //Expression.Assign( context.TargetMember,
+                        //    Expression.Convert( lookupCall, context.TargetMemberType ) ),
 
                         Expression.IfThen
                         (
@@ -74,10 +76,10 @@ namespace TypeMapper.Mappers.TypeMappers
                             Expression.Block
                             (
                                 this.GetInnerBody( context )
+                                //,
 
-                            //cache reference
-                            //Expression.Invoke( CacheAddExpression, context.ReferenceTrack, context.SourcePropertyVar,
-                            //    Expression.Constant( context.TargetPropertyType ), context.TargetPropertyVar )
+                                //cache reference
+                                //addToLookupCall
                             )
                         )
                     )

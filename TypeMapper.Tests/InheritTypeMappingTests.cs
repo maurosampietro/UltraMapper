@@ -35,8 +35,8 @@ namespace TypeMapper.Tests
                 cfg.MapTypes<bool, string>( null, b => b ? "1" : "0" );
 
                 cfg.MapTypes<TestClass, TestClass>()
-                    .MapProperty( a => a.Boolean, y => y.String )
-                    .MapProperty( a => a.Booleans, y => y.Strings );
+                    .MapMember( a => a.Boolean, y => y.String )
+                    .MapMember( a => a.Booleans, y => y.Strings );
             } );
 
             typeMapper.Map( source, target );

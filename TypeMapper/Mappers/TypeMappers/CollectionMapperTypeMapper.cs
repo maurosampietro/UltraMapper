@@ -40,11 +40,13 @@ namespace TypeMapper.Mappers.TypeMappers
                 throw new Exception( msg );
             }
 
-            var conversion = MappingExpressionBuilderFactory.GetMappingExpression(
-                context.SourceCollectionElementType, context.TargetCollectionElementType );
+            var typeMapping = context.MapperConfiguration.Configurator[
+                    context.SourceCollectionElementType, context.TargetCollectionElementType ];
+
+            var convert = typeMapping.MappingExpression;
 
             Expression loopBody = Expression.Call( context.TargetInstance,
-                addMethod, Expression.Invoke( conversion, context.SourceCollectionLoopingVar ) );
+                addMethod, Expression.Invoke( convert, context.SourceCollectionLoopingVar ) );
 
             return Expression.Block
             (

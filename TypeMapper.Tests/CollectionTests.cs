@@ -229,22 +229,22 @@ namespace TypeMapper.Tests
             var sourceProperties = typeof( GenericCollections<int> ).GetProperties();
             var targetProperties = typeof( GenericCollections<double> ).GetProperties();
 
+            var source = new GenericCollections<int>();
+
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( i );
+                source.HashSet.Add( i );
+                source.SortedSet.Add( i );
+                source.Stack.Push( i );
+                source.Queue.Enqueue( i );
+                source.LinkedList.AddLast( i );
+                source.ObservableCollection.Add( i );
+            }
+
             foreach( var sourceProp in sourceProperties )
             {
-                var source = new GenericCollections<int>();
-
-                //initialize source
-                for( int i = 0; i < 50; i++ )
-                {
-                    source.List.Add( i );
-                    source.HashSet.Add( i );
-                    source.SortedSet.Add( i );
-                    source.Stack.Push( i );
-                    source.Queue.Enqueue( i );
-                    source.LinkedList.AddLast( i );
-                    source.ObservableCollection.Add( i );
-                }
-
                 var target = new GenericCollections<double>();
 
                 var typeMapper = new TypeMapper();
@@ -265,22 +265,22 @@ namespace TypeMapper.Tests
         {
             var typeProperties = typeof( GenericCollections<ComplexType> ).GetProperties();
 
+            var source = new GenericCollections<ComplexType>();
+
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
+
             foreach( var sourceProp in typeProperties )
             {
-                var source = new GenericCollections<ComplexType>();
-
-                //initialize source
-                for( int i = 0; i < 50; i++ )
-                {
-                    source.List.Add( new ComplexType() { A = i } );
-                    source.HashSet.Add( new ComplexType() { A = i } );
-                    source.SortedSet.Add( new ComplexType() { A = i } );
-                    source.Stack.Push( new ComplexType() { A = i } );
-                    source.Queue.Enqueue( new ComplexType() { A = i } );
-                    source.LinkedList.AddLast( new ComplexType() { A = i } );
-                    source.ObservableCollection.Add( new ComplexType() { A = i } );
-                }
-
                 var typeMapper = new TypeMapper( cfg =>
                 {
                     //cfg.GlobalConfiguration.IgnoreConventions = true;

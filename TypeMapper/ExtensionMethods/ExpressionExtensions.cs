@@ -47,20 +47,37 @@ namespace TypeMapper
             //the PropertyInfo is retrieved through the base class; hence
             //DeclaredType and ReflectedType are equal and we basically
             //lose information about the ReflectedType (which should be the derived class)...
-            var lambdaMember = memberExpression.Member;
+            //..to fix that we do another search. 
+            //We search the member we are accessing by name in the actual type we meant to use for the invocation
+            //Since we support deep member accessing, things get a little more complex here
+            //but we basically just follow each member access starting from the passed lambda parameter.
 
-            try
+            //Reverse MemberExpression to make it easy to work with it
+            Stack<Expression> stack = new Stack<Expression>();
+
+            MemberExpression temp = memberExpression;
+            while( temp != null )
             {
-                //..to fix that we do another search. 
-                //We search that property name in the actual type we meant to use for the invocation
-                return lambda.Parameters.First().Type.GetMember( lambdaMember.Name )[ 0 ];
+                stack.Push( temp );
+
+                if( temp.Expression.NodeType == ExpressionType.Parameter )
+                    stack.Push( temp.Expression );
+
+                temp = temp.Expression as MemberExpression;
             }
-            catch( Exception ex )
+
+            //Follow member accesses starting from the lambda input parameter.
+            var lambdaMember = (stack.Pop() as ParameterExpression);
+            var member = lambda.Parameters.First(
+                p => p.Name == lambdaMember.Name ).Type as MemberInfo;
+
+            foreach( MemberExpression item in stack )
             {
-                //if the property we searched for do not exists we probably are 
-                //selecting a nested property, so just return that
-                return lambdaMember;
+                var memberType = member.GetMemberType();
+                member = memberType.GetMember( item.Member.Name )[ 0 ];
             }
+
+            return member;
         }
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )

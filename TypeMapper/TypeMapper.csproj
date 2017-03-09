@@ -46,6 +46,7 @@
     <Compile Include="Configuration\GlobalConfiguration.cs" />
     <Compile Include="Configuration\TypeMappingConfigurator.cs" />
     <Compile Include="Configuration\ObjectMapperConfiguration.cs" />
+    <Compile Include="ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="ExtensionMethods\MemberInfoExtensions.cs" />
     <Compile Include="FastInvoke.cs" />

@@ -2,68 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using TypeMapper.Internals;
 using TypeMapper.Mappers;
 
 namespace TypeMapper.Configuration
 {
-    public class MappingExpressionBuilderFactory
-    {
-        private static HashSet<ITypeMappingMapperExpression> _mappers
-            = new HashSet<ITypeMappingMapperExpression>()
-        {
-            new CustomConverterMapper() ,
-            new BuiltInTypeMapper()     ,
-            new NullableMapper()        ,
-            new ConvertMapper()         ,
-            //new ReferenceMapper()       ,
-            //new DictionaryMapper()      ,
-            //new SetMapper()             ,
-            //new StackMapper()           ,
-            //new QueueMapper()           ,
-            //new LinkedListMapper()      ,
-            //new CollectionMapper()
-        };
-
-        //public static IMapperExpression GetExpressionBuilder( Type source, Type target )
-        //{
-        //    return _mappers.First( mapper =>
-        //        mapper.CanHandle( source, target ) );
-        //}
-        //public static bool CanHandle( Type source, Type target )
-        //{
-        //    return _mappers.Any( mapper => mapper.CanHandle( source, target ) );
-        //}
-
-        public static LambdaExpression GetMappingExpression( Type source, Type target )
-        {
-            var selectedMapper = _mappers.FirstOrDefault( mapper =>
-                mapper.CanHandle( source, target ) );
-
-            if( selectedMapper == null )
-                throw new Exception( $"No mapper can handle {source} -> {target}" );
-
-            return selectedMapper.GetMappingExpression( source, target );
-        }
-
-        internal static bool CanHandle( TypeMapping typeMapping )
-        {
-            return _mappers.Any( mapper => mapper.CanHandle( typeMapping ) );
-        }
-
-        internal static LambdaExpression GetMappingExpression( TypeMapping typeMapping )
-        {
-            var selectedMapper = _mappers.FirstOrDefault( mapper =>
-                          mapper.CanHandle( typeMapping ) );
-
-            if( selectedMapper == null )
-                throw new Exception( $"No mapper can handle {typeMapping}" );
-
-            return selectedMapper.GetMappingExpression( typeMapping );
-        }
-    }
-
     public class ObjectMapperSet : IEnumerable<IMemberMappingMapperExpression>
     {
         private class MapperComparer : IEqualityComparer<IMemberMappingMapperExpression>

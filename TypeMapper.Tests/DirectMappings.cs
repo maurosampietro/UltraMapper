@@ -122,7 +122,7 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper
             (
                 cfg => cfg.MapTypes<int, ComplexType>()
-                    .MapProperty( a => a, c => c.PropertyA )
+                    .MapMember( a => a, c => c.PropertyA )
             );
 
             typeMapper.Map( source, target );

@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using TypeMapper.Configuration;
 using TypeMapper.Internals;
 using TypeMapper.Mappers;
+using TypeMapper.Mappers.TypeMappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper
@@ -54,6 +55,7 @@ namespace TypeMapper
                     .Add<QueueMapper>()
                     .Add<LinkedListMapper>()
                     .Add<CollectionMapper>()
+                    .Add<CollectionMapperTypeMapping>()
             };
         }
 

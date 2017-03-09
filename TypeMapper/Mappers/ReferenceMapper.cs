@@ -45,11 +45,8 @@ namespace TypeMapper.Mappers
             return !valueTypes && !builtInTypes && !sourceType.IsEnumerable();
         }
 
-        public LambdaExpression GetMappingExpression( MemberMapping mapping )
+        protected LambdaExpression GetMappingExpression( ReferenceMapperContext context )
         {
-            //Func<ReferenceTracking, sourceType, targetType, ObjectPair>
-
-            var context = this.GetMapperContext( mapping ) as ReferenceMapperContext;
             var expressionBody = this.GetExpressionBody( context );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
@@ -58,6 +55,12 @@ namespace TypeMapper.Mappers
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+        }
+
+        public LambdaExpression GetMappingExpression( MemberMapping mapping )
+        {
+            var context = this.GetMapperContext( mapping ) as ReferenceMapperContext;
+            return GetMappingExpression( context );
         }
 
         protected virtual object GetMapperContext( MemberMapping mapping )
