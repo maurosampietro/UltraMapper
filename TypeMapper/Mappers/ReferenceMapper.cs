@@ -31,8 +31,8 @@ namespace TypeMapper.Mappers
 
         public virtual bool CanHandle( MemberMapping mapping )
         {
-            var sourceType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            var targetType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            var sourceType = mapping.SourceMember.MemberInfo.GetMemberType();
+            var targetType = mapping.TargetMember.MemberInfo.GetMemberType();
 
             return this.CanHandle( sourceType, targetType );
         }
@@ -111,7 +111,8 @@ namespace TypeMapper.Mappers
                      Expression.Block
                      (
                         //object lookup
-                        Expression.Assign( context.TargetMember,
+                        context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) :
+                        (Expression)Expression.Assign( context.TargetMember,
                             Expression.Convert( lookupCall, context.TargetMemberType ) ),
 
                         Expression.IfThen
@@ -122,7 +123,7 @@ namespace TypeMapper.Mappers
                                 this.GetInnerBody( context ),
 
                                 //cache reference
-                                addToLookupCall
+                                context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) : addToLookupCall
                             )
                         )
                     )

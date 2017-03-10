@@ -1,8 +1,10 @@
-﻿namespace TypeMapper.CollectionMappingStrategies
+﻿using System;
+
+namespace TypeMapper.CollectionMappingStrategies
 {
-    /// <summary>
-    /// Creates a new collection
-    /// </summary>
+    ///// <summary>
+    ///// Creates a new collection
+    ///// </summary>
     //public class NewCollection : ICollectionMappingStrategy
     //{
     //    public TReturn GetTargetCollection<TReturn>( object targetInstance, PropertyMapping mapping )

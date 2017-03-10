@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using TypeMapper.Configuration;
+using TypeMapper.ExtensionMethods;
 using TypeMapper.Internals;
 using TypeMapper.Mappers;
 using TypeMapper.Mappers.TypeMappers;
@@ -41,29 +42,30 @@ namespace TypeMapper
             GlobalConfiguration = new GlobalConfiguration( this )
             {
                 MappingConvention = new DefaultMappingConvention(),
-
-                //order is important: the first mapper that can handle a mapping is used
-                Mappers = new ObjectMapperSet()
-                    .Add<CustomConverterMapper>()
-                    .Add<BuiltInTypeMapper>()
-                    .Add<NullableMapper>()
-                    .Add<ConvertMapper>()
-                    .Add<ReferenceMapper>()
-                    .Add<DictionaryMapper>()
-                    //.Add<SetMapper>()
-                    .Add<StackMapper>()
-                    .Add<QueueMapper>()
-                    .Add<LinkedListMapper>()
-                    .Add<CollectionMapper>()
-                    .Add<CollectionMapperTypeMapping>()
             };
         }
 
+        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( bool ignoreConventions )
+        {
+            var typePair = new TypePair( typeof( TSource ), typeof( TTarget ) );
+
+            var typeMapping = _typeMappings.GetOrAdd( typePair,
+                () => new TypeMapping( GlobalConfiguration, typePair ) );
+
+            typeMapping.IgnoreMappingResolveByConvention = ignoreConventions;
+
+            return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+        }
+
         public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-            Expression<Func<TTarget>> targetConstructor = null, 
+            Expression<Func<TTarget>> targetConstructor = null,
             Expression<Func<TSource, TTarget>> converter = null )
         {
-            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            var typePair = new TypePair( typeof( TSource ), typeof( TTarget ) );
+
+            var typeMapping = _typeMappings.GetOrAdd( typePair,
+                () => new TypeMapping( GlobalConfiguration, typePair ) );
+
             typeMapping.CustomTargetConstructor = targetConstructor;
             typeMapping.CustomConverter = converter;
 
@@ -71,26 +73,14 @@ namespace TypeMapper
         }
 
         public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-            TSource source, TTarget target, Action<TypeMapping> configTypeMapping = null )
+            TSource source, TTarget target )
         {
-            var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
-            configTypeMapping?.Invoke( typeMapping );
+            var typePair = new TypePair( source.GetType(), target.GetType() );
+
+            var typeMapping = _typeMappings.GetOrAdd( typePair,
+                () => new TypeMapping( GlobalConfiguration, typePair ) );
 
             return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
-        }
-
-        private TypeMapping GetTypeMapping( Type sourceType, Type targetType )
-        {
-            var typePair = new TypePair( sourceType, targetType );
-
-            TypeMapping typeMapping;
-            if( !_typeMappings.TryGetValue( typePair, out typeMapping ) )
-            {
-                typeMapping = new TypeMapping( GlobalConfiguration, typePair );
-                _typeMappings.Add( typePair, typeMapping );
-            }
-
-            return typeMapping;
         }
 
         public TypeMapping this[ Type source, Type target ]
@@ -103,12 +93,11 @@ namespace TypeMapper
                 if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
                     return typeMapping;
 
-                if( GlobalConfiguration.IgnoreConventions )
+                if( GlobalConfiguration.IgnoreMappingResolvedByConventions )
                     throw new Exception( $"Cannot handle {typePair}. No mapping have been explicitly defined for '{typePair}' and mapping by convention has been disabled." );
 
                 typeMapping = new TypeMapping( GlobalConfiguration, typePair );
-                new TypeMappingConfigurator( typeMapping, GlobalConfiguration )
-                    .MapByConvention( typeMapping );
+                new TypeMappingConfigurator( typeMapping, GlobalConfiguration );
 
                 _typeMappings.Add( typePair, typeMapping );
                 return typeMapping;

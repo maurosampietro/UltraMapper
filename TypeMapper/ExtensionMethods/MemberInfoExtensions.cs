@@ -42,20 +42,20 @@ namespace TypeMapper
             throw new ArgumentException( $"'{memberInfo}' is not supported." );
         }
 
-        public static object GetValue( this MemberInfo memberInfo, object source )
-        {
-            var field = (memberInfo as FieldInfo);
-            if( field != null ) return field.GetValue( source );
+        //public static object GetValue( this MemberInfo memberInfo, object source )
+        //{
+        //    var field = (memberInfo as FieldInfo);
+        //    if( field != null ) return field.GetValue( source );
 
-            //Property indexes are not supported
-            var property = (memberInfo as PropertyInfo);
-            if( property != null ) return property.GetValue( source );
+        //    //Property indexes are not supported
+        //    var property = (memberInfo as PropertyInfo);
+        //    if( property != null ) return property.GetValue( source );
 
-            //Only parameterless methods are supported
-            var method = (memberInfo as MethodInfo);
-            if( method != null ) return method.Invoke( source, null );
+        //    //Only parameterless methods are supported
+        //    var method = (memberInfo as MethodInfo);
+        //    if( method != null ) return method.Invoke( source, null );
 
-            throw new ArgumentException( $"'{memberInfo}' is not supported." );
-        }
+        //    throw new ArgumentException( $"'{memberInfo}' is not supported." );
+        //}
     }
 }

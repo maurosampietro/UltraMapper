@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace TypeMapper
 {
-    //STUB
     public class InstanceFactory
     {
         public static T CreateObject<T>( params object[] constructorValues )
@@ -297,19 +296,19 @@ namespace TypeMapper
             Delegate instanceCreator;
             //if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
             //{
-                //2. generate one otherwise
-                var constructorInfo = type.GetConstructor( ctorArgTypes );
-            
-                var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
-                var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
-                    Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
+            //2. generate one otherwise
+            var constructorInfo = type.GetConstructor( ctorArgTypes );
 
-                var instanceCreatorExp = Expression.Lambda<Func<object[], object>>(
-                   Expression.Convert( Expression.New( constructorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
+            var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
+            var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
+                Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
 
-                instanceCreator = instanceCreatorExp.Compile();
+            var instanceCreatorExp = Expression.Lambda<Func<object[], object>>(
+               Expression.Convert( Expression.New( constructorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
 
-                //3. cache it
+            instanceCreator = instanceCreatorExp.Compile();
+
+            //3. cache it
             //    _cacheUntyped.Add( cacheKey, instanceCreator );
             //}
 

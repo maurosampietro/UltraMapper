@@ -68,30 +68,32 @@ namespace TypeMapper.Tests
 
             foreach( var mapping in typeMapping.MemberMappings.Values )
             {
-                var sourceValue = mapping.SourceProperty
+                var sourceValue = mapping.SourceMember
                     .ValueGetter.Compile().DynamicInvoke( source );
 
                 var converter = mapping.CustomConverter;
                 if( converter != null )
                     sourceValue = converter.Compile().DynamicInvoke( sourceValue );
 
-                var targetValue = mapping.TargetProperty
+                var targetValue = mapping.TargetMember
                     .ValueGetter.Compile().DynamicInvoke( target );
 
-                if( !mapping.SourceProperty.MemberType.IsValueType && sourceValue != null )
+                if( !mapping.SourceMember.MemberType.IsValueType && sourceValue != null )
                 {
-                    if( referenceTracking.Contains( sourceValue, mapping.TargetProperty.MemberType ) )
+                    if( referenceTracking.Contains( sourceValue, mapping.TargetMember.MemberType ) )
                         continue;
 
-                    referenceTracking.Add( sourceValue, mapping.TargetProperty.MemberType, targetValue );
+                    referenceTracking.Add( sourceValue, mapping.TargetMember.MemberType, targetValue );
                 }
 
                 if( Object.ReferenceEquals( sourceValue, targetValue ) )
                     continue;
 
-                if( mapping.SourceProperty.IsNullable &&
-                    !mapping.TargetProperty.IsNullable && sourceValue == null
-                    && targetValue.Equals( mapping.TargetProperty.MemberType.GetDefaultValueViaActivator() ) )
+                bool isSourcePropertyNullable = Nullable.GetUnderlyingType( mapping.SourceMember.MemberType ) != null;
+                bool isTargetPropertyNullable = Nullable.GetUnderlyingType( mapping.TargetMember.MemberType ) != null;
+
+                if( isSourcePropertyNullable && !isTargetPropertyNullable && sourceValue == null
+                    && targetValue.Equals( mapping.TargetMember.MemberType.GetDefaultValueViaActivator() ) )
                     continue;
 
                 if( sourceValue == null ^ targetValue == null )

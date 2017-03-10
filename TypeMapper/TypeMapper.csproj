@@ -45,7 +45,6 @@
     <Compile Include="CollectionMappingStrategies\ICollectionMappingStrategy.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
     <Compile Include="Configuration\TypeMappingConfigurator.cs" />
-    <Compile Include="Configuration\ObjectMapperConfiguration.cs" />
     <Compile Include="ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="ExtensionMethods\MemberInfoExtensions.cs" />
@@ -89,12 +88,10 @@
     <Compile Include="MappingConventions\PropertyMatchingRules\TypeMatchingRule.cs" />
     <Compile Include="MappingConventions\RuleChaining.cs" />
     <Compile Include="Configuration\MapperConfigurator.cs" />
-    <Compile Include="ReferenceTracking\IReferenceTracking.cs" />
     <Compile Include="ReferenceTracking\ReferenceTracking.cs" />
     <Compile Include="ExtensionMethods\TypeExtensions.cs" />
     <Compile Include="TypeMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Internals\MemberInfoPair.cs" />
     <Compile Include="Internals\TypePair.cs" />
   </ItemGroup>
   <ItemGroup />

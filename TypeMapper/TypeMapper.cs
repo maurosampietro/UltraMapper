@@ -58,10 +58,6 @@ namespace TypeMapper
         {
             //Non è il massimo: salta la funzione di map principale
             // e non tiene in cache le espressioni generate.
-            //Il problema è sempre lo stesso: gestire il mapping delle instanze stesse
-            //(il valore in caso di structs o primitives e le collection 
-            //implementate direttamente sull'istanza in caso di classi)
-            //oltre che delle proprietà e dei campi
 
             Type sourceType = source.GetType();
             Type targetType = target.GetType();

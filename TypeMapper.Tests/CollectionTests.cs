@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Tests
@@ -68,7 +69,7 @@ namespace TypeMapper.Tests
 
                 for( int i = 0; i < 10; i++ )
                 {
-                    T value = (T)Convert.ChangeType( i, 
+                    T value = (T)Convert.ChangeType( i,
                         elementType.GetUnderlyingTypeIfNullable() );
 
                     this.List.Add( value );
@@ -172,10 +173,10 @@ namespace TypeMapper.Tests
                     //for the following pairs a conversion is known
                     //to be harder (not possible or convention-based), 
                     //so here we just skip that few cases
-                    if (sourceElementType == typeof(bool?) &&
-                        targetElementType == typeof(string)) continue;
+                    if( sourceElementType == typeof( bool? ) &&
+                        targetElementType == typeof( string ) ) continue;
 
-                    if ( sourceElementType == typeof( string ) &&
+                    if( sourceElementType == typeof( string ) &&
                         targetElementType == typeof( bool? ) ) continue;
 
                     var sourceType = typeof( GenericCollections<> )
@@ -316,6 +317,39 @@ namespace TypeMapper.Tests
             var target = new GenericCollections<int>();
 
             var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void CollectionItemComparer()
+        {
+            throw new NotImplementedException();
+
+            var source = new GenericCollections<ComplexType>();
+
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
+
+            var target = new GenericCollections<ComplexType>();
+
+            var typeMapper = new TypeMapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemA.A );
+            } );
+
             typeMapper.Map( source, target );
 
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );

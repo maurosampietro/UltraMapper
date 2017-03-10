@@ -19,8 +19,8 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( MemberMapping mapping )
         {
-            return mapping.SourceProperty.IsEnumerable &&
-                 mapping.TargetProperty.IsEnumerable;
+            return mapping.SourceMember.MemberType.IsEnumerable() &&
+                 mapping.TargetMember.MemberType.IsEnumerable();
         }
 
         //public bool CanHandle( TypeMapping mapping )

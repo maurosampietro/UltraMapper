@@ -8,7 +8,7 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( MemberMapping mapping )
         {
-            var memberType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            var memberType = mapping.TargetMember.MemberInfo.GetMemberType();
             return base.CanHandle( mapping ) && memberType.IsGenericType
                 && memberType.GetGenericTypeDefinition() == typeof( Queue<> );
         }

@@ -13,10 +13,10 @@ namespace TypeMapper.Mappers
         public override bool CanHandle( MemberMapping mapping )
         {
             bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom(
-                mapping.SourceProperty.MemberInfo.GetMemberType() );
+                mapping.SourceMember.MemberInfo.GetMemberType() );
 
             bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom(
-                mapping.TargetProperty.MemberInfo.GetMemberType() );
+                mapping.TargetMember.MemberInfo.GetMemberType() );
 
             return sourceIsDictionary || targetIsDictionary;
         }

@@ -4,7 +4,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public abstract class BaseMapper : IMapperExpression, IMemberMappingMapperExpression, ITypeMappingMapperExpression
+    public abstract class BaseMapper : IMemberMappingMapperExpression, ITypeMappingMapperExpression
     {
         public virtual bool CanHandle( TypeMapping mapping )
         {
@@ -14,8 +14,8 @@ namespace TypeMapper.Mappers
 
         public virtual bool CanHandle( MemberMapping mapping )
         {
-            var sourcePropertyType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            var targetPropertyType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            var sourcePropertyType = mapping.SourceMember.MemberInfo.GetMemberType();
+            var targetPropertyType = mapping.TargetMember.MemberInfo.GetMemberType();
 
             return this.CanHandle( sourcePropertyType, targetPropertyType );
         }

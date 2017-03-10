@@ -33,8 +33,8 @@ namespace TypeMapper.Mappers
             SourceInstanceType = mapping.InstanceTypeMapping.TypePair.SourceType;
             TargetInstanceType = mapping.InstanceTypeMapping.TypePair.TargetType;
 
-            SourceMemberType = mapping.SourceProperty.MemberInfo.GetMemberType();
-            TargetMemberType = mapping.TargetProperty.MemberInfo.GetMemberType();
+            SourceMemberType = mapping.SourceMember.MemberInfo.GetMemberType();
+            TargetMemberType = mapping.TargetMember.MemberInfo.GetMemberType();
 
             SourceInstance = Expression.Parameter( SourceInstanceType, "sourceInstance" );
             TargetInstance = Expression.Parameter( TargetInstanceType, "targetInstance" );
@@ -43,22 +43,22 @@ namespace TypeMapper.Mappers
             SourceMember = Expression.Variable( SourceMemberType, "sourceValue" );
             TargetMember = Expression.Variable( TargetMemberType, "targetValue" );
 
-            var sourceGetterInstanceParamName = mapping.SourceProperty
+            var sourceGetterInstanceParamName = mapping.SourceMember
                 .ValueGetter.Parameters[ 0 ].Name;
 
-            SourceMemberValue = mapping.SourceProperty.ValueGetter.Body
+            SourceMemberValue = mapping.SourceMember.ValueGetter.Body
                 .ReplaceParameter( SourceInstance, sourceGetterInstanceParamName );
 
-            var targetGetterInstanceParamName = mapping.TargetProperty
+            var targetGetterInstanceParamName = mapping.TargetMember
                 .ValueGetter.Parameters[ 0 ].Name;
 
-            TargetMemberValue = mapping.TargetProperty.ValueGetter.Body
+            TargetMemberValue = mapping.TargetMember.ValueGetter.Body
                 .ReplaceParameter( TargetInstance, targetGetterInstanceParamName );
 
-            var targetSetterInstanceParamName = mapping.TargetProperty.ValueSetter.Parameters[ 0 ].Name;
-            var targetSetterMemberParamName = mapping.TargetProperty.ValueSetter.Parameters[ 1 ].Name;
+            var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+            var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
 
-            TargetMemberValueSetter = mapping.TargetProperty.ValueSetter.Body
+            TargetMemberValueSetter = mapping.TargetMember.ValueSetter.Body
                 .ReplaceParameter( TargetInstance, targetSetterInstanceParamName )
                 .ReplaceParameter( TargetMember, targetSetterMemberParamName );
         }

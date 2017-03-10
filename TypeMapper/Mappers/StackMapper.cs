@@ -18,7 +18,7 @@ namespace TypeMapper.Mappers
     {
         public override bool CanHandle( MemberMapping mapping )
         {
-            return base.CanHandle( mapping ) && mapping.TargetProperty.MemberInfo
+            return base.CanHandle( mapping ) && mapping.TargetMember.MemberInfo
                 .GetMemberType().GetGenericTypeDefinition() == typeof( Stack<> );
         }
 

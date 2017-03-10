@@ -4,7 +4,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public sealed class BuiltInTypeMapper : BaseMapper, IMemberMappingMapperExpression, IMapperExpression, ITypeMappingMapperExpression
+    public sealed class BuiltInTypeMapper : BaseMapper, IMemberMappingMapperExpression, ITypeMappingMapperExpression
     {
         public override bool CanHandle( Type source, Type target )
         {

@@ -5,7 +5,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class NullableMapper : BaseMapper, IMemberMappingMapperExpression, IMapperExpression, ITypeMappingMapperExpression
+    public class NullableMapper : BaseMapper, IMemberMappingMapperExpression, ITypeMappingMapperExpression
     {
         public override bool CanHandle( Type source, Type target )
         {

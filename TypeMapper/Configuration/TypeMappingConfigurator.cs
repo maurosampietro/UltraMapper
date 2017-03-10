@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.ExtensionMethods;
 using TypeMapper.Internals;
 
@@ -27,7 +29,7 @@ namespace TypeMapper.Configuration
             _typeMapping = typeMapping;
             _globalConfiguration = globalConfiguration;
 
-            if( !typeMapping.IgnoreConventions )
+            //if( !typeMapping.IgnoreMappingResolveByConvention )
                 this.MapByConvention( typeMapping );
         }
 
@@ -37,8 +39,16 @@ namespace TypeMapper.Configuration
         public TypeMappingConfigurator( Type sourceType, Type targetType, GlobalConfiguration globalConfiguration )
             : this( new TypeMapping( globalConfiguration, new TypePair( sourceType, targetType ) ), globalConfiguration ) { }
 
-        public TypeMappingConfigurator MapMember( LambdaExpression sourceMemberGetterExpression,
-         LambdaExpression targetMemberGetterExpression, LambdaExpression converter = null )
+        public TypeMappingConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
+        {
+            MemberMapping mapping = MapMemberInternal( sourceMember, targetMember );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+
+            return this;
+        }
+
+        protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetterExpression,
+            LambdaExpression targetMemberGetterExpression )
         {
             var sourceMember = sourceMemberGetterExpression.ExtractMember();
             var targetMember = targetMemberGetterExpression.ExtractMember();
@@ -46,22 +56,22 @@ namespace TypeMapper.Configuration
             var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
-                   targetMemberGetterExpression, targetMemberSetterExpression, MappingResolution.USER_DEFINED, converter );
+                targetMemberGetterExpression, targetMemberSetterExpression );
         }
 
-        public TypeMappingConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
+        protected MemberMapping MapMemberInternal( MemberInfo sourceMember, MemberInfo targetMember )
         {
             var sourceMemberGetterExpression = sourceMember.GetGetterLambdaExpression();
             var targetMemberGetterExpression = targetMember.GetGetterLambdaExpression();
             var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
-                targetMemberGetterExpression, targetMemberSetterExpression, MappingResolution.USER_DEFINED, null );
+                targetMemberGetterExpression, targetMemberSetterExpression );
         }
 
-        private TypeMappingConfigurator MapMemberInternal( MemberInfo sourceMember, MemberInfo targetMember,
+        protected MemberMapping MapMemberInternal( MemberInfo sourceMember, MemberInfo targetMember,
             LambdaExpression sourceMemberGetterExpression, LambdaExpression targetMemberGetterExpression,
-            LambdaExpression targetMemberSetterExpression, MappingResolution mappingResolution, LambdaExpression converter )
+            LambdaExpression targetMemberSetterExpression )
         {
             var mappingSource = _sourceProperties.GetOrAdd( sourceMember,
                 () => new MappingSource( sourceMemberGetterExpression ) );
@@ -69,18 +79,13 @@ namespace TypeMapper.Configuration
             var mappingTarget = _targetProperties.GetOrAdd( targetMember,
                 () => new MappingTarget( targetMemberGetterExpression, targetMemberSetterExpression ) );
 
-            var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget )
-            {
-                CustomConverter = converter,
-                MappingResolution = mappingResolution,
-            };
-
+            var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget );
             _typeMapping.MemberMappings.UpdateOrAdd( targetMember, mapping );
 
-            return this;
+            return mapping;
         }
 
-        protected internal void MapByConvention( TypeMapping typeMapping )
+        protected void MapByConvention( TypeMapping typeMapping )
         {
             var source = typeMapping.TypePair.SourceType;
             var target = typeMapping.TypePair.TargetType;
@@ -106,15 +111,10 @@ namespace TypeMapper.Configuration
                 {
                     if( _globalConfiguration.MappingConvention.IsMatch( sourceMember, targetMember ) )
                     {
-                        var sourceMemberGetterExpression = sourceMember.GetGetterLambdaExpression();
-                        var targetMemberGetterExpression = targetMember.GetGetterLambdaExpression();
-                        var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
+                        var mapping = this.MapMemberInternal( sourceMember, targetMember );
+                        mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
 
-                        this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
-                            targetMemberGetterExpression, targetMemberSetterExpression,
-                            MappingResolution.RESOLVED_BY_CONVENTION, null );
-
-                        break; //sourceProperty is now mapped, jump directly to the next sourceProperty
+                        break; //sourceMember is now mapped, jump directly to the next sourceMember
                     }
                 }
             }
@@ -169,11 +169,11 @@ namespace TypeMapper.Configuration
         }
 
         public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember>(
-            Expression<Func<TSource, TSourceMember>> sourcePropertySelector,
-            Expression<Action<TTarget, TSourceMember>> targetPropertySelector )
+            Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
+            Expression<Action<TTarget, TSourceMember>> targetMemberSelector )
         {
-            return (TypeMappingConfigurator<TSource, TTarget>)
-                base.MapMember( sourcePropertySelector, targetPropertySelector, null );
+            base.MapMemberInternal( sourceMemberSelector, targetMemberSelector );
+            return this;
         }
 
         public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
@@ -181,34 +181,32 @@ namespace TypeMapper.Configuration
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Expression<Func<TSourceMember, TTargetMember>> converter = null )
         {
-            return (TypeMappingConfigurator<TSource, TTarget>)
-                base.MapMember( sourceSelector, targetSelector, converter );
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.CustomConverter = converter;
+
+            return this;
         }
 
-        ////source instance directly to property.
-        //public TypeMappingConfigurator<TSource, TTarget> MapProperty<TTargetProperty>(
-        //       Expression<Func<TTarget, TTargetProperty>> sourcePropertySelector,
-        //       Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
-        //       Expression<Func<TSource,TTargetProperty>> converter = null )
-        //{
-        //    var targetMemberInfo = targetPropertySelector.ExtractProperty();
-        //    return this.MapProperty( null, targetMemberInfo, converter );
-        //}
+        /// <summary>
+        /// Map a member implementing IEnumerable to another IEnumerable for updating.
+        /// Each element matching the equality comparison rule is updated.
+        /// Each element that exists in source but is missing in target is added.
+        /// </summary>
+        /// <typeparam name="TSourceMember"></typeparam>
+        /// <typeparam name="TTargetMember"></typeparam>
+        /// <param name="sourceSelector"></param>
+        /// <param name="targetSelector"></param>
+        /// <param name="elementEqualityComparer"></param>
+        /// <returns></returns>
+        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+           Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
+           Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
+           Expression<Func<TSourceMember, TTargetMember, bool>> elementEqualityComparer )
+        {
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.CollectionEqualityComparer = elementEqualityComparer;
 
-        //public TypeMappingConfiguration<TSource, TTarget> MapProperty<TSourceProperty, TTargetProperty>(
-        //   Expression<Func<TSource, TSourceProperty>> sourcePropertySelector,
-        //   Expression<Func<TTarget, TTargetProperty>> targetPropertySelector,
-        //   ICollectionMappingStrategy collectionStrategy,
-        //   Expression<Func<TSourceProperty, TTargetProperty>> converter = null )
-        //   where TTargetProperty : IEnumerable
-        //{
-        //    var sourceMemberInfo = sourcePropertySelector.ExtractMemberInfo();
-        //    var targetMemberInfo = targetPropertySelector.ExtractMemberInfo();
-
-        //    var propertyMapping = base.Map( sourceMemberInfo, targetMemberInfo, converter );
-        //    propertyMapping.TargetProperty.CollectionStrategy = collectionStrategy;
-
-        //    return this;
-        //}
+            return this;
+        }
     }
 }

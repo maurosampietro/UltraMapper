@@ -63,6 +63,12 @@ namespace TypeMapper
                 if( temp.Expression.NodeType == ExpressionType.Parameter )
                     stack.Push( temp.Expression );
 
+                else if( temp.Expression.NodeType == ExpressionType.Call )
+                {
+                    stack.Push( (MethodCallExpression)temp.Expression );
+                    stack.Push( ((MethodCallExpression)temp.Expression).Object );
+                }
+
                 temp = temp.Expression as MemberExpression;
             }
 

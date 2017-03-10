@@ -13,9 +13,8 @@ namespace TypeMapper.Internals
 
         public readonly TypeMapping InstanceTypeMapping;
 
-        //public readonly MemberInfoPair PropertyInfoPair;
-        public readonly MappingSource SourceProperty;
-        public readonly MappingTarget TargetProperty;
+        public readonly MappingSource SourceMember;
+        public readonly MappingTarget TargetMember;
 
         public MappingResolution MappingResolution { get; internal set; }
         public IMemberMappingMapperExpression Mapper
@@ -37,7 +36,7 @@ namespace TypeMapper.Internals
             get
             {
                 return InstanceTypeMapping.GlobalConfiguration.Configurator[
-                            SourceProperty.MemberType, TargetProperty.MemberType ];
+                    SourceMember.MemberType, TargetMember.MemberType ];
             }
         }
 
@@ -74,20 +73,19 @@ namespace TypeMapper.Internals
             get { return this.Mapper.GetMappingExpression( this ); }
         }
 
+        public LambdaExpression CollectionEqualityComparer { get; internal set; }
+
         public MemberMapping( TypeMapping typeMapping,
-            MappingSource sourceProperty, MappingTarget targetProperty )
+            MappingSource sourceMember, MappingTarget targetMember )
         {
             this.InstanceTypeMapping = typeMapping;
 
-            this.SourceProperty = sourceProperty;
-            this.TargetProperty = targetProperty;
-
-            //this.PropertyInfoPair = new MemberInfoPair(
-            //   this.SourceProperty.MemberInfo, this.TargetProperty.MemberInfo );
+            this.SourceMember = sourceMember;
+            this.TargetMember = targetMember;
 
             _toString = new Lazy<string>( () =>
             {
-                return $"{this.SourceProperty} -> {this.TargetProperty}";
+                return $"{this.SourceMember} -> {this.TargetMember}";
             } );
         }
 

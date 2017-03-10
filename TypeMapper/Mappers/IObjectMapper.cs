@@ -4,29 +4,6 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public interface IMapperExpression
-    {
-        ///// <summary>
-        ///// Gets a value indicating whether the mapper can handle
-        ///// the mapping from <param name="sourceType">source</param>
-        ///// to <param name="targetType">target</param>.
-        ///// </summary>
-        ///// <param name="sourceType">source type</param>
-        ///// <param name="targetType">target type</param>
-        ///// <returns>True if this mapper can handle the mapping from <param name="sourceType">source</param>
-        ///// to <param name="targetType">target</param>, False otherwise.</returns>
-        //bool CanHandle( Type sourceType, Type targetType );
-
-        ///// <summary>
-        ///// Gets the expression to map from <param name="sourceType">source</param>
-        ///// to <param name="targetType">target</param>.
-        ///// </summary>
-        ///// <param name="sourceType"></param>
-        ///// <param name="targetType"></param>
-        ///// <returns>The mapping expression</returns>
-        //LambdaExpression GetMappingExpression( Type sourceType, Type targetType );
-    }
-
     public interface IMemberMappingMapperExpression
     {
         /// <summary>
@@ -44,7 +21,7 @@ namespace TypeMapper.Mappers
         LambdaExpression GetMappingExpression( MemberMapping mapping );
     }
 
-    public interface ITypeMappingMapperExpression : IMapperExpression
+    public interface ITypeMappingMapperExpression
     {
         /// <summary>
         /// Gets a value indicating whether the mapper can handle <paramref name="mapping"/>

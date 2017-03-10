@@ -8,7 +8,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
 {
-    public class CollectionMapperTypeMapping : ReferenceMapperTypeMapping
+    public class CollectionMapperTypeMapping : ReferenceMapperTypeMapping, ITypeMappingMapperExpression
     {
         public override bool CanHandle( TypeMapping mapping )
         {

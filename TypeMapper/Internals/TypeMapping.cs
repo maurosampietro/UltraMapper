@@ -9,54 +9,40 @@ using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
 {
-    #region WORKING VERSION WITH RETURN OF THE ITEMS THAT NEED RECURSION 
-    public class MemberMappingComparer : IComparer<MemberMapping>
-    {
-        public int Compare( MemberMapping x, MemberMapping y )
-        {
-            var xGetter = x.TargetProperty.ValueGetter.ToString();
-            var yGetter = y.TargetProperty.ValueGetter.ToString();
-
-            int xCount = xGetter.Split( '.' ).Count();
-            int yCount = yGetter.Split( '.' ).Count();
-
-            if( xCount > yCount ) return 1;
-            if( xCount < yCount ) return -1;
-
-            return 0;
-        }
-    }
-
     public class TypeMapping
     {
-        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
-
+        /*
+         *A source member can be mapped to multiple target members.
+         *
+         *A target member can be mapped just once and for that reason 
+         *multiple mappings override each other and the last one is used.
+         *
+         *The target member can be therefore used as the key of this dictionary
+         */
+        public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
         public readonly GlobalConfiguration GlobalConfiguration;
         public readonly TypePair TypePair;
 
-        /*
-         *A source property can be mapped to multiple target properties.
-         *
-         *A target property can be mapped just once and for that reason 
-         *multiple mappings override each other and the last one is used.
-         *
-         *The target property can be therefore used as the key 
-         *of this dictionary
-         */
-        public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
-
-        public LambdaExpression CustomTargetConstructor { get; set; }
-        public bool IgnoreConventions { get; set; }
-
         public LambdaExpression CustomConverter { get; set; }
+        public LambdaExpression CustomTargetConstructor { get; set; }
+
+        private bool? _ignoreMappingResolveByConvention = null;
+        public bool IgnoreMappingResolveByConvention
+        {
+            get
+            {
+                if( _ignoreMappingResolveByConvention == null )
+                    return GlobalConfiguration.IgnoreMappingResolvedByConventions;
+
+                return _ignoreMappingResolveByConvention.Value;
+            }
+
+            set { _ignoreMappingResolveByConvention = value; }
+        }
 
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
-
-            if( globalConfig != null )
-                this.IgnoreConventions = globalConfig.IgnoreConventions;
-
             this.TypePair = typePair;
             this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
         }
@@ -67,106 +53,11 @@ namespace TypeMapper.Internals
             get
             {
                 if( _expression != null ) return _expression;
-
-                var returnType = typeof( List<ObjectPair> );
-                var returnElementType = typeof( ObjectPair );
-
-                var sourceType = TypePair.SourceType;
-                var targetType = TypePair.TargetType;
-                var trackerType = typeof( ReferenceTracking );
-
-                var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-                var targetInstance = Expression.Parameter( targetType, "targetInstance" );
-                var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
-
-                var newRefObjects = Expression.Variable( returnType, "result" );
-
-                LambdaExpression typeMappingExp = null;
-
-                var selectedMapper = GlobalConfiguration.Mappers.OfType<ITypeMappingMapperExpression>()
-                    .FirstOrDefault( mapper => mapper.CanHandle( this ) );
-
-                if( selectedMapper != null ) return selectedMapper.GetMappingExpression( this );
-
-                //unificare CollectionMapperTypeMapping con gli altri ITypeMappingMapperExpression?
-                if( typeMappingExp == null )
-                {
-                    if( new CollectionMapperTypeMapping().CanHandle( this ) )
-                        typeMappingExp = new CollectionMapperTypeMapping().GetMappingExpression( this );
-                }
-
-                var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-                var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
-
-                Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
-                {
-                    if( lambdaExp.ReturnType == returnElementType )
-                    {
-                        var objPair = Expression.Variable( returnElementType, "objPair" );
-
-                        return Expression.Block
-                        (
-                            new[] { objPair },
-
-                            Expression.Assign( objPair, lambdaExp.Body ),
-
-                            Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                                Expression.Call( newRefObjects, addMethod, objPair ) )
-                        );
-                    }
-
-                    //if( lambdaExp.ReturnType == typeof( void ) )
-                    return lambdaExp.Body;
-
-                    throw new ArgumentException( "Expressions should return System.Void or ObjectPair" );
-                };
-
-                //since nested selectors are supported, we have to grant
-                //that we assign outer objects first
-                var correctMappingOrder = MemberMappings.Values.OrderBy( mm =>
-                     mm, _memberComparer ).ToList();
-
-                var addCalls = correctMappingOrder
-                    .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
-                    .Select( mapping => createAddCalls( mapping.Expression ) );
-
-                var bodyExp = (addCalls?.Any() != true) ?
-                    (Expression)Expression.Empty() : Expression.Block( addCalls );
-
-                if( typeMappingExp != null )
-                {
-                    var typeMappingBodyExp = createAddCalls( typeMappingExp );
-
-                    bodyExp = Expression.Block
-                    (
-                        typeMappingBodyExp,
-                        bodyExp
-                    );
-                }
-
-                var body = (Expression)Expression.Block
-                (
-                    new[] { newRefObjects },
-
-                    Expression.Assign( newRefObjects, Expression.New( returnType ) ),
-
-                    bodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
-                        .ReplaceParameter( targetInstance, targetInstance.Name )
-                        .ReplaceParameter( sourceInstance, sourceInstance.Name ),
-
-                    newRefObjects
-                );
-
-                var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                    trackerType, sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
-
-                return _expression = Expression.Lambda( delegateType,
-                    body, referenceTrack, sourceInstance, targetInstance );
+                return _expression = MemberMappingExpressionMerger.Merge( this );
             }
         }
 
         private Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> _mapperFunc;
-
         public Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MapperFunc
         {
             get
@@ -191,75 +82,117 @@ namespace TypeMapper.Internals
             }
         }
     }
-    #endregion 
 
-    //public class MemberMappingExpressionMerger
-    //{
-    //    private class MemberMappingComparer : IComparer<MemberMapping>
-    //    {
-    //        public int Compare( MemberMapping x, MemberMapping y )
-    //        {
-    //            var xGetter = x.TargetProperty.ValueGetter.ToString();
-    //            var yGetter = y.TargetProperty.ValueGetter.ToString();
+    public class MemberMappingExpressionMerger
+    {
+        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
 
-    //            int xCount = xGetter.Split( '.' ).Count();
-    //            int yCount = yGetter.Split( '.' ).Count();
+        private class MemberMappingComparer : IComparer<MemberMapping>
+        {
+            public int Compare( MemberMapping x, MemberMapping y )
+            {
+                var xGetter = x.TargetMember.ValueGetter.ToString();
+                var yGetter = y.TargetMember.ValueGetter.ToString();
 
-    //            if( xCount > yCount ) return 1;
-    //            if( xCount < yCount ) return -1;
+                int xCount = xGetter.Split( '.' ).Count();
+                int yCount = yGetter.Split( '.' ).Count();
 
-    //            return 0;
-    //        }
-    //    }
+                if( xCount > yCount ) return 1;
+                if( xCount < yCount ) return -1;
 
-    //    private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+                return 0;
+            }
+        }
 
-    //    private static Expression Merge( IEnumerable<MemberMapping> mappings )
-    //    {
-    //        if( mappings?.Any() != true ) return null;
+        public static LambdaExpression Merge( TypeMapping typeMapping )
+        {
+            var returnType = typeof( List<ObjectPair> );
+            var returnElementType = typeof( ObjectPair );
 
-    //        //since nested selectors are supported, we have to grant
-    //        //that we deal with selector accessing deeper members last
-    //        //(eg when members upper in the hierarchy have been assigned)
-    //        var sortedMappings = mappings.OrderBy( mapping =>
-    //             mapping, _memberComparer ).ToList();
+            var sourceType = typeMapping.TypePair.SourceType;
+            var targetType = typeMapping.TypePair.TargetType;
+            var trackerType = typeof( ReferenceTracking );
 
-    //        var mappingExpressions = sortedMappings
-    //            .Where( mapping => !mapping.SourceProperty.Ignore && !mapping.TargetProperty.Ignore )
-    //            .Select( mapping =>
-    //            {
-    //                if( mapping.Mapper.GetType().IsAssignableFrom( typeof( ReferenceMapper ) ) )
-    //                {
-    //                    var item = mapping.TypeMapping.GlobalConfiguration.Configurator
-    //                        [ mapping.SourceProperty.MemberType, mapping.TargetProperty.MemberType ];
+            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+            var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
 
-    //                    return item.MappingExpression.Body;
-    //                }
+            var newRefObjects = Expression.Variable( returnType, "result" );
 
-    //                return mapping.Expression.Body;
-    //            } );
+            var selectedMapper = typeMapping.GlobalConfiguration.Mappers.OfType<ITypeMappingMapperExpression>()
+                .FirstOrDefault( mapper => mapper.CanHandle( typeMapping ) );
 
-    //        return Expression.Block( mappingExpressions );
-    //    }
+            var typeMappingExp = selectedMapper?.GetMappingExpression( typeMapping );
 
-    //    public static LambdaExpression GetExpression( TypeMapping mapping )
-    //    {
-    //        var trackerType = typeof( ReferenceTracking );
+            var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+            var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
 
-    //        var sourceInstance = Expression.Parameter( mapping.TypePair.SourceType, "sourceInstance" );
-    //        var targetInstance = Expression.Parameter( mapping.TypePair.TargetType, "targetInstance" );
-    //        var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
+            Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
+            {
+                if( lambdaExp.ReturnType == returnElementType )
+                {
+                    var objPair = Expression.Variable( returnElementType, "objPair" );
 
-    //        var bodyExp = Merge( mapping.MemberMappings.Values );
-    //        bodyExp = bodyExp.ReplaceParameter( referenceTrack )
-    //            .ReplaceParameter( sourceInstance, "sourceInstance" )
-    //            .ReplaceParameter( targetInstance, "targetInstance" );
+                    return Expression.Block
+                    (
+                        new[] { objPair },
 
-    //        var delegateType = typeof( Action<,,> ).MakeGenericType(
-    //            trackerType, mapping.TypePair.SourceType, mapping.TypePair.TargetType );
+                        Expression.Assign( objPair, lambdaExp.Body ),
 
-    //        return Expression.Lambda( delegateType, bodyExp,
-    //            referenceTrack, sourceInstance, targetInstance );
-    //    }
-    //}
+                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                            Expression.Call( newRefObjects, addMethod, objPair ) )
+                    );
+                }
+
+                return lambdaExp.Body;
+            };
+
+            //since nested selectors are supported, we sort membermappings to grant
+            //that we assign outer objects first
+
+
+            var validMappings = typeMapping.MemberMappings.Values.ToList();
+            if( typeMapping.IgnoreMappingResolveByConvention )
+                validMappings = validMappings.Where( mapping => mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
+
+            var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
+                .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
+                .Select( mapping => createAddCalls( mapping.Expression ) );
+
+            if( !addCalls.Any() && typeMappingExp != null )
+                return typeMappingExp;
+
+            var bodyExp = !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
+
+            if( typeMappingExp != null )
+            {
+                var typeMappingBodyExp = createAddCalls( typeMappingExp );
+
+                bodyExp = Expression.Block
+                (
+                    typeMappingBodyExp,
+                    bodyExp
+                );
+            }
+
+            var body = (Expression)Expression.Block
+            (
+                new[] { newRefObjects },
+
+                Expression.Assign( newRefObjects, Expression.New( returnType ) ),
+
+                bodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
+                    .ReplaceParameter( targetInstance, targetInstance.Name )
+                    .ReplaceParameter( sourceInstance, sourceInstance.Name ),
+
+                newRefObjects
+            );
+
+            var delegateType = typeof( Func<,,,> ).MakeGenericType(
+                trackerType, sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
+
+            return Expression.Lambda( delegateType,
+                body, referenceTrack, sourceInstance, targetInstance );
+        }
+    }
 }

@@ -4,7 +4,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ConvertMapper : BaseMapper, IMemberMappingMapperExpression, IMapperExpression, ITypeMappingMapperExpression
+    public class ConvertMapper : BaseMapper, IMemberMappingMapperExpression, ITypeMappingMapperExpression
     {
         private static Type _convertType = typeof( Convert );
 

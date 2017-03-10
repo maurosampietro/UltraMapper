@@ -55,8 +55,12 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper( cfg =>
             {
                 cfg.MapTypes<FirstLevel, FirstLevel>()
-                    .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A );
-                    //.MapMember( a => a.GetSecond().ThirdLevel, ( b, value ) => b.SecondLevel.SetThird( value ) )
+                    //nested property getter: ok
+                    .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
+                    //nested mixed member-type getter: not ok
+                    .MapMember( a => a.SecondLevel.GetThird(), b => b.A );
+                    //nested mixed member-type getter and setter method: not ok
+                    //.MapMember( a => a.SecondLevel.GetThird(), ( b, value ) => b.SecondLevel.SetThird( value ) );
             } );
 
             typeMapper.Map( source, target );

@@ -85,11 +85,6 @@ namespace TypeMapper.Tests
 
             var mapper = new TypeMapper( cfg =>
             {
-                cfg.GlobalConfiguration.Mappers.Add<BuiltInTypeMapper>()
-                    .Add<ReferenceMapper>();
-                    //.Add<CollectionMapper>()
-                    //.Add<DictionaryMapper>();
-
                 cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
                     .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
