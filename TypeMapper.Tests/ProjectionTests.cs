@@ -13,6 +13,9 @@ namespace TypeMapper.Tests
         private class FirstLevel
         {
             public string A { get; set; }
+            public string A1 { get; set; }
+            public string A2 { get; set; }
+
             public SecondLevel SecondLevel { get; set; }
 
             public SecondLevel GetSecond() { return SecondLevel; }
@@ -30,10 +33,15 @@ namespace TypeMapper.Tests
         private class ThirdLevel
         {
             public string A { get; set; }
+
+            public void SetA( string value )
+            {
+                this.A = value;
+            }
         }
 
         [TestMethod]
-        public void ManualFlattening()
+        public void ManualFlatteningUsingExistingInstances()
         {
             var source = new FirstLevel()
             {
@@ -50,17 +58,96 @@ namespace TypeMapper.Tests
                 }
             };
 
-            var target = new FirstLevel();
+            var target = new FirstLevel()
+            {
+                A = "first",
+
+                SecondLevel = new SecondLevel()
+                {
+                    A = "second",
+
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "third"
+                    }
+                }
+            };
 
             var typeMapper = new TypeMapper( cfg =>
             {
+                cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
+                {
+                    typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                } );
+
                 cfg.MapTypes<FirstLevel, FirstLevel>()
                     //nested property getter: ok
                     .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
-                    //nested mixed member-type getter: not ok
-                    .MapMember( a => a.SecondLevel.GetThird(), b => b.A );
-                    //nested mixed member-type getter and setter method: not ok
-                    //.MapMember( a => a.SecondLevel.GetThird(), ( b, value ) => b.SecondLevel.SetThird( value ) );
+                    //nested mixed member-type getter: ok
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
+                    //nested multiple method getter
+                    .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
+                    //nested mixed member-type getter and setter method: ok
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
+                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
+            } );
+
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void ManualFlatteningWithoutUsingExistingInstances()
+        {
+            var source = new FirstLevel()
+            {
+                A = "first",
+
+                SecondLevel = new SecondLevel()
+                {
+                    A = "second",
+
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "third"
+                    }
+                }
+            };
+
+            var target = new FirstLevel()
+            {
+                A = "first",
+
+                SecondLevel = new SecondLevel()
+                {
+                    A = "second",
+
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "third"
+                    }
+                }
+            };
+
+            var typeMapper = new TypeMapper( cfg =>
+            {
+                cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
+                {
+                    typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+                } );
+
+                cfg.MapTypes<FirstLevel, FirstLevel>()
+                    //nested property getter: ok
+                    .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
+                    //nested mixed member-type getter: ok
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
+                    //nested multiple method getter
+                    .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
+                    //nested mixed member-type getter and setter method: ok
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
+                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
             } );
 
             typeMapper.Map( source, target );

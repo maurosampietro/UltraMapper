@@ -39,28 +39,35 @@ namespace TypeMapper
             config?.Invoke( (MapperConfiguration<DefaultMappingConvention>)this.MappingConfiguration );
         }
 
+        public TTarget Map<TSource, TTarget>( TSource source ) where TTarget : class, new()
+        {
+            var target = new TTarget();
+            this.Map( source, target );
+            return target;
+        }
+
         /// <summary>
-        /// Creates a copy of the source instance.
+        /// Maps <paramref name="source"/> on a new instance of the same type.
         /// </summary>
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
         /// <param name="source">The instance to be copied.</param>
         /// <returns>A deep copy of the source instance.</returns>
-        public TSource Map<TSource>( TSource source ) where TSource : new()
+        public TSource Map<TSource>( TSource source ) where TSource : class, new()
         {
             var target = new TSource();
             this.Map( source, target );
             return target;
         }
 
-        public void Map<TSource, TTarget>( TSource source, ref TTarget target )
+        public void Map<TSource, TTarget>( TSource source, out TTarget target )
             where TSource : struct
             where TTarget : struct
         {
             //Non è il massimo: salta la funzione di map principale
             // e non tiene in cache le espressioni generate.
 
-            Type sourceType = source.GetType();
-            Type targetType = target.GetType();
+            Type sourceType = typeof( TSource );
+            Type targetType = typeof( TTarget );
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
             var method = (Func<TSource, TTarget>)mapping.MappingExpression.Compile();
@@ -76,6 +83,7 @@ namespace TypeMapper
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">the target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target )
+            where TTarget : class
         {
             var referenceTracking = new ReferenceTracking();
             referenceTracking.Add( source, target.GetType(), target );

@@ -161,6 +161,12 @@ namespace ConsoleApplication
             public InnerTypeDto D { get; set; }
         }
 
+        private class AllObjects
+        {
+            public object String { get; set; }
+            public object OuterType { get; set; }
+        }
+
         static void Main( string[] args )
         {
             var temp = new BaseTypes();
@@ -179,10 +185,10 @@ namespace ConsoleApplication
 
             Stopwatch sw4 = new Stopwatch();
             sw4.Start();
-            for( int i = 0; i < iterations; i++ )
-            {
-                mapper.Map( temp, temp2 );
-            }
+            //for( int i = 0; i < iterations; i++ )
+            //{
+            //    mapper.Map( temp, temp2 );
+            //}
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
 
@@ -200,6 +206,7 @@ namespace ConsoleApplication
                 cfg.CreateMissingTypeMaps = true;
                 cfg.CreateMap<BaseTypes, BaseTypesDto>();
             } );
+
             sw5.Start();
             for( int i = 0; i < iterations; i++ )
             {

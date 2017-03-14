@@ -69,6 +69,12 @@ namespace TypeMapper.Tests
             public OuterType C { get; set; }
         }
 
+        private class AllObjects
+        {
+            public object String { get; set; }
+            public object OuterType { get; set; }
+        }
+
         [TestMethod]
         public void ReferenceSimpleTest()
         {
@@ -151,6 +157,24 @@ namespace TypeMapper.Tests
             typeMapper.Map( source, target );
             Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
             Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
+        }
+
+        [TestMethod]
+        public void ObjectToObject()
+        {
+            throw new Exception( "plain wrong" );
+
+            object source = new AllObjects() { String = "prova", OuterType = new OuterType() { String = "prova" } };
+            object target = new AllObjects();
+
+            var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+
+            Assert.IsTrue( isResultOk );
+            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
+            Assert.IsFalse( Object.ReferenceEquals( ((AllObjects)source).OuterType, ((AllObjects)target).OuterType ) );
         }
     }
 }

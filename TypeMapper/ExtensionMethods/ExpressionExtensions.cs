@@ -52,38 +52,45 @@ namespace TypeMapper
             //Since we support deep member accessing, things get a little more complex here
             //but we basically just follow each member access starting from the passed lambda parameter.
 
-            //Reverse MemberExpression to make it easy to work with it
-            Stack<Expression> stack = new Stack<Expression>();
-
-            MemberExpression temp = memberExpression;
-            while( temp != null )
-            {
-                stack.Push( temp );
-
-                if( temp.Expression.NodeType == ExpressionType.Parameter )
-                    stack.Push( temp.Expression );
-
-                else if( temp.Expression.NodeType == ExpressionType.Call )
-                {
-                    stack.Push( (MethodCallExpression)temp.Expression );
-                    stack.Push( ((MethodCallExpression)temp.Expression).Object );
-                }
-
-                temp = temp.Expression as MemberExpression;
-            }
+            //Reverse the expression accessing order to make it easy to work with it
+            Stack<Expression> stack = GetNaturalExpressionAccessOrder( memberExpression );
 
             //Follow member accesses starting from the lambda input parameter.
             var lambdaMember = (stack.Pop() as ParameterExpression);
             var member = lambda.Parameters.First(
                 p => p.Name == lambdaMember.Name ).Type as MemberInfo;
 
-            foreach( MemberExpression item in stack )
+            foreach( var item in stack )
             {
-                var memberType = member.GetMemberType();
-                member = memberType.GetMember( item.Member.Name )[ 0 ];
+                string memberName = null;
+
+                if( item is MemberExpression )
+                    memberName = ((MemberExpression)item).Member.Name;
+                else if( item is MethodCallExpression )
+                    memberName = ((MethodCallExpression)item).Method.Name;
+
+                member = member.GetMemberType().GetMember( memberName )[ 0 ];
             }
 
             return member;
+        }
+
+        private static Stack<Expression> GetNaturalExpressionAccessOrder( Expression expression )
+        {
+            Stack<Expression> stack = new Stack<Expression>();
+
+            while( !(expression is ParameterExpression) )
+            {
+                stack.Push( expression );
+
+                if( expression is MemberExpression )
+                    expression = ((MemberExpression)expression).Expression;
+                else if( expression is MethodCallExpression )
+                    expression = ((MethodCallExpression)expression).Object;
+            }
+
+            stack.Push( expression );
+            return stack;
         }
 
         public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )

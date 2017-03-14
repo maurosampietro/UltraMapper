@@ -15,7 +15,7 @@ namespace TypeMapper.Mappers.MapperContexts
         }
 
         public CustomConverterContext( TypeMapping mapping )
-            : base( mapping.TypePair.SourceType, mapping.TypePair.TargetType )
+            : base( mapping )
         {
             this.CustomConverter = mapping.CustomConverter;
         }

@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.Configuration;
 using TypeMapper.Mappers;
 using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
 {
-    public class TypeMapping
+    public class TypeMapping : ITypeOptions
     {
         /*
          *A source member can be mapped to multiple target members.
@@ -26,18 +27,46 @@ namespace TypeMapper.Internals
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression CustomTargetConstructor { get; set; }
 
-        private bool? _ignoreMappingResolveByConvention = null;
-        public bool IgnoreMappingResolveByConvention
+        private bool? _ignoreMappingResolvedByConvention = null;
+        public bool IgnoreMappingResolvedByConvention
         {
             get
             {
-                if( _ignoreMappingResolveByConvention == null )
-                    return GlobalConfiguration.IgnoreMappingResolvedByConventions;
+                if( _ignoreMappingResolvedByConvention == null )
+                    return GlobalConfiguration.IgnoreMappingResolvedByConvention;
 
-                return _ignoreMappingResolveByConvention.Value;
+                return _ignoreMappingResolvedByConvention.Value;
             }
 
-            set { _ignoreMappingResolveByConvention = value; }
+            set { _ignoreMappingResolvedByConvention = value; }
+        }
+
+        private ReferenceMappingStrategies? _referenceMappingStrategy;
+        public ReferenceMappingStrategies ReferenceMappingStrategy
+        {
+            get
+            {
+                if( _referenceMappingStrategy == null )
+                    return GlobalConfiguration.ReferenceMappingStrategy;
+
+                return _referenceMappingStrategy.Value;
+            }
+
+            set { _referenceMappingStrategy = value; }
+        }
+
+        private ICollectionMappingStrategy _collectionMappingStrategy;
+        public ICollectionMappingStrategy CollectionMappingStrategy
+        {
+            get
+            {
+                if( _collectionMappingStrategy == null )
+                    return GlobalConfiguration.CollectionMappingStrategy;
+
+                return _collectionMappingStrategy;
+            }
+
+            set { _collectionMappingStrategy = value; }
         }
 
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
@@ -150,10 +179,12 @@ namespace TypeMapper.Internals
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
 
-
             var validMappings = typeMapping.MemberMappings.Values.ToList();
-            if( typeMapping.IgnoreMappingResolveByConvention )
-                validMappings = validMappings.Where( mapping => mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
+            if( typeMapping.IgnoreMappingResolvedByConvention )
+            {
+                validMappings = validMappings.Where( mapping =>
+                    mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
+            }
 
             var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
                 .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )

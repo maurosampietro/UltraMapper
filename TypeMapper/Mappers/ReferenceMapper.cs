@@ -155,7 +155,10 @@ namespace TypeMapper.Mappers
             var context = contextObj as ReferenceMapperContext;
             var newInstanceExp = Expression.New( context.TargetMemberType );
 
-            if( context.MapperConfiguration.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+            var typeMapping = context.MapperConfiguration.Configurator[
+                context.SourceMember.Type, context.TargetMember.Type ];
+
+            if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
                 return Expression.Assign( context.TargetMember, newInstanceExp );
 
             return Expression.IfThenElse

@@ -32,7 +32,6 @@ namespace TypeMapper.Tests
         //Inheritance is tested too
         private class BuiltInTypes : PrimitiveTypes
         {
-            public object Object { get; set; } = 13;
             public string String { get; set; } = "14";
         }
 
@@ -55,7 +54,6 @@ namespace TypeMapper.Tests
 
         private class NullableBuiltInTypes : NullablePrimitiveTypes
         {
-            public object Object { get; set; }
             public string String { get; set; }
         }
 
@@ -136,8 +134,7 @@ namespace TypeMapper.Tests
                 Double = 4.0,
                 Int16 = 5,
                 Int32 = 6,
-                Int64 = 7,
-                Object = 8,
+                Int64 = 7,                
                 SByte = 0x9,
                 Single = 10,
                 String = "11",
@@ -156,7 +153,6 @@ namespace TypeMapper.Tests
                 Int16 = 19,
                 Int32 = 20,
                 Int64 = 21,
-                Object = 22,
                 SByte = 0x23,
                 Single = 24,
                 String = "25",
@@ -185,8 +181,7 @@ namespace TypeMapper.Tests
                 Double = 4.0,
                 Int16 = 5,
                 Int32 = 6,
-                Int64 = 7,
-                Object = 8,
+                Int64 = 7,                
                 SByte = 0x9,
                 Single = 10f,
                 String = "11",

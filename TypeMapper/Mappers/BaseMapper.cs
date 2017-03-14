@@ -6,6 +6,13 @@ namespace TypeMapper.Mappers
 {
     public abstract class BaseMapper : IMemberMappingMapperExpression, ITypeMappingMapperExpression
     {
+#if DEBUG
+        private static void debug( object o ) => Console.WriteLine( o );
+
+        protected static readonly Expression<Action<object>> debugExp =
+            ( o ) => debug( o );
+#endif
+
         public virtual bool CanHandle( TypeMapping mapping )
         {
             return this.CanHandle( mapping.TypePair.SourceType,
@@ -14,10 +21,10 @@ namespace TypeMapper.Mappers
 
         public virtual bool CanHandle( MemberMapping mapping )
         {
-            var sourcePropertyType = mapping.SourceMember.MemberInfo.GetMemberType();
-            var targetPropertyType = mapping.TargetMember.MemberInfo.GetMemberType();
+            var sourceMemberType = mapping.SourceMember.MemberInfo.GetMemberType();
+            var targetMemberType = mapping.TargetMember.MemberInfo.GetMemberType();
 
-            return this.CanHandle( sourcePropertyType, targetPropertyType );
+            return this.CanHandle( sourceMemberType, targetMemberType );
         }
 
         public abstract bool CanHandle( Type sourceType, Type targetType );
@@ -51,14 +58,6 @@ namespace TypeMapper.Mappers
                 mapping.TypePair.TargetType );
         }
 
-        //public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
-        //{
-        //    //Func<SourceType, TargetType>
-
-        //    var context = this.GetContext( sourceType, targetType );
-        //    return GetMappingExpression( context, sourceType, targetType );
-        //}
-
         private LambdaExpression GetMappingExpression( MapperContext context, Type sourceType, Type targetType )
         {
             var targetValueAssignment = this.GetTargetValueAssignment( context );
@@ -84,11 +83,6 @@ namespace TypeMapper.Mappers
         {
             return new MapperContext( mapping );
         }
-
-        //protected virtual MapperContext GetContext( Type sourceType, Type targetType )
-        //{
-        //    return new MapperContext( sourceType, targetType );
-        //}
 
         protected virtual MapperContext GetContext( TypeMapping mapping )
         {

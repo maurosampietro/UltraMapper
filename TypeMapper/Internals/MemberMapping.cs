@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.Mappers;
 
 namespace TypeMapper.Internals
 {
     public enum MappingResolution { RESOLVED_BY_CONVENTION, USER_DEFINED }
 
-    public class MemberMapping
+    public class MemberMapping : IMemberOptions
     {
         private readonly Lazy<string> _toString;
 
@@ -21,8 +22,8 @@ namespace TypeMapper.Internals
         {
             get
             {
-                var selectedMapper = InstanceTypeMapping.GlobalConfiguration.Mappers.FirstOrDefault(
-                    mapper => mapper.CanHandle( this ) );
+                var selectedMapper = InstanceTypeMapping.GlobalConfiguration
+                    .Mappers.FirstOrDefault( mapper => mapper.CanHandle( this ) );
 
                 if( selectedMapper == null )
                     throw new Exception( $"No object mapper can handle {this}" );
@@ -61,19 +62,44 @@ namespace TypeMapper.Internals
             {
                 if( _customTargetConstructor == null )
                     return MemberTypeMapping.CustomTargetConstructor;
-                
+
                 return _customTargetConstructor;
             }
 
             set { _customTargetConstructor = value; }
         }
 
+        public LambdaExpression CollectionEqualityComparer { get; internal set; }
+
+        private ICollectionMappingStrategy _collectionMappingStrategy;
+        public ICollectionMappingStrategy CollectionMappingStrategy
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set { _collectionMappingStrategy = value; }
+        }
+
+        private ReferenceMappingStrategies? _referenceMappingStrategy;
+        public ReferenceMappingStrategies ReferenceMappingStrategy
+        {
+            get
+            {
+                if( _referenceMappingStrategy == null )
+                    return MemberTypeMapping.ReferenceMappingStrategy;
+
+                return _referenceMappingStrategy.Value;
+            }
+
+            set { _referenceMappingStrategy = value; }
+        }
+
         public LambdaExpression Expression
         {
             get { return this.Mapper.GetMappingExpression( this ); }
         }
-
-        public LambdaExpression CollectionEqualityComparer { get; internal set; }
 
         public MemberMapping( TypeMapping typeMapping,
             MappingSource sourceMember, MappingTarget targetMember )

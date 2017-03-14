@@ -12,6 +12,7 @@ namespace TypeMapper
         /// <summary>
         /// Check if a type is a base type, optionally unwrapping 
         /// and checking the underlying type of a Nullable (which is not a base type).
+        /// Object is not considered a base type.
         /// </summary>
         /// <param name="type">The type to check</param>
         /// <param name="unwrapNullableTypes">If true, checks the underlying type of a Nullable.</param>
@@ -33,7 +34,7 @@ namespace TypeMapper
                 checkType == typeof( uint ) ||
                 checkType == typeof( long ) ||
                 checkType == typeof( ulong ) ||
-                checkType == typeof( object ) ||
+                //checkType == typeof( object ) //
                 checkType == typeof( short ) ||
                 checkType == typeof( ushort ) ||
                 checkType == typeof( string );

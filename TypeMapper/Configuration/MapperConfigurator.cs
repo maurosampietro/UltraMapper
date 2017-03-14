@@ -45,15 +45,14 @@ namespace TypeMapper
             };
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( bool ignoreConventions )
+        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<TypeMapping> typeConfig )
         {
             var typePair = new TypePair( typeof( TSource ), typeof( TTarget ) );
 
             var typeMapping = _typeMappings.GetOrAdd( typePair,
                 () => new TypeMapping( GlobalConfiguration, typePair ) );
 
-            typeMapping.IgnoreMappingResolveByConvention = ignoreConventions;
-
+            typeConfig?.Invoke( typeMapping );
             return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
         }
 
@@ -93,7 +92,7 @@ namespace TypeMapper
                 if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
                     return typeMapping;
 
-                if( GlobalConfiguration.IgnoreMappingResolvedByConventions )
+                if( GlobalConfiguration.IgnoreMappingResolvedByConvention )
                     throw new Exception( $"Cannot handle {typePair}. No mapping have been explicitly defined for '{typePair}' and mapping by convention has been disabled." );
 
                 typeMapping = new TypeMapping( GlobalConfiguration, typePair );

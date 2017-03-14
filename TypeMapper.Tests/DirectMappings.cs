@@ -40,7 +40,7 @@ namespace TypeMapper.Tests
             Assert.IsTrue( source != target );
 
             var typeMapper = new TypeMapper();
-            typeMapper.Map( source, ref target );
+            typeMapper.Map( source, out target );
 
             Assert.IsTrue( source == target );
         }
@@ -54,7 +54,7 @@ namespace TypeMapper.Tests
             Assert.IsTrue( source != target );
 
             var typeMapper = new TypeMapper();
-            typeMapper.Map( source, ref target );
+            typeMapper.Map( source, out target );
 
             Assert.IsTrue( source == target );
         }

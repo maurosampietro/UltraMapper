@@ -15,7 +15,7 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            //LinkedList<int> is used only because it is forbidden to use nameof with open generics.
+            //LinkedList<int> is used only because it is forbidden to use nameof with unbound generic types.
             //Any other type instead of int would work.
             var methodName = nameof( LinkedList<int>.AddLast );
             var methodParams = new[] { context.TargetCollectionElementType };

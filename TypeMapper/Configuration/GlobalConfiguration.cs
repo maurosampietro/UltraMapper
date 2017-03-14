@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq.Expressions;
 using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.Configuration;
 using TypeMapper.Mappers;
@@ -7,6 +8,19 @@ using TypeMapper.MappingConventions;
 
 namespace TypeMapper
 {
+    public interface IMemberOptions
+    {
+        ICollectionMappingStrategy CollectionMappingStrategy { get; }
+        ReferenceMappingStrategies ReferenceMappingStrategy { get; }
+        LambdaExpression CustomConverter { get; }
+        LambdaExpression CustomTargetConstructor { get; }
+    }
+
+    public interface ITypeOptions : IMemberOptions
+    {
+        bool IgnoreMappingResolvedByConvention { get; }
+    }
+
     public class GlobalConfiguration
     {
         public readonly MapperConfiguration Configurator;
@@ -16,7 +30,7 @@ namespace TypeMapper
         /// If set to False mappings are generated based on conventions
         /// and the user can override them.
         /// </summary>
-        public bool IgnoreMappingResolvedByConventions { get; set; }
+        public bool IgnoreMappingResolvedByConvention { get; set; }
 
         public ICollectionMappingStrategy CollectionMappingStrategy { get; set; }
         public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
@@ -34,6 +48,7 @@ namespace TypeMapper
                 new BuiltInTypeMapper(),
                 new NullableMapper(),
                 new ConvertMapper(),
+                new StructMapper(),
                 new ReferenceMapper(),
                 new DictionaryMapper(),
                 new StackMapper(),

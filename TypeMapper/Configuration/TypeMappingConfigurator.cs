@@ -30,7 +30,7 @@ namespace TypeMapper.Configuration
             _globalConfiguration = globalConfiguration;
 
             //if( !typeMapping.IgnoreMappingResolveByConvention )
-                this.MapByConvention( typeMapping );
+            this.MapByConvention( typeMapping );
         }
 
         public TypeMappingConfigurator( TypePair typePair, GlobalConfiguration globalConfiguration )
@@ -45,6 +45,16 @@ namespace TypeMapper.Configuration
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
 
             return this;
+        }
+
+        protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetterExpression,
+            LambdaExpression targetMemberGetterExpression, LambdaExpression targetMemberSetterExpression )
+        {
+            var sourceMember = sourceMemberGetterExpression.ExtractMember();
+            var targetMember = targetMemberGetterExpression.ExtractMember();
+
+            return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
+              targetMemberGetterExpression, targetMemberSetterExpression );
         }
 
         protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetterExpression,
@@ -168,11 +178,12 @@ namespace TypeMapper.Configuration
             return this;
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember>(
+        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
-            Expression<Action<TTarget, TSourceMember>> targetMemberSelector )
+            Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
+            Expression<Action<TTarget, TSourceMember>> targetMemberSetter )
         {
-            base.MapMemberInternal( sourceMemberSelector, targetMemberSelector );
+            base.MapMemberInternal( sourceMemberSelector, targetMemberGetter, targetMemberSetter );
             return this;
         }
 

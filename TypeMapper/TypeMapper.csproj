@@ -73,6 +73,7 @@
     <Compile Include="Mappers\NullableMapper.cs" />
     <Compile Include="Mappers\ReferenceMapper.cs" />
     <Compile Include="Mappers\LinkedListMapper.cs" />
+    <Compile Include="Mappers\StructMapper.cs" />
     <Compile Include="Mappers\TypeMappers\CollectionMapperTypeMapper.cs" />
     <Compile Include="Mappers\TypeMappers\ReferenceTypeMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />

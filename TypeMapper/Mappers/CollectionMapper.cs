@@ -23,39 +23,13 @@ namespace TypeMapper.Mappers
                  mapping.TargetMember.MemberType.IsEnumerable();
         }
 
-        //public bool CanHandle( TypeMapping mapping )
-        //{
-        //    return mapping.TypePair.SourceType.IsEnumerable() &&
-        //         mapping.TypePair.TargetType.IsEnumerable();
-        //}
-
         protected override object GetMapperContext( MemberMapping mapping )
         {
             return new CollectionMapperContext( mapping );
         }
 
-        //protected object GetMapperContext( TypeMapping mapping )
-        //{
-        //    return new CollectionMapperContext( mapping );
-        //}
-
         protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
-            /*If reference mapping strategy is USE_TARGET_INSTANCE_IF_NOT_NULL
-             * we can only use the item-insertion method to map cause we are not allowed not create new instances.
-             */
-
-            Func<Expression> GetTargetInstanceExpression = () =>
-            {
-                if( context.MapperConfiguration
-                    .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
-                {
-                    return context.TargetMemberValue;
-                }
-
-                return Expression.New( context.TargetMemberType );
-            };
-
             //- Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
             //- Must also manage the case where SourceElementType and TargetElementType differ:
             // cannot use directly the target constructor: use add method or temp collection.
@@ -82,11 +56,11 @@ namespace TypeMapper.Mappers
                 Expression loopBody = Expression.Call( context.TargetMember,
                     addMethod, Expression.Invoke( convert, context.SourceCollectionLoopingVar ) );
 
-                var targetInstanceExpression = GetTargetInstanceExpression();
+                var targetInstanceExpression = GetTargetInstanceAssignment( context );
 
                 return Expression.Block
                 (
-                    Expression.Assign( context.TargetMember, targetInstanceExpression ),
+                    targetInstanceExpression,
 
                     ExpressionLoops.ForEach( context.SourceMember,
                         context.SourceCollectionLoopingVar, loopBody )
@@ -101,28 +75,6 @@ namespace TypeMapper.Mappers
 
         protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
-            Func<Expression> GetTargetInstanceExpression = () =>
-            {
-                if( context.MapperConfiguration
-                    .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
-                {
-                    return context.TargetMemberValue;
-                }
-
-                var newInstanceExp = Expression.New( context.TargetMemberType );
-                if( context.TargetMemberType.ImplementsInterface( typeof( ICollection<> ) ) )
-                {
-                    var constructorWithCapacity = context.TargetMemberType.GetConstructor( new Type[] { typeof( int ) } );
-                    if( constructorWithCapacity != null )
-                    {
-                        var getCountMethod = context.SourceMemberType.GetProperty( "Count" ).GetGetMethod();
-                        newInstanceExp = Expression.New( constructorWithCapacity, Expression.Call( context.SourceMember, getCountMethod ) );
-                    }
-                }
-
-                return newInstanceExp;
-            };
-
             /*
              * By default try to retrieve the item-insertion method of the collection.
              * The exact name of the method can be overridden so that, for example, 
@@ -136,7 +88,7 @@ namespace TypeMapper.Mappers
              * an exception is thrown
              */
 
-            //var objectPairConstructor = context.ReturnElementType.GetConstructors().First();
+            var targetInstanceAssignment = GetTargetInstanceAssignment( context );
 
             var addMethod = GetTargetCollectionAddMethod( context );
             if( addMethod != null || context.MapperConfiguration
@@ -144,7 +96,7 @@ namespace TypeMapper.Mappers
             {
                 return Expression.Block
                 (
-                    Expression.Assign( context.TargetMember, GetTargetInstanceExpression() ),
+                    targetInstanceAssignment,
                     CollectionLoopWithReferenceTracking( context, context.TargetMember, addMethod )
                 );
             }
@@ -182,6 +134,9 @@ namespace TypeMapper.Mappers
         protected virtual Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
             ParameterExpression targetCollection, MethodInfo targetCollectionAddMethod )
         {
+            var itemMapping = context.MapperConfiguration.Configurator
+                [ context.SourceCollectionLoopingVar.Type, context.TargetCollectionElementType ].MappingExpression;
+
             var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
 
             return Expression.Block
@@ -190,18 +145,15 @@ namespace TypeMapper.Mappers
 
                 ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( context, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( itemMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
         }
 
-        protected BlockExpression LookUpBlock( CollectionMapperContext context, ParameterExpression referenceTracker,
+        protected BlockExpression LookUpBlock( LambdaExpression itemMapping, ParameterExpression referenceTracker,
            Expression sourceParam, ParameterExpression targetParam )
         {
-            var itemMapping = context.MapperConfiguration.Configurator
-             [ sourceParam.Type, targetParam.Type ].MappingExpression;
-
             Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method, referenceTracker, sourceParam,
                     Expression.Constant( targetParam.Type ) );
@@ -258,6 +210,30 @@ namespace TypeMapper.Mappers
         protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
             return context.TargetMemberType.GetMethod( "Add" );
+        }
+
+        protected override Expression GetTargetInstanceAssignment( object contextObj )
+        {
+            var context = contextObj as CollectionMapperContext;
+            var typeMapping = context.MapperConfiguration.Configurator[
+                context.SourceMember.Type, context.TargetMember.Type ];
+
+            if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
+                && context.SourceMemberType.ImplementsInterface( typeof( ICollection<> ) )
+                && context.TargetMemberType.ImplementsInterface( typeof( ICollection<> ) ) )
+            {
+                var constructorWithCapacity = context.TargetMemberType.GetConstructor( new Type[] { typeof( int ) } );
+                if( constructorWithCapacity != null )
+                {
+                    //ICollection<int> is used only because it is forbidden to use nameof with unbound generic types.
+                    //Any other type instead of int would work.
+                    var getCountMethod = context.SourceMemberType.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
+                    return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
+                        Expression.Call( context.SourceMember, getCountMethod ) ) );
+                }
+            }
+
+            return base.GetTargetInstanceAssignment( contextObj );
         }
     }
 }

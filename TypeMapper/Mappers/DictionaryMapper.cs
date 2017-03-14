@@ -60,21 +60,20 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             MemberExpression sourceParam, ParameterExpression targetParam )
         {
+            var typeMapping = context.MapperConfiguration.Configurator[
+                    sourceParam.Type, targetParam.Type ];
+
+            var convert = typeMapping.MappingExpression;
+
             if( sourceParam.Type.IsBuiltInType( false ) && targetParam.Type.IsBuiltInType( false ) )
             {
                 if( sourceParam.Type == targetParam.Type )
                     return Expression.Assign( targetParam, sourceParam );
 
-                var typeMapping = context.MapperConfiguration.Configurator[
-                        sourceParam.Type, targetParam.Type ];
-
-                var convert = typeMapping.MappingExpression;
-
                 return Expression.Assign( targetParam, Expression.Invoke( convert, sourceParam ) );
             }
 
-            return base.LookUpBlock( context, 
-                context.ReferenceTrack, sourceParam, targetParam );
+            return base.LookUpBlock( convert, context.ReferenceTrack, sourceParam, targetParam );
         }
     }
 }

@@ -123,8 +123,8 @@ namespace TypeMapper.Tests
                     var targetType = typeof( GenericCollections<> )
                         .MakeGenericType( targetElementType );
 
-                    var sourceTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( sourceType );
-                    var targetTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( targetType );
+                    var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool>( sourceType );
+                    var targetTypeCtor = ConstructorFactory.CreateConstructor<bool>( targetType );
 
                     var source = sourceTypeCtor( true );
                     var target = targetTypeCtor( true );
@@ -185,8 +185,8 @@ namespace TypeMapper.Tests
                     var targetType = typeof( GenericCollections<> )
                         .MakeGenericType( targetElementType );
 
-                    var sourceTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( sourceType );
-                    var targetTypeCtor = ConstructorFactory.GetOrCreateConstructor<bool>( targetType );
+                    var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool>( sourceType );
+                    var targetTypeCtor = ConstructorFactory.CreateConstructor<bool>( targetType );
 
                     var source = sourceTypeCtor( true );
                     var target = targetTypeCtor( true );

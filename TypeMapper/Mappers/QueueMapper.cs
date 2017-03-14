@@ -15,7 +15,7 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            //Queue<int> is used only because it is forbidden to use nameof with open generics.
+            //Queue<int> is used only because it is forbidden to use nameof with unbound generic types.
             //Any other type instead of int would work.
             var methodName = nameof( Queue<int>.Enqueue );
             var methodParams = new[] { context.TargetCollectionElementType };

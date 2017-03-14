@@ -76,7 +76,7 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
-                    .MapMember( s => s.PropertyA, ( t, val ) => t.SetFieldA( val ) )
+                    .MapMember( s => s.PropertyA, t => t.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
             );
             typeMapper.Map( source, target );
 
@@ -132,7 +132,7 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
-                    .MapMember( s => s.FieldA, ( t, val ) => t.SetFieldA( val ) )
+                    .MapMember( s => s.FieldA, t => t.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
             );
             typeMapper.Map( source, target );
 
@@ -149,7 +149,7 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
-                    .MapMember( s => s.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
+                    .MapMember( s => s.GetFieldA(), t => t.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
             );
             typeMapper.Map( source, target );
 

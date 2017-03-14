@@ -26,6 +26,9 @@ namespace TypeMapper.Mappers
 
         public Expression TargetMemberValueSetter { get; protected set; }
 
+        //public ITypeOptions InstanceMappingOptions { get; protected set; }
+        //public ITypeOptions MemberMappingOptions { get; protected set; }
+
         public MapperContext( MemberMapping mapping )
         {
             MapperConfiguration = mapping.InstanceTypeMapping.GlobalConfiguration;
@@ -61,15 +64,22 @@ namespace TypeMapper.Mappers
             TargetMemberValueSetter = mapping.TargetMember.ValueSetter.Body
                 .ReplaceParameter( TargetInstance, targetSetterInstanceParamName )
                 .ReplaceParameter( TargetMember, targetSetterMemberParamName );
+
+            //InstanceMappingOptions = mapping.InstanceTypeMapping.GlobalConfiguration
+            //    .Configurator[ SourceInstance.Type, TargetInstance.Type ];
+
+            //MemberMappingOptions = mapping as ITypeOptions;
         }
 
-        public MapperContext( Type source, Type target )
+        public MapperContext( TypeMapping mapping )
         {
-            SourceInstanceType = source;
-            TargetInstanceType = target;
+            MapperConfiguration = mapping.GlobalConfiguration;
 
-            SourceMemberType = source;
-            TargetMemberType = target;
+            SourceInstanceType = mapping.TypePair.SourceType;
+            TargetInstanceType = mapping.TypePair.TargetType;
+
+            SourceMemberType = mapping.TypePair.SourceType;
+            TargetMemberType = mapping.TypePair.TargetType;
 
             SourceInstance = Expression.Parameter( SourceInstanceType, "sourceInstance" );
             TargetInstance = Expression.Parameter( TargetInstanceType, "targetInstance" );
@@ -79,12 +89,12 @@ namespace TypeMapper.Mappers
             TargetMember = Expression.Variable( TargetMemberType, "targetValue" );
 
             SourceMemberValue = SourceInstance;
-        }
 
-        public MapperContext( TypeMapping mapping )
-            : this( mapping.TypePair.SourceType, mapping.TypePair.TargetType )
-        {
-            this.MapperConfiguration = mapping.GlobalConfiguration;
+            //InstanceMappingOptions = mapping.GlobalConfiguration.Configurator[
+            //    SourceInstance.Type, TargetInstance.Type ];
+
+            //MemberMappingOptions = mapping.GlobalConfiguration.Configurator[
+            //    SourceMember.Type, TargetMember.Type ];
         }
     }
 }

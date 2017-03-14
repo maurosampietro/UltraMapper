@@ -12,291 +12,113 @@ namespace TypeMapper
             return (T)CreateObject( typeof( T ), constructorValues );
         }
 
-        public static object CreateObject( Type type, params object[] constructorValues )
+        public static object CreateObject( Type intanceType, params object[] constructorValues )
         {
             //parameterless
             if( constructorValues == null || constructorValues.Length == 0 )
             {
-                var instanceCreator = ConstructorFactory.GetOrCreateConstructor( type );
+                var instanceCreator = ConstructorFactory.CreateConstructor( intanceType );
                 return instanceCreator();
             }
             else // with parameters
             {
-                //var paramTypes = constructorValues.Select( v => v.GetType() );
-                var instanceCreator = ConstructorFactory.GetOrCreateConstructor( type );
-                return instanceCreator();
+                var paramTypes = constructorValues.Select( value => value.GetType() ).ToArray();
+                var instanceCreator = ConstructorFactory.CreateConstructor( intanceType, paramTypes );
+
+                return instanceCreator( constructorValues );
             }
         }
     }
 
     public class ConstructorFactory
     {
-        private struct ConstructorArgs
+        public static Func<object> CreateConstructor( Type type )
         {
-            public readonly Type[] ArgTypes;
-            private int _hashCode;
+            var instanceCreatorExp = Expression.Lambda<Func<object>>(
+                Expression.Convert( Expression.New( type ), typeof( object ) ) );
 
-            public ConstructorArgs( params Type[] argTypes )
-            {
-                this.ArgTypes = argTypes;
-
-                if( this.ArgTypes == null ) _hashCode = 0;
-                else
-                {
-                    _hashCode = this.ArgTypes.Aggregate( 31, ( xorAcc, argType )
-                        => xorAcc ^= argType.GetHashCode() );
-                }
-            }
-
-            public override bool Equals( object obj )
-            {
-                if( obj == null ) return false;
-                var instance = (ConstructorArgs)obj;
-
-                if( Object.ReferenceEquals( this.ArgTypes, instance.ArgTypes ) )
-                    return true;
-
-                if( this.ArgTypes.Length != instance.ArgTypes.Length )
-                    return false;
-
-                for( int i = 0; i < this.ArgTypes.Length; i++ )
-                {
-                    if( this.ArgTypes[ i ] != instance.ArgTypes[ i ] )
-                        return false;
-                }
-
-                return true;
-            }
-
-            public override int GetHashCode()
-            {
-                return _hashCode;
-            }
-
-            public static bool operator ==( ConstructorArgs objA, ConstructorArgs objB )
-            {
-                return objA.Equals( objB );
-            }
-            public static bool operator !=( ConstructorArgs objA, ConstructorArgs objB )
-            {
-                return !objA.Equals( objB );
-            }
+            return instanceCreatorExp.Compile();
         }
 
-        private struct CacheKey
-        {
-            public readonly Type InstanceType;
-            public readonly ConstructorArgs ContructorArgs;
-
-            private int _hashCode;
-
-            public CacheKey( Type instanceType, params Type[] constructorArgTypes )
-            {
-                this.InstanceType = instanceType;
-                this.ContructorArgs = new ConstructorArgs( constructorArgTypes );
-
-                _hashCode = this.ContructorArgs.GetHashCode() ^
-                    this.InstanceType.GetHashCode();
-            }
-
-            public override bool Equals( object obj )
-            {
-                if( obj == null ) return false;
-                var instance = (CacheKey)obj;
-
-                return this.InstanceType == instance.InstanceType &&
-                    this.ContructorArgs == instance.ContructorArgs;
-            }
-
-            public override int GetHashCode()
-            {
-                return _hashCode;
-            }
-        }
-
-        /// <summary>
-        /// Caches delegate with typed return type
-        /// </summary>
-        private static Dictionary<CacheKey, Delegate> _cacheTyped
-             = new Dictionary<CacheKey, Delegate>();
-
-        /// <summary>
-        /// Caches delegate with untyped (object) return type 
-        /// </summary>
-        private static Dictionary<CacheKey, Delegate> _cacheUntyped
-            = new Dictionary<CacheKey, Delegate>();
-
-        public static Func<object> GetOrCreateConstructor( Type type )
-        {
-            var cacheKey = new CacheKey( type, null );
-
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                //2. generate one otherwise
-                var instanceCreatorExp = Expression.Lambda<Func<object>>(
-                    Expression.Convert( Expression.New( type ), typeof( object ) ) );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheUntyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<object>)instanceCreator;
-        }
-
-        public static Func<TArg1, object> GetOrCreateConstructor<TArg1>( Type instanceType )
+        public static Func<TArg1, object> CreateConstructor<TArg1>( Type instanceType )
         {
             var ctorArgTypes = new[] { typeof( TArg1 ) };
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
+                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
-
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
-                    Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheUntyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, object>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, object> GetOrCreateConstructor<TArg1, TArg2>( Type instanceType )
+        public static Func<TArg1, TArg2, object> CreateConstructor<TArg1, TArg2>( Type instanceType )
         {
             var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, object>>(
+                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
-
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, object>>(
-                    Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheUntyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, object>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TArg3, object> GetOrCreateConstructor<TArg1, TArg2, TArg3>( Type instanceType )
+        public static Func<TArg1, TArg2, TArg3, object> CreateConstructor<TArg1, TArg2, TArg3>( Type instanceType )
         {
-            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
-                typeof( TArg3 )};
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, object>>(
+               Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, object>>(
-                   Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
-
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheUntyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TArg3, object>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TArg3, TArg4, object> GetOrCreateConstructor<TArg1, TArg2, TArg3, TArg4>( Type instanceType )
+        public static Func<TArg1, TArg2, TArg3, TArg4, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4>( Type instanceType )
         {
             var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                 typeof( TArg3 ), typeof(TArg4)};
 
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, object>>(
+               Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, object>>(
-                   Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheUntyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TArg3, TArg4, object>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, object> GetOrCreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5>( Type instanceType )
+        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5>( Type instanceType )
         {
             var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                 typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>>(
+               Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>>(
-                   Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheUntyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<object[], object> GetOrCreateConstructor( Type type, params Type[] ctorArgTypes )
+        public static Func<object[], object> CreateConstructor( Type type, params Type[] ctorArgTypes )
         {
             if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                 ctorArgTypes = Type.EmptyTypes;
 
-            var cacheKey = new CacheKey( type, ctorArgTypes );
-
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            //if( !_cacheUntyped.TryGetValue( cacheKey, out instanceCreator ) )
-            //{
-            //2. generate one otherwise
             var constructorInfo = type.GetConstructor( ctorArgTypes );
 
             var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
@@ -306,206 +128,110 @@ namespace TypeMapper
             var instanceCreatorExp = Expression.Lambda<Func<object[], object>>(
                Expression.Convert( Expression.New( constructorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
 
-            instanceCreator = instanceCreatorExp.Compile();
-
-            //3. cache it
-            //    _cacheUntyped.Add( cacheKey, instanceCreator );
-            //}
-
-            return (Func<object[], object>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TInstance> GetOrCreateConstructor<TInstance>()
+        public static Func<TInstance> CreateConstructor<TInstance>()
         {
             var instanceType = typeof( TInstance );
-            var cacheKey = new CacheKey( instanceType, null );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                instanceCreator = Expression.Lambda<Func<TInstance>>(
-                    Expression.New( typeof( TInstance ) ) ).Compile();
+            var instanceCreatorExp = Expression.Lambda<Func<TInstance>>(
+                    Expression.New( typeof( TInstance ) ) );
 
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TInstance> GetOrCreateConstructor<TArg1, TInstance>()
+        public static Func<TArg1, TInstance> CreateConstructor<TArg1, TInstance>()
         {
             var ctorArgTypes = new[] { typeof( TArg1 ) };
+            var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
-            var instanceType = typeof( TInstance );
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TInstance>>(
+                Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
-
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TInstance> GetOrCreateConstructor<TArg1, TArg2, TInstance>()
+        public static Func<TArg1, TArg2, TInstance> CreateConstructor<TArg1, TArg2, TInstance>()
         {
             var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
+            var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
-            var instanceType = typeof( TInstance );
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TInstance>>(
+                Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
-
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TArg3, TInstance> GetOrCreateConstructor<TArg1, TArg2, TArg3, TInstance>()
+        public static Func<TArg1, TArg2, TArg3, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TInstance>()
         {
-            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
-                typeof( TArg3 )};
+            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
             var instanceType = typeof( TInstance );
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+            var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TInstance>>(
+                Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
 
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TArg3, TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TArg3, TArg4, TInstance> GetOrCreateConstructor<TArg1, TArg2, TArg3, TArg4, TInstance>()
+        public static Func<TArg1, TArg2, TArg3, TArg4, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TInstance>()
         {
             var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                 typeof( TArg3 ), typeof(TArg4)};
 
-            var instanceType = typeof( TInstance );
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TInstance>>(
+                Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TArg3, TArg4, TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance> GetOrCreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>()
+        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>()
         {
             var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                 typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-            var instanceType = typeof( TInstance );
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>>(
+                Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
 
-        public static Func<object[], TInstance> GetOrCreateConstructor<TInstance>( params Type[] ctorArgTypes )
+        public static Func<object[], TInstance> CreateConstructor<TInstance>( params Type[] ctorArgTypes )
         {
-            var instanceType = typeof( TInstance );
-
             if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                 ctorArgTypes = Type.EmptyTypes;
 
-            var cacheKey = new CacheKey( instanceType, ctorArgTypes );
+            var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
-            //1. look in the cache if a suitable constructor has already been generated
-            Delegate instanceCreator;
-            if( !_cacheTyped.TryGetValue( cacheKey, out instanceCreator ) )
-            {
-                //2. generate one otherwise
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
+            var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
+                Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
 
-                var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
-                var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
-                    Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
+            var instanceCreatorExp = Expression.Lambda<Func<object[], TInstance>>(
+               Expression.New( constructorInfo, constructorArgs ), lambdaArgs );
 
-                var instanceCreatorExp = Expression.Lambda<Func<object[], TInstance>>(
-                   Expression.New( constructorInfo, constructorArgs ), lambdaArgs );
-
-                instanceCreator = instanceCreatorExp.Compile();
-
-                //3. cache it
-                _cacheTyped.Add( cacheKey, instanceCreator );
-            }
-
-            return (Func<object[], TInstance>)instanceCreator;
+            return instanceCreatorExp.Compile();
         }
     }
 }

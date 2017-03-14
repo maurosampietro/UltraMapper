@@ -2,57 +2,32 @@
 
 namespace TypeMapper.CollectionMappingStrategies
 {
-    ///// <summary>
-    ///// Creates a new collection
-    ///// </summary>
-    //public class NewCollection : ICollectionMappingStrategy
-    //{
-    //    public TReturn GetTargetCollection<TReturn>( object targetInstance, PropertyMapping mapping )
-    //    {
-    //        return (TReturn)Activator.CreateInstance( mapping.TargetProperty.MemberInfo.PropertyType );
-    //    }
-    //}
+    /// <summary>
+    /// Keeps using the input collection (same reference).
+    /// The collection is cleared and then elements are added.
+    /// </summary>
+    public class ClearCollection : ICollectionMappingStrategy
+    {
+       
+    }
 
     /// <summary>
-    /// If a collection already exists on the target, keeps using it.
-    /// A new collection is created otherwise.
+    /// Keeps using the input collection (same reference).
+    /// Each source item matching a target item is updated.
+    /// Each source item non existing in the target collection is added.
+    /// Each target item non existing in the source collection is removed.
     /// </summary>
-    //public class KeepCollection : ICollectionMappingStrategy
-    //{
-    //    public TReturn GetTargetCollection<TReturn>( object targetInstance, PropertyMapping mapping )
-    //    {
-    //        var targetProperty = mapping.TargetProperty.MemberInfo;
-
-    //        object collection = targetProperty.GetValue( targetInstance );
-    //        if( collection == null)
-    //            collection = Activator.CreateInstance( targetProperty.PropertyType );
-
-    //        return (TReturn)collection;
-    //    }
-    //}
+    public class UpdateCollection : ICollectionMappingStrategy
+    {
+      
+    }
 
     /// <summary>
-    /// Keeps using the input collection and maps
-    /// removing and adding element to it.
+    /// Keep using the input collection (same reference).
+    /// The collection is untouched and elements are added.
     /// </summary>
-    //public class UpdateCollection : ICollectionMappingStrategy
-    //{
-    //    public IList GetTargetCollection( object targetInstance, PropertyMapping mapping )
-    //    {
-    //        return (IList)mapping.TargetProperty.PropertyInfo.GetValue( targetInstance );
-    //    }
-    //}
-
-    ///// <summary>
-    ///// Keeps the input collection and adds elements to it
-    ///// </summary>
-    //public class MergeCollection : ICollectionMappingStrategy
-    //{
-    //    public IList GetTargetCollection( object targetInstance, PropertyMapping mapping )
-    //    {
-
-
-    //        return (IList)mapping.TargetProperty.PropertyInfo.GetValue( targetInstance );
-    //    }
-    //}
+    public class MergeCollection : ICollectionMappingStrategy
+    {
+      
+    }
 }
