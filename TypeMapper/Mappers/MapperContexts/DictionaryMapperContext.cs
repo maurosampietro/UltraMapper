@@ -28,5 +28,21 @@ namespace TypeMapper.Mappers
             TargetCollectionElementKey = Expression.Variable( targetCollectionElementKeyType, "targetKey" );
             TargetCollectionElementValue = Expression.Variable( targetCollectionElementValueType, "targetValue" );
         }
+
+        public DictionaryMapperContext( Type source, Type target )
+            : base( source, target )
+        {
+            var sourceCollectionElementKeyType = SourceCollectionElementType.GetGenericArguments()[ 0 ];
+            var sourceCollectionElementValueType = SourceCollectionElementType.GetGenericArguments()[ 1 ];
+
+            var targetCollectionElementKeyType = TargetCollectionElementType.GetGenericArguments()[ 0 ];
+            var targetCollectionElementValueType = TargetCollectionElementType.GetGenericArguments()[ 1 ];
+
+            SourceCollectionElementKey = Expression.Property( SourceCollectionLoopingVar, nameof( DictionaryEntry.Key ) );
+            SourceCollectionElementValue = Expression.Property( SourceCollectionLoopingVar, nameof( DictionaryEntry.Value ) );
+
+            TargetCollectionElementKey = Expression.Variable( targetCollectionElementKeyType, "targetKey" );
+            TargetCollectionElementValue = Expression.Variable( targetCollectionElementValueType, "targetValue" );
+        }
     }
 }

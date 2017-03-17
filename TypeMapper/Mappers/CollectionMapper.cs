@@ -15,12 +15,14 @@ namespace TypeMapper.Mappers
      * 
      */
 
-    public class CollectionMapper : ReferenceMapper, IMemberMappingMapperExpression
+    public class CollectionMapper : ReferenceMapper
     {
-        public override bool CanHandle( MemberMapping mapping )
+        public CollectionMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
+        public override bool CanHandle( Type source, Type target )
         {
-            return mapping.SourceMember.MemberType.IsEnumerable() &&
-                 mapping.TargetMember.MemberType.IsEnumerable();
+            return source.IsEnumerable() && target.IsEnumerable();
         }
 
         protected override object GetMapperContext( MemberMapping mapping )
@@ -35,7 +37,7 @@ namespace TypeMapper.Mappers
             // cannot use directly the target constructor: use add method or temp collection.
 
             var constructorInfo = GetTargetCollectionConstructorFromCollection( context );
-            if( constructorInfo == null || context.MapperConfiguration
+            if( constructorInfo == null || MapperConfiguration
                     .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL
                     || context.SourceCollectionElementType != context.TargetCollectionElementType )
             {
@@ -48,7 +50,7 @@ namespace TypeMapper.Mappers
                     throw new Exception( msg );
                 }
 
-                var typeMapping = context.MapperConfiguration.Configurator[
+                var typeMapping = MapperConfiguration.Configurator[
                           context.SourceCollectionElementType, context.TargetCollectionElementType ];
 
                 var convert = typeMapping.MappingExpression;
@@ -91,7 +93,7 @@ namespace TypeMapper.Mappers
             var targetInstanceAssignment = GetTargetInstanceAssignment( context );
 
             var addMethod = GetTargetCollectionAddMethod( context );
-            if( addMethod != null || context.MapperConfiguration
+            if( addMethod != null || MapperConfiguration
                 .ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
             {
                 return Expression.Block
@@ -134,7 +136,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
             ParameterExpression targetCollection, MethodInfo targetCollectionAddMethod )
         {
-            var itemMapping = context.MapperConfiguration.Configurator
+            var itemMapping = MapperConfiguration.Configurator
                 [ context.SourceCollectionLoopingVar.Type, context.TargetCollectionElementType ].MappingExpression;
 
             var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
@@ -215,7 +217,7 @@ namespace TypeMapper.Mappers
         protected override Expression GetTargetInstanceAssignment( object contextObj )
         {
             var context = contextObj as CollectionMapperContext;
-            var typeMapping = context.MapperConfiguration.Configurator[
+            var typeMapping = MapperConfiguration.Configurator[
                 context.SourceMember.Type, context.TargetMember.Type ];
 
             if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE

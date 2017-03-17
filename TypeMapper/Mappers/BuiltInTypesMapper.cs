@@ -4,8 +4,11 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public sealed class BuiltInTypeMapper : BaseMapper, IMemberMappingMapperExpression, ITypeMappingMapperExpression
+    public sealed class BuiltInTypeMapper : BaseMapper, ITypeMappingMapperExpression
     {
+        public BuiltInTypeMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
         public override bool CanHandle( Type source, Type target )
         {
             bool areTypesBuiltIn = source.IsBuiltInType( false )

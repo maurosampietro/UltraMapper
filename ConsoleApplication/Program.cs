@@ -185,10 +185,10 @@ namespace ConsoleApplication
 
             Stopwatch sw4 = new Stopwatch();
             sw4.Start();
-            //for( int i = 0; i < iterations; i++ )
-            //{
-            //    mapper.Map( temp, temp2 );
-            //}
+            for( int i = 0; i < iterations; i++ )
+            {
+                mapper.Map( temp, temp2 );
+            }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
 

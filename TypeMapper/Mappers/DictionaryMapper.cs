@@ -10,13 +10,13 @@ namespace TypeMapper.Mappers
 {
     public class DictionaryMapper : CollectionMapper
     {
-        public override bool CanHandle( MemberMapping mapping )
-        {
-            bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom(
-                mapping.SourceMember.MemberInfo.GetMemberType() );
+        public DictionaryMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
 
-            bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom(
-                mapping.TargetMember.MemberInfo.GetMemberType() );
+        public override bool CanHandle( Type source, Type target )
+        {
+            bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom( source );
+            bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom( target );
 
             return sourceIsDictionary || targetIsDictionary;
         }
@@ -60,7 +60,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             MemberExpression sourceParam, ParameterExpression targetParam )
         {
-            var typeMapping = context.MapperConfiguration.Configurator[
+            var typeMapping = MapperConfiguration.Configurator[
                     sourceParam.Type, targetParam.Type ];
 
             var convert = typeMapping.MappingExpression;

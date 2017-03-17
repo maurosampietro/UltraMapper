@@ -5,8 +5,15 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : IMemberMappingMapperExpression
+    public class ReferenceMapper : IMapperExpressionBuilder, IMemberMappingMapperExpression//, ITypeMappingMapperExpression
     {
+        public readonly GlobalConfiguration MapperConfiguration;
+
+        public ReferenceMapper( GlobalConfiguration configuration )
+        {
+            this.MapperConfiguration = configuration;
+        }
+
 #if DEBUG
         private static void debug( object o ) => Console.WriteLine( o );
 
@@ -29,20 +36,15 @@ namespace TypeMapper.Mappers
             referenceTracker.Add( sourceInstance, targetType, targetInstance );
         };
 
-        public virtual bool CanHandle( MemberMapping mapping )
+        public virtual bool CanHandle( Type source, Type target )
         {
-            var sourceType = mapping.SourceMember.MemberInfo.GetMemberType();
-            var targetType = mapping.TargetMember.MemberInfo.GetMemberType();
+            bool valueTypes = source.IsValueType
+                && target.IsValueType;
 
-            return this.CanHandle( sourceType, targetType );
-        }
+            bool builtInTypes = source.IsBuiltInType( false )
+                && target.IsBuiltInType( false );
 
-        protected virtual bool CanHandle( Type sourceType, Type targetType )
-        {
-            bool valueTypes = sourceType.IsValueType && targetType.IsValueType;
-            bool builtInTypes = sourceType.IsBuiltInType( false ) && targetType.IsBuiltInType( false );
-
-            return !valueTypes && !builtInTypes && !sourceType.IsEnumerable();
+            return !valueTypes && !builtInTypes && !source.IsEnumerable();
         }
 
         protected LambdaExpression GetMappingExpression( ReferenceMapperContext context )
@@ -55,6 +57,17 @@ namespace TypeMapper.Mappers
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+        }
+
+        public LambdaExpression GetMappingExpression( Type source, Type target )
+        {
+            var context = this.GetMapperContext( source, target ) as ReferenceMapperContext;
+            return GetMappingExpression( context );
+        }
+
+        protected virtual object GetMapperContext( Type source, Type target )
+        {
+            return new ReferenceMapperContext( source, target );
         }
 
         public LambdaExpression GetMappingExpression( MemberMapping mapping )
@@ -155,7 +168,7 @@ namespace TypeMapper.Mappers
             var context = contextObj as ReferenceMapperContext;
             var newInstanceExp = Expression.New( context.TargetMemberType );
 
-            var typeMapping = context.MapperConfiguration.Configurator[
+            var typeMapping = MapperConfiguration.Configurator[
                 context.SourceMember.Type, context.TargetMember.Type ];
 
             if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )

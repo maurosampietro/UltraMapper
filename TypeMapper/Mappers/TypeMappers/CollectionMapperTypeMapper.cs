@@ -8,18 +8,20 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
 {
-    public class CollectionMapperTypeMapping : ReferenceMapperTypeMapping, ITypeMappingMapperExpression
+    public class CollectionMapperTypeMapping : ReferenceMapper, ITypeMappingMapperExpression
     {
-        public override bool CanHandle( TypeMapping mapping )
+        public CollectionMapperTypeMapping( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
+        public override bool CanHandle( Type source, Type target )
         {
-            return mapping.TypePair.SourceType.IsEnumerable() &&
-                 mapping.TypePair.TargetType.IsEnumerable() &&
-                 !mapping.TypePair.SourceType.IsBuiltInType( false ); //avoid strings
+            return source.IsEnumerable() && target.IsEnumerable() &&
+                 !source.IsBuiltInType( false ); //avoid strings
         }
 
-        protected override object GetMapperContext( TypeMapping mapping )
+        protected override object GetMapperContext( Type source, Type target )
         {
-            return new CollectionMapperContext( mapping );
+            return new CollectionMapperContext( source, target );
         }
 
         protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
@@ -40,7 +42,7 @@ namespace TypeMapper.Mappers.TypeMappers
                 throw new Exception( msg );
             }
 
-            var typeMapping = context.MapperConfiguration.Configurator[
+            var typeMapping = MapperConfiguration.Configurator[
                     context.SourceCollectionElementType, context.TargetCollectionElementType ];
 
             var convert = typeMapping.MappingExpression;
@@ -58,7 +60,7 @@ namespace TypeMapper.Mappers.TypeMappers
 
         protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
-            var itemMapping = context.MapperConfiguration.Configurator[
+            var itemMapping = MapperConfiguration.Configurator[
                 context.SourceCollectionElementType, context.TargetCollectionElementType ].MappingExpression;
 
             var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );

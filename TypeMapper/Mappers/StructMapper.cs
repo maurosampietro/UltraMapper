@@ -9,6 +9,9 @@ namespace TypeMapper.Mappers
 {
     public class StructMapper : BaseMapper
     {
+        public StructMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
         public override bool CanHandle( Type sourceType, Type targetType )
         {
             return sourceType.IsValueType && targetType.IsValueType;

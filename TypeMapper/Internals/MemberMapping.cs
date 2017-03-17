@@ -18,12 +18,14 @@ namespace TypeMapper.Internals
         public readonly MappingTarget TargetMember;
 
         public MappingResolution MappingResolution { get; internal set; }
-        public IMemberMappingMapperExpression Mapper
+        public IMapperExpressionBuilder Mapper
         {
             get
             {
                 var selectedMapper = InstanceTypeMapping.GlobalConfiguration
-                    .Mappers.FirstOrDefault( mapper => mapper.CanHandle( this ) );
+                    .Mappers.FirstOrDefault( mapper => mapper.CanHandle( 
+                        this.MemberTypeMapping.TypePair.SourceType,
+                        this.MemberTypeMapping.TypePair.TargetType ) );
 
                 if( selectedMapper == null )
                     throw new Exception( $"No object mapper can handle {this}" );
@@ -76,7 +78,10 @@ namespace TypeMapper.Internals
         {
             get
             {
-                throw new NotImplementedException();
+                if( _collectionMappingStrategy == null )
+                    return MemberTypeMapping.CollectionMappingStrategy;
+
+                return _collectionMappingStrategy;
             }
 
             set { _collectionMappingStrategy = value; }
@@ -96,9 +101,24 @@ namespace TypeMapper.Internals
             set { _referenceMappingStrategy = value; }
         }
 
+        private LambdaExpression _expression;
         public LambdaExpression Expression
         {
-            get { return this.Mapper.GetMappingExpression( this ); }
+            get
+            {
+                if( this.CustomConverter != null )
+                    return this.CustomConverter;
+
+                if( _expression != null ) return _expression;
+
+                if( this.Mapper is IMemberMappingMapperExpression )
+                    return _expression = ((IMemberMappingMapperExpression)this.Mapper).GetMappingExpression( this );
+
+                return _expression = ((ITypeMappingMapperExpression)this.Mapper).GetMappingExpression( this.MemberTypeMapping.TypePair.SourceType, 
+                    this.MemberTypeMapping.TypePair.TargetType );
+            }
+
+            set { _expression = value; }
         }
 
         public MemberMapping( TypeMapping typeMapping,

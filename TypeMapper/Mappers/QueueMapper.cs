@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using TypeMapper.Internals;
 
@@ -6,11 +7,13 @@ namespace TypeMapper.Mappers
 {
     public class QueueMapper : CollectionMapper
     {
-        public override bool CanHandle( MemberMapping mapping )
+        public QueueMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
+        public override bool CanHandle( Type source, Type target )
         {
-            var memberType = mapping.TargetMember.MemberInfo.GetMemberType();
-            return base.CanHandle( mapping ) && memberType.IsGenericType
-                && memberType.GetGenericTypeDefinition() == typeof( Queue<> );
+            return base.CanHandle( source, target ) && target.IsGenericType
+                && target.GetGenericTypeDefinition() == typeof( Queue<> );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )

@@ -22,6 +22,9 @@ namespace TypeMapper.Mappers
         public ReferenceMapperContext( TypeMapping mapping )
             : base( mapping ) { Initialize(); }
 
+        public ReferenceMapperContext( Type source, Type target )
+             : base( source, target ) { Initialize(); }
+
         private void Initialize()
         {
             ReturnType = typeof( ObjectPair );

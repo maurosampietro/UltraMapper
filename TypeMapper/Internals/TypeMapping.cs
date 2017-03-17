@@ -69,6 +69,17 @@ namespace TypeMapper.Internals
             set { _collectionMappingStrategy = value; }
         }
 
+        public ITypeMappingMapperExpression Mapper
+        {
+            get
+            {
+                var selectedMapper = GlobalConfiguration.Mappers.OfType<ITypeMappingMapperExpression>()
+                    .FirstOrDefault( mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
+
+                return selectedMapper;
+            }
+        }
+
         public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
@@ -81,6 +92,9 @@ namespace TypeMapper.Internals
         {
             get
             {
+                if( this.CustomConverter != null )
+                    return this.CustomConverter;
+
                 if( _expression != null ) return _expression;
                 return _expression = MemberMappingExpressionMerger.Merge( this );
             }
@@ -148,13 +162,53 @@ namespace TypeMapper.Internals
 
             var newRefObjects = Expression.Variable( returnType, "result" );
 
-            var selectedMapper = typeMapping.GlobalConfiguration.Mappers.OfType<ITypeMappingMapperExpression>()
-                .FirstOrDefault( mapper => mapper.CanHandle( typeMapping ) );
-
-            var typeMappingExp = selectedMapper?.GetMappingExpression( typeMapping );
+            LambdaExpression typeMappingExp = typeMapping.Mapper?.GetMappingExpression( 
+                typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
 
             var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
             var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+
+            Func<MemberMapping, Expression> getMemberMapping = ( mapping ) =>
+            {
+                LambdaExpression expression = mapping.Expression;
+
+                if( expression.ReturnType == returnElementType )
+                {
+                    var objPair = Expression.Variable( returnElementType, "objPair" );
+
+                    return Expression.Block
+                    (
+                        new[] { objPair },
+
+                        Expression.Assign( objPair, expression.Body ),
+
+                        //Expression.Assign( objPair, Expression.Invoke( expression, referenceTrack,
+                        //Expression.Invoke( mapping.SourceMember.ValueGetter, sourceInstance ),
+                        //Expression.Invoke( mapping.TargetMember.ValueGetter, targetInstance ) )
+                        //),
+
+                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                            Expression.Call( newRefObjects, addMethod, objPair ) )
+                    );
+                }
+
+                ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "value" );
+
+                var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+                var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+
+                return Expression.Block
+                (
+                    new[] { value },
+
+                    Expression.Assign( value, Expression.Invoke( expression, Expression.Invoke( mapping.SourceMember.ValueGetter, sourceInstance ) ) ),
+
+                    mapping.TargetMember.ValueSetter.Body
+                        .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
+                        .ReplaceParameter( value, targetSetterMemberParamName )
+                );
+            };
+
 
             Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
             {
@@ -188,29 +242,23 @@ namespace TypeMapper.Internals
 
             var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
                 .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
-                .Select( mapping => createAddCalls( mapping.Expression ) );
+                .Select( mapping => getMemberMapping( mapping ) );
 
             if( !addCalls.Any() && typeMappingExp != null )
                 return typeMappingExp;
 
             var bodyExp = !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
+            var typeMappingBodyExp = typeMappingExp != null ? createAddCalls( typeMappingExp ) : Expression.Empty();
 
-            if( typeMappingExp != null )
-            {
-                var typeMappingBodyExp = createAddCalls( typeMappingExp );
-
-                bodyExp = Expression.Block
-                (
-                    typeMappingBodyExp,
-                    bodyExp
-                );
-            }
-
-            var body = (Expression)Expression.Block
+            var body = Expression.Block
             (
                 new[] { newRefObjects },
 
                 Expression.Assign( newRefObjects, Expression.New( returnType ) ),
+
+                typeMappingBodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
+                    .ReplaceParameter( targetInstance, targetInstance.Name )
+                    .ReplaceParameter( sourceInstance, sourceInstance.Name ),
 
                 bodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
                     .ReplaceParameter( targetInstance, targetInstance.Name )

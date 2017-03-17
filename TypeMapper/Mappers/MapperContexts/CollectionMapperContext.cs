@@ -18,8 +18,8 @@ namespace TypeMapper.Mappers
         public CollectionMapperContext( MemberMapping mapping )
             : base( mapping ) { Initialize(); }
 
-        public CollectionMapperContext( TypeMapping mapping )
-            : base( mapping ) { Initialize(); }
+        public CollectionMapperContext( Type source, Type target )
+            : base( source, target ) { Initialize(); }
 
         private void Initialize()
         {

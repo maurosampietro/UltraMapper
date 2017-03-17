@@ -12,7 +12,6 @@ namespace TypeMapper
     {
         ICollectionMappingStrategy CollectionMappingStrategy { get; }
         ReferenceMappingStrategies ReferenceMappingStrategy { get; }
-        LambdaExpression CustomConverter { get; }
         LambdaExpression CustomTargetConstructor { get; }
     }
 
@@ -36,26 +35,25 @@ namespace TypeMapper
         public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
 
         public IMappingConvention MappingConvention { get; set; }
-        public HashSet<IMemberMappingMapperExpression> Mappers { get; private set; }
+        public HashSet<IMapperExpressionBuilder> Mappers { get; private set; }
 
         public GlobalConfiguration( MapperConfiguration configurator )
         {
             this.Configurator = configurator;
-            this.Mappers = new HashSet<IMemberMappingMapperExpression>()
+            this.Mappers = new HashSet<IMapperExpressionBuilder>()
             {
                 //order is important: the first mapper that can handle a mapping is used
-                new CustomConverterMapper(),
-                new BuiltInTypeMapper(),
-                new NullableMapper(),
-                new ConvertMapper(),
-                new StructMapper(),
-                new ReferenceMapper(),
-                new DictionaryMapper(),
-                new StackMapper(),
-                new QueueMapper(),
-                new LinkedListMapper(),
-                new CollectionMapper(),
-                new CollectionMapperTypeMapping(),
+                new BuiltInTypeMapper(this),
+                new NullableMapper(this),
+                new ConvertMapper(this),
+                new StructMapper(this),
+                new ReferenceMapper(this),
+                new DictionaryMapper(this),
+                new StackMapper(this),
+                new QueueMapper(this),
+                new LinkedListMapper(this),
+                new CollectionMapper(this),
+                new CollectionMapperTypeMapping(this),
             };
         }
     }

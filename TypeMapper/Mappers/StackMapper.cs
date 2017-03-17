@@ -16,10 +16,13 @@ namespace TypeMapper.Mappers
     */
     public class StackMapper : CollectionMapper
     {
-        public override bool CanHandle( MemberMapping mapping )
+        public StackMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
+        public override bool CanHandle( Type source, Type target )
         {
-            return base.CanHandle( mapping ) && mapping.TargetMember.MemberInfo
-                .GetMemberType().GetGenericTypeDefinition() == typeof( Stack<> );
+            return base.CanHandle( source, target ) &&
+                target.GetGenericTypeDefinition() == typeof( Stack<> );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )

@@ -4,8 +4,11 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ConvertMapper : BaseMapper, IMemberMappingMapperExpression, ITypeMappingMapperExpression
+    public class ConvertMapper : BaseMapper, ITypeMappingMapperExpression
     {
+        public ConvertMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
         private static Type _convertType = typeof( Convert );
 
         public override bool CanHandle( Type source, Type target )

@@ -5,8 +5,11 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class NullableMapper : BaseMapper, IMemberMappingMapperExpression, ITypeMappingMapperExpression
+    public class NullableMapper : BaseMapper, ITypeMappingMapperExpression
     {
+        public NullableMapper( GlobalConfiguration configuration )
+            : base( configuration ) { }
+
         public override bool CanHandle( Type source, Type target )
         {
             return source.IsNullable() || target.IsNullable();
@@ -27,7 +30,7 @@ namespace TypeMapper.Mappers
                 var nullableValueAccess = Expression.MakeMemberAccess( context.SourceInstance,
                     context.SourceMemberType.GetProperty( nameof( Nullable<int>.Value ) ) );
 
-                var typeMapping = context.MapperConfiguration.Configurator[
+                var typeMapping = MapperConfiguration.Configurator[
                      sourceUnderlyingType, targetUnderlyingType ];
 
                 var convert = typeMapping.MappingExpression;

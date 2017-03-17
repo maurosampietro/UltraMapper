@@ -6,8 +6,6 @@ namespace TypeMapper.Mappers
 {
     public class MapperContext
     {
-        public readonly GlobalConfiguration MapperConfiguration;
-
         public Type SourceInstanceType { get; protected set; }
         public Type TargetInstanceType { get; protected set; }
 
@@ -31,7 +29,7 @@ namespace TypeMapper.Mappers
 
         public MapperContext( MemberMapping mapping )
         {
-            MapperConfiguration = mapping.InstanceTypeMapping.GlobalConfiguration;
+            //MapperConfiguration = mapping.InstanceTypeMapping.GlobalConfiguration;
 
             SourceInstanceType = mapping.InstanceTypeMapping.TypePair.SourceType;
             TargetInstanceType = mapping.InstanceTypeMapping.TypePair.TargetType;
@@ -73,7 +71,7 @@ namespace TypeMapper.Mappers
 
         public MapperContext( TypeMapping mapping )
         {
-            MapperConfiguration = mapping.GlobalConfiguration;
+            //MapperConfiguration = mapping.GlobalConfiguration;
 
             SourceInstanceType = mapping.TypePair.SourceType;
             TargetInstanceType = mapping.TypePair.TargetType;
@@ -96,5 +94,33 @@ namespace TypeMapper.Mappers
             //MemberMappingOptions = mapping.GlobalConfiguration.Configurator[
             //    SourceMember.Type, TargetMember.Type ];
         }
+
+        public MapperContext( Type source, Type target )
+        {
+            //MapperConfiguration = mapping.GlobalConfiguration;
+
+            SourceInstanceType = source;
+            TargetInstanceType = target;
+
+            SourceMemberType = source;
+            TargetMemberType = target;
+
+            SourceInstance = Expression.Parameter( SourceInstanceType, "sourceInstance" );
+            TargetInstance = Expression.Parameter( TargetInstanceType, "targetInstance" );
+            ReferenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+
+            SourceMember = Expression.Variable( SourceMemberType, "sourceValue" );
+            TargetMember = Expression.Variable( TargetMemberType, "targetValue" );
+
+            SourceMemberValue = SourceInstance;
+
+            //InstanceMappingOptions = mapping.GlobalConfiguration.Configurator[
+            //    SourceInstance.Type, TargetInstance.Type ];
+
+            //MemberMappingOptions = mapping.GlobalConfiguration.Configurator[
+            //    SourceMember.Type, TargetMember.Type ];
+        }
+
+
     }
 }
