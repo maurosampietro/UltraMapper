@@ -9,7 +9,6 @@ namespace TypeMapper.Mappers
 {
     public class ReferenceMapperContext : MemberMappingContext
     {
-        public Type ReturnType { get; protected set; }
         public ConstructorInfo ReturnTypeConstructor { get; protected set; }
 
         public ParameterExpression ReturnObject { get; protected set; }
@@ -28,13 +27,12 @@ namespace TypeMapper.Mappers
 
         private void Initialize()
         {
-            ReturnType = typeof( ObjectPair );
-            ReturnTypeConstructor = ReturnType.GetConstructors().First();
+            var returnType = typeof( ObjectPair );
+            ReturnTypeConstructor = returnType.GetConstructors().First();
+            ReturnObject = Expression.Variable( returnType, "result" );
 
-            ReturnObject = Expression.Variable( ReturnType, "result" );
-
-            SourceMemberNullValue = Expression.Constant( null, SourceMemberType );
-            TargetMemberNullValue = Expression.Constant( null, TargetMemberType );
+            SourceMemberNullValue = Expression.Constant( null, SourceMember.Type );
+            TargetMemberNullValue = Expression.Constant( null, TargetMember.Type );
         }
     }
 }

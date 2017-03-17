@@ -29,26 +29,24 @@ namespace TypeMapper.Mappers.TypeMappers
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null )
             {
-                string msg = $@"Cannot map to type '{nameof( context.TargetMemberType )}' does not provide a clear method";
+                string msg = $@"Cannot map to type '{nameof( context.TargetMember.Type )}' does not provide a clear method";
                 throw new Exception( msg );
             }
 
             var addMethod = GetTargetCollectionAddMethod( context );
             if( addMethod == null )
             {
-                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMemberType )}' does not provide an item-insertion method " +
+                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMember.Type )}' does not provide an item-insertion method " +
                     $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
 
                 throw new Exception( msg );
             }
 
-            var typeMapping = MapperConfiguration[
-                    context.SourceCollectionElementType, context.TargetCollectionElementType ];
-
-            var convert = typeMapping.MappingExpression;
+            var itemMapping = MapperConfiguration[ context.SourceCollectionElementType,
+                context.TargetCollectionElementType ].MappingExpression;
 
             Expression loopBody = Expression.Call( context.TargetInstance,
-                addMethod, Expression.Invoke( convert, context.SourceCollectionLoopingVar ) );
+                addMethod, Expression.Invoke( itemMapping, context.SourceCollectionLoopingVar ) );
 
             return Expression.Block
             (
@@ -68,14 +66,14 @@ namespace TypeMapper.Mappers.TypeMappers
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null )
             {
-                string msg = $@"Cannot map to type '{nameof( context.TargetMemberType )}' does not provide a clear method";
+                string msg = $@"Cannot map to type '{nameof( context.TargetMember.Type )}' does not provide a clear method";
                 throw new Exception( msg );
             }
 
             var addMethod = GetTargetCollectionAddMethod( context );
             if( addMethod == null )
             {
-                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMemberType )}' does not provide an item-insertion method " +
+                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMember.Type )}' does not provide an item-insertion method " +
                       $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
 
                 throw new Exception( msg );
@@ -113,12 +111,12 @@ namespace TypeMapper.Mappers.TypeMappers
         /// <returns></returns>
         protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetMemberType.GetMethod( "Add" );
+            return context.TargetMember.Type.GetMethod( "Add" );
         }
 
         private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
-            return context.TargetMemberType.GetMethod( "Clear" );
+            return context.TargetMember.Type.GetMethod( "Clear" );
         }
     }
 }

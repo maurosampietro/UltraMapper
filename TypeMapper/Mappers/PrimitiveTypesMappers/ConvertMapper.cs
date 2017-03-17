@@ -6,10 +6,10 @@ namespace TypeMapper.Mappers
 {
     public class ConvertMapper : PrimitiveMapperBase
     {
+        private static Type _convertType = typeof( Convert );
+
         public ConvertMapper( MapperConfiguration configuration )
             : base( configuration ) { }
-
-        private static Type _convertType = typeof( Convert );
 
         public override bool CanHandle( Type source, Type target )
         {

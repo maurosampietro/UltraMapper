@@ -8,16 +8,16 @@ using TypeMapper.MappingConventions;
 
 namespace TypeMapper
 {
-    public interface IMemberOptions
+    public interface IMappingOptions
     {
-        ICollectionMappingStrategy CollectionMappingStrategy { get; }
-        ReferenceMappingStrategies ReferenceMappingStrategy { get; }
-        LambdaExpression CustomTargetConstructor { get; }
+        ICollectionMappingStrategy CollectionMappingStrategy { get; set; }
+        ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
+        LambdaExpression CustomTargetConstructor { get; set; }
     }
 
-    public interface ITypeOptions : IMemberOptions
+    public interface ITypeOptions : IMappingOptions
     {
-        bool IgnoreMappingResolvedByConvention { get; }
+        bool IgnoreMemberMappingResolvedByConvention { get; }
     }
 
     public class GlobalConfiguration
@@ -25,11 +25,13 @@ namespace TypeMapper
         public readonly MapperConfiguration Configuration;
 
         /// <summary>
-        /// If set to True only explicit user-defined mappings are used.
-        /// If set to False mappings are generated based on conventions
-        /// and the user can override them.
+        /// If set to True only explicitly user-defined member-mappings are 
+        /// taken into account in the mapping process.
+        /// 
+        /// If set to False members-mappings that have been resolved by convention 
+        /// are taken into account in the mapping process.
         /// </summary>
-        public bool IgnoreMappingResolvedByConvention { get; set; }
+        public bool IgnoreMemberMappingResolvedByConvention { get; set; }
 
         public ICollectionMappingStrategy CollectionMappingStrategy { get; set; }
         public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
@@ -42,7 +44,8 @@ namespace TypeMapper
             this.Configuration = configuration;
             this.Mappers = new HashSet<IMapperExpressionBuilder>()
             {
-                //order is important: the first mapper that can handle a mapping is used
+                //Order is important: the first mapper that can handle a mapping is used.
+                //Make sure to use collection which preserve insertion order!
                 new BuiltInTypeMapper( configuration ),
                 new NullableMapper( configuration ),
                 new ConvertMapper( configuration ),

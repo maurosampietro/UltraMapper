@@ -23,7 +23,7 @@ namespace TypeMapper.Mappers
             var methodName = nameof( LinkedList<int>.AddLast );
             var methodParams = new[] { context.TargetCollectionElementType };
 
-            return context.TargetMemberType.GetMethod( methodName, methodParams );
+            return context.TargetMember.Type.GetMethod( methodName, methodParams );
         }
     }
 }

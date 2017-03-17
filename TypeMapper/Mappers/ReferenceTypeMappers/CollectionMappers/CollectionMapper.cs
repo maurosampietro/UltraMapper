@@ -46,7 +46,7 @@ namespace TypeMapper.Mappers
                 var addMethod = GetTargetCollectionAddMethod( context );
                 if( addMethod == null )
                 {
-                    string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMemberType )}' does not provide an item-insertion method " +
+                    string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMember.Type )}' does not provide an item-insertion method " +
                         $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
 
                     throw new Exception( msg );
@@ -109,7 +109,7 @@ namespace TypeMapper.Mappers
             var constructor = GetTargetCollectionConstructorFromCollection( context );
             if( constructor == null )
             {
-                string msg = $@"'{nameof( context.TargetMemberType )}' does not provide an 'Add' method or a constructor taking as parameter IEnumerable<T>. " +
+                string msg = $@"'{nameof( context.TargetMember.Type )}' does not provide an 'Add' method or a constructor taking as parameter IEnumerable<T>. " +
                     $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item insertion method.";
 
                 throw new Exception( msg );
@@ -120,7 +120,7 @@ namespace TypeMapper.Mappers
             var tempCollectionAddMethod = tempCollectionType.GetMethod( "Add" );
 
             var tempCtorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var tempCollectionCountMethod = context.SourceMemberType.GetProperty( "Count" ).GetGetMethod();
+            var tempCollectionCountMethod = context.SourceMember.Type.GetProperty( "Count" ).GetGetMethod();
 
             var newTempCollectionExp = Expression.New( tempCtorWithCapacity,
                 Expression.Call( context.SourceMember, tempCollectionCountMethod ) );
@@ -203,7 +203,7 @@ namespace TypeMapper.Mappers
             var paramType = new Type[] { typeof( IEnumerable<> )
                 .MakeGenericType( context.TargetCollectionElementType ) };
 
-            return context.TargetMemberType.GetConstructor( paramType );
+            return context.TargetMember.Type.GetConstructor( paramType );
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace TypeMapper.Mappers
         /// <returns></returns>
         protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetMemberType.GetMethod( "Add" );
+            return context.TargetMember.Type.GetMethod( "Add" );
         }
 
         protected override Expression GetTargetInstanceAssignment( object contextObj )
@@ -223,15 +223,15 @@ namespace TypeMapper.Mappers
                 context.TargetMember.Type ];
 
             if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
-                && context.SourceMemberType.ImplementsInterface( typeof( ICollection<> ) )
-                && context.TargetMemberType.ImplementsInterface( typeof( ICollection<> ) ) )
+                && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) )
+                && context.TargetMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
-                var constructorWithCapacity = context.TargetMemberType.GetConstructor( new Type[] { typeof( int ) } );
+                var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
                 if( constructorWithCapacity != null )
                 {
                     //ICollection<int> is used only because it is forbidden to use nameof with unbound generic types.
                     //Any other type instead of int would work.
-                    var getCountMethod = context.SourceMemberType.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
+                    var getCountMethod = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
                     return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
                         Expression.Call( context.SourceMember, getCountMethod ) ) );
                 }

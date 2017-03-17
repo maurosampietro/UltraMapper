@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.CollectionMappingStrategies;
+using TypeMapper.Internals;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Tests
@@ -348,6 +349,43 @@ namespace TypeMapper.Tests
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemA.A );
+            } );
+
+            typeMapper.Map( source, target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void KeepAndClearCollection()
+        {
+            var source = new GenericCollections<ComplexType>();
+
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
+
+            var target = new GenericCollections<ComplexType>();
+
+            var typeMapper = new TypeMapper( cfg =>
+            {
+                cfg.GlobalConfiguration.IgnoreMemberMappingResolvedByConvention = true;
+
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.List, b => b.List, options =>
+                    {
+                        options.CollectionMappingStrategy = new ClearCollection();
+                        options.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                    } );
             } );
 
             typeMapper.Map( source, target );

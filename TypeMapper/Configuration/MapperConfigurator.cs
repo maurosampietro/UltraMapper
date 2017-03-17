@@ -91,10 +91,7 @@ namespace TypeMapper
                 TypeMapping typeMapping;
                 if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
                     return typeMapping;
-
-                if( GlobalConfiguration.IgnoreMappingResolvedByConvention )
-                    throw new Exception( $"Cannot handle {typePair}. No mapping have been explicitly defined for '{typePair}' and mapping by convention has been disabled." );
-
+   
                 typeMapping = new TypeMapping( GlobalConfiguration, typePair );
                 new TypeMappingConfigurator( typeMapping, GlobalConfiguration );
 

@@ -27,7 +27,7 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetMemberType.GetMethod( "Push" );
+            return context.TargetMember.Type.GetMethod( "Push" );
         }
 
         protected override Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
@@ -56,7 +56,7 @@ namespace TypeMapper.Mappers
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
             var constructorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var getCountMethod = context.SourceMemberType.GetProperty( "Count" ).GetGetMethod();
+            var getCountMethod = context.SourceMember.Type.GetProperty( "Count" ).GetGetMethod();
 
             var newTempCollectionExp = Expression.New( constructorWithCapacity,
                 Expression.Call( context.SourceMember, getCountMethod ) );

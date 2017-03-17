@@ -43,7 +43,7 @@ namespace TypeMapper.Mappers
                 new[] { context.TargetCollectionElementKey, context.TargetCollectionElementValue },
 
                 Expression.Assign( context.TargetMember,
-                    Expression.New( context.TargetMemberType ) ),
+                    Expression.New( context.TargetMember.Type ) ),
 
                 ExpressionLoops.ForEach( context.SourceMember,
                     context.SourceCollectionLoopingVar, Expression.Block

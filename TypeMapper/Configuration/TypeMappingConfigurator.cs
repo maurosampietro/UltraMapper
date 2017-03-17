@@ -183,7 +183,9 @@ namespace TypeMapper.Configuration
             Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
             Expression<Action<TTarget, TSourceMember>> targetMemberSetter )
         {
-            base.MapMemberInternal( sourceMemberSelector, targetMemberGetter, targetMemberSetter );
+            var mapping = base.MapMemberInternal( sourceMemberSelector, targetMemberGetter, targetMemberSetter );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+
             return this;
         }
 
@@ -193,6 +195,7 @@ namespace TypeMapper.Configuration
             Expression<Func<TSourceMember, TTargetMember>> converter = null )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
             mapping.CustomConverter = converter;
 
             return this;
@@ -215,7 +218,20 @@ namespace TypeMapper.Configuration
            Expression<Func<TSourceMember, TTargetMember, bool>> elementEqualityComparer )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
             mapping.CollectionEqualityComparer = elementEqualityComparer;
+
+            return this;
+        }
+
+        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+         Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
+         Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
+         Action<IMappingOptions> options )
+        {
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            options.Invoke( mapping );
 
             return this;
         }

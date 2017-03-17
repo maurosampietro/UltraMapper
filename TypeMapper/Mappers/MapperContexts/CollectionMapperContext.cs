@@ -23,8 +23,8 @@ namespace TypeMapper.Mappers
 
         private void Initialize()
         {
-            SourceCollectionElementType = SourceMemberType.GetCollectionGenericType();
-            TargetCollectionElementType = TargetMemberType.GetCollectionGenericType();
+            SourceCollectionElementType = SourceMember.Type.GetCollectionGenericType();
+            TargetCollectionElementType = TargetMember.Type.GetCollectionGenericType();
 
             IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltInType( true );
             IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( true );

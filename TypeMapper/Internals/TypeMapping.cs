@@ -28,12 +28,12 @@ namespace TypeMapper.Internals
         public LambdaExpression CustomTargetConstructor { get; set; }
 
         private bool? _ignoreMappingResolvedByConvention = null;
-        public bool IgnoreMappingResolvedByConvention
+        public bool IgnoreMemberMappingResolvedByConvention
         {
             get
             {
                 if( _ignoreMappingResolvedByConvention == null )
-                    return GlobalConfiguration.IgnoreMappingResolvedByConvention;
+                    return GlobalConfiguration.IgnoreMemberMappingResolvedByConvention;
 
                 return _ignoreMappingResolvedByConvention.Value;
             }
@@ -233,7 +233,7 @@ namespace TypeMapper.Internals
             //that we assign outer objects first
 
             var validMappings = typeMapping.MemberMappings.Values.ToList();
-            if( typeMapping.IgnoreMappingResolvedByConvention )
+            if( typeMapping.IgnoreMemberMappingResolvedByConvention )
             {
                 validMappings = validMappings.Where( mapping =>
                     mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();

@@ -52,8 +52,8 @@ namespace TypeMapper.Mappers
             var expressionBody = this.GetExpressionBody( context );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceInstanceType,
-                context.TargetInstanceType, context.ReturnType );
+                typeof( ReferenceTracking ), context.SourceInstance.Type,
+                context.TargetInstance.Type, context.ReturnObject.Type );
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
@@ -84,7 +84,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression ReturnTypeInitialization( object contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
-            return Expression.Assign( context.ReturnObject, Expression.Constant( null, context.ReturnType ) );
+            return Expression.Assign( context.ReturnObject, Expression.Constant( null, context.ReturnObject.Type ) );
         }
 
         protected virtual Expression GetExpressionBody( ReferenceMapperContext context )
@@ -100,11 +100,11 @@ namespace TypeMapper.Mappers
 
             Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method, context.ReferenceTrack,
-                context.SourceMember, Expression.Constant( context.TargetMemberType ) );
+                context.SourceMember, Expression.Constant( context.TargetMember.Type ) );
 
             Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
                 addToTracker.Method, context.ReferenceTrack, context.SourceMember,
-                Expression.Constant( context.TargetMemberType ), context.TargetMember );
+                Expression.Constant( context.TargetMember.Type ), context.TargetMember );
 
             var body = (Expression)Expression.Block
             (
@@ -126,7 +126,7 @@ namespace TypeMapper.Mappers
                         //object lookup
                         context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) :
                         (Expression)Expression.Assign( context.TargetMember,
-                            Expression.Convert( lookupCall, context.TargetMemberType ) ),
+                            Expression.Convert( lookupCall, context.TargetMember.Type ) ),
 
                         Expression.IfThen
                         (
@@ -166,7 +166,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetTargetInstanceAssignment( object contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
-            var newInstanceExp = Expression.New( context.TargetMemberType );
+            var newInstanceExp = Expression.New( context.TargetMember.Type );
 
             var typeMapping = MapperConfiguration[ context.SourceMember.Type,
                 context.TargetMember.Type ];

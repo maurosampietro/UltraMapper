@@ -8,7 +8,7 @@ namespace TypeMapper.Internals
 {
     public enum MappingResolution { RESOLVED_BY_CONVENTION, USER_DEFINED }
 
-    public class MemberMapping : IMemberOptions
+    public class MemberMapping : IMappingOptions
     {
         private readonly Lazy<string> _toString;
 
