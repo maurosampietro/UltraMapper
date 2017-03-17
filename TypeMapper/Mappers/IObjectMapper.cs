@@ -4,16 +4,6 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public interface IMemberMappingMapperExpression : IMapperExpressionBuilder
-    {
-        /// <summary>
-        /// Gets an expression that can handle <paramref name="mapping"/>
-        /// </summary>
-        /// <param name="mapping">the property mapping to handle</param>
-        /// <returns>Returns a list of objects that need to be recursively mapped</returns>
-        LambdaExpression GetMappingExpression( MemberMapping mapping );
-    }
-
     public interface IMapperExpressionBuilder
     {
         /// <summary>
@@ -32,5 +22,15 @@ namespace TypeMapper.Mappers
         /// <param name="mapping">the property mapping to handle</param>
         /// <returns>Returns a list of objects that need to be recursively mapped</returns>
         LambdaExpression GetMappingExpression( Type source, Type target );
+    }
+
+    public interface IMemberMappingMapperExpression : IMapperExpressionBuilder
+    {
+        /// <summary>
+        /// Gets an expression that can handle <paramref name="mapping"/>
+        /// </summary>
+        /// <param name="mapping">the property mapping to handle</param>
+        /// <returns>Returns a list of objects that need to be recursively mapped</returns>
+        LambdaExpression GetMappingExpression( MemberMapping mapping );
     }
 }

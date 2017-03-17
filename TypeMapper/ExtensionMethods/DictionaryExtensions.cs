@@ -8,15 +8,6 @@ namespace TypeMapper.ExtensionMethods
 {
     public static class DictionaryExtensions
     {
-        public static void UpdateOrAdd<TKey, TValue>(
-            this Dictionary<TKey, TValue> dictionary, TKey key, TValue value )
-        {
-            if( dictionary.ContainsKey( key ) )
-                dictionary[ key ] = value;
-            else
-                dictionary.Add( key, value );
-        }
-
         public static TValue GetOrAdd<TKey, TValue>(
             this Dictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueFactory )
         {

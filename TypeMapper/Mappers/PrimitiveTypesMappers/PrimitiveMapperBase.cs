@@ -4,11 +4,11 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public abstract class BaseMapper : ITypeMappingMapperExpression
+    public abstract class PrimitiveMapperBase : ITypeMappingMapperExpression
     {
-        public readonly GlobalConfiguration MapperConfiguration;
+        public readonly MapperConfiguration MapperConfiguration;
 
-        public BaseMapper( GlobalConfiguration configuration )
+        public PrimitiveMapperBase( MapperConfiguration configuration )
         {
             this.MapperConfiguration = configuration;
         }
@@ -22,12 +22,12 @@ namespace TypeMapper.Mappers
 
             var body = Expression.Block
             (
-                new[] { context.TargetMember },
+                new[] { context.TargetInstance },
 
                 targetValueAssignment,
 
                 //return the value assigned to TargetValue param
-                context.TargetMember
+                context.TargetInstance
             );
 
             var delegateType = typeof( Func<,> )

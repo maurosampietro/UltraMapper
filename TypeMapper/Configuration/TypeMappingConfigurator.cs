@@ -90,7 +90,7 @@ namespace TypeMapper.Configuration
                 () => new MappingTarget( targetMemberGetterExpression, targetMemberSetterExpression ) );
 
             var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget );
-            _typeMapping.MemberMappings.UpdateOrAdd( targetMember, mapping );
+            _typeMapping.MemberMappings[ targetMember ] = mapping;
 
             return mapping;
         }

@@ -10,8 +10,8 @@ namespace TypeMapper.Mappers
 {
     public class DictionaryMapper : CollectionMapper
     {
-        public DictionaryMapper( GlobalConfiguration configuration )
-            : base( configuration ) { }
+        public DictionaryMapper( MapperConfiguration configuration )
+             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
         {
@@ -60,7 +60,7 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             MemberExpression sourceParam, ParameterExpression targetParam )
         {
-            var typeMapping = MapperConfiguration.Configurator[
+            var typeMapping = MapperConfiguration[
                     sourceParam.Type, targetParam.Type ];
 
             var convert = typeMapping.MappingExpression;

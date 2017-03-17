@@ -10,7 +10,7 @@ namespace TypeMapper.Mappers.TypeMappers
 {
     public class CollectionMapperTypeMapping : ReferenceMapper, ITypeMappingMapperExpression
     {
-        public CollectionMapperTypeMapping( GlobalConfiguration configuration )
+        public CollectionMapperTypeMapping( MapperConfiguration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -42,7 +42,7 @@ namespace TypeMapper.Mappers.TypeMappers
                 throw new Exception( msg );
             }
 
-            var typeMapping = MapperConfiguration.Configurator[
+            var typeMapping = MapperConfiguration[
                     context.SourceCollectionElementType, context.TargetCollectionElementType ];
 
             var convert = typeMapping.MappingExpression;
@@ -60,8 +60,8 @@ namespace TypeMapper.Mappers.TypeMappers
 
         protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
-            var itemMapping = MapperConfiguration.Configurator[
-                context.SourceCollectionElementType, context.TargetCollectionElementType ].MappingExpression;
+            var itemMapping = MapperConfiguration[ context.SourceCollectionElementType,
+                context.TargetCollectionElementType ].MappingExpression;
 
             var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
 

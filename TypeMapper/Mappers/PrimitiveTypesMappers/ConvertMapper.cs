@@ -4,9 +4,9 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class ConvertMapper : BaseMapper, ITypeMappingMapperExpression
+    public class ConvertMapper : PrimitiveMapperBase
     {
-        public ConvertMapper( GlobalConfiguration configuration )
+        public ConvertMapper( MapperConfiguration configuration )
             : base( configuration ) { }
 
         private static Type _convertType = typeof( Convert );
@@ -48,13 +48,13 @@ namespace TypeMapper.Mappers
 
         protected override Expression GetTargetValueAssignment( MapperContext context )
         {
-            var methodName = $"To{context.TargetMemberType.Name}";
-            var methodParams = new[] { context.SourceMemberType };
+            var methodName = $"To{context.TargetInstance.Type.Name}";
+            var methodParams = new[] { context.SourceInstance.Type };
 
             var convertMethod = _convertType.GetMethod( methodName, methodParams );
-            var convertMethodCall = Expression.Call( convertMethod, context.SourceMemberValue );
+            var convertMethodCall = Expression.Call( convertMethod, context.SourceInstance );
 
-            return Expression.Assign( context.TargetMember, convertMethodCall );
+            return Expression.Assign( context.TargetInstance, convertMethodCall );
         }
     }
 }

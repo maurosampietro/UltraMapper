@@ -22,7 +22,7 @@ namespace TypeMapper
 
     public class GlobalConfiguration
     {
-        public readonly MapperConfiguration Configurator;
+        public readonly MapperConfiguration Configuration;
 
         /// <summary>
         /// If set to True only explicit user-defined mappings are used.
@@ -37,23 +37,23 @@ namespace TypeMapper
         public IMappingConvention MappingConvention { get; set; }
         public HashSet<IMapperExpressionBuilder> Mappers { get; private set; }
 
-        public GlobalConfiguration( MapperConfiguration configurator )
+        public GlobalConfiguration( MapperConfiguration configuration )
         {
-            this.Configurator = configurator;
+            this.Configuration = configuration;
             this.Mappers = new HashSet<IMapperExpressionBuilder>()
             {
                 //order is important: the first mapper that can handle a mapping is used
-                new BuiltInTypeMapper(this),
-                new NullableMapper(this),
-                new ConvertMapper(this),
-                new StructMapper(this),
-                new ReferenceMapper(this),
-                new DictionaryMapper(this),
-                new StackMapper(this),
-                new QueueMapper(this),
-                new LinkedListMapper(this),
-                new CollectionMapper(this),
-                new CollectionMapperTypeMapping(this),
+                new BuiltInTypeMapper( configuration ),
+                new NullableMapper( configuration ),
+                new ConvertMapper( configuration ),
+                new StructMapper( configuration ),
+                new ReferenceMapper( configuration ),
+                new DictionaryMapper( configuration ),
+                new StackMapper( configuration ),
+                new QueueMapper( configuration ),
+                new LinkedListMapper( configuration ),
+                new CollectionMapper( configuration ),
+                new CollectionMapperTypeMapping( configuration ),
             };
         }
     }

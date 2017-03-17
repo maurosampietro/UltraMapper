@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace TypeMapper.Mappers
 {
-    public class StructMapper : BaseMapper
+    public class StructMapper : PrimitiveMapperBase
     {
-        public StructMapper( GlobalConfiguration configuration )
-            : base( configuration ) { }
+        public StructMapper( MapperConfiguration configuration )
+            : base( configuration ){ }
 
         public override bool CanHandle( Type sourceType, Type targetType )
         {
@@ -19,7 +19,7 @@ namespace TypeMapper.Mappers
 
         protected override Expression GetTargetValueAssignment( MapperContext context )
         {
-            return Expression.Assign( context.TargetMember, context.SourceMemberValue );
+            return Expression.Assign( context.TargetInstance, context.SourceInstance );
         }
     }
 }

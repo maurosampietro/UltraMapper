@@ -5,22 +5,22 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public class LinkedListMapper : CollectionMapper
+    public class QueueMapper : CollectionMapper
     {
-        public LinkedListMapper( GlobalConfiguration configuration )
+        public QueueMapper( MapperConfiguration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
         {
             return base.CanHandle( source, target ) && target.IsGenericType
-                && target.GetGenericTypeDefinition() == typeof( LinkedList<> );
+                && target.GetGenericTypeDefinition() == typeof( Queue<> );
         }
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            //LinkedList<int> is used only because it is forbidden to use nameof with unbound generic types.
+            //Queue<int> is used only because it is forbidden to use nameof with unbound generic types.
             //Any other type instead of int would work.
-            var methodName = nameof( LinkedList<int>.AddLast );
+            var methodName = nameof( Queue<int>.Enqueue );
             var methodParams = new[] { context.TargetCollectionElementType };
 
             return context.TargetMemberType.GetMethod( methodName, methodParams );

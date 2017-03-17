@@ -4,9 +4,9 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public sealed class BuiltInTypeMapper : BaseMapper, ITypeMappingMapperExpression
+    public sealed class BuiltInTypeMapper : PrimitiveMapperBase
     {
-        public BuiltInTypeMapper( GlobalConfiguration configuration )
+        public BuiltInTypeMapper( MapperConfiguration configuration ) 
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -21,13 +21,13 @@ namespace TypeMapper.Mappers
 
         protected override Expression GetTargetValueAssignment( MapperContext context )
         {
-            if( context.SourceMemberType == context.TargetMemberType )
-                return Expression.Assign( context.TargetMember, context.SourceMemberValue );
+            if( context.SourceInstance.Type == context.TargetInstance.Type )
+                return Expression.Assign( context.TargetInstance, context.SourceInstance );
 
             var conversionExp = Expression.Convert(
-                context.SourceMemberValue, context.TargetMemberType );
+                context.SourceInstance, context.TargetInstance.Type );
 
-            return Expression.Assign( context.TargetMember, conversionExp );
+            return Expression.Assign( context.TargetInstance, conversionExp );
         }
     }
 }

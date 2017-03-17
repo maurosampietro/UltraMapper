@@ -68,7 +68,6 @@ namespace TypeMapper.MappingConventions
         }
     }
 
-
     /*These helper classes carry generic type around
      *and allow static typed use of Respect method
      */   

@@ -7,9 +7,9 @@ namespace TypeMapper.Mappers
 {
     public class ReferenceMapper : IMapperExpressionBuilder, IMemberMappingMapperExpression//, ITypeMappingMapperExpression
     {
-        public readonly GlobalConfiguration MapperConfiguration;
+        public readonly MapperConfiguration MapperConfiguration;
 
-        public ReferenceMapper( GlobalConfiguration configuration )
+        public ReferenceMapper( MapperConfiguration configuration )
         {
             this.MapperConfiguration = configuration;
         }
@@ -168,8 +168,8 @@ namespace TypeMapper.Mappers
             var context = contextObj as ReferenceMapperContext;
             var newInstanceExp = Expression.New( context.TargetMemberType );
 
-            var typeMapping = MapperConfiguration.Configurator[
-                context.SourceMember.Type, context.TargetMember.Type ];
+            var typeMapping = MapperConfiguration[ context.SourceMember.Type,
+                context.TargetMember.Type ];
 
             if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
                 return Expression.Assign( context.TargetMember, newInstanceExp );

@@ -16,7 +16,7 @@ namespace TypeMapper.Mappers
     */
     public class StackMapper : CollectionMapper
     {
-        public StackMapper( GlobalConfiguration configuration )
+        public StackMapper( MapperConfiguration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )

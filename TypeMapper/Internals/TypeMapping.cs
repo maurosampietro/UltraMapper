@@ -209,7 +209,6 @@ namespace TypeMapper.Internals
                 );
             };
 
-
             Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
             {
                 if( lambdaExp.ReturnType == returnElementType )

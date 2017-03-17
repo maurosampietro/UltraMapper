@@ -38,7 +38,7 @@ namespace TypeMapper.Internals
         {
             get
             {
-                return InstanceTypeMapping.GlobalConfiguration.Configurator[
+                return InstanceTypeMapping.GlobalConfiguration.Configuration[
                     SourceMember.MemberType, TargetMember.MemberType ];
             }
         }

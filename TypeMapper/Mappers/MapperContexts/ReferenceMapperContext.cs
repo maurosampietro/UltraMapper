@@ -3,10 +3,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeMapper.Internals;
+using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapperContext : MapperContext
+    public class ReferenceMapperContext : MemberMappingContext
     {
         public Type ReturnType { get; protected set; }
         public ConstructorInfo ReturnTypeConstructor { get; protected set; }
