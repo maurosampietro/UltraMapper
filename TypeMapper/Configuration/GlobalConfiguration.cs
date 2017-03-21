@@ -42,6 +42,10 @@ namespace TypeMapper
         public GlobalConfiguration( MapperConfiguration configuration )
         {
             this.Configuration = configuration;
+
+            this.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+            this.CollectionMappingStrategy = new ClearCollection();
+
             this.Mappers = new HashSet<IMapperExpressionBuilder>()
             {
                 //Order is important: the first mapper that can handle a mapping is used.
@@ -52,6 +56,7 @@ namespace TypeMapper
                 new StructMapper( configuration ),
                 new ReferenceMapper( configuration ),
                 new DictionaryMapper( configuration ),
+                new SetMapper( configuration ),
                 new StackMapper( configuration ),
                 new QueueMapper( configuration ),
                 new LinkedListMapper( configuration ),

@@ -20,6 +20,7 @@ namespace TypeMapper.Tests
         private class ComplexType : IComparable<ComplexType>
         {
             public int A { get; set; }
+            public InnerType InnerType { get; set; }
 
             public int CompareTo( ComplexType other )
             {
@@ -35,6 +36,11 @@ namespace TypeMapper.Tests
             {
                 return this.A.Equals( (obj as ComplexType)?.A );
             }
+        }
+
+        private class InnerType
+        {
+            public string String { get; set; }
         }
 
         private class GenericCollections<T>
@@ -82,6 +88,30 @@ namespace TypeMapper.Tests
                     this.ObservableCollection.Add( value );
                 }
             }
+        }
+
+        [TestMethod]
+        public void CollectionItemsAndMembersMappping()
+        {
+            List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            source.Capacity = 100;
+            List<double> target = new List<double>() { 1, 2, 3 };
+
+            Assert.IsTrue( !source.SequenceEqual(
+                    target.Select( item => (int)item ) ) );
+
+            var typeMapper = new TypeMapper();
+
+            var typeMapping = typeMapper.MappingConfiguration[ 
+                source.GetType(), target.GetType() ];
+
+            typeMapper.Map( source, target );
+
+            Assert.IsTrue( source.SequenceEqual(
+                target.Select( item => (int)item ) ) );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -204,16 +234,18 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void ComplexCollection()
         {
+            var innerType = new InnerType() { String = "test" };
+
             var source = new GenericCollections<ComplexType>();
-            for( int i = 0; i < 1; i++ )
+            for( int i = 0; i < 3; i++ )
             {
-                source.List.Add( new ComplexType() { A = i } );
-                source.HashSet.Add( new ComplexType() { A = i } );
-                source.SortedSet.Add( new ComplexType() { A = i } );
-                source.Stack.Push( new ComplexType() { A = i } );
-                source.Queue.Enqueue( new ComplexType() { A = i } );
-                source.LinkedList.AddLast( new ComplexType() { A = i } );
-                source.ObservableCollection.Add( new ComplexType() { A = i } );
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
             }
 
             var target = new GenericCollections<ComplexType>();

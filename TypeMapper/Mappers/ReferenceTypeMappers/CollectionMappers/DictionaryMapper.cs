@@ -51,8 +51,8 @@ namespace TypeMapper.Mappers
                     keyExpression,
                     valueExpression,
 
-                    Expression.Call( context.TargetMember,
-                        addMethod, context.TargetCollectionElementKey, context.TargetCollectionElementValue )
+                    Expression.Call( context.TargetMember, addMethod, 
+                        context.TargetCollectionElementKey, context.TargetCollectionElementValue )
                 ) )
             );
         }
@@ -60,20 +60,18 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             MemberExpression sourceParam, ParameterExpression targetParam )
         {
-            var typeMapping = MapperConfiguration[
-                    sourceParam.Type, targetParam.Type ];
-
-            var convert = typeMapping.MappingExpression;
+            var itemMapping = MapperConfiguration[ sourceParam.Type,
+                targetParam.Type ].MappingExpression;
 
             if( sourceParam.Type.IsBuiltInType( false ) && targetParam.Type.IsBuiltInType( false ) )
             {
                 if( sourceParam.Type == targetParam.Type )
                     return Expression.Assign( targetParam, sourceParam );
 
-                return Expression.Assign( targetParam, Expression.Invoke( convert, sourceParam ) );
+                return Expression.Assign( targetParam, Expression.Invoke( itemMapping, sourceParam ) );
             }
 
-            return base.LookUpBlock( convert, context.ReferenceTrack, sourceParam, targetParam );
+            return base.LookUpBlock(itemMapping, context, context.ReferenceTrack, sourceParam, targetParam );
         }
     }
 }

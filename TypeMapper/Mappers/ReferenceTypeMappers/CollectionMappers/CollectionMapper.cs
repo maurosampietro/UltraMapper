@@ -22,7 +22,8 @@ namespace TypeMapper.Mappers
 
         public override bool CanHandle( Type source, Type target )
         {
-            return source.IsEnumerable() && target.IsEnumerable();
+            return source.IsEnumerable() && target.IsEnumerable() &&
+                !source.IsBuiltInType( false ) && !target.IsBuiltInType( false ); //avoid strings
         }
 
         protected override object GetMapperContext( MemberMapping mapping )
@@ -52,10 +53,9 @@ namespace TypeMapper.Mappers
                     throw new Exception( msg );
                 }
 
-                var convert = typeMapping.MappingExpression;
-
                 Expression loopBody = Expression.Call( context.TargetMember,
-                    addMethod, Expression.Invoke( convert, context.SourceCollectionLoopingVar ) );
+                    addMethod, Expression.Invoke( typeMapping.MappingExpression,
+                        context.SourceCollectionLoopingVar ) );
 
                 var targetInstanceExpression = GetTargetInstanceAssignment( context );
 
@@ -95,7 +95,7 @@ namespace TypeMapper.Mappers
             var targetInstanceAssignment = GetTargetInstanceAssignment( context );
 
             var addMethod = GetTargetCollectionAddMethod( context );
-            if( addMethod != null || typeMapping.ReferenceMappingStrategy == 
+            if( addMethod != null || typeMapping.ReferenceMappingStrategy ==
                 ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
             {
                 return Expression.Block
@@ -149,26 +149,26 @@ namespace TypeMapper.Mappers
 
                 ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( itemMapping, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( itemMapping, context, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
         }
 
-        protected BlockExpression LookUpBlock( LambdaExpression itemMapping, ParameterExpression referenceTracker,
+        protected BlockExpression LookUpBlock(LambdaExpression itemMapping, CollectionMapperContext context, ParameterExpression referenceTracker,
            Expression sourceParam, ParameterExpression targetParam )
         {
-            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+            Expression cacheLookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method, referenceTracker, sourceParam,
                     Expression.Constant( targetParam.Type ) );
 
-            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+            Expression cacheInsertCall = Expression.Call( Expression.Constant( addToTracker.Target ),
                 addToTracker.Method, referenceTracker, sourceParam,
                 Expression.Constant( targetParam.Type ), targetParam );
 
             return Expression.Block
             (
-                Expression.Assign( targetParam, Expression.Convert( lookupCall, targetParam.Type ) ),
+                Expression.Assign( targetParam, Expression.Convert( cacheLookupCall, targetParam.Type ) ),
 
                 Expression.IfThen
                 (
@@ -178,11 +178,17 @@ namespace TypeMapper.Mappers
                     (
                         Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
 
-                        //cache new collection
-                        addToLookupCall,
+                        cacheInsertCall,
 
                         Expression.Invoke( itemMapping, referenceTracker,
-                            sourceParam, targetParam )
+                            sourceParam, targetParam ), 
+                        Expression.Call
+                        (
+                            context.ReturnObject, context.AddToReturnList,
+                            Expression.New( typeof( ObjectPair ).GetConstructors()[ 0 ],
+                            Expression.Convert( sourceParam, typeof( object ) ),
+                            Expression.Convert( targetParam, typeof( object ) ) )
+                        )
                     )
                 )
             );
@@ -192,10 +198,21 @@ namespace TypeMapper.Mappers
         {
             var context = contextObj as CollectionMapperContext;
 
+            Expression innerMapping;
             if( context.IsTargetElementTypeBuiltIn )
-                return GetSimpleTypeInnerBody( context );
+                innerMapping = GetSimpleTypeInnerBody( context );
+            else
+                innerMapping = GetComplexTypeInnerBody( context );
 
-            return GetComplexTypeInnerBody( context );
+            var getCountMethod = context.SourceMember.Type.GetProperty( "Count" ).GetGetMethod();
+
+            return Expression.Block
+            (
+                Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
+                    Expression.Call( context.SourceMember, getCountMethod ) ) ),
+
+                innerMapping
+            );
         }
 
         protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )

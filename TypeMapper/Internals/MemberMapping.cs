@@ -114,7 +114,7 @@ namespace TypeMapper.Internals
                 if( this.Mapper is IMemberMappingMapperExpression )
                     return _expression = ((IMemberMappingMapperExpression)this.Mapper).GetMappingExpression( this );
 
-                return _expression = ((ITypeMappingMapperExpression)this.Mapper).GetMappingExpression( this.MemberTypeMapping.TypePair.SourceType, 
+                return _expression = ((ITypeMapperExpression)this.Mapper).GetMappingExpression( this.MemberTypeMapping.TypePair.SourceType, 
                     this.MemberTypeMapping.TypePair.TargetType );
             }
 

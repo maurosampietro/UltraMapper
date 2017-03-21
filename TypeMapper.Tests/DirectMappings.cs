@@ -17,18 +17,13 @@ namespace TypeMapper.Tests
     {
         private class ComplexType
         {
-            public int GetPropertyA() { return this.PropertyA; }
             public int PropertyA { get; set; }
+            public InnerType InnerType { get; set; }
+        }
 
-            public override bool Equals( object obj )
-            {
-                return (obj as ComplexType)?.PropertyA == this.PropertyA;
-            }
-
-            public override int GetHashCode()
-            {
-                return PropertyA;
-            }
+        private class InnerType
+        {
+            public string String { get; set; }
         }
 
         [TestMethod]
@@ -43,6 +38,9 @@ namespace TypeMapper.Tests
             typeMapper.Map( source, out target );
 
             Assert.IsTrue( source == target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -57,6 +55,9 @@ namespace TypeMapper.Tests
             typeMapper.Map( source, out target );
 
             Assert.IsTrue( source == target );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -71,15 +72,19 @@ namespace TypeMapper.Tests
             typeMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual( target ) );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
         public void ListToListSameElementComplexType()
         {
+            var innerType = new InnerType() { String = "test" };
             var source = new List<ComplexType>()
             {
-                new ComplexType() { PropertyA = 1 },
-                new ComplexType() { PropertyA = 2 }
+                new ComplexType() { PropertyA = 1, InnerType = innerType },
+                new ComplexType() { PropertyA = 2, InnerType = innerType }
             };
 
             var target = new List<ComplexType>();
@@ -90,12 +95,16 @@ namespace TypeMapper.Tests
             typeMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual( target ) );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
         public void ListToListDifferentElementType()
         {
             List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            source.Capacity = 100;
             List<double> target = new List<double>() { 1, 2, 3 };
 
             Assert.IsTrue( !source.SequenceEqual(
@@ -106,6 +115,9 @@ namespace TypeMapper.Tests
 
             Assert.IsTrue( source.SequenceEqual(
                 target.Select( item => (int)item ) ) );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -144,8 +156,8 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper
             (
-                //cfg => cfg.MapTypes<ComplexType, int>()
-                //    .MapProperty( a => a.PropertyA, c => c )
+            //cfg => cfg.MapTypes<ComplexType, int>()
+            //    .MapProperty( a => a.PropertyA, c => c )
             );
 
             typeMapper.Map( source, target );

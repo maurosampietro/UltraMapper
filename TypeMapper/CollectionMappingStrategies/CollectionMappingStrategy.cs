@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq.Expressions;
+using TypeMapper.Mappers;
 
 namespace TypeMapper.CollectionMappingStrategies
 {
@@ -8,7 +10,15 @@ namespace TypeMapper.CollectionMappingStrategies
     /// </summary>
     public class ClearCollection : ICollectionMappingStrategy
     {
-       
+        public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -19,7 +29,15 @@ namespace TypeMapper.CollectionMappingStrategies
     /// </summary>
     public class UpdateCollection : ICollectionMappingStrategy
     {
-      
+        public Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -28,6 +46,39 @@ namespace TypeMapper.CollectionMappingStrategies
     /// </summary>
     public class MergeCollection : ICollectionMappingStrategy
     {
-      
+        public Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class NewCollection : ICollectionMappingStrategy
+    {
+        //public Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
+        //{
+        //    var constructor = GetTargetCollectionConstructorFromCollection( context );
+        //    var targetCollectionConstructor = Expression.New( constructor, context.SourceMember );
+
+        //    return Expression.Assign( context.TargetMember, targetCollectionConstructor );
+        //}
+
+        //public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
+        //{
+        //    throw new NotImplementedException();
+        //}
+        public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
+        {
+            throw new NotImplementedException();
+        }
     }
 }

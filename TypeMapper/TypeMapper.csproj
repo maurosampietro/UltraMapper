@@ -73,6 +73,7 @@
     <Compile Include="Mappers\ReferenceTypeMappers\ReferenceMapper.cs" />
     <Compile Include="Mappers\ReferenceTypeMappers\CollectionMappers\LinkedListMapper.cs" />
     <Compile Include="Mappers\PrimitiveTypesMappers\StructMapper.cs" />
+    <Compile Include="Mappers\ReferenceTypeMappers\CollectionMappers\SetMapper.cs" />
     <Compile Include="Mappers\ReferenceTypeMappers\TypeMappers\CollectionMapperTypeMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />

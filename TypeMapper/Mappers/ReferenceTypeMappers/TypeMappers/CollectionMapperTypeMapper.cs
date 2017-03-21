@@ -8,7 +8,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
 {
-    public class CollectionMapperTypeMapping : ReferenceMapper, ITypeMappingMapperExpression
+    public class CollectionMapperTypeMapping : ReferenceMapper, ITypeMapperExpression
     {
         public CollectionMapperTypeMapping( MapperConfiguration configuration )
             : base( configuration ) { }

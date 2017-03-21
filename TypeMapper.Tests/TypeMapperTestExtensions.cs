@@ -18,6 +18,14 @@ namespace TypeMapper.Tests
         private static bool VerifyMapperResultHelper( this TypeMapper typeMapper,
             object source, object target, ReferenceTracking referenceTracking )
         {
+            //sharing the same reference or both null
+            if( Object.ReferenceEquals( source, target ) )
+                return true;
+
+            //either source or target is null 
+            if( source == null || target == null )
+                return false;
+
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
@@ -29,14 +37,6 @@ namespace TypeMapper.Tests
                 if( !sourceType.IsValueType )
                     referenceTracking.Add( source, targetType, target );
             }
-
-            //sharing the same reference or both null
-            if( Object.ReferenceEquals( source, target ) )
-                return true;
-
-            //either source or target is null 
-            if( source == null || target == null )
-                return false;
 
             //same value type: just compare their values
             if( sourceType == targetType && sourceType.IsValueType )
@@ -82,6 +82,9 @@ namespace TypeMapper.Tests
                 {
                     if( referenceTracking.Contains( sourceValue, mapping.TargetMember.MemberType ) )
                         continue;
+
+                    var result = VerifyMapperResultHelper( typeMapper, sourceValue, targetValue, referenceTracking );
+                    if( !result ) return false;
 
                     referenceTracking.Add( sourceValue, mapping.TargetMember.MemberType, targetValue );
                 }

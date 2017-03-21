@@ -14,7 +14,7 @@ namespace TypeMapper.Mappers
         bool CanHandle( Type source, Type target );
     }
 
-    public interface ITypeMappingMapperExpression : IMapperExpressionBuilder
+    public interface ITypeMapperExpression : IMapperExpressionBuilder
     {
         /// <summary>
         /// Gets an expression that can handle <paramref name="mapping"/>
@@ -22,6 +22,11 @@ namespace TypeMapper.Mappers
         /// <param name="mapping">the property mapping to handle</param>
         /// <returns>Returns a list of objects that need to be recursively mapped</returns>
         LambdaExpression GetMappingExpression( Type source, Type target );
+    }
+
+    public interface ITypeMappingMapperExpression : IMapperExpressionBuilder
+    {
+        LambdaExpression GetMappingExpression( TypeMapping typeMapping );
     }
 
     public interface IMemberMappingMapperExpression : IMapperExpressionBuilder

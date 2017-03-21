@@ -34,13 +34,11 @@ namespace TypeMapper.Mappers
         {
             var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );
 
-            var body = Expression.Block
+            return Expression.Block
             (
                 base.GetSimpleTypeInnerBody( context ),
                 Expression.Assign( context.TargetMember, Expression.New( constructorInfo, context.TargetMember ) )
             );
-
-            return body;
         }
 
         protected override Expression GetComplexTypeInnerBody( CollectionMapperContext context )

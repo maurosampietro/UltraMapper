@@ -16,29 +16,12 @@ namespace TypeMapper.Tests
     {
         private class OuterType
         {
-            public InnerType NullInnerType { get; set; }
-            public InnerType InnerType { get; set; }
+            //public InnerType NullInnerType { get; set; }
+            //public InnerType InnerType { get; set; }
             public List<int> PrimitiveList { get; set; }
-            public List<InnerType> ComplexList { get; set; }
+            //public List<InnerType> ComplexList { get; set; }
 
-            public string String { get; set; }
-
-            public OuterType()
-            {
-                this.PrimitiveList = Enumerable.Range( 0, 10 ).ToList();
-
-                this.InnerType = new InnerType()
-                {
-                    A = "a",
-                    B = "b"
-                };
-
-                this.ComplexList = new List<InnerType>()
-                {
-                    new InnerType() { A = "a", B = "b", },
-                    new InnerType() { A = "c", B = "d", }
-                };
-            }
+            //public string String { get; set; }
         }
 
         private class OuterTypeDto
@@ -82,12 +65,13 @@ namespace TypeMapper.Tests
 
             var source = new OuterType()
             {
-                InnerType = innerType,
+                //InnerType = innerType,
                 PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
-                ComplexList = new List<InnerType>() { innerType }
+                //ComplexList = new List<InnerType>() { innerType },
+                //String = "ok"
             };
 
-            source.InnerType.C = source;
+            //source.InnerType.C = source;
 
             var target = new OuterType();
 
@@ -98,83 +82,99 @@ namespace TypeMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-        [TestMethod]
-        public void UseTargetInstanceIfNotNull()
-        {
-            var innerType = new InnerType() { A = "fadadfsadsffsd" };
+        //[TestMethod]
+        //public void UseTargetInstanceIfNotNull()
+        //{
+        //    var innerType = new InnerType() { A = "fadadfsadsffsd" };
 
-            var source = new OuterType();
-            var target = new OuterType()
-            {
-                InnerType = innerType,
-                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
-                ComplexList = new List<InnerType>() { innerType }
-            };
+        //    var source = new OuterType();
+        //    var target = new OuterType()
+        //    {
+        //        InnerType = innerType,
+        //        PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
+        //        ComplexList = new List<InnerType>() { innerType }
+        //    };
 
-            var primitiveList = target.PrimitiveList;
-            int primitiveListCount = target.PrimitiveList.Count;
+        //    var primitiveList = target.PrimitiveList;
+        //    int primitiveListCount = target.PrimitiveList.Count;
 
-            var complexList = target.ComplexList;
-            int complexListCount = target.ComplexList.Count;
+        //    var complexList = target.ComplexList;
+        //    int complexListCount = target.ComplexList.Count;
 
-            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
-            {
-                cfg.GlobalConfiguration.ReferenceMappingStrategy =
-                    ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-            } );
+        //    var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+        //    {
+        //        cfg.GlobalConfiguration.ReferenceMappingStrategy =
+        //            ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+        //    } );
 
-            typeMapper.Map( source, target );
+        //    typeMapper.Map( source, target );
 
-            Assert.IsTrue( Object.ReferenceEquals( target.InnerType, innerType ) );
+        //    Assert.IsTrue( Object.ReferenceEquals( target.InnerType, innerType ) );
 
-            Assert.IsTrue( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
-            Assert.IsTrue( primitiveListCount + source.PrimitiveList.Count == primitiveList.Count );
+        //    Assert.IsTrue( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
+        //    Assert.IsTrue( primitiveListCount + source.PrimitiveList.Count == primitiveList.Count );
 
-            Assert.IsTrue( Object.ReferenceEquals( target.ComplexList, complexList ) );
-            Assert.IsTrue( complexListCount + source.ComplexList.Count == complexList.Count );
-        }
+        //    Assert.IsTrue( Object.ReferenceEquals( target.ComplexList, complexList ) );
+        //    Assert.IsTrue( complexListCount + source.ComplexList.Count == complexList.Count );
+        //}
 
-        [TestMethod]
-        public void CreateNewInstance()
-        {
-            var innerType = new InnerType() { A = "fadadfsadsffsd" };
+        //[TestMethod]
+        //public void CreateNewInstance()
+        //{
+        //    var innerType = new InnerType() { A = "fadadfsadsffsd" };
 
-            var source = new OuterType();
-            var target = new OuterType()
-            {
-                InnerType = innerType,
-                PrimitiveList = Enumerable.Range( 20, 10 ).ToList()
-            };
+        //    var source = new OuterType()
+        //    {
+        //        PrimitiveList = Enumerable.Range( 0, 10 ).ToList(),
 
-            var primitiveList = target.PrimitiveList;
+        //        InnerType = new InnerType()
+        //        {
+        //            A = "a",
+        //            B = "b"
+        //        },
 
-            var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
-            {
-                cfg.GlobalConfiguration.ReferenceMappingStrategy =
-                    ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
-            } );
+        //        ComplexList = new List<InnerType>()
+        //        {
+        //            new InnerType() { A = "a", B = "b", },
+        //            new InnerType() { A = "c", B = "d", }
+        //        }
+        //    };
 
-            typeMapper.Map( source, target );
-            Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
-            Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
-        }
+        //    var target = new OuterType()
+        //    {
+        //        InnerType = innerType,
+        //        PrimitiveList = Enumerable.Range( 20, 10 ).ToList()
+        //    };
 
-        [TestMethod]
-        public void ObjectToObject()
-        {
-            throw new Exception( "plain wrong" );
+        //    var primitiveList = target.PrimitiveList;
 
-            object source = new AllObjects() { String = "prova", OuterType = new OuterType() { String = "prova" } };
-            object target = new AllObjects();
+        //    var typeMapper = new TypeMapper<CustomMappingConvention>( cfg =>
+        //    {
+        //        cfg.GlobalConfiguration.ReferenceMappingStrategy =
+        //            ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+        //    } );
 
-            var typeMapper = new TypeMapper();
-            typeMapper.Map( source, target );
+        //    typeMapper.Map( source, target );
+        //    Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
+        //    Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
+        //}
 
-            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+        //[TestMethod]
+        //public void ObjectToObject()
+        //{
+        //    throw new Exception( "plain wrong" );
 
-            Assert.IsTrue( isResultOk );
-            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
-            Assert.IsFalse( Object.ReferenceEquals( ((AllObjects)source).OuterType, ((AllObjects)target).OuterType ) );
-        }
+        //    object source = new AllObjects() { String = "prova", OuterType = new OuterType() { String = "prova" } };
+        //    object target = new AllObjects();
+
+        //    var typeMapper = new TypeMapper();
+        //    typeMapper.Map( source, target );
+
+        //    bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+
+        //    Assert.IsTrue( isResultOk );
+        //    Assert.IsFalse( Object.ReferenceEquals( source, target ) );
+        //    Assert.IsFalse( Object.ReferenceEquals( ((AllObjects)source).OuterType, ((AllObjects)target).OuterType ) );
+        //}
     }
 }

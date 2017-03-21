@@ -69,11 +69,11 @@ namespace TypeMapper.Internals
             set { _collectionMappingStrategy = value; }
         }
 
-        public ITypeMappingMapperExpression Mapper
+        public ITypeMapperExpression Mapper
         {
             get
             {
-                var selectedMapper = GlobalConfiguration.Mappers.OfType<ITypeMappingMapperExpression>()
+                var selectedMapper = GlobalConfiguration.Mappers.OfType<ITypeMapperExpression>()
                     .FirstOrDefault( mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
 
                 return selectedMapper;
@@ -96,7 +96,7 @@ namespace TypeMapper.Internals
                     return this.CustomConverter;
 
                 if( _expression != null ) return _expression;
-                return _expression = MemberMappingExpressionMerger.Merge( this );
+                return _expression = new ReferenceMapperWithMemberMapping().GetMappingExpression( this );
             }
         }
 
@@ -126,151 +126,162 @@ namespace TypeMapper.Internals
         }
     }
 
-    public class MemberMappingExpressionMerger
-    {
-        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+    //public class MemberMappingExpressionMerger
+    //{
+    //    private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
 
-        private class MemberMappingComparer : IComparer<MemberMapping>
-        {
-            public int Compare( MemberMapping x, MemberMapping y )
-            {
-                var xGetter = x.TargetMember.ValueGetter.ToString();
-                var yGetter = y.TargetMember.ValueGetter.ToString();
+    //    private class MemberMappingComparer : IComparer<MemberMapping>
+    //    {
+    //        public int Compare( MemberMapping x, MemberMapping y )
+    //        {
+    //            var xGetter = x.TargetMember.ValueGetter.ToString();
+    //            var yGetter = y.TargetMember.ValueGetter.ToString();
 
-                int xCount = xGetter.Split( '.' ).Count();
-                int yCount = yGetter.Split( '.' ).Count();
+    //            int xCount = xGetter.Split( '.' ).Count();
+    //            int yCount = yGetter.Split( '.' ).Count();
 
-                if( xCount > yCount ) return 1;
-                if( xCount < yCount ) return -1;
+    //            if( xCount > yCount ) return 1;
+    //            if( xCount < yCount ) return -1;
 
-                return 0;
-            }
-        }
+    //            return 0;
+    //        }
+    //    }
 
-        public static LambdaExpression Merge( TypeMapping typeMapping )
-        {
-            var returnType = typeof( List<ObjectPair> );
-            var returnElementType = typeof( ObjectPair );
+    //    public static LambdaExpression Merge( TypeMapping typeMapping )
+    //    {
+    //        var returnType = typeof( List<ObjectPair> );
+    //        var returnElementType = typeof( ObjectPair );
 
-            var sourceType = typeMapping.TypePair.SourceType;
-            var targetType = typeMapping.TypePair.TargetType;
-            var trackerType = typeof( ReferenceTracking );
+    //        var sourceType = typeMapping.TypePair.SourceType;
+    //        var targetType = typeMapping.TypePair.TargetType;
+    //        var trackerType = typeof( ReferenceTracking );
 
-            var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
-            var targetInstance = Expression.Parameter( targetType, "targetInstance" );
-            var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
+    //        var sourceInstance = Expression.Parameter( sourceType, "sourceInstance" );
+    //        var targetInstance = Expression.Parameter( targetType, "targetInstance" );
+    //        var referenceTrack = Expression.Parameter( trackerType, "referenceTracker" );
 
-            var newRefObjects = Expression.Variable( returnType, "result" );
+    //        var newRefObjects = Expression.Variable( returnType, "result" );
 
-            LambdaExpression typeMappingExp = typeMapping.Mapper?.GetMappingExpression( 
-                typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+    //        LambdaExpression typeMappingExp = typeMapping.Mapper?.GetMappingExpression(
+    //            typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
 
-            var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
-            var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+    //        var addMethod = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+    //        var addRangeMethod = returnType.GetMethod( nameof( List<ObjectPair>.AddRange ) );
 
-            Func<MemberMapping, Expression> getMemberMapping = ( mapping ) =>
-            {
-                LambdaExpression expression = mapping.Expression;
+    //        Func<MemberMapping, Expression> getMemberMapping = ( mapping ) =>
+    //        {
+    //            ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "returnValue" );
 
-                if( expression.ReturnType == returnElementType )
-                {
-                    var objPair = Expression.Variable( returnElementType, "objPair" );
+    //            var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+    //            var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
 
-                    return Expression.Block
-                    (
-                        new[] { objPair },
+    //            LambdaExpression expression = mapping.Expression;
 
-                        Expression.Assign( objPair, expression.Body ),
+    //            if( mapping.Expression.ReturnType == typeof( List<ObjectPair> ) )
+    //            {
+    //                return Expression.Call( newRefObjects, addRangeMethod, mapping.Expression.Body );
+    //            }
 
-                        //Expression.Assign( objPair, Expression.Invoke( expression, referenceTrack,
-                        //Expression.Invoke( mapping.SourceMember.ValueGetter, sourceInstance ),
-                        //Expression.Invoke( mapping.TargetMember.ValueGetter, targetInstance ) )
-                        //),
+    //            else if( expression.ReturnType == returnElementType )
+    //            {
+    //                var objPair = Expression.Variable( returnElementType, "objPair" );
 
-                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                            Expression.Call( newRefObjects, addMethod, objPair ) )
-                    );
-                }
+    //                //var targetMemberInfo = typeof( ObjectPair ).GetMember( nameof( ObjectPair.Target ) )[ 0 ];
+    //                //var targetAccess = Expression.MakeMemberAccess( objPair, targetMemberInfo );
 
-                ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "value" );
+    //                return Expression.Block
+    //                (
+    //                    new[] { value, objPair },
 
-                var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
-                var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+    //                    Expression.Assign( objPair, expression.Body ),
 
-                return Expression.Block
-                (
-                    new[] { value },
+    //                    //Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+    //                    //Expression.Assign( value, Expression.Convert( targetAccess, mapping.TargetMember.MemberType ) )),
 
-                    Expression.Assign( value, Expression.Invoke( expression, Expression.Invoke( mapping.SourceMember.ValueGetter, sourceInstance ) ) ),
+    //                    //mapping.TargetMember.ValueSetter.Body
+    //                    //    .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
+    //                    //    .ReplaceParameter( value, targetSetterMemberParamName ),
 
-                    mapping.TargetMember.ValueSetter.Body
-                        .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
-                        .ReplaceParameter( value, targetSetterMemberParamName )
-                );
-            };
+    //                    Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null, returnElementType ) ),
+    //                        Expression.Call( newRefObjects, addMethod, objPair ) )
+    //                );
+    //            }
 
-            Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
-            {
-                if( lambdaExp.ReturnType == returnElementType )
-                {
-                    var objPair = Expression.Variable( returnElementType, "objPair" );
 
-                    return Expression.Block
-                    (
-                        new[] { objPair },
+    //            return Expression.Block
+    //            (
+    //                new[] { value },
 
-                        Expression.Assign( objPair, lambdaExp.Body ),
+    //                Expression.Assign( value, Expression.Invoke( expression, Expression.Invoke( mapping.SourceMember.ValueGetter, sourceInstance ) ) ),
 
-                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                            Expression.Call( newRefObjects, addMethod, objPair ) )
-                    );
-                }
+    //                mapping.TargetMember.ValueSetter.Body
+    //                    .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
+    //                    .ReplaceParameter( value, targetSetterMemberParamName )
+    //            );
+    //        };
 
-                return lambdaExp.Body;
-            };
+    //        Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
+    //        {
+    //            if( lambdaExp.ReturnType == returnElementType )
+    //            {
+    //                var objPair = Expression.Variable( returnElementType, "objPair" );
 
-            //since nested selectors are supported, we sort membermappings to grant
-            //that we assign outer objects first
+    //                return Expression.Block
+    //                (
+    //                    new[] { objPair },
 
-            var validMappings = typeMapping.MemberMappings.Values.ToList();
-            if( typeMapping.IgnoreMemberMappingResolvedByConvention )
-            {
-                validMappings = validMappings.Where( mapping =>
-                    mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
-            }
+    //                    Expression.Assign( objPair, lambdaExp.Body ),
 
-            var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
-                .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
-                .Select( mapping => getMemberMapping( mapping ) );
+    //                    Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+    //                        Expression.Call( newRefObjects, addMethod, objPair ) )
+    //                );
+    //            }
 
-            if( !addCalls.Any() && typeMappingExp != null )
-                return typeMappingExp;
+    //            return lambdaExp.Body;
+    //        };
 
-            var bodyExp = !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
-            var typeMappingBodyExp = typeMappingExp != null ? createAddCalls( typeMappingExp ) : Expression.Empty();
+    //        //since nested selectors are supported, we sort membermappings to grant
+    //        //that we assign outer objects first
 
-            var body = Expression.Block
-            (
-                new[] { newRefObjects },
+    //        var validMappings = typeMapping.MemberMappings.Values.ToList();
+    //        if( typeMapping.IgnoreMemberMappingResolvedByConvention )
+    //        {
+    //            validMappings = validMappings.Where( mapping =>
+    //                mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
+    //        }
 
-                Expression.Assign( newRefObjects, Expression.New( returnType ) ),
+    //        var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
+    //            .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
+    //            .Select( mapping => getMemberMapping( mapping ) ).ToList();
 
-                typeMappingBodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
-                    .ReplaceParameter( targetInstance, targetInstance.Name )
-                    .ReplaceParameter( sourceInstance, sourceInstance.Name ),
+    //        if( !addCalls.Any() && typeMappingExp != null )
+    //            return typeMappingExp;
 
-                bodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
-                    .ReplaceParameter( targetInstance, targetInstance.Name )
-                    .ReplaceParameter( sourceInstance, sourceInstance.Name ),
+    //        var bodyExp = !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
+    //        var typeMappingBodyExp = typeMappingExp != null ? createAddCalls( typeMappingExp ) : Expression.Empty();
 
-                newRefObjects
-            );
+    //        var body = Expression.Block
+    //        (
+    //            new[] { newRefObjects },
 
-            var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                trackerType, sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
+    //            Expression.Assign( newRefObjects, Expression.New( returnType ) ),
 
-            return Expression.Lambda( delegateType,
-                body, referenceTrack, sourceInstance, targetInstance );
-        }
-    }
+    //            typeMappingBodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
+    //                .ReplaceParameter( targetInstance, targetInstance.Name )
+    //                .ReplaceParameter( sourceInstance, sourceInstance.Name ),
+
+    //            bodyExp.ReplaceParameter( referenceTrack, referenceTrack.Name )
+    //                .ReplaceParameter( targetInstance, targetInstance.Name )
+    //                .ReplaceParameter( sourceInstance, sourceInstance.Name ),
+
+    //            newRefObjects
+    //        );
+
+    //        var delegateType = typeof( Func<,,,> ).MakeGenericType(
+    //            trackerType, sourceType, targetType, typeof( IEnumerable<ObjectPair> ) );
+
+    //        return Expression.Lambda( delegateType,
+    //            body, referenceTrack, sourceInstance, targetInstance );
+    //    }
+    //}
 }

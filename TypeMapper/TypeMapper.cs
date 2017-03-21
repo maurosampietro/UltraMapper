@@ -103,7 +103,9 @@ namespace TypeMapper
             if( references != null )
             {
                 foreach( var reference in references )
+                {
                     this.Map( reference.Source, reference.Target, referenceTracking );
+                }
             }
         }
     }

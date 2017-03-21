@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using TypeMapper.Internals;
@@ -81,12 +82,6 @@ namespace TypeMapper.Mappers
             return new ReferenceMapperContext( mapping );
         }
 
-        protected virtual Expression ReturnTypeInitialization( object contextObj )
-        {
-            var context = contextObj as ReferenceMapperContext;
-            return Expression.Assign( context.ReturnObject, Expression.Constant( null, context.ReturnObject.Type ) );
-        }
-
         protected virtual Expression GetExpressionBody( ReferenceMapperContext context )
         {
             /* SOURCE (NULL) -> TARGET = NULL
@@ -106,11 +101,9 @@ namespace TypeMapper.Mappers
                 addToTracker.Method, context.ReferenceTrack, context.SourceMember,
                 Expression.Constant( context.TargetMember.Type ), context.TargetMember );
 
-            var body = (Expression)Expression.Block
+            return Expression.Block
             (
                 new ParameterExpression[] { context.SourceMember, context.TargetMember, context.ReturnObject },
-
-                ReturnTypeInitialization( context ),
 
                 //read source value
                 Expression.Assign( context.SourceMember, context.SourceMemberValue ),
@@ -145,8 +138,6 @@ namespace TypeMapper.Mappers
                 context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) : context.TargetMemberValueSetter,
                 context.ReturnObject
             );
-
-            return body;
         }
 
         protected virtual Expression GetInnerBody( object contextObj )
@@ -180,6 +171,175 @@ namespace TypeMapper.Mappers
                 Expression.Assign( context.TargetMember, newInstanceExp ),
                 Expression.Assign( context.TargetMember, context.TargetMemberValue )
             );
+        }
+    }
+
+    /// <summary>
+    /// Maps simple types and return a list of objectPair
+    /// that need to be recursively mapped
+    /// </summary>
+    public class ReferenceMapperWithMemberMapping : IMapperExpressionBuilder, ITypeMappingMapperExpression
+    {
+        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+
+        private class MemberMappingComparer : IComparer<MemberMapping>
+        {
+            public int Compare( MemberMapping x, MemberMapping y )
+            {
+                var xGetter = x.TargetMember.ValueGetter.ToString();
+                var yGetter = y.TargetMember.ValueGetter.ToString();
+
+                int xCount = xGetter.Split( '.' ).Count();
+                int yCount = yGetter.Split( '.' ).Count();
+
+                if( xCount > yCount ) return 1;
+                if( xCount < yCount ) return -1;
+
+                return 0;
+            }
+        }
+
+        public virtual bool CanHandle( Type source, Type target )
+        {
+            bool valueTypes = source.IsValueType
+                && target.IsValueType;
+
+            bool builtInTypes = source.IsBuiltInType( false )
+                && target.IsBuiltInType( false );
+
+            return !valueTypes && !builtInTypes && !source.IsEnumerable();
+        }
+
+        protected virtual object GetMapperContext( TypeMapping typeMapping )
+        {
+            return new ReferenceMapperWithMemberMappingContext( typeMapping );
+        }
+
+        public LambdaExpression GetMappingExpression( TypeMapping typeMapping )
+        {
+            var context = GetMapperContext( typeMapping ) as ReferenceMapperWithMemberMappingContext;
+
+            LambdaExpression typeMappingExp = typeMapping.Mapper?.GetMappingExpression(
+                typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+
+            var addMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.Add ) );
+            var addRangeMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+
+            Func<MemberMapping, Expression> getMemberMapping = ( mapping ) =>
+            {
+                ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "returnValue" );
+
+                var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+                var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+
+                LambdaExpression expression = mapping.Expression;
+
+                if( mapping.Expression.ReturnType == typeof( List<ObjectPair> ) )
+                {
+                    return Expression.Call( context.ReturnObject, addRangeMethod, mapping.Expression.Body );
+                }
+
+                else if( expression.ReturnType == context.ReturnElementType )
+                {
+                    var objPair = Expression.Variable( context.ReturnElementType, "objPair" );
+
+                    //var targetMemberInfo = typeof( ObjectPair ).GetMember( nameof( ObjectPair.Target ) )[ 0 ];
+                    //var targetAccess = Expression.MakeMemberAccess( objPair, targetMemberInfo );
+
+                    return Expression.Block
+                    (
+                        new[] { value, objPair },
+
+                        Expression.Assign( objPair, expression.Body ),
+
+                        //Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                        //Expression.Assign( value, Expression.Convert( targetAccess, mapping.TargetMember.MemberType ) )),
+
+                        //mapping.TargetMember.ValueSetter.Body
+                        //    .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
+                        //    .ReplaceParameter( value, targetSetterMemberParamName ),
+
+                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null, context.ReturnElementType ) ),
+                            Expression.Call( context.ReturnObject, addMethod, objPair ) )
+                    );
+                }
+
+
+                return Expression.Block
+                (
+                    new[] { value },
+
+                    Expression.Assign( value, Expression.Invoke( expression, Expression.Invoke( mapping.SourceMember.ValueGetter, context.SourceInstance ) ) ),
+
+                    mapping.TargetMember.ValueSetter.Body
+                        .ReplaceParameter( context.TargetInstance, targetSetterInstanceParamName )
+                        .ReplaceParameter( value, targetSetterMemberParamName )
+                );
+            };
+
+            Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
+            {
+                if( lambdaExp.ReturnType == context.ReturnElementType )
+                {
+                    var objPair = Expression.Variable( context.ReturnElementType, "objPair" );
+
+                    return Expression.Block
+                    (
+                        new[] { objPair },
+
+                        Expression.Assign( objPair, lambdaExp.Body ),
+
+                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
+                            Expression.Call( context.ReturnObject, addMethod, objPair ) )
+                    );
+                }
+
+                return lambdaExp.Body;
+            };
+
+            //since nested selectors are supported, we sort membermappings to grant
+            //that we assign outer objects first
+
+            var validMappings = typeMapping.MemberMappings.Values.ToList();
+            if( typeMapping.IgnoreMemberMappingResolvedByConvention )
+            {
+                validMappings = validMappings.Where( mapping =>
+                    mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
+            }
+
+            var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
+                .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
+                .Select( mapping => getMemberMapping( mapping ) ).ToList();
+
+            if( !addCalls.Any() && typeMappingExp != null )
+                return typeMappingExp;
+
+            var bodyExp = !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
+            var typeMappingBodyExp = typeMappingExp != null ? createAddCalls( typeMappingExp ) : Expression.Empty();
+
+            var body = Expression.Block
+            (
+                new[] { context.ReturnObject },
+
+                Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) ),
+
+                typeMappingBodyExp.ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
+                    .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
+                    .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name ),
+
+                bodyExp.ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
+                    .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
+                    .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name ),
+
+                 context.ReturnObject
+            );
+
+            var delegateType = typeof( Func<,,,> ).MakeGenericType(
+                context.ReferenceTrack.Type, context.SourceInstance.Type, 
+                context.TargetInstance.Type, typeof( IEnumerable<ObjectPair> ) );
+
+            return Expression.Lambda( delegateType,
+                body, context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
         }
     }
 }

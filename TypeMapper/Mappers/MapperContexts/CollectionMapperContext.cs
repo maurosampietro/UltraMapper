@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
@@ -14,6 +16,7 @@ namespace TypeMapper.Mappers
         public bool IsTargetElementTypeBuiltIn { get; set; }
 
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
+        public MethodInfo AddToReturnList { get; internal set; }
 
         public CollectionMapperContext( MemberMapping mapping )
             : base( mapping ) { Initialize(); }
@@ -23,6 +26,11 @@ namespace TypeMapper.Mappers
 
         private void Initialize()
         {
+            var returnType = typeof( List<ObjectPair> );
+            ReturnTypeConstructor = returnType.GetConstructor( new[] { typeof( int ) } );
+            ReturnObject = Expression.Variable( returnType, "returnObject" );
+            AddToReturnList = returnType.GetMethod( "Add" );
+
             SourceCollectionElementType = SourceMember.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetMember.Type.GetCollectionGenericType();
 
