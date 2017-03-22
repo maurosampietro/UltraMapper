@@ -27,7 +27,7 @@ namespace TypeMapper.Mappers
 
         protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetMember.Type.GetMethod( "Push" );
+            return context.TargetInstance.Type.GetMethod( "Push" );
         }
 
         protected override Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
@@ -37,7 +37,7 @@ namespace TypeMapper.Mappers
             return Expression.Block
             (
                 base.GetSimpleTypeInnerBody( context ),
-                Expression.Assign( context.TargetMember, Expression.New( constructorInfo, context.TargetMember ) )
+                Expression.Assign( context.TargetInstance, Expression.New( constructorInfo, context.TargetInstance ) )
             );
         }
 
@@ -54,10 +54,10 @@ namespace TypeMapper.Mappers
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
             var constructorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var getCountMethod = context.SourceMember.Type.GetProperty( "Count" ).GetGetMethod();
+            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
 
             var newTempCollectionExp = Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceMember, getCountMethod ) );
+                Expression.Call( context.SourceInstance, getCountMethod ) );
 
             return Expression.Block
             (
@@ -65,7 +65,7 @@ namespace TypeMapper.Mappers
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
                 CollectionLoopWithReferenceTracking( context, tempCollection, addMethod ),
-                Expression.Assign( context.TargetMember, Expression.New( constructorInfo, tempCollection ) )
+                Expression.Assign( context.TargetInstance, Expression.New( constructorInfo, tempCollection ) )
             );
         }
     }

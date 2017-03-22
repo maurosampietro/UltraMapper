@@ -26,9 +26,9 @@ namespace TypeMapper.Mappers
                 !source.IsBuiltInType( false ) && !target.IsBuiltInType( false ); //avoid strings
         }
 
-        protected override object GetMapperContext( MemberMapping mapping )
+        protected override object GetMapperContext( Type source, Type target )
         {
-            return new CollectionMapperContext( mapping );
+            return new CollectionMapperContext( source, target );
         }
 
         protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
@@ -47,13 +47,13 @@ namespace TypeMapper.Mappers
                 var addMethod = GetTargetCollectionAddMethod( context );
                 if( addMethod == null )
                 {
-                    string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetMember.Type )}' does not provide an item-insertion method " +
+                    string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetInstance.Type )}' does not provide an item-insertion method " +
                         $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
 
                     throw new Exception( msg );
                 }
 
-                Expression loopBody = Expression.Call( context.TargetMember,
+                Expression loopBody = Expression.Call( context.TargetInstance,
                     addMethod, Expression.Invoke( typeMapping.MappingExpression,
                         context.SourceCollectionLoopingVar ) );
 
@@ -63,15 +63,15 @@ namespace TypeMapper.Mappers
                 (
                     targetInstanceExpression,
 
-                    ExpressionLoops.ForEach( context.SourceMember,
+                    ExpressionLoops.ForEach( context.SourceInstance,
                         context.SourceCollectionLoopingVar, loopBody )
                 );
             }
 
             var constructor = GetTargetCollectionConstructorFromCollection( context );
-            var targetCollectionConstructor = Expression.New( constructor, context.SourceMember );
+            var targetCollectionConstructor = Expression.New( constructor, context.SourceInstance );
 
-            return Expression.Assign( context.TargetMember, targetCollectionConstructor );
+            return Expression.Assign( context.TargetInstance, targetCollectionConstructor );
         }
 
         protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
@@ -101,7 +101,7 @@ namespace TypeMapper.Mappers
                 return Expression.Block
                 (
                     targetInstanceAssignment,
-                    CollectionLoopWithReferenceTracking( context, context.TargetMember, addMethod )
+                    CollectionLoopWithReferenceTracking( context, context.TargetInstance, addMethod )
                 );
             }
 
@@ -109,7 +109,7 @@ namespace TypeMapper.Mappers
             var constructor = GetTargetCollectionConstructorFromCollection( context );
             if( constructor == null )
             {
-                string msg = $@"'{nameof( context.TargetMember.Type )}' does not provide an 'Add' method or a constructor taking as parameter IEnumerable<T>. " +
+                string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an 'Add' method or a constructor taking as parameter IEnumerable<T>. " +
                     $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item insertion method.";
 
                 throw new Exception( msg );
@@ -120,10 +120,10 @@ namespace TypeMapper.Mappers
             var tempCollectionAddMethod = tempCollectionType.GetMethod( "Add" );
 
             var tempCtorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var tempCollectionCountMethod = context.SourceMember.Type.GetProperty( "Count" ).GetGetMethod();
+            var tempCollectionCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
 
             var newTempCollectionExp = Expression.New( tempCtorWithCapacity,
-                Expression.Call( context.SourceMember, tempCollectionCountMethod ) );
+                Expression.Call( context.SourceInstance, tempCollectionCountMethod ) );
 
             return Expression.Block
             (
@@ -131,7 +131,7 @@ namespace TypeMapper.Mappers
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
                 CollectionLoopWithReferenceTracking( context, tempCollection, tempCollectionAddMethod ),
-                Expression.Assign( context.TargetMember, Expression.New( constructor, tempCollection ) )
+                Expression.Assign( context.TargetInstance, Expression.New( constructor, tempCollection ) )
             );
         }
 
@@ -147,7 +147,7 @@ namespace TypeMapper.Mappers
             (
                 new[] { newElement },
 
-                ExpressionLoops.ForEach( context.SourceMember, context.SourceCollectionLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( context.SourceInstance, context.SourceCollectionLoopingVar, Expression.Block
                 (
                     LookUpBlock( itemMapping, context, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
@@ -155,7 +155,7 @@ namespace TypeMapper.Mappers
             ) );
         }
 
-        protected BlockExpression LookUpBlock(LambdaExpression itemMapping, CollectionMapperContext context, ParameterExpression referenceTracker,
+        protected BlockExpression LookUpBlock( LambdaExpression itemMapping, CollectionMapperContext context, ParameterExpression referenceTracker,
            Expression sourceParam, ParameterExpression targetParam )
         {
             Expression cacheLookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
@@ -181,7 +181,8 @@ namespace TypeMapper.Mappers
                         cacheInsertCall,
 
                         Expression.Invoke( itemMapping, referenceTracker,
-                            sourceParam, targetParam ), 
+                            sourceParam, targetParam ),
+                        
                         Expression.Call
                         (
                             context.ReturnObject, context.AddToReturnList,
@@ -198,21 +199,20 @@ namespace TypeMapper.Mappers
         {
             var context = contextObj as CollectionMapperContext;
 
-            Expression innerMapping;
             if( context.IsTargetElementTypeBuiltIn )
-                innerMapping = GetSimpleTypeInnerBody( context );
+                return GetSimpleTypeInnerBody( context );
             else
-                innerMapping = GetComplexTypeInnerBody( context );
+            {
+                var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
 
-            var getCountMethod = context.SourceMember.Type.GetProperty( "Count" ).GetGetMethod();
+                return Expression.Block
+                (
+                    Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
+                        Expression.Call( context.SourceInstance, getCountMethod ) ) ),
 
-            return Expression.Block
-            (
-                Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
-                    Expression.Call( context.SourceMember, getCountMethod ) ) ),
-
-                innerMapping
-            );
+                    GetComplexTypeInnerBody( context )
+                );
+            }
         }
 
         protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )
@@ -220,7 +220,7 @@ namespace TypeMapper.Mappers
             var paramType = new Type[] { typeof( IEnumerable<> )
                 .MakeGenericType( context.TargetCollectionElementType ) };
 
-            return context.TargetMember.Type.GetConstructor( paramType );
+            return context.TargetInstance.Type.GetConstructor( paramType );
         }
 
         /// <summary>
@@ -230,27 +230,27 @@ namespace TypeMapper.Mappers
         /// <returns></returns>
         protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
         {
-            return context.TargetMember.Type.GetMethod( "Add" );
+            return context.TargetInstance.Type.GetMethod( "Add" );
         }
 
         protected override Expression GetTargetInstanceAssignment( object contextObj )
         {
             var context = contextObj as CollectionMapperContext;
-            var typeMapping = MapperConfiguration[ context.SourceMember.Type,
-                context.TargetMember.Type ];
+            var typeMapping = MapperConfiguration[ context.SourceInstance.Type,
+                context.TargetInstance.Type ];
 
             if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
-                && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) )
-                && context.TargetMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
+                && context.SourceInstance.Type.ImplementsInterface( typeof( ICollection<> ) )
+                && context.TargetInstance.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
-                var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
+                var constructorWithCapacity = context.TargetInstance.Type.GetConstructor( new Type[] { typeof( int ) } );
                 if( constructorWithCapacity != null )
                 {
                     //ICollection<int> is used only because it is forbidden to use nameof with unbound generic types.
                     //Any other type instead of int would work.
-                    var getCountMethod = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
-                    return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
-                        Expression.Call( context.SourceMember, getCountMethod ) ) );
+                    var getCountMethod = context.SourceInstance.Type.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
+                    return Expression.Assign( context.TargetInstance, Expression.New( constructorWithCapacity,
+                        Expression.Call( context.SourceInstance, getCountMethod ) ) );
                 }
             }
 

@@ -29,13 +29,13 @@ namespace TypeMapper.Mappers
         LambdaExpression GetMappingExpression( TypeMapping typeMapping );
     }
 
-    public interface IMemberMappingMapperExpression : IMapperExpressionBuilder
-    {
-        /// <summary>
-        /// Gets an expression that can handle <paramref name="mapping"/>
-        /// </summary>
-        /// <param name="mapping">the property mapping to handle</param>
-        /// <returns>Returns a list of objects that need to be recursively mapped</returns>
-        LambdaExpression GetMappingExpression( MemberMapping mapping );
-    }
+    //public interface IMemberMappingMapperExpression : IMapperExpressionBuilder
+    //{
+    //    /// <summary>
+    //    /// Gets an expression that can handle <paramref name="mapping"/>
+    //    /// </summary>
+    //    /// <param name="mapping">the property mapping to handle</param>
+    //    /// <returns>Returns a list of objects that need to be recursively mapped</returns>
+    //    LambdaExpression GetMappingExpression( MemberMapping mapping );
+    //}
 }

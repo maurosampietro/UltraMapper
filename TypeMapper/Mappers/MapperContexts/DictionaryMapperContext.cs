@@ -13,9 +13,6 @@ namespace TypeMapper.Mappers
         public ParameterExpression TargetCollectionElementKey { get; private set; }
         public ParameterExpression TargetCollectionElementValue { get; private set; }
 
-        public DictionaryMapperContext( MemberMapping mapping )
-            : base( mapping ) { Initialize(); }
-
         public DictionaryMapperContext( Type source, Type target )
             : base( source, target ) { Initialize(); }
 

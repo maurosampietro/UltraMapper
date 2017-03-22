@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using TypeMapper.Internals;
+using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : IMapperExpressionBuilder, IMemberMappingMapperExpression//, ITypeMappingMapperExpression
+    public class ReferenceMapper : IMapperExpressionBuilder, ITypeMapperExpression
     {
         public readonly MapperConfiguration MapperConfiguration;
 
@@ -22,7 +23,7 @@ namespace TypeMapper.Mappers
             ( o ) => debug( o );
 #endif
 
-        protected static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
+        public static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
          ( referenceTracker, sourceInstance, targetType ) =>
          {
              object targetInstance;
@@ -31,7 +32,7 @@ namespace TypeMapper.Mappers
              return targetInstance;
          };
 
-        protected static Action<ReferenceTracking, object, Type, object> addToTracker =
+        public static Action<ReferenceTracking, object, Type, object> addToTracker =
             ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
         {
             referenceTracker.Add( sourceInstance, targetType, targetInstance );
@@ -71,17 +72,6 @@ namespace TypeMapper.Mappers
             return new ReferenceMapperContext( source, target );
         }
 
-        public LambdaExpression GetMappingExpression( MemberMapping mapping )
-        {
-            var context = this.GetMapperContext( mapping ) as ReferenceMapperContext;
-            return GetMappingExpression( context );
-        }
-
-        protected virtual object GetMapperContext( MemberMapping mapping )
-        {
-            return new ReferenceMapperContext( mapping );
-        }
-
         protected virtual Expression GetExpressionBody( ReferenceMapperContext context )
         {
             /* SOURCE (NULL) -> TARGET = NULL
@@ -95,47 +85,43 @@ namespace TypeMapper.Mappers
 
             Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method, context.ReferenceTrack,
-                context.SourceMember, Expression.Constant( context.TargetMember.Type ) );
+                context.SourceInstance, Expression.Constant( context.TargetInstance.Type ) );
 
             Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
-                addToTracker.Method, context.ReferenceTrack, context.SourceMember,
-                Expression.Constant( context.TargetMember.Type ), context.TargetMember );
+                addToTracker.Method, context.ReferenceTrack, context.SourceInstance,
+                Expression.Constant( context.TargetInstance.Type ), context.TargetInstance );
 
             return Expression.Block
             (
-                new ParameterExpression[] { context.SourceMember, context.TargetMember, context.ReturnObject },
-
-                //read source value
-                Expression.Assign( context.SourceMember, context.SourceMemberValue ),
+                new ParameterExpression[] { /*context.SourceInstance, context.TargetInstance,*/ context.ReturnObject },
 
                 Expression.IfThenElse
                 (
-                     Expression.Equal( context.SourceMember, context.SourceMemberNullValue ),
+                     Expression.Equal( context.SourceInstance, context.SourceNullValue ),
 
-                     Expression.Assign( context.TargetMember, context.TargetMemberNullValue ),
+                     Expression.Assign( context.TargetInstance, context.TargetNullValue ),
 
                      Expression.Block
                      (
-                        //object lookup
-                        context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) :
-                        (Expression)Expression.Assign( context.TargetMember,
-                            Expression.Convert( lookupCall, context.TargetMember.Type ) ),
+                            //object lookup
+                            Expression.Assign( context.TargetInstance,
+                                Expression.Convert( lookupCall, context.TargetInstance.Type ) ),
 
-                        Expression.IfThen
-                        (
-                            Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
-                            Expression.Block
+                            Expression.IfThen
                             (
-                                this.GetInnerBody( context ),
+                                Expression.Equal( context.TargetInstance, context.TargetNullValue ),
+                                Expression.Block
+                                (
 
-                                //cache reference
-                                context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) : addToLookupCall
+                                    this.GetInnerBody( context ),
+
+                                    //cache reference
+                                    addToLookupCall
+                                )
                             )
-                        )
                     )
                 ),
 
-                context.TargetMemberValueSetter == null ? Expression.Default( typeof( void ) ) : context.TargetMemberValueSetter,
                 context.ReturnObject
             );
         }
@@ -146,30 +132,29 @@ namespace TypeMapper.Mappers
 
             return Expression.Block
             (
-                this.GetTargetInstanceAssignment( contextObj ),
+                //this.GetTargetInstanceAssignment( contextObj ),
 
                 //assign to the object to return
                 Expression.Assign( context.ReturnObject, Expression.New(
-                    context.ReturnTypeConstructor, context.SourceMember, context.TargetMember ) )
+                    context.ReturnTypeConstructor, context.SourceInstance, context.TargetInstance ) )
             );
         }
 
         protected virtual Expression GetTargetInstanceAssignment( object contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
-            var newInstanceExp = Expression.New( context.TargetMember.Type );
+            var newInstanceExp = Expression.New( context.TargetInstance.Type );
 
-            var typeMapping = MapperConfiguration[ context.SourceMember.Type,
-                context.TargetMember.Type ];
+            var typeMapping = MapperConfiguration[ context.SourceInstance.Type,
+                context.TargetInstance.Type ];
 
             if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
-                return Expression.Assign( context.TargetMember, newInstanceExp );
+                return Expression.Assign( context.TargetInstance, newInstanceExp );
 
-            return Expression.IfThenElse
+            return Expression.IfThen
             (
-                Expression.Equal( context.TargetMemberValue, context.TargetMemberNullValue ),
-                Expression.Assign( context.TargetMember, newInstanceExp ),
-                Expression.Assign( context.TargetMember, context.TargetMemberValue )
+                Expression.Equal( context.TargetInstance, context.TargetNullValue ),
+                Expression.Assign( context.TargetInstance, newInstanceExp )
             );
         }
     }
@@ -181,6 +166,7 @@ namespace TypeMapper.Mappers
     public class ReferenceMapperWithMemberMapping : IMapperExpressionBuilder, ITypeMappingMapperExpression
     {
         private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+        private static HashSet<TypePair> pairs = new HashSet<TypePair>();
 
         private class MemberMappingComparer : IComparer<MemberMapping>
         {
@@ -219,63 +205,23 @@ namespace TypeMapper.Mappers
         {
             var context = GetMapperContext( typeMapping ) as ReferenceMapperWithMemberMappingContext;
 
-            LambdaExpression typeMappingExp = typeMapping.Mapper?.GetMappingExpression(
-                typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
-
             var addMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.Add ) );
-            var addRangeMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+            LambdaExpression typeMappingExp = null;
 
-            Func<MemberMapping, Expression> getMemberMapping = ( mapping ) =>
-            {
-                ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "returnValue" );
+            ////avoid infinite recursion and stackoverflow
+            //var pair = new TypePair( typeMapping.TypePair.SourceType,
+            //    typeMapping.TypePair.TargetType );
 
-                var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
-                var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+            //if( !pairs.Contains( pair ) )
+            //{
+            //    pairs.Add( pair );
 
-                LambdaExpression expression = mapping.Expression;
+            //    typeMappingExp =
+            //        typeMapping.GlobalConfiguration.Configuration[
+            //        typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType ].MappingExpression ;
 
-                if( mapping.Expression.ReturnType == typeof( List<ObjectPair> ) )
-                {
-                    return Expression.Call( context.ReturnObject, addRangeMethod, mapping.Expression.Body );
-                }
-
-                else if( expression.ReturnType == context.ReturnElementType )
-                {
-                    var objPair = Expression.Variable( context.ReturnElementType, "objPair" );
-
-                    //var targetMemberInfo = typeof( ObjectPair ).GetMember( nameof( ObjectPair.Target ) )[ 0 ];
-                    //var targetAccess = Expression.MakeMemberAccess( objPair, targetMemberInfo );
-
-                    return Expression.Block
-                    (
-                        new[] { value, objPair },
-
-                        Expression.Assign( objPair, expression.Body ),
-
-                        //Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null ) ),
-                        //Expression.Assign( value, Expression.Convert( targetAccess, mapping.TargetMember.MemberType ) )),
-
-                        //mapping.TargetMember.ValueSetter.Body
-                        //    .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
-                        //    .ReplaceParameter( value, targetSetterMemberParamName ),
-
-                        Expression.IfThen( Expression.NotEqual( objPair, Expression.Constant( null, context.ReturnElementType ) ),
-                            Expression.Call( context.ReturnObject, addMethod, objPair ) )
-                    );
-                }
-
-
-                return Expression.Block
-                (
-                    new[] { value },
-
-                    Expression.Assign( value, Expression.Invoke( expression, Expression.Invoke( mapping.SourceMember.ValueGetter, context.SourceInstance ) ) ),
-
-                    mapping.TargetMember.ValueSetter.Body
-                        .ReplaceParameter( context.TargetInstance, targetSetterInstanceParamName )
-                        .ReplaceParameter( value, targetSetterMemberParamName )
-                );
-            };
+            //    pairs.Remove( pair );
+            //}
 
             Func<LambdaExpression, Expression> createAddCalls = ( lambdaExp ) =>
             {
@@ -309,10 +255,14 @@ namespace TypeMapper.Mappers
 
             var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
                 .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
-                .Select( mapping => getMemberMapping( mapping ) ).ToList();
+                .Select( mapping => getMemberMapping( context, mapping ) ).ToList();
 
-            if( !addCalls.Any() && typeMappingExp != null )
-                return typeMappingExp;
+            if( !addCalls.Any() )
+            {
+                return typeMapping.GlobalConfiguration.Configuration[
+                    typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType ].Mapper.GetMappingExpression(
+                    typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+            }
 
             var bodyExp = !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
             var typeMappingBodyExp = typeMappingExp != null ? createAddCalls( typeMappingExp ) : Expression.Empty();
@@ -323,11 +273,13 @@ namespace TypeMapper.Mappers
 
                 Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) ),
 
-                typeMappingBodyExp.ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
+                typeMappingBodyExp
+                    .ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
                     .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
                     .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name ),
 
-                bodyExp.ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
+                bodyExp
+                    .ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
                     .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
                     .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name ),
 
@@ -335,11 +287,137 @@ namespace TypeMapper.Mappers
             );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                context.ReferenceTrack.Type, context.SourceInstance.Type, 
+                context.ReferenceTrack.Type, context.SourceInstance.Type,
                 context.TargetInstance.Type, typeof( IEnumerable<ObjectPair> ) );
 
             return Expression.Lambda( delegateType,
                 body, context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+        }
+
+        private Expression getMemberMapping( ReferenceMapperWithMemberMappingContext context, MemberMapping mapping )
+        {
+            var addMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.Add ) );
+            var addRangeMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.AddRange ) );
+
+            ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "returnValue" );
+
+            var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+            var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+
+            if( mapping.Expression.ReturnType == typeof( List<ObjectPair> ) )
+            {
+                var memberContext = new MemberMappingContext( mapping );
+                var memberMapping = this.GetMappingExpression( mapping.MemberTypeMapping );
+
+                return Expression.Block
+                (
+                    new[] { memberContext.SourceMember, memberContext.TargetMember },
+
+                    Expression.Assign( memberContext.SourceMember, mapping.SourceMember.ValueGetter.Body.ReplaceParameter(
+                            context.SourceInstance, mapping.SourceMember.ValueGetter.Parameters[ 0 ].Name ) ),
+                   
+                    mapping.Expression.Body
+                        .ReplaceParameter( memberContext.SourceMember, mapping.Expression.Parameters[ 1 ].Name )
+                        .ReplaceParameter( memberContext.TargetMember, mapping.Expression.Parameters[ 2 ].Name ),
+
+                    memberMapping.Body
+                        .ReplaceParameter( memberContext.SourceMember, mapping.Expression.Parameters[ 1 ].Name )
+                        .ReplaceParameter( memberContext.TargetMember, mapping.Expression.Parameters[ 2 ].Name ),
+
+                     mapping.TargetMember.ValueSetter.Body
+                        .ReplaceParameter( context.TargetInstance, targetSetterInstanceParamName )
+                        .ReplaceParameter( memberContext.TargetMember, targetSetterMemberParamName )
+                );
+            }
+
+            else if( mapping.Expression.ReturnType == context.ReturnElementType )
+            {
+                var memberContext = new MemberMappingContext( mapping );
+
+                Expression lookupCall = Expression.Call( Expression.Constant( ReferenceMapper.refTrackingLookup.Target ),
+                  ReferenceMapper.refTrackingLookup.Method, context.ReferenceTrack,
+                   memberContext.SourceMember, Expression.Constant( memberContext.TargetMember.Type ) );
+
+                Expression addToLookupCall = Expression.Call( Expression.Constant( ReferenceMapper.addToTracker.Target ),
+                   ReferenceMapper.addToTracker.Method, context.ReferenceTrack, memberContext.SourceMember,
+                    Expression.Constant( memberContext.TargetMember.Type ), memberContext.TargetMember );
+
+                return Expression.Block
+                (
+                    new[] { memberContext.SourceMember, memberContext.TargetMember },
+
+                    Expression.Assign( memberContext.SourceMember, mapping.SourceMember.ValueGetter.Body
+                        .ReplaceParameter( context.SourceInstance, mapping.SourceMember.ValueGetter.Parameters[ 0 ].Name ) ),
+
+                    Expression.IfThenElse
+                    (
+                         Expression.Equal( memberContext.SourceMember, memberContext.SourceMemberNullValue ),
+
+                         Expression.Assign( memberContext.TargetMember, memberContext.TargetMemberNullValue ),
+
+                         Expression.Block
+                         (
+                            //object lookup
+                            Expression.Assign( memberContext.TargetMember,
+                                Expression.Convert( lookupCall, memberContext.TargetMember.Type ) ),
+
+                            Expression.IfThen
+                            (
+                                 Expression.Equal( memberContext.TargetMember, memberContext.TargetMemberNullValue ),
+                                 Expression.Block
+                                 (
+                                     AssignInstanceToTargetMember( memberContext, mapping ),
+
+                                     mapping.TargetMember.ValueSetter.Body
+                                         .ReplaceParameter( context.TargetInstance, targetSetterInstanceParamName )
+                                         .ReplaceParameter( memberContext.TargetMember, targetSetterMemberParamName ),
+
+                                     //cache reference
+                                     addToLookupCall,
+
+                                     Expression.Call
+                                     (
+                                         context.ReturnObject, addMethod,
+                                         Expression.New
+                                         (
+                                             typeof( ObjectPair ).GetConstructors()[ 0 ],
+                                             Expression.Convert( memberContext.SourceMember, typeof( object ) ),
+                                             Expression.Convert( memberContext.TargetMember, typeof( object ) )
+                                         )
+                                     )
+                                )
+                            )
+                        )
+                    )
+                );
+            }
+
+            return Expression.Block
+            (
+                new[] { value },
+
+                Expression.Assign( value,
+                    Expression.Invoke( mapping.Expression, mapping.SourceMember.ValueGetter.Body
+                        .ReplaceParameter( context.SourceInstance, mapping.SourceMember.ValueGetter.Parameters[ 0 ].Name ) ) ),
+
+                mapping.TargetMember.ValueSetter.Body
+                    .ReplaceParameter( context.TargetInstance, targetSetterInstanceParamName )
+                    .ReplaceParameter( value, targetSetterMemberParamName )
+            );
+        }
+
+        protected virtual Expression AssignInstanceToTargetMember( MemberMappingContext context, MemberMapping mapping )
+        {
+            var newInstanceExp = Expression.New( context.TargetMember.Type );
+
+            if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+                return Expression.Assign( context.TargetMember, newInstanceExp );
+
+            return Expression.IfThen
+            (
+                Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
+                Expression.Assign( context.TargetMember, newInstanceExp )
+            );
         }
     }
 }

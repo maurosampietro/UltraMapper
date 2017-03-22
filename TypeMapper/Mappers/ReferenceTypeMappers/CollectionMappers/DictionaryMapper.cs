@@ -21,9 +21,9 @@ namespace TypeMapper.Mappers
             return sourceIsDictionary || targetIsDictionary;
         }
 
-        protected override object GetMapperContext( MemberMapping mapping )
+        protected override object GetMapperContext( Type source, Type target )
         {
-            return new DictionaryMapperContext( mapping );
+            return new DictionaryMapperContext( source, target );
         }
 
         protected override Expression GetInnerBody( object contextObj )
@@ -42,16 +42,16 @@ namespace TypeMapper.Mappers
             (
                 new[] { context.TargetCollectionElementKey, context.TargetCollectionElementValue },
 
-                Expression.Assign( context.TargetMember,
-                    Expression.New( context.TargetMember.Type ) ),
+                Expression.Assign( context.TargetInstance,
+                    Expression.New( context.TargetInstance.Type ) ),
 
-                ExpressionLoops.ForEach( context.SourceMember,
+                ExpressionLoops.ForEach( context.SourceInstance,
                     context.SourceCollectionLoopingVar, Expression.Block
                 (
                     keyExpression,
                     valueExpression,
 
-                    Expression.Call( context.TargetMember, addMethod, 
+                    Expression.Call( context.TargetInstance, addMethod,
                         context.TargetCollectionElementKey, context.TargetCollectionElementValue )
                 ) )
             );
@@ -71,7 +71,7 @@ namespace TypeMapper.Mappers
                 return Expression.Assign( targetParam, Expression.Invoke( itemMapping, sourceParam ) );
             }
 
-            return base.LookUpBlock(itemMapping, context, context.ReferenceTrack, sourceParam, targetParam );
+            return base.LookUpBlock( itemMapping, context, context.ReferenceTrack, sourceParam, targetParam );
         }
     }
 }

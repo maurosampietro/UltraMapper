@@ -16,12 +16,12 @@ namespace TypeMapper.Tests
     {
         private class OuterType
         {
-            //public InnerType NullInnerType { get; set; }
-            //public InnerType InnerType { get; set; }
+            public InnerType NullInnerType { get; set; }
+            public InnerType InnerType { get; set; }
             public List<int> PrimitiveList { get; set; }
-            //public List<InnerType> ComplexList { get; set; }
+            public List<InnerType> ComplexList { get; set; }
 
-            //public string String { get; set; }
+            public string String { get; set; }
         }
 
         private class OuterTypeDto
@@ -61,17 +61,17 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void ReferenceSimpleTest()
         {
-            var innerType = new InnerType() { A = "fadadfsadsffsd" };
+            var innerType = new InnerType() { A = "this is a test" };
 
             var source = new OuterType()
             {
-                //InnerType = innerType,
+                InnerType = innerType,
                 PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
-                //ComplexList = new List<InnerType>() { innerType },
-                //String = "ok"
+                ComplexList = new List<InnerType>() { innerType },
+                String = "ok"
             };
 
-            //source.InnerType.C = source;
+            source.InnerType.C = source;
 
             var target = new OuterType();
 

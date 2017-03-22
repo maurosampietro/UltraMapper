@@ -111,10 +111,8 @@ namespace TypeMapper.Internals
 
                 if( _expression != null ) return _expression;
 
-                if( this.Mapper is IMemberMappingMapperExpression )
-                    return _expression = ((IMemberMappingMapperExpression)this.Mapper).GetMappingExpression( this );
-
-                return _expression = ((ITypeMapperExpression)this.Mapper).GetMappingExpression( this.MemberTypeMapping.TypePair.SourceType, 
+                return _expression = ((ITypeMapperExpression)this.Mapper).GetMappingExpression(
+                    this.MemberTypeMapping.TypePair.SourceType, 
                     this.MemberTypeMapping.TypePair.TargetType );
             }
 
