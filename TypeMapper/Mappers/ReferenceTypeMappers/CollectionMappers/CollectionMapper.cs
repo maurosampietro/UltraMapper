@@ -34,8 +34,9 @@ namespace TypeMapper.Mappers
         protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
             //- Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
+            //  By the way Construcor(capacity) + AddRange has roughly the same performance of Construcor(IEnumerable<T>). 
             //- Must also manage the case where SourceElementType and TargetElementType differ:
-            // cannot use directly the target constructor: use add method or temp collection.
+            //  cannot use directly the target constructor: use add method or temp collection.
 
             var typeMapping = MapperConfiguration[ context.SourceCollectionElementType,
                 context.TargetCollectionElementType ];
@@ -182,7 +183,7 @@ namespace TypeMapper.Mappers
 
                         Expression.Invoke( itemMapping, referenceTracker,
                             sourceParam, targetParam ),
-                        
+
                         Expression.Call
                         (
                             context.ReturnObject, context.AddToReturnList,
@@ -200,7 +201,12 @@ namespace TypeMapper.Mappers
             var context = contextObj as CollectionMapperContext;
 
             if( context.IsTargetElementTypeBuiltIn )
-                return GetSimpleTypeInnerBody( context );
+            {
+                return Expression.Block
+                (
+                   GetSimpleTypeInnerBody( context )
+                );
+            }
             else
             {
                 var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
@@ -210,7 +216,7 @@ namespace TypeMapper.Mappers
                     Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
                         Expression.Call( context.SourceInstance, getCountMethod ) ) ),
 
-                    GetComplexTypeInnerBody( context )
+                    GetComplexTypeInnerBody( context )                    
                 );
             }
         }

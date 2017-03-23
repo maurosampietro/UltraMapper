@@ -64,6 +64,7 @@ namespace TypeMapper.Tests
         public void ListToListSameElementSimpleType()
         {
             List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            source.Capacity = 1000;
             List<int> target = Enumerable.Range( 10, 10 ).ToList();
 
             Assert.IsTrue( !source.SequenceEqual( target ) );

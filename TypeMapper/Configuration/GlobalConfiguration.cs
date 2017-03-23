@@ -60,7 +60,7 @@ namespace TypeMapper
                 new StackMapper( configuration ),
                 new QueueMapper( configuration ),
                 new LinkedListMapper( configuration ),
-                new CollectionMapper( configuration ),
+                //new CollectionMapper( configuration ),
                 new CollectionMapperTypeMapping( configuration ),
             };
         }

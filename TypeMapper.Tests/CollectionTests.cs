@@ -56,7 +56,8 @@ namespace TypeMapper.Tests
             public GenericCollections( bool initializeRandomly )
                 : this()
             {
-                InitializeRandomly();
+                if( initializeRandomly )
+                    InitializeRandomly();
             }
 
             public GenericCollections()
@@ -91,7 +92,7 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
-        public void CollectionItemsAndMembersMappping()
+        public void CollectionItemsAndMembersMapping()
         {
             List<int> source = Enumerable.Range( 0, 10 ).ToList();
             source.Capacity = 100;
@@ -102,7 +103,7 @@ namespace TypeMapper.Tests
 
             var typeMapper = new TypeMapper();
 
-            var typeMapping = typeMapper.MappingConfiguration[ 
+            var typeMapping = typeMapper.MappingConfiguration[
                 source.GetType(), target.GetType() ];
 
             typeMapper.Map( source, target );
@@ -158,7 +159,7 @@ namespace TypeMapper.Tests
                     var targetTypeCtor = ConstructorFactory.CreateConstructor<bool>( targetType );
 
                     var source = sourceTypeCtor( true );
-                    var target = targetTypeCtor( true );
+                    var target = targetTypeCtor( false );
 
                     var typeMapper = new TypeMapper();
                     typeMapper.Map( source, target );

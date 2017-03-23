@@ -115,8 +115,6 @@ namespace TypeMapper.Internals
                     this.MemberTypeMapping.TypePair.SourceType, 
                     this.MemberTypeMapping.TypePair.TargetType );
             }
-
-            set { _expression = value; }
         }
 
         public MemberMapping( TypeMapping typeMapping,

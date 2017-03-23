@@ -8,7 +8,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers.TypeMappers
 {
-    public class CollectionMapperTypeMapping : ReferenceMapper, ITypeMapperExpression
+    public class CollectionMapperTypeMapping : ReferenceMapper
     {
         public CollectionMapperTypeMapping( MapperConfiguration configuration )
             : base( configuration ) { }
@@ -49,7 +49,7 @@ namespace TypeMapper.Mappers.TypeMappers
                 addMethod, Expression.Invoke( itemMapping, context.SourceCollectionLoopingVar ) );
 
             return Expression.Block
-            (
+            ( 
                 Expression.Call( context.TargetInstance, clearMethod ),
                 ExpressionLoops.ForEach( context.SourceInstance,
                     context.SourceCollectionLoopingVar, loopBody )

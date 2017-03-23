@@ -169,51 +169,107 @@ namespace ConsoleApplication
 
         static void Main( string[] args )
         {
-            var temp = new BaseTypes();
-            var temp2 = new BaseTypesDto();
+            int items = 100000;
+            int cycles = 10000;
 
-            int iterations = (int)Math.Pow( 10, 6 );
+            var collectionToCopy = Enumerable.Range( 0, items );
 
-            var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            var sw0 = new Stopwatch();
+            sw0.Start();
+            for( int i = 0; i < cycles; i++ )
             {
-                //cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
-                //    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
-                //    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
-                //    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
-                //    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
-            } );
+                List<int> list = new List<int>( collectionToCopy );
+            }
+            sw0.Stop();
+            Console.WriteLine( sw0.ElapsedMilliseconds );
 
-            Stopwatch sw4 = new Stopwatch();
+            var sw1 = new Stopwatch();
+            sw1.Start();
+            for( int i = 0; i < cycles; i++ )
+            {
+                List<int> list = new List<int>( items );
+                list.AddRange( collectionToCopy );
+            }
+            sw1.Stop();
+            Console.WriteLine( sw1.ElapsedMilliseconds );
+
+            var sw4 = new Stopwatch();
             sw4.Start();
-            for( int i = 0; i < iterations; i++ )
+            for( int i = 0; i < cycles; i++ )
             {
-                mapper.Map( temp, temp2 );
+                List<int> list = new List<int>();
+                list.AddRange( collectionToCopy );
             }
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
 
-            //var exp = mapper._mappingConfiguration[ typeof( BaseTypes ), typeof( BaseTypesDto ) ].First().Expression;
-            //var func = (Func<ReferenceTracking, BaseTypes, BaseTypesDto, IEnumerable<ObjectPair>>)exp.Compile();
-            //func( new ReferenceTracking(), temp, temp2 );
-
-            Stopwatch sw5 = new Stopwatch();
-
-            var temp3 = new BaseTypes();
-            var temp4 = new BaseTypesDto();
-
-            AutoMapper.Mapper.Initialize( cfg =>
+            var sw2 = new Stopwatch();
+            sw2.Start();
+            for( int i = 0; i < cycles; i++ )
             {
-                cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>();
-            } );
-
-            sw5.Start();
-            for( int i = 0; i < iterations; i++ )
-            {
-                AutoMapper.Mapper.Map( temp3, temp4 );
+                List<int> list = new List<int>( items );
+                foreach( var item in collectionToCopy )
+                    list.Add( item );
             }
-            sw5.Stop();
-            Console.WriteLine( sw5.ElapsedMilliseconds );
+            sw2.Stop();
+            Console.WriteLine( sw2.ElapsedMilliseconds );
+
+            var sw3 = new Stopwatch();
+            sw3.Start();
+            for( int i = 0; i < cycles; i++ )
+            {
+                List<int> list = new List<int>();
+                foreach( var item in collectionToCopy )
+                    list.Add( item );
+            }
+            sw3.Stop();
+            Console.WriteLine( sw3.ElapsedMilliseconds );
+
+            //var temp = new BaseTypes();
+            //var temp2 = new BaseTypesDto();
+
+            //int iterations = (int)Math.Pow( 10, 6 );
+
+            //var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            //{
+            //    //cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
+            //    //    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
+            //    //    .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+            //    //    .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true )
+            //    //    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
+            //} );
+
+            //Stopwatch sw4 = new Stopwatch();
+            //sw4.Start();
+            //for( int i = 0; i < iterations; i++ )
+            //{
+            //    mapper.Map( temp, temp2 );
+            //}
+            //sw4.Stop();
+            //Console.WriteLine( sw4.ElapsedMilliseconds );
+
+            ////var exp = mapper._mappingConfiguration[ typeof( BaseTypes ), typeof( BaseTypesDto ) ].First().Expression;
+            ////var func = (Func<ReferenceTracking, BaseTypes, BaseTypesDto, IEnumerable<ObjectPair>>)exp.Compile();
+            ////func( new ReferenceTracking(), temp, temp2 );
+
+            //Stopwatch sw5 = new Stopwatch();
+
+            //var temp3 = new BaseTypes();
+            //var temp4 = new BaseTypesDto();
+
+            //AutoMapper.Mapper.Initialize( cfg =>
+            //{
+            //    cfg.CreateMissingTypeMaps = true;
+            //    cfg.CreateMap<BaseTypes, BaseTypesDto>();
+            //} );
+
+            //sw5.Start();
+            //for( int i = 0; i < iterations; i++ )
+            //{
+            //    AutoMapper.Mapper.Map( temp3, temp4 );
+            //}
+            //sw5.Stop();
+            //Console.WriteLine( sw5.ElapsedMilliseconds );
 
             Console.ReadKey();
         }

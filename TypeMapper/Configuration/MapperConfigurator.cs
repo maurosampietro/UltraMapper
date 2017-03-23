@@ -82,21 +82,28 @@ namespace TypeMapper
             return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
         }
 
-        public TypeMapping this[ Type source, Type target ]
+        public TypeMapping this[ TypePair typePair ]
         {
             get
             {
-                var typePair = new TypePair( source, target );
-
                 TypeMapping typeMapping;
                 if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
                     return typeMapping;
-   
+
                 typeMapping = new TypeMapping( GlobalConfiguration, typePair );
                 new TypeMappingConfigurator( typeMapping, GlobalConfiguration );
 
                 _typeMappings.Add( typePair, typeMapping );
                 return typeMapping;
+            }
+        }
+
+        public TypeMapping this[ Type source, Type target ]
+        {
+            get
+            {
+                var typePair = new TypePair( source, target );
+                return this[ typePair ];
             }
         }
     }

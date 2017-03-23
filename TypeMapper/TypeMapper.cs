@@ -86,7 +86,7 @@ namespace TypeMapper
             where TTarget : class
         {
             var referenceTracking = new ReferenceTracking();
-            //referenceTracking.Add( source, target.GetType(), target );
+            referenceTracking.Add( source, target.GetType(), target );
 
             this.Map( source, target, referenceTracking );
         }

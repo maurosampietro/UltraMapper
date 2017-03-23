@@ -15,10 +15,11 @@ namespace TypeMapper.Mappers.MapperContexts
         public ParameterExpression TargetMember { get; protected set; }
         public ParameterExpression SourceMember { get; protected set; }
 
-        public Expression SourceMemberValue { get; protected set; }
-        public Expression TargetMemberValue { get; protected set; }
+        public Expression SourceMemberValueGetter { get; protected set; }
+        public Expression TargetMemberValueGetter { get; protected set; }
 
         public Expression TargetMemberValueSetter { get; protected set; }
+
         public Expression TargetMemberNullValue { get; internal set; }
         public Expression SourceMemberNullValue { get; internal set; }
 
@@ -38,19 +39,22 @@ namespace TypeMapper.Mappers.MapperContexts
             SourceMember = Expression.Variable( sourceMemberType, "sourceValue" );
             TargetMember = Expression.Variable( targetMemberType, "targetValue" );
 
-            SourceMemberNullValue = Expression.Constant( null, sourceMemberType );
-            TargetMemberNullValue = Expression.Constant( null, targetMemberType );
+            if( !sourceMemberType.IsValueType )
+                SourceMemberNullValue = Expression.Constant( null, sourceMemberType );
+
+            if( !targetMemberType.IsValueType )
+                TargetMemberNullValue = Expression.Constant( null, targetMemberType );
 
             var sourceGetterInstanceParamName = mapping.SourceMember
                 .ValueGetter.Parameters[ 0 ].Name;
 
-            SourceMemberValue = mapping.SourceMember.ValueGetter.Body
+            SourceMemberValueGetter = mapping.SourceMember.ValueGetter.Body
                 .ReplaceParameter( SourceInstance, sourceGetterInstanceParamName );
 
             var targetGetterInstanceParamName = mapping.TargetMember
                 .ValueGetter.Parameters[ 0 ].Name;
 
-            TargetMemberValue = mapping.TargetMember.ValueGetter.Body
+            TargetMemberValueGetter = mapping.TargetMember.ValueGetter.Body
                 .ReplaceParameter( TargetInstance, targetGetterInstanceParamName );
 
             var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
