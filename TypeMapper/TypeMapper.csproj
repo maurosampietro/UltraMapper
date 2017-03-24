@@ -56,6 +56,7 @@
     <Compile Include="Internals\MappingSource.cs" />
     <Compile Include="Internals\MappingTarget.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
+    <Compile Include="Mappers\MemberMapper.cs" />
     <Compile Include="Mappers\PrimitiveTypesMappers\PrimitiveMapperBase.cs" />
     <Compile Include="Mappers\MapperContexts\DictionaryMapperContext.cs" />
     <Compile Include="Mappers\MapperContexts\MapperContext.cs" />
@@ -74,7 +75,6 @@
     <Compile Include="Mappers\ReferenceTypeMappers\CollectionMappers\LinkedListMapper.cs" />
     <Compile Include="Mappers\PrimitiveTypesMappers\StructMapper.cs" />
     <Compile Include="Mappers\ReferenceTypeMappers\CollectionMappers\SetMapper.cs" />
-    <Compile Include="Mappers\ReferenceTypeMappers\TypeMappers\CollectionMapperTypeMapper.cs" />
     <Compile Include="MappingConventions\CustomMappingConvention.cs" />
     <Compile Include="MappingConventions\IMappingConvention.cs" />
     <Compile Include="MappingConventions\DefaultMappingConvention.cs" />

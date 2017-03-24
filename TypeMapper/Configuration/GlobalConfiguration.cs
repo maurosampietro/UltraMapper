@@ -3,7 +3,6 @@ using System.Linq.Expressions;
 using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.Configuration;
 using TypeMapper.Mappers;
-using TypeMapper.Mappers.TypeMappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper
@@ -56,12 +55,11 @@ namespace TypeMapper
                 new StructMapper( configuration ),
                 new ReferenceMapper( configuration ),
                 new DictionaryMapper( configuration ),
-                new SetMapper( configuration ),
+                //new SetMapper( configuration ),
                 new StackMapper( configuration ),
                 new QueueMapper( configuration ),
                 new LinkedListMapper( configuration ),
-                //new CollectionMapper( configuration ),
-                new CollectionMapperTypeMapping( configuration ),
+                new CollectionMapper( configuration ),
             };
         }
     }

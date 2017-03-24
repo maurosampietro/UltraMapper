@@ -8,7 +8,6 @@ using TypeMapper.Internals;
 using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 using TypeMapper;
-using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Tests
 {

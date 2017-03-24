@@ -256,6 +256,10 @@ namespace TypeMapper.Tests
 
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+
+            Assert.IsTrue( source.List.Concat( source.HashSet.Concat( source.SortedSet.Concat( source.Stack.Concat( source.Queue.Concat( source.LinkedList.Concat( source.ObservableCollection ) ) ) ) ) )
+                .Select( it => it.InnerType )
+                .All( item => Object.ReferenceEquals( item, source.HashSet.First().InnerType ) ) );
         }
 
         [TestMethod]

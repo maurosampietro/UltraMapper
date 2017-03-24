@@ -6,7 +6,6 @@ using System.Reflection;
 using TypeMapper.CollectionMappingStrategies;
 using TypeMapper.Configuration;
 using TypeMapper.Mappers;
-using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Internals
 {

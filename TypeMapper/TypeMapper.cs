@@ -104,7 +104,8 @@ namespace TypeMapper
             {
                 foreach( var reference in references )
                 {
-                    this.Map( reference.Source, reference.Target, referenceTracking );
+                    if( reference != null )
+                        this.Map( reference.Source, reference.Target, referenceTracking );
                 }
             }
         }

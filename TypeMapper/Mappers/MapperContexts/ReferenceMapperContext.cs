@@ -24,7 +24,7 @@ namespace TypeMapper.Mappers
 
         private void Initialize()
         {
-            var returnType = typeof( ObjectPair );
+            var returnType = typeof( List<ObjectPair> );
             ReturnTypeConstructor = returnType.GetConstructors().First();
             ReturnObject = Expression.Variable( returnType, "returnObject" );
 

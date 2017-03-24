@@ -5,7 +5,6 @@ using TypeMapper.Configuration;
 using TypeMapper.ExtensionMethods;
 using TypeMapper.Internals;
 using TypeMapper.Mappers;
-using TypeMapper.Mappers.TypeMappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper

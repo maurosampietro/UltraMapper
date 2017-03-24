@@ -8,13 +8,32 @@ using TypeMapper.Internals;
 using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 using TypeMapper;
-using TypeMapper.Mappers.TypeMappers;
 
 namespace TypeMapper.Tests
 {
     [TestClass]
     public class DirectMappings
     {
+        private static ComplexTypeComparer comparer = new ComplexTypeComparer();
+        private class ComplexTypeComparer : IEqualityComparer<ComplexType>
+        {
+            public bool Equals( ComplexType x, ComplexType y )
+            {
+                return x.PropertyA == y.PropertyA &&
+                    (x.InnerType == null && y.InnerType == null ||
+                    x.InnerType.String == y.InnerType.String);
+            }
+
+            public int GetHashCode( ComplexType obj )
+            {
+                int hash = obj.PropertyA;
+                if( obj.InnerType != null )
+                    hash ^= obj.InnerType.String.GetHashCode();
+
+                return hash;
+            }
+        }
+
         private class ComplexType
         {
             public int PropertyA { get; set; }
@@ -95,7 +114,7 @@ namespace TypeMapper.Tests
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
 
-            Assert.IsTrue( source.SequenceEqual( target ) );
+            Assert.IsTrue( source.SequenceEqual( target, comparer ) );
 
             bool isResultOk = typeMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );

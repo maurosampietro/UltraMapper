@@ -172,7 +172,7 @@ namespace ConsoleApplication
             int items = 100000;
             int cycles = 10000;
 
-            var collectionToCopy = Enumerable.Range( 0, items );
+            var collectionToCopy = Enumerable.Range( 0, items ).ToList();
 
             var sw0 = new Stopwatch();
             sw0.Start();
