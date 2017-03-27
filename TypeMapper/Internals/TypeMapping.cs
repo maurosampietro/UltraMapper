@@ -68,11 +68,11 @@ namespace TypeMapper.Internals
             set { _collectionMappingStrategy = value; }
         }
 
-        public ITypeMapperExpression Mapper
+        public IMapperExpressionBuilder Mapper
         {
             get
             {
-                var selectedMapper = GlobalConfiguration.Mappers.OfType<ITypeMapperExpression>()
+                var selectedMapper = GlobalConfiguration.Mappers
                     .FirstOrDefault( mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
 
                 return selectedMapper;

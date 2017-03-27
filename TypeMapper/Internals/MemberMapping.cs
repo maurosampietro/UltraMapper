@@ -101,17 +101,17 @@ namespace TypeMapper.Internals
             set { _referenceMappingStrategy = value; }
         }
 
-        private LambdaExpression _expression;
-        public LambdaExpression Expression
+        private LambdaExpression _mappingExpression;
+        public LambdaExpression MappingExpression
         {
             get
             {
                 if( this.CustomConverter != null )
                     return this.CustomConverter;
 
-                if( _expression != null ) return _expression;
+                if( _mappingExpression != null ) return _mappingExpression;
 
-                return _expression = ((ITypeMapperExpression)this.Mapper).GetMappingExpression(
+                return _mappingExpression = this.Mapper.GetMappingExpression(
                     this.MemberTypeMapping.TypePair.SourceType, 
                     this.MemberTypeMapping.TypePair.TargetType );
             }

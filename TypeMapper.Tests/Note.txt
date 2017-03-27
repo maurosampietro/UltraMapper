@@ -1,4 +1,15 @@
 ﻿
+TODO WITH MAX PRIORITY (AFTER ARCHITECTURAL REFACTORING):
+
+- Collections now work only by clear/adding. 
+  Before we could work with constructor(IEnumeable<T>), which is faster.
+  
+- Expression builder leads to StackOverflow if a class contains a member of the same type
+  of the declaring class anywhere down the tree.
+  
+
+
+
 TODO:
 
 - Dynamic mapping
@@ -37,5 +48,3 @@ access could solve the problem on source side but implies the splitting and the 
 
 TARGET SIDE: An automatic mechanism instantiating a null reference could be useful 
 to solve the problem on target side but implies the splitting and the analysis of the selctor.
-
-

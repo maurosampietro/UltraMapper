@@ -10,7 +10,8 @@ namespace TypeMapper.Mappers.MapperContexts
 {
     public class MemberMappingContext : MapperContext
     {
-        public ParameterExpression ReferenceTrack { get; protected set; }
+        public ParameterExpression ReferenceTracker { get; protected set; }
+        public ParameterExpression TrackedReference { get; protected set; }
 
         public ParameterExpression TargetMember { get; protected set; }
         public ParameterExpression SourceMember { get; protected set; }
@@ -34,7 +35,9 @@ namespace TypeMapper.Mappers.MapperContexts
 
             SourceInstance = Expression.Parameter( sourceInstanceType, "sourceInstance" );
             TargetInstance = Expression.Parameter( targetInstanceType, "targetInstance" );
-            ReferenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+
+            ReferenceTracker = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+            TrackedReference = Expression.Parameter( targetMemberType, "trackedReference" );
 
             SourceMember = Expression.Variable( sourceMemberType, "sourceValue" );
             TargetMember = Expression.Variable( targetMemberType, "targetValue" );

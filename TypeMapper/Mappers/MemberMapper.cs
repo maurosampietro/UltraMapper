@@ -13,10 +13,9 @@ namespace TypeMapper.Mappers
     /// Maps simple types and return a list of objectPair
     /// that need to be recursively mapped
     /// </summary>
-    public class ReferenceMapperWithMemberMapping : IMapperExpressionBuilder, ITypeMappingMapperExpression
+    public class ReferenceMapperWithMemberMapping
     {
         private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
-        //private static HashSet<TypePair> pairs = new HashSet<TypePair>();
 
         private class MemberMappingComparer : IComparer<MemberMapping>
         {
@@ -73,10 +72,10 @@ namespace TypeMapper.Mappers
             //}
 
             Expression typeMappingExpression = typeMappingLambdaExpression.Body
-                     .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
-                     .ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
-                     .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
-                     .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name );
+                .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
+                .ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
+                .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
+                .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name );
 
             if( typeMappingLambdaExpression.ReturnType == typeof( List<ObjectPair> ) )
             {
@@ -101,12 +100,7 @@ namespace TypeMapper.Mappers
                 new[] { context.ReturnObject },
 
                 Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) ),
-
-                Expression.IfThen
-                (
-                    Expression.NotEqual( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
-                    typeMappingExpression
-                ),
+                typeMappingExpression,
 
                 context.ReturnObject
             );
@@ -165,10 +159,7 @@ namespace TypeMapper.Mappers
         {
             var memberContext = new MemberMappingContext( mapping );
 
-            if( mapping.Expression.ReturnType == typeof( List<ObjectPair> ) )
-                return GetIEnumerableMemberExpression( mapping, memberContext );
-
-            if( mapping.Expression.ReturnType == context.ReturnElementType )
+            if( mapping.Mapper is ReferenceMapper )
                 return GetComplexMemberExpression( context, mapping, memberContext );
 
             return GetSimpleMemberExpression( context, mapping );
@@ -176,8 +167,6 @@ namespace TypeMapper.Mappers
 
         private Expression GetComplexMemberExpression( ReferenceMapperWithMemberMappingContext context, MemberMapping mapping, MemberMappingContext memberContext )
         {
-            var addMethod = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.Add ) );
-
             /* SOURCE (NULL) -> TARGET = NULL
              * 
              * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
@@ -197,10 +186,9 @@ namespace TypeMapper.Mappers
 
             return Expression.Block
             (
-                new[] { memberContext.SourceMember, memberContext.TargetMember },
+                new[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember },
 
                 Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
-                Expression.Invoke( ReferenceMapper.debugExp, memberContext.SourceMember ),
 
                 Expression.IfThenElse
                 (
@@ -210,53 +198,28 @@ namespace TypeMapper.Mappers
 
                      Expression.Block
                      (
-                        //object lookup
-                        Expression.Assign( memberContext.TargetMember,
+                        //object lookup. An intermediate variable (TrackedReference) is needed in order to deal with ReferenceMappingStrategies
+                        Expression.Assign( memberContext.TrackedReference,
                             Expression.Convert( lookupCall, memberContext.TargetMember.Type ) ),
 
-                        Expression.IfThen
+                        Expression.IfThenElse
                         (
-                             Expression.Equal( memberContext.TargetMember, memberContext.TargetMemberNullValue ),
-                             Expression.Block
-                             (
-                                 AssignInstanceToTargetMember( memberContext, mapping ),
+                            Expression.NotEqual( memberContext.TrackedReference, memberContext.TargetMemberNullValue ),
+                            Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
+                            Expression.Block
+                            (
+                                AssignInstanceToTargetMember( memberContext, mapping ),
 
-                                 //cache reference
-                                 addToLookupCall,
+                                mapping.MappingExpression.Body
+                                    .ReplaceParameter( memberContext.SourceMember, mapping.MappingExpression.Parameters[ 1 ].Name )
+                                    .ReplaceParameter( memberContext.TargetMember, mapping.MappingExpression.Parameters[ 2 ].Name ),
 
-                                 Expression.Call
-                                 (
-                                     context.ReturnObject, addMethod,
-                                     Expression.New
-                                     (
-                                         typeof( ObjectPair ).GetConstructors()[ 0 ],
-                                         Expression.Convert( memberContext.SourceMember, typeof( object ) ),
-                                         Expression.Convert( memberContext.TargetMember, typeof( object ) )
-                                     )
-                                 )
+                                //cache reference
+                                addToLookupCall
                             )
-                        ),
-
-                        memberContext.TargetMemberValueSetter
+                        )
                     )
-                )
-            );
-        }
-
-        private Expression GetIEnumerableMemberExpression( MemberMapping mapping, MemberMappingContext memberContext )
-        {
-            return Expression.Block
-            (
-                new[] { memberContext.SourceMember, memberContext.TargetMember },
-
-                Expression.Assign( memberContext.SourceMember, mapping.SourceMember.ValueGetter.Body.ReplaceParameter(
-                    memberContext.SourceInstance, mapping.SourceMember.ValueGetter.Parameters[ 0 ].Name ) ),
-
-                AssignInstanceToTargetMember( memberContext, mapping ),
-
-                mapping.Expression.Body
-                    .ReplaceParameter( memberContext.SourceMember, mapping.Expression.Parameters[ 1 ].Name )
-                    .ReplaceParameter( memberContext.TargetMember, mapping.Expression.Parameters[ 2 ].Name ),
+                ),
 
                 memberContext.TargetMemberValueSetter
             );
@@ -274,7 +237,7 @@ namespace TypeMapper.Mappers
                 new[] { value },
 
                 Expression.Assign( value,
-                    Expression.Invoke( mapping.Expression, mapping.SourceMember.ValueGetter.Body
+                    Expression.Invoke( mapping.MappingExpression, mapping.SourceMember.ValueGetter.Body
                         .ReplaceParameter( context.SourceInstance, mapping.SourceMember.ValueGetter.Parameters[ 0 ].Name ) ) ),
 
                 mapping.TargetMember.ValueSetter.Body
@@ -290,10 +253,15 @@ namespace TypeMapper.Mappers
             if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
                 return Expression.Assign( context.TargetMember, newInstanceExp );
 
-            return Expression.IfThen
+            return Expression.Block
             (
-                Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
-                Expression.Assign( context.TargetMember, newInstanceExp )
+                Expression.Assign( context.TargetMember, context.TargetMemberValueGetter ),
+
+                Expression.IfThen
+                (
+                    Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
+                    Expression.Assign( context.TargetMember, newInstanceExp )
+                )
             );
         }
     }

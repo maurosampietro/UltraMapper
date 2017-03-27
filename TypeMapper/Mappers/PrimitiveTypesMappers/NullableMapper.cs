@@ -93,12 +93,14 @@ namespace TypeMapper.Mappers
                 {
                     var constructor = context.TargetInstance.Type.GetConstructor( new Type[] { targetUnderlyingType } );
                     var newNullable = Expression.New( constructor, Expression.Convert( context.SourceInstance, targetUnderlyingType ) );
+
                     return Expression.Assign( context.TargetInstance, newNullable );
                 }
                 else
                 {
                     var constructor = context.TargetInstance.Type.GetConstructor( new Type[] { context.SourceInstance.Type } );
                     var newNullable = Expression.New( constructor, context.SourceInstance );
+
                     return Expression.Assign( context.TargetInstance, newNullable );
                 }
             }

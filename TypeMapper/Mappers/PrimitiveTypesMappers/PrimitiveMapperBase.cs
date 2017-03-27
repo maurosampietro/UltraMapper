@@ -4,7 +4,7 @@ using TypeMapper.Internals;
 
 namespace TypeMapper.Mappers
 {
-    public abstract class PrimitiveMapperBase : ITypeMapperExpression
+    public abstract class PrimitiveMapperBase : IMapperExpressionBuilder
     {
         public readonly MapperConfiguration MapperConfiguration;
 

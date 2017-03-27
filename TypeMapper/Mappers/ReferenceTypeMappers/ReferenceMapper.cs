@@ -7,7 +7,7 @@ using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : IMapperExpressionBuilder, ITypeMapperExpression
+    public class ReferenceMapper : IMapperExpressionBuilder
     {
         public readonly MapperConfiguration MapperConfiguration;
 
@@ -41,12 +41,18 @@ namespace TypeMapper.Mappers
         public virtual bool CanHandle( Type source, Type target )
         {
             bool valueTypes = source.IsValueType
-                && target.IsValueType;
+                || target.IsValueType;
 
             bool builtInTypes = source.IsBuiltInType( false )
                 && target.IsBuiltInType( false );
 
             return !valueTypes && !builtInTypes && !source.IsEnumerable();
+        }
+
+        public LambdaExpression GetMappingExpression( Type source, Type target )
+        {
+            var context = this.GetMapperContext( source, target ) as ReferenceMapperContext;
+            return GetMappingExpression( context );
         }
 
         protected LambdaExpression GetMappingExpression( ReferenceMapperContext context )
@@ -59,12 +65,6 @@ namespace TypeMapper.Mappers
 
             return Expression.Lambda( delegateType, expressionBody,
                 context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
-        }
-
-        public LambdaExpression GetMappingExpression( Type source, Type target )
-        {
-            var context = this.GetMapperContext( source, target ) as ReferenceMapperContext;
-            return GetMappingExpression( context );
         }
 
         protected virtual object GetMapperContext( Type source, Type target )
@@ -84,7 +84,6 @@ namespace TypeMapper.Mappers
                 new ParameterExpression[] { context.ReturnObject },
 
                 this.GetInnerBody( context ),
-
                 memberMappings,
 
                 context.ReturnObject
