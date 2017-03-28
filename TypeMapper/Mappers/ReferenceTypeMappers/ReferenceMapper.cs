@@ -52,22 +52,17 @@ namespace TypeMapper.Mappers
         public LambdaExpression GetMappingExpression( Type source, Type target )
         {
             var context = this.GetMapperContext( source, target ) as ReferenceMapperContext;
-            return GetMappingExpression( context );
-        }
-
-        protected LambdaExpression GetMappingExpression( ReferenceMapperContext context )
-        {
             var expressionBody = this.GetExpressionBody( context );
 
             var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                typeof( ReferenceTracking ), context.SourceInstance.Type,
+                context.ReferenceTracker.Type, context.SourceInstance.Type,
                 context.TargetInstance.Type, context.ReturnObject.Type );
 
             return Expression.Lambda( delegateType, expressionBody,
-                context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
+                context.ReferenceTracker, context.SourceInstance, context.TargetInstance );
         }
 
-        protected virtual object GetMapperContext( Type source, Type target )
+        protected virtual ReferenceMapperContext GetMapperContext( Type source, Type target )
         {
             return new ReferenceMapperContext( source, target );
         }
@@ -77,26 +72,35 @@ namespace TypeMapper.Mappers
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
             var memberMappings = new MemberMappingMapper().GetMemberMappings( typeMapping )
                 .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
-                .ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name );
+                .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
+                .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
+                .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name );
 
             return Expression.Block
             (
-                new ParameterExpression[] { context.ReturnObject },
+                new[] { context.ReturnObject },
 
+                this.ReturnListInitialization( context ),
                 this.GetInnerBody( context ),
                 memberMappings,
 
+                Expression.Invoke( debugExp, context.ReturnObject ),
                 context.ReturnObject
             );
         }
 
-        protected virtual Expression GetInnerBody( object contextObj )
+        protected virtual Expression GetInnerBody( ReferenceMapperContext contextObj )
+        {
+            return Expression.Empty();
+        }
+
+        protected virtual Expression ReturnListInitialization( ReferenceMapperContext contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
             return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) );
         }
 
-        protected virtual Expression GetTargetInstanceAssignment( object contextObj )
+        protected virtual Expression GetTargetInstanceAssignment( ReferenceMapperContext contextObj )
         {
             var context = contextObj as ReferenceMapperContext;
             var newInstanceExp = Expression.New( context.TargetInstance.Type );

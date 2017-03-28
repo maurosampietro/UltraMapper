@@ -54,6 +54,7 @@
     <Compile Include="CollectionTests.cs" />
     <Compile Include="DictionaryTests.cs" />
     <Compile Include="InheritTypeMappingTests.cs" />
+    <Compile Include="MapperExpressionBuilderTests.cs" />
     <Compile Include="MappingConventionTests.cs" />
     <Compile Include="MemberExtractionTests.cs" />
     <Compile Include="ProjectionTests.cs" />

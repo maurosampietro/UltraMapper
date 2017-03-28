@@ -17,8 +17,10 @@ namespace TypeMapper.Mappers
 
     public class CollectionMapper : ReferenceMapper
     {
+        protected bool NeedsImmediateRecursion { get; set; }
+
         public CollectionMapper( MapperConfiguration configuration )
-            : base( configuration ) { }
+            : base( configuration ) { this.NeedsImmediateRecursion = false; }
 
         public override bool CanHandle( Type source, Type target )
         {
@@ -26,7 +28,7 @@ namespace TypeMapper.Mappers
                 !source.IsBuiltInType( false ) && !target.IsBuiltInType( false ); //avoid strings
         }
 
-        protected override object GetMapperContext( Type source, Type target )
+        protected override ReferenceMapperContext GetMapperContext( Type source, Type target )
         {
             return new CollectionMapperContext( source, target );
         }
@@ -58,10 +60,10 @@ namespace TypeMapper.Mappers
             }
 
             Expression loopBody = Expression.Call
-            ( 
-                context.TargetInstance, addMethod, 
-                Expression.Invoke( typeMapping.MappingExpression, 
-                    context.SourceCollectionLoopingVar ) 
+            (
+                context.TargetInstance, addMethod,
+                Expression.Invoke( typeMapping.MappingExpression,
+                    context.SourceCollectionLoopingVar )
             );
 
             return Expression.Block
@@ -135,7 +137,7 @@ namespace TypeMapper.Mappers
 
                 ExpressionLoops.ForEach( context.SourceInstance, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( itemMapping, context, context.ReferenceTrack, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( itemMapping, context, context.ReferenceTracker, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
@@ -152,6 +154,23 @@ namespace TypeMapper.Mappers
                 addToTracker.Method, referenceTracker, Expression.Convert( sourceParam, typeof( object ) ),
                 Expression.Constant( targetParam.Type ), Expression.Convert( targetParam, typeof( object ) ) );
 
+            Expression cacheItemAndRecurseImmediately = Expression.Block
+            (
+                cacheInsertCall,
+
+                //Immediate recursion on the item (needed for sets)
+                Expression.Invoke( itemMapping, referenceTracker,
+                    sourceParam, targetParam )
+            );
+
+            Expression deferItemRecursion = Expression.Call
+            (
+                context.ReturnObject, context.AddObjectPairToReturnList,
+                Expression.New( typeof( ObjectPair ).GetConstructors()[ 0 ],
+                Expression.Convert( sourceParam, typeof( object ) ),
+                Expression.Convert( targetParam, typeof( object ) ) )
+            );
+
             return Expression.Block
             (
                 Expression.Assign( targetParam, Expression.Convert( cacheLookupCall, targetParam.Type ) ),
@@ -163,49 +182,30 @@ namespace TypeMapper.Mappers
                     Expression.Block
                     (
                         Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
-
-                        cacheInsertCall,
-
-                        //Immediate recursion on the item (needed for sets)
-                        Expression.Invoke( itemMapping, referenceTracker,
-                            sourceParam, targetParam )
-                            //,
-
-                        //Expression.Call
-                        //(
-                        //    context.ReturnObject, context.AddToReturnList,
-                        //    Expression.New( typeof( ObjectPair ).GetConstructors()[ 0 ],
-                        //    Expression.Convert( sourceParam, typeof( object ) ),
-                        //    Expression.Convert( targetParam, typeof( object ) ) )
-                        //)
+                        NeedsImmediateRecursion ? cacheItemAndRecurseImmediately : deferItemRecursion
                     )
                 )
             );
         }
 
-        protected override Expression GetInnerBody( object contextObj )
+        protected override Expression GetInnerBody( ReferenceMapperContext contextObj )
         {
             var context = contextObj as CollectionMapperContext;
 
             if( context.IsTargetElementTypeBuiltIn )
-            {
-                return Expression.Block
-                (
-                   GetSimpleTypeInnerBody( context )
-                );
-            }
-            else
-            {
-                var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
+                return GetSimpleTypeInnerBody( context );
 
-                return Expression.Block
-                (
-                    Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
-                        Expression.Call( context.SourceInstance, getCountMethod ) ) ),
+            return GetComplexTypeInnerBody( context );            
+        }
 
-                    GetComplexTypeInnerBody( context )
-                );
-            }
+        protected override Expression ReturnListInitialization( ReferenceMapperContext contextObj )
+        {
+            var context = contextObj as CollectionMapperContext;
+
+            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
+
+            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
+                Expression.Call( context.SourceInstance, getCountMethod ) ) );
         }
 
         protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )
@@ -226,7 +226,7 @@ namespace TypeMapper.Mappers
             return context.TargetInstance.Type.GetMethod( "Add" );
         }
 
-        protected override Expression GetTargetInstanceAssignment( object contextObj )
+        protected override Expression GetTargetInstanceAssignment( ReferenceMapperContext contextObj )
         {
             var context = contextObj as CollectionMapperContext;
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type,

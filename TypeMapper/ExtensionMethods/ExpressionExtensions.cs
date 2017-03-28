@@ -169,11 +169,6 @@ namespace TypeMapper
             return expression.Compile()();
         }
 
-        //public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter )
-        //{
-        //    return new ExpressionParameterReplacer( parameter ).Visit( expression );
-        //}
-
         public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter, string name )
         {
             return new ExpressionParameterReplacer( parameter, name ).Visit( expression );
@@ -194,7 +189,9 @@ namespace TypeMapper
             var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
 
             // The MoveNext method's actually on IEnumerator, not IEnumerator<T>
-            var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator ).GetMethod( nameof( IEnumerator.MoveNext ) ) );
+            var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator )
+                .GetMethod( nameof( IEnumerator.MoveNext ) ) );
+
             var breakLabel = Expression.Label( "LoopBreak" );
 
             var loop = Expression.Block

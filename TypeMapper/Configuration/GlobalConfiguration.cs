@@ -55,7 +55,7 @@ namespace TypeMapper
                 new StructMapper( configuration ),
                 new ReferenceMapper( configuration ),
                 new DictionaryMapper( configuration ),
-                //new SetMapper( configuration ),
+                new SetMapper( configuration ),
                 new StackMapper( configuration ),
                 new QueueMapper( configuration ),
                 new LinkedListMapper( configuration ),

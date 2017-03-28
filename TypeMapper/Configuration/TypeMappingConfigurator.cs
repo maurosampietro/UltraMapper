@@ -29,7 +29,6 @@ namespace TypeMapper.Configuration
             _typeMapping = typeMapping;
             _globalConfiguration = globalConfiguration;
 
-            //if( !typeMapping.IgnoreMappingResolveByConvention )
             this.MapByConvention( typeMapping );
         }
 

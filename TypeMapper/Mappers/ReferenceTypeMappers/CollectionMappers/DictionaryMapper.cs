@@ -21,12 +21,12 @@ namespace TypeMapper.Mappers
             return sourceIsDictionary || targetIsDictionary;
         }
 
-        protected override object GetMapperContext( Type source, Type target )
+        protected override ReferenceMapperContext GetMapperContext( Type source, Type target )
         {
             return new DictionaryMapperContext( source, target );
         }
 
-        protected override Expression GetInnerBody( object contextObj )
+        protected override Expression GetInnerBody( ReferenceMapperContext contextObj )
         {
             var context = contextObj as DictionaryMapperContext;
 
@@ -71,7 +71,7 @@ namespace TypeMapper.Mappers
                 return Expression.Assign( targetParam, Expression.Invoke( itemMapping, sourceParam ) );
             }
 
-            return base.LookUpBlock( itemMapping, context, context.ReferenceTrack, sourceParam, targetParam );
+            return base.LookUpBlock( itemMapping, context, context.ReferenceTracker, sourceParam, targetParam );
         }
     }
 }

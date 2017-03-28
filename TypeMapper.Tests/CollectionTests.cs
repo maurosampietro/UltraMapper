@@ -34,7 +34,10 @@ namespace TypeMapper.Tests
 
             public override bool Equals( object obj )
             {
-                return this.A.Equals( (obj as ComplexType)?.A );
+                var otherObj = obj as ComplexType;
+
+                return this.A.Equals( otherObj?.A ) &&
+                    this.InnerType?.String == otherObj?.InnerType?.String;
             }
         }
 

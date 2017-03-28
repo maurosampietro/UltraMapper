@@ -41,7 +41,7 @@ namespace TypeMapper.Tests
             public string A { get; set; }
             public string B { get; set; }
 
-            public OuterType C { get; set; }
+            //public OuterType C { get; set; }
         }
 
         private class InnerTypeDto
@@ -71,7 +71,7 @@ namespace TypeMapper.Tests
                 String = "ok"
             };
 
-            source.InnerType.C = source;
+            //source.InnerType.C = source;
 
             var target = new OuterType();
 

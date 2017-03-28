@@ -16,7 +16,6 @@ namespace TypeMapper.Mappers
         public bool IsTargetElementTypeBuiltIn { get; set; }
 
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
-        public MethodInfo AddToReturnList { get; internal set; }
 
         public CollectionMapperContext( Type source, Type target )
             : base( source, target ) { Initialize(); }
@@ -25,8 +24,6 @@ namespace TypeMapper.Mappers
         {
             var returnType = typeof( List<ObjectPair> );
             ReturnTypeConstructor = returnType.GetConstructor( new[] { typeof( int ) } );
-            ReturnObject = Expression.Variable( returnType, "returnObject" );
-            AddToReturnList = returnType.GetMethod( "Add" );
 
             SourceCollectionElementType = SourceInstance.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetInstance.Type.GetCollectionGenericType();

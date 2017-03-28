@@ -68,14 +68,18 @@ namespace TypeMapper.Internals
             set { _collectionMappingStrategy = value; }
         }
 
+        private IMapperExpressionBuilder _mapper = null;
         public IMapperExpressionBuilder Mapper
         {
             get
             {
-                var selectedMapper = GlobalConfiguration.Mappers
-                    .FirstOrDefault( mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
+                if( _mapper == null )
+                {
+                    _mapper = GlobalConfiguration.Mappers.FirstOrDefault(
+                        mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
+                }
 
-                return selectedMapper;
+                return _mapper;
             }
         }
 
@@ -95,7 +99,9 @@ namespace TypeMapper.Internals
                     return this.CustomConverter;
 
                 if( _expression != null ) return _expression;
-                return _expression = new ReferenceMapperWithMemberMapping().GetMappingExpression( this );
+
+                return _expression = this.Mapper.GetMappingExpression(
+                    this.TypePair.SourceType, this.TypePair.TargetType );
             }
         }
 

@@ -81,7 +81,7 @@ namespace TypeMapper
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
         /// <typeparam name="TTarget">Type of the target instance.</typeparam>
         /// <param name="source">The source instance from which the values are read.</param>
-        /// <param name="target">the target instance to which the values are written.</param>
+        /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target )
             where TTarget : class
         {

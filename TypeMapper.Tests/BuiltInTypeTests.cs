@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TypeMapper.Configuration;
+using TypeMapper.Internals;
+using TypeMapper.Mappers;
 using TypeMapper.MappingConventions;
 
 namespace TypeMapper.Tests

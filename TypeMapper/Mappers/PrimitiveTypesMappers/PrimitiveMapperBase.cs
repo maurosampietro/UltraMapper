@@ -6,14 +6,12 @@ namespace TypeMapper.Mappers
 {
     public abstract class PrimitiveMapperBase : IMapperExpressionBuilder
     {
-        public readonly MapperConfiguration MapperConfiguration;
+        protected readonly MapperConfiguration MapperConfiguration;
 
         public PrimitiveMapperBase( MapperConfiguration configuration )
         {
             this.MapperConfiguration = configuration;
         }
-
-        public abstract bool CanHandle( Type sourceType, Type targetType );
 
         public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
         {
@@ -41,6 +39,8 @@ namespace TypeMapper.Mappers
         {
             return new MapperContext( sourceType, targetType );
         }
+
+        public abstract bool CanHandle( Type sourceType, Type targetType );
 
         protected abstract Expression GetTargetValueAssignment( MapperContext context );
     }
