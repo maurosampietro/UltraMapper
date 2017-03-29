@@ -17,9 +17,9 @@ namespace TypeMapper.Mappers
             return sourceType.IsValueType && targetType.IsValueType;
         }
 
-        protected override Expression GetTargetValueAssignment( MapperContext context )
+        protected override Expression GetValueExpression( MapperContext context )
         {
-            return Expression.Assign( context.TargetInstance, context.SourceInstance );
+            return context.SourceInstance;
         }
     }
 }

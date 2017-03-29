@@ -45,7 +45,8 @@ namespace TypeMapper.Mappers
             Expression loopBody = Expression.Call
             (
                 targetCollection, targetCollectionAddMethod,
-                Expression.Invoke( itemMapping, context.SourceCollectionLoopingVar )
+                itemMapping.Body.ReplaceParameter(
+                    context.SourceCollectionLoopingVar, itemMapping.Parameters[ 0 ].Name )
             );
 
             return ExpressionLoops.ForEach( sourceCollection,
@@ -97,17 +98,15 @@ namespace TypeMapper.Mappers
                 cacheInsertCall,
 
                 itemMapping.Body
-                    .ReplaceParameter( referenceTracker, referenceTracker.Name )
-                    .ReplaceParameter( sourceParam, "sourceInstance" )
-                    .ReplaceParameter( targetParam, "targetInstance" )
+                    .ReplaceParameter( referenceTracker, itemMapping.Parameters[ 0 ].Name )
+                    .ReplaceParameter( sourceParam, itemMapping.Parameters[ 1 ].Name )
+                    .ReplaceParameter( targetParam, itemMapping.Parameters[ 2 ].Name )
             );
 
             Expression deferItemRecursion = Expression.Call
             (
                 context.ReturnObject, context.AddObjectPairToReturnList,
-                Expression.New( typeof( ObjectPair ).GetConstructors()[ 0 ],
-                Expression.Convert( sourceParam, typeof( object ) ),
-                Expression.Convert( targetParam, typeof( object ) ) )
+                Expression.New( typeof( ObjectPair ).GetConstructors()[ 0 ], sourceParam, targetParam )
             );
 
             return Expression.Block
@@ -195,7 +194,7 @@ namespace TypeMapper.Mappers
         }
 
         private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
-        {         
+        {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Clear ) );
         }

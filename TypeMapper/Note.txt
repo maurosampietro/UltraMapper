@@ -28,20 +28,20 @@ TODO:
 KNOWN (POTENTIAL) PROBLEMS:
 
 - ReferenceTracking and other dictionaries that should take as key a pair of object ( such as Dictionary<TypePair,*> ),
-for performance reasons, calculate a hashcode of the pair itself and use this hashcode as the key.
-When dealing with many many object and types, this can lead to collisions and therefore unexpected behaviors of the mapper.
-Since it is unknown if this can happen in practice and due to the performance cost of using any different approach,
-the problem is ignored until it shows up in real world usage.
+  for performance reasons, calculate a hashcode of the pair itself and use this hashcode as the key.
+  When dealing with many many objects and types, this can lead to collisions and therefore unexpected behaviors of the mapper.
+  Since it is unknown if this can happen in practice and due to the performance cost of using any different approach,
+  the problem is ignored until it shows up in real world usage.
 
 - When manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
-all instances referred by the selector (both on source and target) must be instantiated. 
-
-At the time to avoid NullReferenceException on target side
-it is possible to instantiate the target and set 
-ReferenceMappingStrategy = USE_TARGET_INSTANCE_IF_NOT_NULL.
-
-SOURCE SIDE: An automatic mechanism checking for null reference for each reference
-access could solve the problem on source side but implies the splitting and the analysis of the selctor.
-
-TARGET SIDE: An automatic mechanism instantiating a null reference could be useful 
-to solve the problem on target side but implies the splitting and the analysis of the selctor.
+  all instances referred by the selector (both on source and target) must be instantiated. 
+  
+  At the time to avoid NullReferenceException on target side
+  it is possible to instantiate the target and set 
+  ReferenceMappingStrategy = USE_TARGET_INSTANCE_IF_NOT_NULL.
+  
+  SOURCE SIDE: An automatic mechanism checking for null reference for each reference
+  access could solve the problem on source side but implies the splitting and the analysis of the selctor.
+  
+  TARGET SIDE: An automatic mechanism instantiating a null reference could be useful 
+  to solve the problem on target side but implies the splitting and the analysis of the selctor.

@@ -19,15 +19,15 @@ namespace TypeMapper.Mappers
                     source.IsExplicitlyConvertibleTo( target ));
         }
 
-        protected override Expression GetTargetValueAssignment( MapperContext context )
+        protected override Expression GetValueExpression( MapperContext context )
         {
             if( context.SourceInstance.Type == context.TargetInstance.Type )
-                return Expression.Assign( context.TargetInstance, context.SourceInstance );
+                return context.SourceInstance;
 
             var conversionExp = Expression.Convert(
                 context.SourceInstance, context.TargetInstance.Type );
 
-            return Expression.Assign( context.TargetInstance, conversionExp );
+            return conversionExp;
         }
     }
 }

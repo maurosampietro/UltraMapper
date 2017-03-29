@@ -67,15 +67,17 @@ namespace TypeMapper.Mappers
             var itemMapping = MapperConfiguration[ sourceParam.Type,
                 targetParam.Type ].MappingExpression;
 
-            if( sourceParam.Type.IsBuiltInType( false ) && targetParam.Type.IsBuiltInType( false ) )
-            {
-                if( sourceParam.Type == targetParam.Type )
-                    return Expression.Assign( targetParam, sourceParam );
+            var itemMappingExp = itemMapping.Body.ReplaceParameter(
+                sourceParam, itemMapping.Parameters[ 0 ].Name );
 
-                return Expression.Assign( targetParam, Expression.Invoke( itemMapping, sourceParam ) );
+            if( sourceParam.Type.IsBuiltInType( false ) && 
+                targetParam.Type.IsBuiltInType( false ) )
+            {
+                return Expression.Assign( targetParam, itemMappingExp );
             }
 
-            return base.LookUpBlock( itemMapping, context, context.ReferenceTracker, sourceParam, targetParam );
+            return base.LookUpBlock( itemMapping, context, 
+                context.ReferenceTracker, sourceParam, targetParam );
         }
     }
 }

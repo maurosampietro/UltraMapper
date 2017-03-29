@@ -46,7 +46,7 @@ namespace TypeMapper.Mappers
             return areTypesBuiltIn || isConvertible.Value;
         }
 
-        protected override Expression GetTargetValueAssignment( MapperContext context )
+        protected override Expression GetValueExpression( MapperContext context )
         {
             var methodName = $"To{context.TargetInstance.Type.Name}";
             var methodParams = new[] { context.SourceInstance.Type };
@@ -54,7 +54,7 @@ namespace TypeMapper.Mappers
             var convertMethod = _convertType.GetMethod( methodName, methodParams );
             var convertMethodCall = Expression.Call( convertMethod, context.SourceInstance );
 
-            return Expression.Assign( context.TargetInstance, convertMethodCall );
+            return convertMethodCall;
         }
     }
 }

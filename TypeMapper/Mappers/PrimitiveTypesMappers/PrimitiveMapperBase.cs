@@ -16,23 +16,13 @@ namespace TypeMapper.Mappers
         public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
         {
             var context = this.GetContext( sourceType, targetType );
-            var targetValueAssignment = this.GetTargetValueAssignment( context );
-
-            var body = Expression.Block
-            (
-                new[] { context.TargetInstance },
-
-                targetValueAssignment,
-
-                //return the value assigned to TargetValue param
-                context.TargetInstance
-            );
+            var getValueExpression = this.GetValueExpression( context );
 
             var delegateType = typeof( Func<,> )
                 .MakeGenericType( sourceType, targetType );
 
             return Expression.Lambda( delegateType,
-                body, context.SourceInstance );
+                getValueExpression, context.SourceInstance );
         }
 
         protected virtual MapperContext GetContext( Type sourceType, Type targetType )
@@ -42,6 +32,6 @@ namespace TypeMapper.Mappers
 
         public abstract bool CanHandle( Type sourceType, Type targetType );
 
-        protected abstract Expression GetTargetValueAssignment( MapperContext context );
+        protected abstract Expression GetValueExpression( MapperContext context );
     }
 }
