@@ -25,47 +25,54 @@ namespace TypeMapper.Mappers
                 target.GetGenericTypeDefinition() == typeof( Stack<> );
         }
 
-        protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
+        protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
         {
             return context.TargetInstance.Type.GetMethod( "Push" );
         }
 
         protected override Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
         {
-            var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );
+            //1. Reverse the Stack by creating a new temporary Stack( sourceInstance )
+            //2. Read items from temporary stack and add items to the target instance
 
-            return Expression.Block
-            (
-                base.GetSimpleTypeInnerBody( context ),
-                Expression.Assign( context.TargetInstance, Expression.New( constructorInfo, context.TargetInstance ) )
-            );
-        }
+            var paramType = new Type[] { typeof( IEnumerable<> )
+                .MakeGenericType( context.SourceCollectionElementType ) };
 
-        protected override Expression GetComplexTypeInnerBody( CollectionMapperContext context )
-        {
-            var addMethod = this.GetTargetCollectionAddMethod( context );
-            var constructorInfo = this.GetTargetCollectionConstructorFromCollection( context );
-
-            //avoids add calls on the Stack because the source and target collection
-            //will not be identical (one will be reversed).
-            //avoids add calls by creating a temporary list.
-
-            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.TargetCollectionElementType );
+            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
+            var tempCollectionConstructorInfo = tempCollectionType.GetConstructor( paramType );
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
-            var constructorWithCapacity = tempCollectionType.GetConstructor( new Type[] { typeof( int ) } );
-            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
-
-            var newTempCollectionExp = Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceInstance, getCountMethod ) );
+            var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
 
             return Expression.Block
             (
                 new[] { tempCollection },
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
-                CollectionLoopWithReferenceTracking( context, tempCollection, addMethod ),
-                Expression.Assign( context.TargetInstance, Expression.New( constructorInfo, tempCollection ) )
+                SimpleCollectionLoop( context, tempCollection, context.TargetInstance )
+            );
+        }
+
+        protected override Expression GetComplexTypeInnerBody( CollectionMapperContext context )
+        {
+            //1. Reverse the Stack by creating a new temporary Stack( sourceInstance )
+            //2. Read items from temporary stack and add items to the target instance
+
+            var paramType = new Type[] { typeof( IEnumerable<> )
+                .MakeGenericType( context.SourceCollectionElementType ) };
+
+            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
+            var tempCollectionConstructorInfo = tempCollectionType.GetConstructor( paramType );
+            var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
+
+            var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
+
+            return Expression.Block
+            (
+                new[] { tempCollection },
+
+                Expression.Assign( tempCollection, newTempCollectionExp ),
+                CollectionLoopWithReferenceTracking( context, tempCollection, context.TargetInstance )
             );
         }
     }

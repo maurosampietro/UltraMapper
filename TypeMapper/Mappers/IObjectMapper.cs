@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using TypeMapper.Internals;
+using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
@@ -19,5 +20,10 @@ namespace TypeMapper.Mappers
         /// <param name="mapping">the property mapping to handle</param>
         /// <returns>Returns a list of objects that need to be recursively mapped</returns>
         LambdaExpression GetMappingExpression( Type source, Type target );
+    }
+
+    public interface IReferenceMapperExpressionBuilder : IMapperExpressionBuilder
+    {
+        Expression GetTargetInstanceAssignment( MemberMappingContext memberContext, MemberMapping mapping );
     }
 }

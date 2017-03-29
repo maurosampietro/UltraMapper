@@ -7,7 +7,7 @@ using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
-    public class ReferenceMapper : IMapperExpressionBuilder
+    public class ReferenceMapper : IReferenceMapperExpressionBuilder
     {
         public readonly MapperConfiguration MapperConfiguration;
 
@@ -81,10 +81,10 @@ namespace TypeMapper.Mappers
                 new[] { context.ReturnObject },
 
                 this.ReturnListInitialization( context ),
+
                 this.GetInnerBody( context ),
                 memberMappings,
 
-                Expression.Invoke( debugExp, context.ReturnObject ),
                 context.ReturnObject
             );
         }
@@ -100,21 +100,22 @@ namespace TypeMapper.Mappers
             return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) );
         }
 
-        protected virtual Expression GetTargetInstanceAssignment( ReferenceMapperContext contextObj )
+        public virtual Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
         {
-            var context = contextObj as ReferenceMapperContext;
-            var newInstanceExp = Expression.New( context.TargetInstance.Type );
+            var newInstanceExp = Expression.New( context.TargetMember.Type );
 
-            var typeMapping = MapperConfiguration[ context.SourceInstance.Type,
-                context.TargetInstance.Type ];
+            if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+                return Expression.Assign( context.TargetMember, newInstanceExp );
 
-            if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
-                return Expression.Assign( context.TargetInstance, newInstanceExp );
-
-            return Expression.IfThen
+            return Expression.Block
             (
-                Expression.Equal( context.TargetInstance, context.TargetNullValue ),
-                Expression.Assign( context.TargetInstance, newInstanceExp )
+                Expression.Assign( context.TargetMember, context.TargetMemberValueGetter ),
+
+                Expression.IfThen
+                (
+                    Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
+                    Expression.Assign( context.TargetMember, newInstanceExp )
+                )
             );
         }
     }

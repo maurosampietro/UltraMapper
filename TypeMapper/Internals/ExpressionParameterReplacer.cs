@@ -9,9 +9,6 @@ namespace TypeMapper.Internals
 
         protected override Expression VisitParameter( ParameterExpression node )
         {
-            if( _name == null && node.Type == _parameter.Type )
-                return base.VisitParameter( _parameter );
-
             if( node.Type == _parameter.Type && node.Name == _name )
                 return base.VisitParameter( _parameter );
 

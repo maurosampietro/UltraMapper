@@ -7,8 +7,8 @@ namespace TypeMapper.Mappers
 {
     public class DictionaryMapperContext : CollectionMapperContext
     {
-        public MemberExpression SourceCollectionElementKey { get; private set; }
-        public MemberExpression SourceCollectionElementValue { get; private set; }
+        public ParameterExpression SourceCollectionElementKey { get; private set; }
+        public ParameterExpression SourceCollectionElementValue { get; private set; }
 
         public ParameterExpression TargetCollectionElementKey { get; private set; }
         public ParameterExpression TargetCollectionElementValue { get; private set; }
@@ -24,8 +24,8 @@ namespace TypeMapper.Mappers
             var targetCollectionElementKeyType = TargetCollectionElementType.GetGenericArguments()[ 0 ];
             var targetCollectionElementValueType = TargetCollectionElementType.GetGenericArguments()[ 1 ];
 
-            SourceCollectionElementKey = Expression.Property( SourceCollectionLoopingVar, nameof( DictionaryEntry.Key ) );
-            SourceCollectionElementValue = Expression.Property( SourceCollectionLoopingVar, nameof( DictionaryEntry.Value ) );
+            SourceCollectionElementKey = Expression.Variable( sourceCollectionElementKeyType, "sourceKey" );
+            SourceCollectionElementValue = Expression.Variable( sourceCollectionElementValueType, "sourceValue" );
 
             TargetCollectionElementKey = Expression.Variable( targetCollectionElementKeyType, "targetKey" );
             TargetCollectionElementValue = Expression.Variable( targetCollectionElementValueType, "targetValue" );

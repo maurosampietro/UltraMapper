@@ -80,6 +80,24 @@ namespace TypeMapper.Tests
         }
 
         [TestMethod]
+        public void DictionaryToDictionarySameElementSimpleType()
+        {
+            Dictionary<int, int> source = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 }, { 3, 3 } };
+            Dictionary<int, int> target = new Dictionary<int, int>();
+
+            Assert.IsTrue( !source.SequenceEqual( target ) );
+
+            var typeMapper = new TypeMapper();
+            typeMapper.Map( source, target );
+
+            Assert.IsTrue( source.SequenceEqual( target ) );
+
+            bool isResultOk = typeMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+
+        [TestMethod]
         public void ListToListSameElementSimpleType()
         {
             List<int> source = Enumerable.Range( 0, 10 ).ToList();

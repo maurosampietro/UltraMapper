@@ -99,18 +99,18 @@ namespace TypeMapper.Mappers
 
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
-            var validMappings = typeMapping.MemberMappings.Values.ToList();
+            var memberMappings = typeMapping.MemberMappings.Values.ToList();
             if( typeMapping.IgnoreMemberMappingResolvedByConvention )
             {
-                validMappings = validMappings.Where( mapping =>
+                memberMappings = memberMappings.Where( mapping =>
                     mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
             }
 
-            var addCalls = validMappings.OrderBy( mm => mm, _memberComparer )
+            var memberMappingExps = memberMappings.OrderBy( mm => mm, _memberComparer )
                 .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
                 .Select( mapping => GetMemberMapping( mapping ) ).ToList();
 
-            return !addCalls.Any() ? (Expression)Expression.Empty() : Expression.Block( addCalls );
+            return !memberMappingExps.Any() ? (Expression)Expression.Empty() : Expression.Block( memberMappingExps );
         }
 
         private Expression GetMemberMapping( MemberMapping mapping )
@@ -184,11 +184,20 @@ namespace TypeMapper.Mappers
                             Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
                             Expression.Block
                             (
-                                AssignInstanceToTargetMember( memberContext, mapping ),
+                                ((IReferenceMapperExpressionBuilder)mapping.Mapper)
+                                    .GetTargetInstanceAssignment( memberContext, mapping ),
 
-                                mapping.MappingExpression.Body
-                                    .ReplaceParameter( memberContext.SourceMember, mapping.MappingExpression.Parameters[ 1 ].Name )
-                                    .ReplaceParameter( memberContext.TargetMember, mapping.MappingExpression.Parameters[ 2 ].Name ),
+                                //Add to the list of instance-pair to recurse on (only way to avoid StackOverflow if the mapping object contains anywhere 
+                                //down the tree a member of the same type of the mapping object itself)
+                                Expression.Call
+                                ( 
+                                    memberContext.ReturnObject, memberContext.AddObjectPairToReturnList,
+                                    Expression.New
+                                    (   
+                                        typeof( ObjectPair ).GetConstructors()[ 0 ],
+                                        memberContext.SourceMember, memberContext.TargetMember 
+                                    ) 
+                                ),
 
                                 //cache reference
                                 addToLookupCall
@@ -221,25 +230,6 @@ namespace TypeMapper.Mappers
                 mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
                     .ReplaceParameter( value, targetSetterMemberParamName )
-            );
-        }
-
-        protected virtual Expression AssignInstanceToTargetMember( MemberMappingContext context, MemberMapping mapping )
-        {
-            var newInstanceExp = Expression.New( context.TargetMember.Type );
-
-            if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
-                return Expression.Assign( context.TargetMember, newInstanceExp );
-
-            return Expression.Block
-            (
-                Expression.Assign( context.TargetMember, context.TargetMemberValueGetter ),
-
-                Expression.IfThen
-                (
-                    Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
-                    Expression.Assign( context.TargetMember, newInstanceExp )
-                )
             );
         }
     }

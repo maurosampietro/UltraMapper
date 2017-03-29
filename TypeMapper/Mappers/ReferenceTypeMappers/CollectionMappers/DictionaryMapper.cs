@@ -30,7 +30,7 @@ namespace TypeMapper.Mappers
         {
             var context = contextObj as DictionaryMapperContext;
 
-            var addMethod = base.GetTargetCollectionAddMethod( context );
+            var addMethod = base.GetTargetCollectionInsertionMethod( context );
 
             var keyExpression = this.GetKeyOrValueExpression( context,
                 context.SourceCollectionElementKey, context.TargetCollectionElementKey );
@@ -40,14 +40,18 @@ namespace TypeMapper.Mappers
 
             return Expression.Block
             (
-                new[] { context.TargetCollectionElementKey, context.TargetCollectionElementValue },
-
-                Expression.Assign( context.TargetInstance,
-                    Expression.New( context.TargetInstance.Type ) ),
+                new[] { context.SourceCollectionElementKey, context.SourceCollectionElementValue,
+                    context.TargetCollectionElementKey, context.TargetCollectionElementValue },
 
                 ExpressionLoops.ForEach( context.SourceInstance,
                     context.SourceCollectionLoopingVar, Expression.Block
                 (
+                    Expression.Assign( context.SourceCollectionElementKey,
+                        Expression.Property( context.SourceCollectionLoopingVar, nameof( DictionaryEntry.Key ) ) ),
+
+                    Expression.Assign( context.SourceCollectionElementValue,
+                        Expression.Property( context.SourceCollectionLoopingVar, nameof( DictionaryEntry.Value ) ) ),
+
                     keyExpression,
                     valueExpression,
 
@@ -58,7 +62,7 @@ namespace TypeMapper.Mappers
         }
 
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
-            MemberExpression sourceParam, ParameterExpression targetParam )
+            ParameterExpression sourceParam, ParameterExpression targetParam )
         {
             var itemMapping = MapperConfiguration[ sourceParam.Type,
                 targetParam.Type ].MappingExpression;

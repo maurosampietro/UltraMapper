@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using TypeMapper.Configuration;
 using TypeMapper.Internals;
+using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
@@ -40,9 +41,6 @@ namespace TypeMapper.Mappers
             //- Must also manage the case where SourceElementType and TargetElementType differ:
             //  cannot use directly the target constructor: use add method or temp collection.
 
-            var typeMapping = MapperConfiguration[ context.SourceCollectionElementType,
-                context.TargetCollectionElementType ];
-
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null )
             {
@@ -50,28 +48,19 @@ namespace TypeMapper.Mappers
                 throw new Exception( msg );
             }
 
-            var addMethod = GetTargetCollectionAddMethod( context );
+            var addMethod = GetTargetCollectionInsertionMethod( context );
             if( addMethod == null )
             {
                 string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetInstance.Type )}' does not provide an item-insertion method " +
-                    $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item-insertion method.";
+                    $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item-insertion method.";
 
                 throw new Exception( msg );
             }
 
-            Expression loopBody = Expression.Call
-            (
-                context.TargetInstance, addMethod,
-                Expression.Invoke( typeMapping.MappingExpression,
-                    context.SourceCollectionLoopingVar )
-            );
-
             return Expression.Block
             (
                 Expression.Call( context.TargetInstance, clearMethod ),
-
-                ExpressionLoops.ForEach( context.SourceInstance,
-                    context.SourceCollectionLoopingVar, loopBody )
+                SimpleCollectionLoop( context, context.SourceInstance, context.TargetInstance )
             );
         }
 
@@ -102,19 +91,10 @@ namespace TypeMapper.Mappers
                 throw new Exception( msg );
             }
 
-            var addMethod = GetTargetCollectionAddMethod( context );
-            if( addMethod == null )
-            {
-                string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertiong method. " +
-                    $"Please override '{nameof( GetTargetCollectionAddMethod )}' to provide the item insertion method.";
-
-                throw new Exception( msg );
-            }
-
             return Expression.Block
             (
                 Expression.Call( context.TargetInstance, clearMethod ),
-                CollectionLoopWithReferenceTracking( context, context.TargetInstance, addMethod )
+                CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
             );
         }
 
@@ -123,9 +103,43 @@ namespace TypeMapper.Mappers
             return context.TargetInstance.Type.GetMethod( "Clear" );
         }
 
-        protected virtual Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
-            ParameterExpression targetCollection, MethodInfo targetCollectionAddMethod )
+        protected virtual Expression SimpleCollectionLoop( CollectionMapperContext context, ParameterExpression sourceCollection,
+            ParameterExpression targetCollection )
         {
+            var targetCollectionAddMethod = GetTargetCollectionInsertionMethod( context );
+            if( targetCollectionAddMethod == null )
+            {
+                string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertion method. " +
+                    $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
+
+                throw new Exception( msg );
+            }
+
+            var itemMapping = MapperConfiguration[ context.SourceCollectionElementType,
+                context.TargetCollectionElementType ].MappingExpression;
+
+            Expression loopBody = Expression.Call
+            (
+                targetCollection, targetCollectionAddMethod,
+                Expression.Invoke( itemMapping, context.SourceCollectionLoopingVar )
+            );
+
+            return ExpressionLoops.ForEach( sourceCollection,
+                context.SourceCollectionLoopingVar, loopBody );
+        }
+
+        protected virtual Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
+            ParameterExpression sourceCollection, ParameterExpression targetCollection )
+        {
+            var targetCollectionAddMethod = GetTargetCollectionInsertionMethod( context );
+            if( targetCollectionAddMethod == null )
+            {
+                string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertion method. " +
+                    $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
+
+                throw new Exception( msg );
+            }
+
             var itemMapping = MapperConfiguration[ context.SourceCollectionLoopingVar.Type,
                 context.TargetCollectionElementType ].MappingExpression;
 
@@ -135,7 +149,7 @@ namespace TypeMapper.Mappers
             (
                 new[] { newElement },
 
-                ExpressionLoops.ForEach( context.SourceInstance, context.SourceCollectionLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( sourceCollection, context.SourceCollectionLoopingVar, Expression.Block
                 (
                     LookUpBlock( itemMapping, context, context.ReferenceTracker, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
@@ -143,8 +157,8 @@ namespace TypeMapper.Mappers
             ) );
         }
 
-        protected BlockExpression LookUpBlock( LambdaExpression itemMapping, CollectionMapperContext context, ParameterExpression referenceTracker,
-           Expression sourceParam, ParameterExpression targetParam )
+        protected BlockExpression LookUpBlock( LambdaExpression itemMapping, CollectionMapperContext context,
+            ParameterExpression referenceTracker, ParameterExpression sourceParam, ParameterExpression targetParam )
         {
             Expression cacheLookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method, referenceTracker, Expression.Convert( sourceParam, typeof( object ) ),
@@ -158,9 +172,10 @@ namespace TypeMapper.Mappers
             (
                 cacheInsertCall,
 
-                //Immediate recursion on the item (needed for sets)
-                Expression.Invoke( itemMapping, referenceTracker,
-                    sourceParam, targetParam )
+                itemMapping.Body
+                    .ReplaceParameter( referenceTracker, referenceTracker.Name )
+                    .ReplaceParameter( sourceParam, "sourceInstance" )
+                    .ReplaceParameter( targetParam, "targetInstance" )
             );
 
             Expression deferItemRecursion = Expression.Call
@@ -195,7 +210,7 @@ namespace TypeMapper.Mappers
             if( context.IsTargetElementTypeBuiltIn )
                 return GetSimpleTypeInnerBody( context );
 
-            return GetComplexTypeInnerBody( context );            
+            return GetComplexTypeInnerBody( context );
         }
 
         protected override Expression ReturnListInitialization( ReferenceMapperContext contextObj )
@@ -208,31 +223,19 @@ namespace TypeMapper.Mappers
                 Expression.Call( context.SourceInstance, getCountMethod ) ) );
         }
 
-        protected virtual ConstructorInfo GetTargetCollectionConstructorFromCollection( CollectionMapperContext context )
-        {
-            var paramType = new Type[] { typeof( IEnumerable<> )
-                .MakeGenericType( context.TargetCollectionElementType ) };
-
-            return context.TargetInstance.Type.GetConstructor( paramType );
-        }
-
         /// <summary>
         /// Return the method that allows to add items to the target collection.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        protected virtual MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
+        protected virtual MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
         {
             return context.TargetInstance.Type.GetMethod( "Add" );
         }
 
-        protected override Expression GetTargetInstanceAssignment( ReferenceMapperContext contextObj )
+        public override Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
         {
-            var context = contextObj as CollectionMapperContext;
-            var typeMapping = MapperConfiguration[ context.SourceInstance.Type,
-                context.TargetInstance.Type ];
-
-            if( typeMapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
+            if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
                 && context.SourceInstance.Type.ImplementsInterface( typeof( ICollection<> ) )
                 && context.TargetInstance.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
@@ -247,7 +250,7 @@ namespace TypeMapper.Mappers
                 }
             }
 
-            return base.GetTargetInstanceAssignment( contextObj );
+            return base.GetTargetInstanceAssignment( context, mapping );
         }
     }
 }

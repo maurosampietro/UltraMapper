@@ -16,7 +16,7 @@ namespace TypeMapper.Mappers
                 && target.GetGenericTypeDefinition() == typeof( Queue<> );
         }
 
-        protected override MethodInfo GetTargetCollectionAddMethod( CollectionMapperContext context )
+        protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
         {
             //Queue<int> is used only because it is forbidden to use nameof with unbound generic types.
             //Any other type instead of int would work.

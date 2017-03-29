@@ -57,13 +57,6 @@ namespace TypeMapper.Tests
             public ObservableCollection<T> ObservableCollection { get; set; }
 
             public GenericCollections( bool initializeRandomly )
-                : this()
-            {
-                if( initializeRandomly )
-                    InitializeRandomly();
-            }
-
-            public GenericCollections()
             {
                 this.List = new List<T>();
                 this.HashSet = new HashSet<T>();
@@ -72,6 +65,9 @@ namespace TypeMapper.Tests
                 this.Queue = new Queue<T>();
                 this.LinkedList = new LinkedList<T>();
                 this.ObservableCollection = new ObservableCollection<T>();
+
+                if( initializeRandomly )
+                    InitializeRandomly();
             }
 
             private void InitializeRandomly()
@@ -240,7 +236,7 @@ namespace TypeMapper.Tests
         {
             var innerType = new InnerType() { String = "test" };
 
-            var source = new GenericCollections<ComplexType>();
+            var source = new GenericCollections<ComplexType>( false );
             for( int i = 0; i < 3; i++ )
             {
                 source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
@@ -252,7 +248,7 @@ namespace TypeMapper.Tests
                 source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
             }
 
-            var target = new GenericCollections<ComplexType>();
+            var target = new GenericCollections<ComplexType>( false );
 
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
@@ -271,7 +267,7 @@ namespace TypeMapper.Tests
             var sourceProperties = typeof( GenericCollections<int> ).GetProperties();
             var targetProperties = typeof( GenericCollections<double> ).GetProperties();
 
-            var source = new GenericCollections<int>();
+            var source = new GenericCollections<int>( false );
 
             //initialize source
             for( int i = 0; i < 50; i++ )
@@ -287,7 +283,7 @@ namespace TypeMapper.Tests
 
             foreach( var sourceProp in sourceProperties )
             {
-                var target = new GenericCollections<double>();
+                var target = new GenericCollections<double>( false );
 
                 var typeMapper = new TypeMapper();
                 var typeMappingConfig = typeMapper.MappingConfiguration.MapTypes( source, target );
@@ -307,7 +303,7 @@ namespace TypeMapper.Tests
         {
             var typeProperties = typeof( GenericCollections<ComplexType> ).GetProperties();
 
-            var source = new GenericCollections<ComplexType>();
+            var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
             for( int i = 0; i < 50; i++ )
@@ -328,7 +324,7 @@ namespace TypeMapper.Tests
                     //cfg.GlobalConfiguration.IgnoreConventions = true;
                 } );
 
-                var target = new GenericCollections<ComplexType>();
+                var target = new GenericCollections<ComplexType>( false );
 
                 var typeMappingConfig = typeMapper.MappingConfiguration.MapTypes( source, target );
                 foreach( var targetProp in typeProperties )
@@ -344,7 +340,7 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void AssignNullCollection()
         {
-            var source = new GenericCollections<int>()
+            var source = new GenericCollections<int>( false )
             {
                 List = null,
                 HashSet = null,
@@ -355,7 +351,7 @@ namespace TypeMapper.Tests
                 ObservableCollection = null
             };
 
-            var target = new GenericCollections<int>();
+            var target = new GenericCollections<int>( true );
 
             var typeMapper = new TypeMapper();
             typeMapper.Map( source, target );
@@ -369,7 +365,7 @@ namespace TypeMapper.Tests
         {
             throw new NotImplementedException();
 
-            var source = new GenericCollections<ComplexType>();
+            var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
             for( int i = 0; i < 50; i++ )
@@ -383,7 +379,7 @@ namespace TypeMapper.Tests
                 source.ObservableCollection.Add( new ComplexType() { A = i } );
             }
 
-            var target = new GenericCollections<ComplexType>();
+            var target = new GenericCollections<ComplexType>( false );
 
             var typeMapper = new TypeMapper( cfg =>
             {
@@ -400,7 +396,7 @@ namespace TypeMapper.Tests
         [TestMethod]
         public void KeepAndClearCollection()
         {
-            var source = new GenericCollections<ComplexType>();
+            var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
             for( int i = 0; i < 50; i++ )
@@ -414,7 +410,7 @@ namespace TypeMapper.Tests
                 source.ObservableCollection.Add( new ComplexType() { A = i } );
             }
 
-            var target = new GenericCollections<ComplexType>();
+            var target = new GenericCollections<ComplexType>( false );
 
             var typeMapper = new TypeMapper( cfg =>
             {

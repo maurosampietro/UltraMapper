@@ -2,15 +2,12 @@
 TODO WITH MAX PRIORITY (AFTER ARCHITECTURAL REFACTORING):
 
 - Collections now work only by clear/adding. 
-  Before we could work with constructor(IEnumeable<T>), which is faster.
+  Before we could work with constructor(IEnumeable<T>), which is much faster.
   
-- Expression builder leads to StackOverflow if a class contains a member of the same type
-  of the declaring class anywhere down the tree.
-  
-
-
 
 TODO:
+
+- Collection mapping strategies 
 
 - Dynamic mapping
 
