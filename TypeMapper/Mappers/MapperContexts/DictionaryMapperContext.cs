@@ -14,9 +14,7 @@ namespace TypeMapper.Mappers
         public ParameterExpression TargetCollectionElementValue { get; private set; }
 
         public DictionaryMapperContext( Type source, Type target )
-            : base( source, target ) { Initialize(); }
-
-        private void Initialize()
+            : base( source, target )
         {
             var sourceCollectionElementKeyType = SourceCollectionElementType.GetGenericArguments()[ 0 ];
             var sourceCollectionElementValueType = SourceCollectionElementType.GetGenericArguments()[ 1 ];

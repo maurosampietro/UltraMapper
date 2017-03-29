@@ -9,13 +9,6 @@ using TypeMapper.Mappers.MapperContexts;
 
 namespace TypeMapper.Mappers
 {
-    /*NOTES:
-     * 
-     *- Collections that do not implement ICollection<T> must specify which method
-     *to use to 'Add' an item or must have a constructor that takes as param an IEnumerable.
-     * 
-     */
-
     public class CollectionMapper : ReferenceMapper
     {
         protected bool NeedsImmediateRecursion { get; set; }
@@ -34,77 +27,8 @@ namespace TypeMapper.Mappers
             return new CollectionMapperContext( source, target );
         }
 
-        protected virtual Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
-        {
-            //- Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
-            //  By the way Construcor(capacity) + AddRange has roughly the same performance of Construcor(IEnumerable<T>). 
-            //- Must also manage the case where SourceElementType and TargetElementType differ:
-            //  cannot use directly the target constructor: use add method or temp collection.
-
-            var clearMethod = GetTargetCollectionClearMethod( context );
-            if( clearMethod == null )
-            {
-                string msg = $@"Cannot map to type '{nameof( context.TargetInstance.Type )}' does not provide a clear method";
-                throw new Exception( msg );
-            }
-
-            var addMethod = GetTargetCollectionInsertionMethod( context );
-            if( addMethod == null )
-            {
-                string msg = $@"Cannot use existing instance on target object. '{nameof( context.TargetInstance.Type )}' does not provide an item-insertion method " +
-                    $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item-insertion method.";
-
-                throw new Exception( msg );
-            }
-
-            return Expression.Block
-            (
-                Expression.Call( context.TargetInstance, clearMethod ),
-                SimpleCollectionLoop( context, context.SourceInstance, context.TargetInstance )
-            );
-        }
-
-        protected virtual Expression GetComplexTypeInnerBody( CollectionMapperContext context )
-        {
-            /*
-             * By default try to retrieve the item-insertion method of the collection.
-             * The exact name of the method can be overridden so that, for example, 
-             * on Queue you search for 'Enqueue'. The default method name searched is 'Add'.
-             * 
-             * If the item-insertion method does not exist, try to retrieve a constructor
-             * which takes as its only parameter 'IEnumerable<T>'. If this constructor
-             * exists a temporary List<T> is created and then passed to the constructor.
-             * 
-             * If neither the item insertion method nor the above constructor exist
-             * an exception is thrown
-             */
-
-            var typeMapping = MapperConfiguration[ context.SourceCollectionElementType,
-                context.TargetCollectionElementType ];
-
-            //var targetInstanceAssignment = GetTargetInstanceAssignment( context );
-
-            var clearMethod = GetTargetCollectionClearMethod( context );
-            if( clearMethod == null )
-            {
-                string msg = $@"Cannot map to type '{nameof( context.TargetInstance.Type )}' does not provide a clear method";
-                throw new Exception( msg );
-            }
-
-            return Expression.Block
-            (
-                Expression.Call( context.TargetInstance, clearMethod ),
-                CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
-            );
-        }
-
-        private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
-        {
-            return context.TargetInstance.Type.GetMethod( "Clear" );
-        }
-
-        protected virtual Expression SimpleCollectionLoop( CollectionMapperContext context, ParameterExpression sourceCollection,
-            ParameterExpression targetCollection )
+        protected Expression SimpleCollectionLoop( CollectionMapperContext context,
+            ParameterExpression sourceCollection, ParameterExpression targetCollection )
         {
             var targetCollectionAddMethod = GetTargetCollectionInsertionMethod( context );
             if( targetCollectionAddMethod == null )
@@ -128,7 +52,7 @@ namespace TypeMapper.Mappers
                 context.SourceCollectionLoopingVar, loopBody );
         }
 
-        protected virtual Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
+        protected Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
             ParameterExpression sourceCollection, ParameterExpression targetCollection )
         {
             var targetCollectionAddMethod = GetTargetCollectionInsertionMethod( context );
@@ -207,10 +131,46 @@ namespace TypeMapper.Mappers
         {
             var context = contextObj as CollectionMapperContext;
 
-            if( context.IsTargetElementTypeBuiltIn )
-                return GetSimpleTypeInnerBody( context );
+            /* By default try to retrieve the item-insertion method of the collection.
+             * The exact name of the method can be overridden so that, for example, 
+             * on Queue you search for 'Enqueue'. The default method name searched is 'Add'.
+             * 
+             * If the item-insertion method does not exist, try to retrieve a constructor
+             * which takes as its only parameter 'IEnumerable<T>'. If this constructor
+             * exists a temporary List<T> is created and then passed to the constructor.
+             * 
+             * If neither the item insertion method nor the above constructor exist
+             * an exception is thrown
+             */
 
-            return GetComplexTypeInnerBody( context );
+            /* -Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
+             *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).
+             * 
+             * -Must also manage the case where SourceElementType and TargetElementType differ:
+             *  cannot use directly the target constructor: use add method or temp collection.
+             */
+
+            var clearMethod = GetTargetCollectionClearMethod( context );
+            if( clearMethod == null )
+            {
+                string msg = $@"Cannot map to type '{nameof( context.TargetInstance.Type )}' does not provide a clear method";
+                throw new Exception( msg );
+            }
+
+            if( context.IsTargetElementTypeBuiltIn )
+            {
+                return Expression.Block
+                (
+                    Expression.Call( context.TargetInstance, clearMethod ),
+                    SimpleCollectionLoop( context, context.SourceInstance, context.TargetInstance )
+                );
+            }
+
+            return Expression.Block
+            (
+                Expression.Call( context.TargetInstance, clearMethod ),
+                CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
+            );
         }
 
         protected override Expression ReturnListInitialization( ReferenceMapperContext contextObj )
@@ -230,7 +190,14 @@ namespace TypeMapper.Mappers
         /// <returns></returns>
         protected virtual MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
         {
-            return context.TargetInstance.Type.GetMethod( "Add" );
+            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
+            return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
+        }
+
+        private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
+        {         
+            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
+            return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Clear ) );
         }
 
         public override Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
@@ -242,8 +209,7 @@ namespace TypeMapper.Mappers
                 var constructorWithCapacity = context.TargetInstance.Type.GetConstructor( new Type[] { typeof( int ) } );
                 if( constructorWithCapacity != null )
                 {
-                    //ICollection<int> is used only because it is forbidden to use nameof with unbound generic types.
-                    //Any other type instead of int would work.
+                    //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
                     var getCountMethod = context.SourceInstance.Type.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
                     return Expression.Assign( context.TargetInstance, Expression.New( constructorWithCapacity,
                         Expression.Call( context.SourceInstance, getCountMethod ) ) );

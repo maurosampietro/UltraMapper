@@ -21,13 +21,13 @@ namespace TypeMapper.Mappers
         public ParameterExpression ReferenceTracker { get; protected set; }
 
         public ReferenceMapperContext( Type source, Type target )
-             : base( source, target ) { Initialize(); }
-
-        private void Initialize()
+             : base( source, target )
         {
             var returnType = typeof( List<ObjectPair> );
-            ReturnTypeConstructor = returnType.GetConstructors().First();
+
             ReturnObject = Expression.Variable( returnType, "returnObject" );
+            ReturnTypeConstructor = returnType.GetConstructors().First();
+
             AddObjectPairToReturnList = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
 
             ReferenceTracker = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );

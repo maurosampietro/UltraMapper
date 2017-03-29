@@ -23,8 +23,8 @@ namespace TypeMapper.Mappers
                     if( !source.ImplementsInterface( typeof( IConvertible ) ) )
                         return false;
 
-                    //reference types are ok but if mapping to the same 
-                    //type a referencemapper should be used
+                    //reference types are ok per se; but if mapping to the same 
+                    //type we should use a ReferenceMapper
                     if( source == target )
                         return false;
 

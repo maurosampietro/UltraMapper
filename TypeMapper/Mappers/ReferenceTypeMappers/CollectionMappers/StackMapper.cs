@@ -30,10 +30,12 @@ namespace TypeMapper.Mappers
             return context.TargetInstance.Type.GetMethod( "Push" );
         }
 
-        protected override Expression GetSimpleTypeInnerBody( CollectionMapperContext context )
+        protected override Expression GetInnerBody( ReferenceMapperContext contextObj )
         {
-            //1. Reverse the Stack by creating a new temporary Stack( sourceInstance )
-            //2. Read items from temporary stack and add items to the target instance
+            var context = contextObj as CollectionMapperContext;
+
+            //1. Reverse the Stack by creating a new temporary Stack passing source as input
+            //2. Read items from the newly created temporary stack and add items to the target
 
             var paramType = new Type[] { typeof( IEnumerable<> )
                 .MakeGenericType( context.SourceCollectionElementType ) };
@@ -44,28 +46,16 @@ namespace TypeMapper.Mappers
 
             var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
 
-            return Expression.Block
-            (
-                new[] { tempCollection },
+            if( context.IsTargetElementTypeBuiltIn )
+            {
+                return Expression.Block
+                (
+                    new[] { tempCollection },
 
-                Expression.Assign( tempCollection, newTempCollectionExp ),
-                SimpleCollectionLoop( context, tempCollection, context.TargetInstance )
-            );
-        }
-
-        protected override Expression GetComplexTypeInnerBody( CollectionMapperContext context )
-        {
-            //1. Reverse the Stack by creating a new temporary Stack( sourceInstance )
-            //2. Read items from temporary stack and add items to the target instance
-
-            var paramType = new Type[] { typeof( IEnumerable<> )
-                .MakeGenericType( context.SourceCollectionElementType ) };
-
-            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
-            var tempCollectionConstructorInfo = tempCollectionType.GetConstructor( paramType );
-            var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
-
-            var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
+                    Expression.Assign( tempCollection, newTempCollectionExp ),
+                    SimpleCollectionLoop( context, tempCollection, context.TargetInstance )
+                );
+            }
 
             return Expression.Block
             (

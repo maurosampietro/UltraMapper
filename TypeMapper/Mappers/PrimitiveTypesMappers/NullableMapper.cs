@@ -25,8 +25,7 @@ namespace TypeMapper.Mappers
                 var sourceUnderlyingType = Nullable.GetUnderlyingType( context.SourceInstance.Type );
                 var targetUnderlyingType = Nullable.GetUnderlyingType( context.TargetInstance.Type );
 
-                //Nullable<int> is used only because it is forbidden to use nameof with unbound generic types.
-                //Any other struct type instead of int would work.
+                //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
                 var nullableValueAccess = Expression.MakeMemberAccess( context.SourceInstance,
                     context.SourceInstance.Type.GetProperty( nameof( Nullable<int>.Value ) ) );
 
@@ -48,8 +47,7 @@ namespace TypeMapper.Mappers
 
             if( context.SourceInstance.Type.IsNullable() && !context.TargetInstance.Type.IsNullable() )
             {
-                //Nullable<int> is used only because it is forbidden to use nameof with unbound generic types.
-                //Any other struct type instead of int would work.
+                //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
                 var nullableValueAccess = Expression.MakeMemberAccess( context.SourceInstance,
                     context.SourceInstance.Type.GetProperty( nameof( Nullable<int>.Value ) ) );
 

@@ -30,69 +30,6 @@ namespace TypeMapper.Mappers
             }
         }
 
-        //public LambdaExpression GetTypeMappingExpression( TypeMapping typeMapping )
-        //{
-        //    var context = GetMapperContext( typeMapping ) as ReferenceMapperWithMemberMappingContext;
-
-        //    var memberMappingBody = new MemberMappingMapper().GetMemberMappings( typeMapping );
-
-        //    if( memberMappingBody.NodeType == ExpressionType.Default && memberMappingBody.Type == typeof( void ) )
-        //    {
-        //        return typeMapping.GlobalConfiguration.Configuration[ typeMapping.TypePair ]
-        //            .Mapper.GetMappingExpression( typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
-        //    }
-
-        //    var typeMappingLambdaExpression = typeMapping.Mapper.GetMappingExpression( typeMapping.TypePair.SourceType,
-        //        typeMapping.TypePair.TargetType );
-
-        //    ////per eliminare memberMappingBody...
-        //    //if( typeMappingLambdaExpression.Body.NodeType == ExpressionType.Default && typeMappingLambdaExpression.Body.Type == typeof( void ) )
-        //    //{
-        //    //    return typeMappingLambdaExpression;
-        //    //}
-
-        //    Expression typeMappingExpression = typeMappingLambdaExpression.Body
-        //        .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
-        //        .ReplaceParameter( context.ReferenceTrack, context.ReferenceTrack.Name )
-        //        .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
-        //        .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name );
-
-        //    if( typeMappingLambdaExpression.ReturnType == typeof( List<ObjectPair> ) )
-        //    {
-        //        var addRange = context.ReturnObject.Type.GetMethod( nameof( List<ObjectPair>.AddRange ) );
-
-        //        var objPairs = Expression.Parameter( typeof( List<ObjectPair> ), "objPairs" );
-        //        typeMappingExpression = Expression.Block
-        //        (
-        //            new[] { objPairs },
-
-        //            Expression.Assign( objPairs, typeMappingExpression ),
-        //            Expression.IfThen
-        //            (
-        //                Expression.NotEqual( objPairs, Expression.Constant( null, typeof( List<ObjectPair> ) ) ),
-        //                Expression.Call( context.ReturnObject, addRange, objPairs )
-        //            )
-        //       );
-        //    }
-
-        //    var body = Expression.Block
-        //    (
-        //        //new[] { context.ReturnObject },
-
-        //        //Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) ),
-        //        typeMappingExpression
-
-        //        //context.ReturnObject
-        //    );
-
-        //    var delegateType = typeof( Func<,,,> ).MakeGenericType(
-        //        context.ReferenceTrack.Type, context.SourceInstance.Type,
-        //        context.TargetInstance.Type, typeof( IEnumerable<ObjectPair> ) );
-
-        //    return Expression.Lambda( delegateType,
-        //        body, context.ReferenceTrack, context.SourceInstance, context.TargetInstance );
-        //}
-
         public Expression GetMemberMappings( TypeMapping typeMapping )
         {
             var context = new ReferenceMapperContext( typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
@@ -122,24 +59,6 @@ namespace TypeMapper.Mappers
 
             return GetSimpleMemberExpression( mapping, memberContext );
         }
-
-        //private LambdaExpression GetMemberMapping( MemberMapping mapping )
-        //{
-        //    var memberContext = new MemberMappingContext( mapping );
-
-        //    Expression mapperExpression = null;
-        //    if( mapping.Mapper is ReferenceMapper )
-        //        mapperExpression = GetComplexMemberExpression( mapping, memberContext );
-
-        //    mapperExpression = GetSimpleMemberExpression( mapping, memberContext );
-
-        //    var delegateType = typeof( Func<,,,> ).MakeGenericType(
-        //        memberContext.ReferenceTracker.Type, memberContext.SourceInstance.Type,
-        //        memberContext.TargetInstance.Type, typeof( IEnumerable<ObjectPair> ) );
-
-        //    return Expression.Lambda( delegateType, mapperExpression, memberContext.ReferenceTracker,
-        //       memberContext.SourceInstance, memberContext.TargetInstance );
-        //}
 
         private Expression GetComplexMemberExpression( MemberMapping mapping, MemberMappingContext memberContext )
         {

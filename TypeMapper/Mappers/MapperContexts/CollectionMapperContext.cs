@@ -18,9 +18,7 @@ namespace TypeMapper.Mappers
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
 
         public CollectionMapperContext( Type source, Type target )
-            : base( source, target ) { Initialize(); }
-
-        private void Initialize()
+            : base( source, target )
         {
             var returnType = typeof( List<ObjectPair> );
             ReturnTypeConstructor = returnType.GetConstructor( new[] { typeof( int ) } );

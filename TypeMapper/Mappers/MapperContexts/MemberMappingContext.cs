@@ -10,7 +10,6 @@ namespace TypeMapper.Mappers.MapperContexts
 {
     public class MemberMappingContext : ReferenceMapperContext
     {
-        //public ParameterExpression ReferenceTracker { get; protected set; }
         public ParameterExpression TrackedReference { get; protected set; }
 
         public ParameterExpression TargetMember { get; protected set; }
@@ -27,16 +26,9 @@ namespace TypeMapper.Mappers.MapperContexts
         public MemberMappingContext( MemberMapping mapping )
             : base( mapping.InstanceTypeMapping.TypePair.SourceType, mapping.InstanceTypeMapping.TypePair.TargetType )
         {
-            //var sourceInstanceType = mapping.InstanceTypeMapping.TypePair.SourceType;
-            //var targetInstanceType = mapping.InstanceTypeMapping.TypePair.TargetType;
-
             var sourceMemberType = mapping.SourceMember.MemberInfo.GetMemberType();
             var targetMemberType = mapping.TargetMember.MemberInfo.GetMemberType();
 
-            //SourceInstance = Expression.Parameter( sourceInstanceType, "sourceInstance" );
-            //TargetInstance = Expression.Parameter( targetInstanceType, "targetInstance" );
-
-            //ReferenceTracker = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
             TrackedReference = Expression.Parameter( targetMemberType, "trackedReference" );
 
             SourceMember = Expression.Variable( sourceMemberType, "sourceValue" );
