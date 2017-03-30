@@ -67,12 +67,12 @@ namespace TypeMapper.Mappers
             var itemMapping = MapperConfiguration[ sourceParam.Type,
                 targetParam.Type ].MappingExpression;
 
-            var itemMappingExp = itemMapping.Body.ReplaceParameter(
-                sourceParam, itemMapping.Parameters[ 0 ].Name );
-
             if( sourceParam.Type.IsBuiltInType( false ) && 
                 targetParam.Type.IsBuiltInType( false ) )
             {
+                var itemMappingExp = itemMapping.Body.ReplaceParameter(
+                    sourceParam, itemMapping.Parameters[ 0 ].Name );
+
                 return Expression.Assign( targetParam, itemMappingExp );
             }
 

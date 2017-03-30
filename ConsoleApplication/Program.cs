@@ -248,10 +248,6 @@ namespace ConsoleApplication
             sw4.Stop();
             Console.WriteLine( sw4.ElapsedMilliseconds );
 
-            //var exp = mapper._mappingConfiguration[ typeof( BaseTypes ), typeof( BaseTypesDto ) ].First().Expression;
-            //var func = (Func<ReferenceTracking, BaseTypes, BaseTypesDto, IEnumerable<ObjectPair>>)exp.Compile();
-            //func( new ReferenceTracking(), temp, temp2 );
-
             Stopwatch sw5 = new Stopwatch();
 
             var temp3 = new BaseTypes();

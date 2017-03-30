@@ -37,7 +37,8 @@ namespace TypeMapper.Tests
                 var otherObj = obj as ComplexType;
 
                 return this.A.Equals( otherObj?.A ) &&
-                    this.InnerType?.String == otherObj?.InnerType?.String;
+                    (Object.ReferenceEquals( this.InnerType, otherObj ) ||
+                    this.InnerType.Equals( otherObj.InnerType ));
             }
         }
 
@@ -48,9 +49,9 @@ namespace TypeMapper.Tests
 
         private class GenericCollections<T>
         {
-            public List<T> List { get; set; }
             public HashSet<T> HashSet { get; set; }
             public SortedSet<T> SortedSet { get; set; }
+            public List<T> List { get; set; }
             public Stack<T> Stack { get; set; }
             public Queue<T> Queue { get; set; }
             public LinkedList<T> LinkedList { get; set; }

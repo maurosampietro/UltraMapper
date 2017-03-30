@@ -20,8 +20,7 @@ namespace TypeMapper.Mappers
         public CollectionMapperContext( Type source, Type target )
             : base( source, target )
         {
-            var returnType = typeof( List<ObjectPair> );
-            ReturnTypeConstructor = returnType.GetConstructor( new[] { typeof( int ) } );
+            //ReturnTypeConstructor = ReturnObject.Type.GetConstructor( new[] { typeof( int ) } );
 
             SourceCollectionElementType = SourceInstance.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetInstance.Type.GetCollectionGenericType();

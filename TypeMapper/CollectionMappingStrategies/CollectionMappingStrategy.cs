@@ -67,10 +67,6 @@ namespace TypeMapper.CollectionMappingStrategies
         //    return Expression.Assign( context.TargetMember, targetCollectionConstructor );
         //}
 
-        //public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
-        //{
-        //    throw new NotImplementedException();
-        //}
         public Expression GetComplexTypeInnerBody( CollectionMapperContext context )
         {
             throw new NotImplementedException();

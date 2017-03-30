@@ -10,8 +10,10 @@ namespace TypeMapper.Mappers
 {
     public class ReferenceMapperContext : MapperContext
     {
+        public Type ReturnElementType { get; protected set; }
+
         public ConstructorInfo ReturnTypeConstructor { get; protected set; }
-        public MethodInfo AddObjectPairToReturnList { get; internal set; }
+        public MethodInfo AddObjectPairToReturnList { get; protected set; }
 
         public ParameterExpression ReturnObject { get; protected set; }
 
@@ -19,16 +21,20 @@ namespace TypeMapper.Mappers
         public ConstantExpression TargetNullValue { get; protected set; }
 
         public ParameterExpression ReferenceTracker { get; protected set; }
+        public ConstructorInfo ReturnElementConstructor { get; protected set; }
 
         public ReferenceMapperContext( Type source, Type target )
              : base( source, target )
         {
-            var returnType = typeof( List<ObjectPair> );
+            ReturnElementType = typeof( ObjectPair );
+            var returnType = typeof( List<> ).MakeGenericType( ReturnElementType );
 
             ReturnObject = Expression.Variable( returnType, "returnObject" );
             ReturnTypeConstructor = returnType.GetConstructors().First();
+            ReturnElementConstructor = ReturnElementType.GetConstructors()[ 0 ];
 
-            AddObjectPairToReturnList = returnType.GetMethod( nameof( List<ObjectPair>.Add ) );
+            var methodParams = new[] { ReturnElementType };
+            AddObjectPairToReturnList = returnType.GetMethod( nameof( List<ObjectPair>.Add ), methodParams );
 
             ReferenceTracker = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 

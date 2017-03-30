@@ -9,33 +9,8 @@ namespace TypeMapper
     /// </summary>
     public class ReferenceTracking
     {
-        private struct Key
-        {
-            object Object;
-            Type Type;
-
-            public Key( object obj, Type type )
-            {
-                Object = obj;
-                Type = type;
-            }
-
-            public override int GetHashCode()
-            {
-                return Type.GetHashCode();
-            }
-
-            public override bool Equals( object obj )
-            {
-                var key = (Key)obj;
-
-                return Type == key.Type &&
-                    Object.ReferenceEquals( key.Object, Object );
-            }
-        }
-
-        private Dictionary<Key, object> _mappings
-            = new Dictionary<Key, object>( 8 );
+        private Dictionary<int, object> _mappings
+            = new Dictionary<int, object>( 8 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {
@@ -66,10 +41,9 @@ namespace TypeMapper
             }
         }
 
-        private Key GetKey( object sourceInstance, Type targetType )
+        private int GetKey( object sourceInstance, Type targetType )
         {
-            return new Key( sourceInstance, targetType );
-            //return sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+            return sourceInstance.GetHashCode() ^ targetType.GetHashCode();
         }
     }
 }

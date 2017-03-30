@@ -109,13 +109,10 @@ namespace TypeMapper.Mappers
                                 //Add to the list of instance-pair to recurse on (only way to avoid StackOverflow if the mapping object contains anywhere 
                                 //down the tree a member of the same type of the mapping object itself)
                                 Expression.Call
-                                ( 
+                                (
                                     memberContext.ReturnObject, memberContext.AddObjectPairToReturnList,
-                                    Expression.New
-                                    (   
-                                        typeof( ObjectPair ).GetConstructors()[ 0 ],
-                                        memberContext.SourceMember, memberContext.TargetMember 
-                                    ) 
+                                    Expression.New( memberContext.ReturnElementConstructor, 
+                                        memberContext.SourceMember, memberContext.TargetMember )
                                 ),
 
                                 //cache reference

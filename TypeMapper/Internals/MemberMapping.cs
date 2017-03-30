@@ -18,28 +18,39 @@ namespace TypeMapper.Internals
         public readonly MappingTarget TargetMember;
 
         public MappingResolution MappingResolution { get; internal set; }
+
+        private IMapperExpressionBuilder _mapper;
         public IMapperExpressionBuilder Mapper
         {
             get
             {
-                var selectedMapper = InstanceTypeMapping.GlobalConfiguration
-                    .Mappers.FirstOrDefault( mapper => mapper.CanHandle( 
-                        this.MemberTypeMapping.TypePair.SourceType,
-                        this.MemberTypeMapping.TypePair.TargetType ) );
+                if( _mapper == null )
+                {
+                    _mapper = InstanceTypeMapping.GlobalConfiguration
+                        .Mappers.FirstOrDefault( mapper => mapper.CanHandle(
+                            this.MemberTypeMapping.TypePair.SourceType,
+                            this.MemberTypeMapping.TypePair.TargetType ) );
 
-                if( selectedMapper == null )
-                    throw new Exception( $"No object mapper can handle {this}" );
+                    if( _mapper == null )
+                        throw new Exception( $"No object mapper can handle {this}" );
+                }
 
-                return selectedMapper;
+                return _mapper;
             }
         }
 
+        private TypeMapping _memberTypeMapping;
         public TypeMapping MemberTypeMapping
         {
             get
             {
-                return InstanceTypeMapping.GlobalConfiguration.Configuration[
-                    SourceMember.MemberType, TargetMember.MemberType ];
+                if( _memberTypeMapping == null )
+                {
+                    _memberTypeMapping = InstanceTypeMapping.GlobalConfiguration.Configuration[
+                        SourceMember.MemberType, TargetMember.MemberType ];
+                }
+
+                return _memberTypeMapping;
             }
         }
 
@@ -112,7 +123,7 @@ namespace TypeMapper.Internals
                 if( _mappingExpression != null ) return _mappingExpression;
 
                 return _mappingExpression = this.Mapper.GetMappingExpression(
-                    this.MemberTypeMapping.TypePair.SourceType, 
+                    this.MemberTypeMapping.TypePair.SourceType,
                     this.MemberTypeMapping.TypePair.TargetType );
             }
         }

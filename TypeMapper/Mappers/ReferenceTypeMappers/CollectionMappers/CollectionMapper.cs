@@ -14,7 +14,7 @@ namespace TypeMapper.Mappers
         protected bool NeedsImmediateRecursion { get; set; }
 
         public CollectionMapper( MapperConfiguration configuration )
-            : base( configuration ) { this.NeedsImmediateRecursion = false; }
+            : base( configuration ) { this.NeedsImmediateRecursion = true; }
 
         public override bool CanHandle( Type source, Type target )
         {
@@ -85,33 +85,41 @@ namespace TypeMapper.Mappers
         protected BlockExpression LookUpBlock( LambdaExpression itemMapping, CollectionMapperContext context,
             ParameterExpression referenceTracker, ParameterExpression sourceParam, ParameterExpression targetParam )
         {
-            Expression cacheLookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+            Expression itemLookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method, referenceTracker, Expression.Convert( sourceParam, typeof( object ) ),
                     Expression.Constant( targetParam.Type ) );
 
-            Expression cacheInsertCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+            Expression itemCacheCall = Expression.Call( Expression.Constant( addToTracker.Target ),
                 addToTracker.Method, referenceTracker, Expression.Convert( sourceParam, typeof( object ) ),
                 Expression.Constant( targetParam.Type ), Expression.Convert( targetParam, typeof( object ) ) );
 
-            Expression cacheItemAndRecurseImmediately = Expression.Block
-            (
-                cacheInsertCall,
-
-                itemMapping.Body
+            var itemMappingBodyParts = ((BlockExpression)itemMapping.Body
+                    .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
                     .ReplaceParameter( referenceTracker, itemMapping.Parameters[ 0 ].Name )
                     .ReplaceParameter( sourceParam, itemMapping.Parameters[ 1 ].Name )
-                    .ReplaceParameter( targetParam, itemMapping.Parameters[ 2 ].Name )
+                    .ReplaceParameter( targetParam, itemMapping.Parameters[ 2 ].Name )).Expressions;
+
+            Expression cacheItemAndRecurseImmediately = Expression.Block
+            (
+                itemCacheCall,
+
+                Expression.Block
+                (
+                    //remove returnObject declaration of the subexpression in order to merge items into just one list
+                    itemMappingBodyParts.Skip( 1 ).Take( 
+                        itemMappingBodyParts.Count - 2 ).ToArray()
+                )
             );
 
             Expression deferItemRecursion = Expression.Call
             (
                 context.ReturnObject, context.AddObjectPairToReturnList,
-                Expression.New( typeof( ObjectPair ).GetConstructors()[ 0 ], sourceParam, targetParam )
+                Expression.New( context.ReturnElementConstructor, sourceParam, targetParam )
             );
 
             return Expression.Block
             (
-                Expression.Assign( targetParam, Expression.Convert( cacheLookupCall, targetParam.Type ) ),
+                Expression.Assign( targetParam, Expression.Convert( itemLookupCall, targetParam.Type ) ),
 
                 Expression.IfThen
                 (
@@ -176,23 +184,24 @@ namespace TypeMapper.Mappers
         {
             var context = contextObj as CollectionMapperContext;
 
-            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
+            //var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
 
-            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
-                Expression.Call( context.SourceInstance, getCountMethod ) ) );
+            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor ) );
+            //,                Expression.Call( context.SourceInstance, getCountMethod ) ) );
         }
 
         /// <summary>
-        /// Return the method that allows to add items to the target collection.
+        /// Returns the method that allows to insert items in the target collection.
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
         protected virtual MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
+        /// <summary>
+        /// Returns the method that allows to clear the target collection.
+        /// </summary>
         private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
