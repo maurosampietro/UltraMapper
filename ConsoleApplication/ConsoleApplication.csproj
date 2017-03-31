@@ -43,6 +43,10 @@
       <HintPath>..\packages\AutoMapper.5.2.0\lib\net45\AutoMapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="ExpressMapper, Version=1.9.1.0, Culture=neutral, PublicKeyToken=ac363faa09311ba0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Expressmapper.1.9.1\lib\net46\ExpressMapper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Hyperion, Version=0.9.2.2, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Hyperion.0.9.2\lib\net45\Hyperion.dll</HintPath>
       <Private>True</Private>
@@ -75,9 +79,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TypeMapper\TypeMapper.csproj">
+    <ProjectReference Include="..\UltraMapper\UltraMapper.csproj">
       <Project>{34e9592b-27f8-45bc-be54-f90bd125b4e2}</Project>
-      <Name>TypeMapper</Name>
+      <Name>UltraMapper</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

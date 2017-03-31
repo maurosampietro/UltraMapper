@@ -9,11 +9,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeMapper;
-using TypeMapper.Configuration;
-using TypeMapper.Internals;
-using TypeMapper.Mappers;
-using TypeMapper.MappingConventions;
+using UltraMapper;
+using UltraMapper.Configuration;
+using UltraMapper.Internals;
+using UltraMapper.Mappers;
+using UltraMapper.MappingConventions;
 
 namespace ConsoleApplication
 {
@@ -58,7 +58,7 @@ namespace ConsoleApplication
 
             public BaseTypes()
             {
-                //this.SelfReference = this;
+                this.SelfReference = this;
                 this.InnerType = new InnerType() { A = "vara", B = "suka" };
 
                 this.ListOfInts = new List<int>( Enumerable.Range( 1, (int)Math.Pow( 10, 2 ) ) );
@@ -230,7 +230,7 @@ namespace ConsoleApplication
 
             int iterations = (int)Math.Pow( 10, 6 );
 
-            var mapper = new TypeMapper<CustomMappingConvention>( cfg =>
+            var mapper = new UltraMapper<CustomMappingConvention>( cfg =>
             {
                 //cfg.GlobalConfiguration.MappingConvention.PropertyMatchingRules
                 //    //.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true )
@@ -262,7 +262,8 @@ namespace ConsoleApplication
             sw5.Start();
             for( int i = 0; i < iterations; i++ )
             {
-                AutoMapper.Mapper.Map( temp3, temp4 );
+                ExpressMapper.Mapper.Map( temp3, temp4 );
+                //AutoMapper.Mapper.Map( temp3, temp4 );
             }
             sw5.Stop();
             Console.WriteLine( sw5.ElapsedMilliseconds );
