@@ -239,30 +239,31 @@ namespace ConsoleApplication
                 //    .Respect( ( /*rule1,*/ rule2, rule3 ) => /*rule1 & */(rule2 | rule3) );
             } );
 
-            Stopwatch sw4 = new Stopwatch();
-            sw4.Start();
-            for( int i = 0; i < iterations; i++ )
-            {
-                mapper.Map( temp, temp2 );
-            }
-            sw4.Stop();
-            Console.WriteLine( sw4.ElapsedMilliseconds );
+            //Stopwatch sw4 = new Stopwatch();
+            //sw4.Start();
+            //for( int i = 0; i < iterations; i++ )
+            //{
+            //    mapper.Map( temp, temp2 );
+            //}
+            //sw4.Stop();
+            //Console.WriteLine( sw4.ElapsedMilliseconds );
 
             Stopwatch sw5 = new Stopwatch();
 
             var temp3 = new BaseTypes();
             var temp4 = new BaseTypesDto();
 
-            AutoMapper.Mapper.Initialize( cfg =>
-            {
-                cfg.CreateMissingTypeMaps = true;
-                cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
-            } );
-
+            //AutoMapper.Mapper.Initialize( cfg =>
+            //{
+            //    cfg.CreateMissingTypeMaps = true;
+            //    cfg.CreateMap<BaseTypes, BaseTypesDto>().PreserveReferences();
+            //} );
+                        
             sw5.Start();
             for( int i = 0; i < iterations; i++ )
             {
-                ExpressMapper.Mapper.Map( temp3, temp4 );
+                temp4 = Omu.ValueInjecter.Mapper.Map<BaseTypesDto>( temp3 );
+                //ExpressMapper.Mapper.Map( temp3, temp4 );
                 //AutoMapper.Mapper.Map( temp3, temp4 );
             }
             sw5.Stop();

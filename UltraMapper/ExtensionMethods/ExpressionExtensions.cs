@@ -93,82 +93,6 @@ namespace UltraMapper
             return stack;
         }
 
-        public static Expression<Func<object, object>> EncapsulateInGenericFunc<T>( this Expression expression )
-        {
-            return expression.EncapsulateInGenericFunc( typeof( T ) );
-        }
-
-        public static Expression<Func<object, object>> EncapsulateInGenericFunc( this Expression expression, Type convertType )
-        {
-            // o => Convert( Invoke( expression, Convert( o ) ) )
-
-            var lambdaExpression = expression as LambdaExpression;
-
-            var parameter = Expression.Parameter( typeof( object ), "o" );
-            var convert = Expression.Convert( parameter, convertType );
-            var encapsulatedExpression = Expression.Convert(
-                Expression.Invoke( lambdaExpression, convert ), typeof( object ) );
-
-            return Expression.Lambda<Func<object, object>>( encapsulatedExpression, parameter );
-        }
-
-        public static Expression<Func<T, V>> ToExpression<T, V>( this PropertyInfo property )
-        {
-            var parameter = Expression.Parameter( typeof( T ), "item" );
-            var propertyBody = Expression.Property( parameter, property );
-            var convert = Expression.Convert( propertyBody, typeof( V ) );
-
-            return Expression.Lambda<Func<T, V>>( convert, parameter );
-        }
-
-        public static Expression<Func<T, IComparable>> ToExpression<T>( this PropertyInfo property )
-        {
-            var parameter = Expression.Parameter( typeof( T ), "item" );
-            var propertyBody = Expression.Property( parameter, property );
-
-            ////if not a valuetype check if null
-            //if( !property.PropertyType.IsValueType )
-            //{
-            //    var nullTest = Expression.Equal( propertyBody,
-            //        Expression.Constant( null, property.PropertyType ) );
-
-            //    var isNullExp = Expression.Constant( String.Empty );
-            //    //var notNullExp = Expression.Call( propertyBody, "ToString", null );
-
-            //    //var cast = Expression.Condition( nullTest, isNullExp, notNullExp );
-            //    var exp = Expression.Lambda<Func<T, IComparable>>( propertyBody, parameter );
-
-            //    return exp;
-            //}
-
-            var convert = Expression.Convert( propertyBody, typeof( IComparable ) );
-            return Expression.Lambda<Func<T, IComparable>>( convert, parameter );
-        }
-
-        public static Expression<Func<T, ReturnType>> ConvertReturnType<T, V, ReturnType>( this Expression<Func<T, V>> expression )
-        {
-            var convert = Expression.Convert( expression.Body, typeof( ReturnType ) );
-            return Expression.Lambda<Func<T, ReturnType>>( convert, expression.Parameters );
-        }
-
-        //public static T GetDefaultValue<T>()
-        //{
-        //    var e = Expression.Lambda<Func<T>>( Expression.Default( typeof( T ) ) );
-
-        //    // Compile and return the value.
-        //    return e.Compile()();
-        //}
-
-        public static object GetDefaultValueViaExpressionCompilation( this Type type )
-        {
-            if( type == null ) throw new ArgumentNullException( nameof( type ) );
-
-            var expression = Expression.Lambda<Func<object>>(
-                Expression.Convert( Expression.Default( type ), typeof( object ) ) );
-
-            return expression.Compile()();
-        }
-
         public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter, string name )
         {
             return new ExpressionParameterReplacer( parameter, name ).Visit( expression );
@@ -177,8 +101,7 @@ namespace UltraMapper
 
     internal static class ExpressionLoops
     {
-        public static Expression ForEach( Expression collection,
-            ParameterExpression loopVar, Expression loopContent )
+        public static Expression ForEach( Expression collection, ParameterExpression loopVar, Expression loopContent )
         {
             var elementType = loopVar.Type;
             var enumerableType = typeof( IEnumerable<> ).MakeGenericType( elementType );
@@ -221,6 +144,146 @@ namespace UltraMapper
             );
 
             return loop;
+        }
+    }
+
+    internal static class GetterSetterExpressionBuilder
+    {
+        public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
+        {
+            if( memberInfo is FieldInfo )
+                return GetGetterLambdaExpression( (FieldInfo)memberInfo );
+
+            if( memberInfo is PropertyInfo )
+                return GetGetterLambdaExpression( (PropertyInfo)memberInfo );
+
+            if( memberInfo is MethodInfo )
+                return GetGetterLambdaExpression( (MethodInfo)memberInfo );
+
+            throw new ArgumentException( $"'{memberInfo}' is not supported." );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
+        {
+            if( memberInfo is Type )
+            {
+                var type = (Type)memberInfo;
+                // (target, value) => target.field;
+
+                var targetInstance = Expression.Parameter( type, "target" );
+                var value = Expression.Parameter( type, "value" );
+
+                var body = Expression.Assign( targetInstance, value );
+
+                var delegateType = typeof( Action<,> ).MakeGenericType( type, type );
+
+                return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+            }
+
+            if( memberInfo is FieldInfo )
+                return GetSetterLambdaExpression( (FieldInfo)memberInfo );
+
+            if( memberInfo is PropertyInfo )
+                return GetSetterLambdaExpression( (PropertyInfo)memberInfo );
+
+            if( memberInfo is MethodInfo )
+                return GetSetterLambdaExpression( (MethodInfo)memberInfo );
+
+            throw new ArgumentException( $"'{memberInfo}' is not supported." );
+        }
+
+        public static LambdaExpression GetGetterLambdaExpression( this FieldInfo fieldInfo )
+        {
+            // (target) => target.field;
+
+            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
+            var body = Expression.Field( targetInstance, fieldInfo );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType(
+                fieldInfo.ReflectedType, fieldInfo.FieldType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this FieldInfo fieldInfo )
+        {
+            // (target, value) => target.field = value;
+
+            var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
+            var value = Expression.Parameter( fieldInfo.FieldType, "value" );
+
+            var fieldExp = Expression.Field( targetInstance, fieldInfo );
+            var body = Expression.Assign( fieldExp, value );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+                fieldInfo.ReflectedType, fieldInfo.FieldType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+        }
+
+        public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
+        {
+            // (target) => target.get_Property()
+            var targetType = propertyInfo.ReflectedType;
+            var methodInfo = propertyInfo.GetGetMethod();
+
+            var targetInstance = Expression.Parameter( targetType, "target" );
+            var body = Expression.Call( targetInstance, methodInfo );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType(
+                propertyInfo.ReflectedType, propertyInfo.PropertyType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this PropertyInfo propertyInfo )
+        {
+            // (target, value) => target.set_Property( value )
+            var methodInfo = propertyInfo.GetSetMethod();
+            if( methodInfo == null )
+                throw new ArgumentException( $"'{propertyInfo}' does not provide a setter method." );
+
+            var targetInstance = Expression.Parameter( propertyInfo.ReflectedType, "target" );
+            var value = Expression.Parameter( propertyInfo.PropertyType, "value" );
+
+            var body = Expression.Call( targetInstance, methodInfo, value );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+                propertyInfo.ReflectedType, propertyInfo.PropertyType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+        }
+
+        public static LambdaExpression GetGetterLambdaExpression( this MethodInfo methodInfo )
+        {
+            if( methodInfo.GetParameters().Length > 0 )
+                throw new NotImplementedException( "Only parameterless methods are currently supported" );
+
+            var targetType = methodInfo.ReflectedType;
+
+            var targetInstance = Expression.Parameter( targetType, "target" );
+            var body = Expression.Call( targetInstance, methodInfo );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType(
+                methodInfo.ReflectedType, methodInfo.ReturnType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this MethodInfo methodInfo )
+        {
+            if( methodInfo.GetParameters().Length != 1 )
+                throw new NotImplementedException( $"Only methods taking as input exactly one parameter are currently supported." );
+
+            var targetInstance = Expression.Parameter( methodInfo.ReflectedType, "target" );
+            var value = Expression.Parameter( methodInfo.GetParameters()[ 0 ].ParameterType, "value" );
+
+            var body = Expression.Call( targetInstance, methodInfo, value );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+                methodInfo.ReflectedType, methodInfo.GetParameters()[ 0 ].ParameterType );
+
+            return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
     }
 }

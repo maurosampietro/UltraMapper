@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UltraMapper
 {
     /// <summary>
-    /// This class helps tracking and retrieving each reference to the mapped type instance.
+    /// This class helps tracking and retrieving each source reference to its mapped target instance.
     /// A reference value type can be mapped to many different types (one instance for each target type).
     /// </summary>
     public class ReferenceTracking

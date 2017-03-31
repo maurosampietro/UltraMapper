@@ -130,15 +130,15 @@ namespace UltraMapper.Configuration
         }
     }
 
-    public class TypeMappingConfigurator<TSource, TTarget> : MemberConfigurator
+    public class MemberConfigurator<TSource, TTarget> : MemberConfigurator
     {
-        public TypeMappingConfigurator( GlobalConfiguration globalConfiguration )
+        public MemberConfigurator( GlobalConfiguration globalConfiguration )
             : base( typeof( TSource ), typeof( TTarget ), globalConfiguration ) { }
 
-        public TypeMappingConfigurator( TypeMapping typeMapping, GlobalConfiguration globalConfiguration )
+        public MemberConfigurator( TypeMapping typeMapping, GlobalConfiguration globalConfiguration )
             : base( typeMapping, globalConfiguration ) { }
 
-        public TypeMappingConfigurator<TSource, TTarget> IgnoreSourceMember<TSourceMember>(
+        public MemberConfigurator<TSource, TTarget> IgnoreSourceMember<TSourceMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
             params Expression<Func<TSource, TSourceMember>>[] sourceMemberSelectors )
         {
@@ -156,7 +156,7 @@ namespace UltraMapper.Configuration
             return this;
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> IgnoreTargetMember<TTargetMember>(
+        public MemberConfigurator<TSource, TTarget> IgnoreTargetMember<TTargetMember>(
             Expression<Func<TSource, TTargetMember>> targetMemberSelector,
             params Expression<Func<TSource, TTargetMember>>[] targetMemberSelectors )
         {
@@ -177,7 +177,7 @@ namespace UltraMapper.Configuration
             return this;
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
             Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
             Expression<Action<TTarget, TSourceMember>> targetMemberSetter )
@@ -188,7 +188,7 @@ namespace UltraMapper.Configuration
             return this;
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Expression<Func<TSourceMember, TTargetMember>> converter = null )
@@ -211,7 +211,7 @@ namespace UltraMapper.Configuration
         /// <param name="targetSelector"></param>
         /// <param name="elementEqualityComparer"></param>
         /// <returns></returns>
-        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
            Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
            Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
            Expression<Func<TSourceMember, TTargetMember, bool>> elementEqualityComparer )
@@ -223,7 +223,7 @@ namespace UltraMapper.Configuration
             return this;
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
          Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
          Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
          Action<IMappingOptions> options )

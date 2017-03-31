@@ -48,7 +48,6 @@
     <Compile Include="ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="ExtensionMethods\MemberInfoExtensions.cs" />
-    <Compile Include="FastInvoke.cs" />
     <Compile Include="Internals\ExpressionParameterReplacer.cs" />
     <Compile Include="Internals\ObjectPair.cs" />
     <Compile Include="Internals\MappingMemberBase.cs" />

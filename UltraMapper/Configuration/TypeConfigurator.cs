@@ -44,12 +44,12 @@ namespace UltraMapper
             };
         }
 
-        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<TypeMapping> typeConfig )
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<TypeMapping> typeConfig )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
             typeConfig?.Invoke( typeMapping );
 
-            return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+            return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
         }
 
         /// <summary>
@@ -60,13 +60,13 @@ namespace UltraMapper
         /// <typeparam name="TTarget">Target type</typeparam>
         /// <param name="targetConstructor">The conversion mechanism to be used to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
         /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
             Expression<Func<TSource, TTarget>> converter )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
             typeMapping.CustomConverter = converter;
 
-            return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+            return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
         }
 
         /// <summary>
@@ -77,13 +77,13 @@ namespace UltraMapper
         /// <typeparam name="TTarget">Target type</typeparam>
         /// <param name="targetConstructor">The expression providing an instance of <typeparamref name="TTarget"/>.</param>
         /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
             Expression<Func<TTarget>> targetConstructor = null )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
             typeMapping.CustomTargetConstructor = targetConstructor;
 
-            return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+            return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
         }
 
         /// <summary>
@@ -95,10 +95,10 @@ namespace UltraMapper
         /// <param name="source">Source instance</param>
         /// <param name="target">Target instance</param>
         /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public TypeMappingConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( TSource source, TTarget target )
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( TSource source, TTarget target )
         {
             var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
-            return new TypeMappingConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+            return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
         }
 
         public TypeMapping this[ Type source, Type target ]
