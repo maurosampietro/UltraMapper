@@ -8,7 +8,7 @@ namespace UltraMapper.Mappers
     {
         private static Type _convertType = typeof( Convert );
 
-        public ConvertMapper( MapperConfiguration configuration )
+        public ConvertMapper( TypeConfigurator configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )

@@ -9,11 +9,13 @@ namespace UltraMapper.Mappers
 {
     public class ReferenceMapper : IReferenceMapperExpressionBuilder
     {
-        public readonly MapperConfiguration MapperConfiguration;
+        public readonly UltraMapper _mapper;
+        public readonly TypeConfigurator MapperConfiguration;
 
-        public ReferenceMapper( MapperConfiguration configuration )
+        public ReferenceMapper( TypeConfigurator configuration )
         {
             this.MapperConfiguration = configuration;
+            _mapper = new UltraMapper( configuration );
         }
 
 #if DEBUG
@@ -46,7 +48,7 @@ namespace UltraMapper.Mappers
             bool builtInTypes = source.IsBuiltInType( false )
                 && target.IsBuiltInType( false );
 
-            return !valueTypes && !builtInTypes && !source.IsEnumerable();
+            return !valueTypes && !builtInTypes;
         }
 
         public LambdaExpression GetMappingExpression( Type source, Type target )
@@ -54,7 +56,7 @@ namespace UltraMapper.Mappers
             var context = this.GetMapperContext( source, target ) as ReferenceMapperContext;
 
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
-            var memberMappings = new MemberMappingMapper().GetMemberMappings( typeMapping )
+            var memberMappings = this.GetMemberMappings( typeMapping )
                 .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
                 .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                 .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
@@ -66,7 +68,7 @@ namespace UltraMapper.Mappers
 
                 this.ReturnListInitialization( context ),
 
-                this.GetExpressionBody( context ),                
+                this.GetExpressionBody( context ),
                 memberMappings,
 
                 context.ReturnObject
@@ -114,5 +116,153 @@ namespace UltraMapper.Mappers
                 )
             );
         }
+
+        #region MemberMapping
+        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+
+        private class MemberMappingComparer : IComparer<MemberMapping>
+        {
+            public int Compare( MemberMapping x, MemberMapping y )
+            {
+                var xGetter = x.TargetMember.ValueGetter.ToString();
+                var yGetter = y.TargetMember.ValueGetter.ToString();
+
+                int xCount = xGetter.Split( '.' ).Count();
+                int yCount = yGetter.Split( '.' ).Count();
+
+                if( xCount > yCount ) return 1;
+                if( xCount < yCount ) return -1;
+
+                return 0;
+            }
+        }
+
+        private Expression GetMemberMappings( TypeMapping typeMapping )
+        {
+            var context = new ReferenceMapperContext( typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+
+            //since nested selectors are supported, we sort membermappings to grant
+            //that we assign outer objects first
+            var memberMappings = typeMapping.MemberMappings.Values.ToList();
+            if( typeMapping.IgnoreMemberMappingResolvedByConvention )
+            {
+                memberMappings = memberMappings.Where( mapping =>
+                    mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
+            }
+
+            var memberMappingExps = memberMappings.OrderBy( mm => mm, _memberComparer )
+                .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
+                .Select( mapping =>
+                {
+                    if( mapping.Mapper is ReferenceMapper )
+                        return GetComplexMemberExpression( mapping );
+
+                    return GetSimpleMemberExpression( mapping );
+                } ).ToList();
+
+            return !memberMappingExps.Any() ? (Expression)Expression.Empty() : Expression.Block( memberMappingExps );
+        }
+
+        private Expression GetComplexMemberExpression( MemberMapping mapping )
+        {
+            /* SOURCE (NULL) -> TARGET = NULL
+             * 
+             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
+             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
+             * 
+             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
+             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
+             */
+            var memberContext = new MemberMappingContext( mapping );
+
+            var mapMethod = memberContext.RecursiveMapMethodInfo.MakeGenericMethod(
+                memberContext.SourceMember.Type, memberContext.TargetMember.Type );
+
+            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
+                ReferenceMapper.refTrackingLookup.Method, memberContext.ReferenceTracker,
+                memberContext.SourceMember, Expression.Constant( memberContext.TargetMember.Type ) );
+
+            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
+                ReferenceMapper.addToTracker.Method, memberContext.ReferenceTracker, memberContext.SourceMember,
+                Expression.Constant( memberContext.TargetMember.Type ), memberContext.TargetMember );
+
+            return Expression.Block
+            (
+                new[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember },
+
+                Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
+
+                Expression.IfThenElse
+                (
+                     Expression.Equal( memberContext.SourceMember, memberContext.SourceMemberNullValue ),
+
+                     Expression.Assign( memberContext.TargetMember, memberContext.TargetMemberNullValue ),
+
+                     Expression.Block
+                     (
+                        //object lookup. An intermediate variable (TrackedReference) is needed in order to deal with ReferenceMappingStrategies
+                        Expression.Assign( memberContext.TrackedReference,
+                            Expression.Convert( lookupCall, memberContext.TargetMember.Type ) ),
+
+                        Expression.IfThenElse
+                        (
+                            Expression.NotEqual( memberContext.TrackedReference, memberContext.TargetMemberNullValue ),
+                            Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
+                            Expression.Block
+                            (
+                                new[] { memberContext.Mapper },
+
+                                ((IReferenceMapperExpressionBuilder)mapping.Mapper)
+                                    .GetTargetInstanceAssignment( memberContext, mapping ),
+
+                                Expression.Assign( memberContext.Mapper, Expression.Constant( _mapper ) ),
+                                Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
+                                    memberContext.TargetMember, memberContext.ReferenceTracker ),
+
+                                ////Add to the list of instance-pair to recurse on (only way to avoid StackOverflow if the mapping object contains anywhere 
+                                ////down the tree a member of the same type of the mapping object itself)
+                                //Expression.Call
+                                //(
+                                //    memberContext.ReturnObject, memberContext.AddObjectPairToReturnList,
+                                //    Expression.New( memberContext.ReturnElementConstructor,
+                                //        memberContext.SourceMember, memberContext.TargetMember )
+                                //),
+
+                                //cache reference
+                                addToLookupCall
+                            )
+                        )
+                    )
+                ),
+
+                memberContext.TargetMemberValueSetter
+            );
+        }
+
+        private Expression GetSimpleMemberExpression( MemberMapping mapping )
+        {
+            var memberContext = new MemberMappingContext( mapping );
+
+            ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "returnValue" );
+
+            var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+            var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+
+            return Expression.Block
+            (
+                new[] { memberContext.SourceMember, value },
+
+                Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
+
+                Expression.Assign( value, mapping.MappingExpression.Body
+                    .ReplaceParameter( memberContext.SourceMember,
+                        mapping.MappingExpression.Parameters[ 0 ].Name ) ),
+
+                mapping.TargetMember.ValueSetter.Body
+                    .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
+                    .ReplaceParameter( value, targetSetterMemberParamName )
+            );
+        }
+        #endregion
     }
 }

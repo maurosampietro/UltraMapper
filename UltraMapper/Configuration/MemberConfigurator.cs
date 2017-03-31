@@ -10,7 +10,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Configuration
 {
-    public class TypeMappingConfigurator
+    public class MemberConfigurator
     {
         //Each source and target member is instantiated only once per configuration
         //so we can handle their options/configuration override correctly.
@@ -23,7 +23,7 @@ namespace UltraMapper.Configuration
         protected readonly TypeMapping _typeMapping;
         protected readonly GlobalConfiguration _globalConfiguration;
 
-        public TypeMappingConfigurator( TypeMapping typeMapping,
+        public MemberConfigurator( TypeMapping typeMapping,
             GlobalConfiguration globalConfiguration )
         {
             _typeMapping = typeMapping;
@@ -32,13 +32,13 @@ namespace UltraMapper.Configuration
             this.MapByConvention( typeMapping );
         }
 
-        public TypeMappingConfigurator( TypePair typePair, GlobalConfiguration globalConfiguration )
+        public MemberConfigurator( TypePair typePair, GlobalConfiguration globalConfiguration )
             : this( new TypeMapping( globalConfiguration, typePair ), globalConfiguration ) { }
 
-        public TypeMappingConfigurator( Type sourceType, Type targetType, GlobalConfiguration globalConfiguration )
+        public MemberConfigurator( Type sourceType, Type targetType, GlobalConfiguration globalConfiguration )
             : this( new TypeMapping( globalConfiguration, new TypePair( sourceType, targetType ) ), globalConfiguration ) { }
 
-        public TypeMappingConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
+        public MemberConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
         {
             MemberMapping mapping = MapMemberInternal( sourceMember, targetMember );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
@@ -130,7 +130,7 @@ namespace UltraMapper.Configuration
         }
     }
 
-    public class TypeMappingConfigurator<TSource, TTarget> : TypeMappingConfigurator
+    public class TypeMappingConfigurator<TSource, TTarget> : MemberConfigurator
     {
         public TypeMappingConfigurator( GlobalConfiguration globalConfiguration )
             : base( typeof( TSource ), typeof( TTarget ), globalConfiguration ) { }

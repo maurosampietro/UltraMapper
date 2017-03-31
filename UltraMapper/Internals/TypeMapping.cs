@@ -77,6 +77,9 @@ namespace UltraMapper.Internals
                 {
                     _mapper = GlobalConfiguration.Mappers.FirstOrDefault(
                         mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
+
+                    if( _mapper == null )
+                        throw new Exception( $"No object mapper can handle {this}" );
                 }
 
                 return _mapper;

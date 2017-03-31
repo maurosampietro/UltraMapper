@@ -44,7 +44,7 @@
     <Compile Include="CollectionMappingStrategies\CollectionMappingStrategy.cs" />
     <Compile Include="CollectionMappingStrategies\ICollectionMappingStrategy.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
-    <Compile Include="Configuration\TypeMappingConfigurator.cs" />
+    <Compile Include="Configuration\MemberConfigurator.cs" />
     <Compile Include="ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="ExtensionMethods\MemberInfoExtensions.cs" />
@@ -56,7 +56,6 @@
     <Compile Include="Internals\MappingSource.cs" />
     <Compile Include="Internals\MappingTarget.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
-    <Compile Include="Mappers\ReferenceTypeMappers\MemberMapper.cs" />
     <Compile Include="Mappers\PrimitiveTypesMappers\PrimitiveMapperBase.cs" />
     <Compile Include="Mappers\MapperContexts\DictionaryMapperContext.cs" />
     <Compile Include="Mappers\MapperContexts\MapperContext.cs" />
@@ -87,7 +86,7 @@
     <Compile Include="MappingConventions\PropertyMatchingRules\SuffixMatching.cs" />
     <Compile Include="MappingConventions\PropertyMatchingRules\TypeMatchingRule.cs" />
     <Compile Include="MappingConventions\RuleChaining.cs" />
-    <Compile Include="Configuration\MapperConfigurator.cs" />
+    <Compile Include="Configuration\TypeConfigurator.cs" />
     <Compile Include="ReferenceTracking\ReferenceTracking.cs" />
     <Compile Include="ExtensionMethods\TypeExtensions.cs" />
     <Compile Include="UltraMapper.cs" />

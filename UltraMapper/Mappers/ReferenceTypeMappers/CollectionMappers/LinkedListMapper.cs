@@ -7,7 +7,7 @@ namespace UltraMapper.Mappers
 {
     public class LinkedListMapper : CollectionMapper
     {
-        public LinkedListMapper( MapperConfiguration configuration )
+        public LinkedListMapper( TypeConfigurator configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )

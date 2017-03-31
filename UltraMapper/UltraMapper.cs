@@ -8,22 +8,22 @@ namespace UltraMapper
 {
     public class UltraMapper<T> : UltraMapper where T : IMappingConvention, new()
     {
-        public UltraMapper( Action<MapperConfiguration<T>> config )
-              : base( new MapperConfiguration<T>() )
+        public UltraMapper( Action<TypeConfigurator<T>> config )
+              : base( new TypeConfigurator<T>() )
         {
-            config?.Invoke( (MapperConfiguration<T>)base.MappingConfiguration );
+            config?.Invoke( (TypeConfigurator<T>)base.MappingConfiguration );
         }
     }
 
     public class UltraMapper
     {
-        public MapperConfiguration MappingConfiguration { get; protected set; }
+        public TypeConfigurator MappingConfiguration { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
-        public UltraMapper( MapperConfiguration config )
+        public UltraMapper( TypeConfigurator config )
         {
             this.MappingConfiguration = config;
         }
@@ -33,10 +33,10 @@ namespace UltraMapper
         /// as mapping convention allowing inline editing of the configuraton itself.
         /// </summary>
         /// <param name="config"></param>
-        public UltraMapper( Action<MapperConfiguration<DefaultMappingConvention>> config = null )
+        public UltraMapper( Action<TypeConfigurator<DefaultMappingConvention>> config = null )
         {
-            this.MappingConfiguration = new MapperConfiguration<DefaultMappingConvention>();
-            config?.Invoke( (MapperConfiguration<DefaultMappingConvention>)this.MappingConfiguration );
+            this.MappingConfiguration = new TypeConfigurator<DefaultMappingConvention>();
+            config?.Invoke( (TypeConfigurator<DefaultMappingConvention>)this.MappingConfiguration );
         }
 
         public TTarget Map<TSource, TTarget>( TSource source ) where TTarget : class, new()

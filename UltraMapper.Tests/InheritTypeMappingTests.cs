@@ -32,7 +32,7 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new UltraMapper( cfg =>
             {
-                cfg.MapTypes<bool, string>( null, b => b ? "1" : "0" );
+                cfg.MapTypes<bool, string>( b => b ? "1" : "0" );
 
                 cfg.MapTypes<TestClass, TestClass>()
                     .MapMember( a => a.Boolean, y => y.String )

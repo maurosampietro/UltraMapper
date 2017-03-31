@@ -171,8 +171,7 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new UltraMapper
             (
-                cfg => cfg.MapTypes<int, ComplexType>()
-                    .MapMember( a => a, c => c.PropertyA )
+                cfg => cfg.MapTypes<int, ComplexType>( c => new ComplexType() { PropertyA = c } )
             );
 
             ultraMapper.Map( source, target );
@@ -194,17 +193,13 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new UltraMapper
             (
-            //cfg => cfg.MapTypes<ComplexType, int>()
-            //    .MapProperty( a => a.PropertyA, c => c )
+                cfg => cfg.MapTypes<ComplexType, int>( a => a.PropertyA )
             );
 
             ultraMapper.Map( source, target );
 
-            throw new Exception( "Il verifier non verifica correttamente ed il mapping non funziona" );
-
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
-
         }
     }
 }

@@ -61,7 +61,7 @@ namespace UltraMapper.Tests
             var source = new SourceClass();
             var target = new TargetClass();
 
-            var config = new MapperConfiguration( cfg =>
+            var config = new TypeConfigurator( cfg =>
             {
                 cfg.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
                 {

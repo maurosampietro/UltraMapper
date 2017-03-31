@@ -21,7 +21,7 @@ namespace UltraMapper
 
     public class GlobalConfiguration
     {
-        public readonly MapperConfiguration Configuration;
+        public readonly TypeConfigurator Configuration;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -38,7 +38,7 @@ namespace UltraMapper
         public IMappingConvention MappingConvention { get; set; }
         public HashSet<IMapperExpressionBuilder> Mappers { get; private set; }
 
-        public GlobalConfiguration( MapperConfiguration configuration )
+        public GlobalConfiguration( TypeConfigurator configuration )
         {
             this.Configuration = configuration;
 
@@ -53,13 +53,13 @@ namespace UltraMapper
                 new NullableMapper( configuration ),
                 new ConvertMapper( configuration ),
                 new StructMapper( configuration ),
-                new ReferenceMapper( configuration ),
                 new DictionaryMapper( configuration ),
                 new SetMapper( configuration ),
                 new StackMapper( configuration ),
                 new QueueMapper( configuration ),
                 new LinkedListMapper( configuration ),
                 new CollectionMapper( configuration ),
+                new ReferenceMapper( configuration ),
             };
         }
     }

@@ -117,19 +117,20 @@ namespace UltraMapper.Tests
             };
 
             var target = new FirstLevel()
-            {
-                A = "first",
+            //{
+            //    A = "first",
 
-                SecondLevel = new SecondLevel()
-                {
-                    A = "second",
+            //    SecondLevel = new SecondLevel()
+            //    {
+            //        A = "second",
 
-                    ThirdLevel = new ThirdLevel()
-                    {
-                        A = "third"
-                    }
-                }
-            };
+            //        ThirdLevel = new ThirdLevel()
+            //        {
+            //            A = "third"
+            //        }
+            //    }
+            //}
+            ;
 
             var ultraMapper = new UltraMapper( cfg =>
             {

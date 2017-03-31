@@ -9,7 +9,7 @@ namespace UltraMapper.Mappers
 {
     public class StructMapper : PrimitiveMapperBase
     {
-        public StructMapper( MapperConfiguration configuration )
+        public StructMapper( TypeConfigurator configuration )
             : base( configuration ){ }
 
         public override bool CanHandle( Type sourceType, Type targetType )

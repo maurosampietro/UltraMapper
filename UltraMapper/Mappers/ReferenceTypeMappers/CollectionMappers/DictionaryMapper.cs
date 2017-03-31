@@ -10,7 +10,7 @@ namespace UltraMapper.Mappers
 {
     public class DictionaryMapper : CollectionMapper
     {
-        public DictionaryMapper( MapperConfiguration configuration )
+        public DictionaryMapper( TypeConfigurator configuration )
              : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -40,8 +40,10 @@ namespace UltraMapper.Mappers
 
             return Expression.Block
             (
-                new[] { context.SourceCollectionElementKey, context.SourceCollectionElementValue,
+                new[] { context.Mapper, context.SourceCollectionElementKey, context.SourceCollectionElementValue,
                     context.TargetCollectionElementKey, context.TargetCollectionElementValue },
+                
+                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
 
                 ExpressionLoops.ForEach( context.SourceInstance,
                     context.SourceCollectionLoopingVar, Expression.Block
@@ -64,20 +66,19 @@ namespace UltraMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             ParameterExpression sourceParam, ParameterExpression targetParam )
         {
-            var itemMapping = MapperConfiguration[ sourceParam.Type,
-                targetParam.Type ].MappingExpression;
-
             if( sourceParam.Type.IsBuiltInType( false ) && 
                 targetParam.Type.IsBuiltInType( false ) )
             {
+                var itemMapping = MapperConfiguration[ sourceParam.Type,
+                    targetParam.Type ].MappingExpression;
+
                 var itemMappingExp = itemMapping.Body.ReplaceParameter(
                     sourceParam, itemMapping.Parameters[ 0 ].Name );
 
                 return Expression.Assign( targetParam, itemMappingExp );
             }
 
-            return base.LookUpBlock( itemMapping, context, 
-                context.ReferenceTracker, sourceParam, targetParam );
+            return base.LookUpBlock( context, sourceParam, targetParam );
         }
     }
 }

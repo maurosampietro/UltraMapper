@@ -27,7 +27,7 @@ namespace UltraMapper.Mappers
     /// </summary>
     public class SetMapper : CollectionMapper
     {
-        public SetMapper( MapperConfiguration configuration )
+        public SetMapper( TypeConfigurator configuration )
             : base( configuration ) { this.NeedsImmediateRecursion = true; }
 
         public override bool CanHandle( Type source, Type target )

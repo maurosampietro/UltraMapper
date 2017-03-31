@@ -11,15 +11,10 @@ namespace UltraMapper.Mappers
 {
     public class CollectionMapper : ReferenceMapper
     {
-        public static UltraMapper _runtimeRecursor;
         protected bool NeedsImmediateRecursion { get; set; }
 
-        public CollectionMapper( MapperConfiguration configuration )
-            : base( configuration )
-        {
-            this.NeedsImmediateRecursion = false;
-            _runtimeRecursor = new UltraMapper( configuration );
-        }
+        public CollectionMapper( TypeConfigurator configuration )
+            : base( configuration ) { this.NeedsImmediateRecursion = true; }
 
         public override bool CanHandle( Type source, Type target )
         {
@@ -77,57 +72,45 @@ namespace UltraMapper.Mappers
 
             return Expression.Block
             (
-                new[] { newElement },
+                new[] { newElement, context.Mapper },
+
+                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
 
                 ExpressionLoops.ForEach( sourceCollection, context.SourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( itemMapping, context, context.ReferenceTracker, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( context, context.SourceCollectionLoopingVar, newElement ),
                     Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
                 )
             ) );
         }
 
-        public static MethodInfo getTypeMapperMapGenericMethod()
+        protected BlockExpression LookUpBlock( CollectionMapperContext context,
+            ParameterExpression sourceParam, ParameterExpression targetParam )
         {
-            return typeof( UltraMapper ).GetMethods()
-                .Where( m => m.Name == "Map" )
-                .Select( m => new
-                {
-                    Method = m,
-                    Params = m.GetParameters(),
-                    GenericArgs = m.GetGenericArguments()
-                } )
-                .Where( x => x.Params.Length == 3
-                            && x.GenericArgs.Length == 2
-                            && x.Params[ 0 ].ParameterType == x.GenericArgs[ 0 ] &&
-                             x.Params[ 1 ].ParameterType == x.GenericArgs[ 1 ] &&
-                             x.Params[ 2 ].ParameterType == typeof( ReferenceTracking ) )
-                .Select( x => x.Method )
-                .First();
-        }
+            Expression itemLookupCall = Expression.Call
+            ( 
+                Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method, context.ReferenceTracker, 
+                Expression.Convert( sourceParam, typeof( object ) ),
+                Expression.Constant( targetParam.Type )
+            );
 
-        protected BlockExpression LookUpBlock( LambdaExpression itemMapping, CollectionMapperContext context,
-            ParameterExpression referenceTracker, ParameterExpression sourceParam, ParameterExpression targetParam )
-        {
-            Expression itemLookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
-                refTrackingLookup.Method, referenceTracker, Expression.Convert( sourceParam, typeof( object ) ),
-                    Expression.Constant( targetParam.Type ) );
+            Expression itemCacheCall = Expression.Call
+            ( 
+                Expression.Constant( addToTracker.Target ),
+                addToTracker.Method, context.ReferenceTracker, 
+                Expression.Convert( sourceParam, typeof( object ) ),
+                Expression.Constant( targetParam.Type ), 
+                Expression.Convert( targetParam, typeof( object ) ) 
+            );
 
-            Expression itemCacheCall = Expression.Call( Expression.Constant( addToTracker.Target ),
-                addToTracker.Method, referenceTracker, Expression.Convert( sourceParam, typeof( object ) ),
-                Expression.Constant( targetParam.Type ), Expression.Convert( targetParam, typeof( object ) ) );
-
-            var recursor = Expression.Variable( _runtimeRecursor.GetType(), "recursor" );
-            var mapMethod = getTypeMapperMapGenericMethod().MakeGenericMethod( sourceParam.Type, targetParam.Type );
+            var mapMethod = context.RecursiveMapMethodInfo
+                .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
             Expression cacheItemAndRecurseImmediately = Expression.Block
             (
-                new[] { recursor },
-
                 itemCacheCall,
-
-                Expression.Assign( recursor, Expression.Constant( _runtimeRecursor ) ),
-                Expression.Call( recursor, mapMethod, sourceParam, targetParam, referenceTracker )
+                Expression.Call( context.Mapper, mapMethod, sourceParam, targetParam, context.ReferenceTracker )
             );
 
             Expression deferItemRecursion = Expression.Call
@@ -183,7 +166,7 @@ namespace UltraMapper.Mappers
                 throw new Exception( msg );
             }
 
-            if( context.IsTargetElementTypeBuiltIn )
+            if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
             {
                 return Expression.Block
                 (

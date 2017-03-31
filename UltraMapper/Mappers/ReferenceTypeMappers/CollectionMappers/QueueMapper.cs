@@ -7,7 +7,7 @@ namespace UltraMapper.Mappers
 {
     public class QueueMapper : CollectionMapper
     {
-        public QueueMapper( MapperConfiguration configuration )
+        public QueueMapper( TypeConfigurator configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )

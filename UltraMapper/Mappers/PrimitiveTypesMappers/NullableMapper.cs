@@ -7,7 +7,7 @@ namespace UltraMapper.Mappers
 {
     public class NullableMapper : PrimitiveMapperBase
     {
-        public NullableMapper( MapperConfiguration configuration )
+        public NullableMapper( TypeConfigurator configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
