@@ -19,11 +19,6 @@ It has problems with self-references, reference tracking, ignoring members and s
 Getting started
 --------------------------------
 
-```c#
-var mapper = new UltraMapper();
-mapper.Map( source, target );
-```
-
 Examples and documentation will be ready soon.
 
 
