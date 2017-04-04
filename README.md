@@ -24,15 +24,7 @@ var mapper = new UltraMapper();
 mapper.Map( source, target );
 ```
 
-```c#
-
-
-var mapper = new UltraMapper();
-mapper.Map( source, target );
-```
-
-
-More examples and documentation will be ready soon.
+Examples and documentation will be ready soon.
 
 
 Key features
