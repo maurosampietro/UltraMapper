@@ -94,6 +94,7 @@
     <Compile Include="Internals\TypePair.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="index.html" />
     <Content Include="Note.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
