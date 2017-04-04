@@ -3,13 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApplication", "ConsoleApplication\ConsoleApplication.csproj", "{08FE6E64-7231-4809-920A-95A9342063E7}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMapper.Net4", "..\..\..\..\Desktop\AutoMapper-master\src\AutoMapper.Net4\AutoMapper.Net4.csproj", "{8C955148-FA96-4F0D-880D-ABB6770F54E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraMapper.Tests", "UltraMapper.Tests\UltraMapper.Tests.csproj", "{CB20B669-0412-4FC1-88EF-F43C9F2BB572}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraMapper", "UltraMapper\UltraMapper.csproj", "{34E9592B-27F8-45BC-BE54-F90BD125B4E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5820E739-4C83-48E6-881D-89F87B695C0F}"
+	ProjectSection(SolutionItems) = preProject
+		index.html = index.html
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +20,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{08FE6E64-7231-4809-920A-95A9342063E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{08FE6E64-7231-4809-920A-95A9342063E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{08FE6E64-7231-4809-920A-95A9342063E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{08FE6E64-7231-4809-920A-95A9342063E7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8C955148-FA96-4F0D-880D-ABB6770F54E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8C955148-FA96-4F0D-880D-ABB6770F54E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C955148-FA96-4F0D-880D-ABB6770F54E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
