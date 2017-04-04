@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using UltraMapper.CollectionMappingStrategies;
 
 namespace UltraMapper.Internals
 {
@@ -9,13 +8,10 @@ namespace UltraMapper.Internals
         public LambdaExpression ValueGetter { get; set; }
 
         public LambdaExpression CustomConstructor { get; set; }
-        public ICollectionMappingStrategy CollectionStrategy { get; set; }
 
         internal MappingTarget( LambdaExpression memberGetter, LambdaExpression memberSetter )
             : base( memberGetter.ExtractMember() )
         {
-            //this.CollectionStrategy = new NewCollection();
-
             this.ValueGetter = memberGetter;
             this.ValueSetter = memberSetter;
         }

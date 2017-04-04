@@ -117,36 +117,31 @@ namespace UltraMapper.Tests
             };
 
             var target = new FirstLevel()
-            //{
-            //    A = "first",
+            {
+                A = "first",
 
-            //    SecondLevel = new SecondLevel()
-            //    {
-            //        A = "second",
+                SecondLevel = new SecondLevel()
+                {
+                    A = "suka",
 
-            //        ThirdLevel = new ThirdLevel()
-            //        {
-            //            A = "third"
-            //        }
-            //    }
-            //}
-            ;
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "suka"
+                    }
+                }
+            };
 
             var ultraMapper = new UltraMapper( cfg =>
             {
                 cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
                 {
-                    typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+                    typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
                 } );
 
-                cfg.MapTypes<FirstLevel, FirstLevel>()
-                    //nested property getter: ok
+                cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => { typeConfig.IgnoreMemberMappingResolvedByConvention = true; } )
                     .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
-                    //nested mixed member-type getter: ok
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
-                    //nested multiple method getter
                     .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
-                    //nested mixed member-type getter and setter method: ok
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
                         ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
             } );

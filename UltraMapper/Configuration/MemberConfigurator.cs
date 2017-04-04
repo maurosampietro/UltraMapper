@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using UltraMapper.CollectionMappingStrategies;
 using UltraMapper.ExtensionMethods;
 using UltraMapper.Internals;
 
@@ -212,9 +211,9 @@ namespace UltraMapper.Configuration
         /// <param name="elementEqualityComparer"></param>
         /// <returns></returns>
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
-           Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
-           Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
-           Expression<Func<TSourceMember, TTargetMember, bool>> elementEqualityComparer )
+            Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
+            Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
+            Expression<Func<TSourceMember, TTargetMember, bool>> elementEqualityComparer )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
@@ -224,13 +223,13 @@ namespace UltraMapper.Configuration
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
-         Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
-         Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
-         Action<IMappingOptions> options )
+            Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
+            Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
+            Action<IMappingOptions> memberMappingConfig )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
-            options.Invoke( mapping );
+            memberMappingConfig.Invoke( mapping );
 
             return this;
         }

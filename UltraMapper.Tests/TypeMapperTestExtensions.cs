@@ -39,7 +39,7 @@ namespace UltraMapper.Tests
             }
 
             //same value type: just compare their values
-            if( sourceType == targetType && sourceType.IsValueType )
+            if( sourceType == targetType && (sourceType.IsValueType || sourceType.IsBuiltInType( false )) )
                 return source.Equals( target );
 
             if( sourceType.IsEnumerable() && targetType.IsEnumerable() )
@@ -68,6 +68,9 @@ namespace UltraMapper.Tests
 
             foreach( var mapping in typeMapping.MemberMappings.Values )
             {
+                if( mapping.MappingResolution == Internals.MappingResolution.RESOLVED_BY_CONVENTION
+                    && typeMapping.IgnoreMemberMappingResolvedByConvention ) continue;
+
                 var sourceValue = mapping.SourceMember
                     .ValueGetter.Compile().DynamicInvoke( source );
 

@@ -7,7 +7,7 @@ using UltraMapper.Mappers.MapperContexts;
 
 namespace UltraMapper.Mappers
 {
-    public class ReferenceMapper : IReferenceMapperExpressionBuilder
+    public class ReferenceMapper : IMemberMappingExpressionBuilder
     {
         public readonly UltraMapper _mapper;
         public readonly TypeConfigurator MapperConfiguration;
@@ -51,9 +51,9 @@ namespace UltraMapper.Mappers
             return !valueTypes && !builtInTypes;
         }
 
-        public LambdaExpression GetMappingExpression( Type source, Type target )
+        public LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
         {
-            var context = this.GetMapperContext( source, target ) as ReferenceMapperContext;
+            var context = this.GetMapperContext( source, target, options ) as ReferenceMapperContext;
 
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
             var memberMappings = this.GetMemberMappings( typeMapping )
@@ -82,9 +82,9 @@ namespace UltraMapper.Mappers
                 context.ReferenceTracker, context.SourceInstance, context.TargetInstance );
         }
 
-        protected virtual ReferenceMapperContext GetMapperContext( Type source, Type target )
+        protected virtual ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
         {
-            return new ReferenceMapperContext( source, target );
+            return new ReferenceMapperContext( source, target, options );
         }
 
         protected virtual Expression GetExpressionBody( ReferenceMapperContext contextObj )
@@ -139,7 +139,8 @@ namespace UltraMapper.Mappers
 
         private Expression GetMemberMappings( TypeMapping typeMapping )
         {
-            var context = new ReferenceMapperContext( typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+            var context = new ReferenceMapperContext( typeMapping.TypePair.SourceType,
+                typeMapping.TypePair.TargetType, typeMapping );
 
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
@@ -175,16 +176,27 @@ namespace UltraMapper.Mappers
              */
             var memberContext = new MemberMappingContext( mapping );
 
-            var mapMethod = memberContext.RecursiveMapMethodInfo.MakeGenericMethod(
+            var mapMethod = memberContext.RecursiveMemberMappingMapMethodInfo.MakeGenericMethod(
                 memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 
-            Expression lookupCall = Expression.Call( Expression.Constant( refTrackingLookup.Target ),
-                ReferenceMapper.refTrackingLookup.Method, memberContext.ReferenceTracker,
-                memberContext.SourceMember, Expression.Constant( memberContext.TargetMember.Type ) );
+            Expression itemLookupCall = Expression.Call
+            (
+                Expression.Constant( refTrackingLookup.Target ),
+                refTrackingLookup.Method,
+                memberContext.ReferenceTracker,
+                memberContext.SourceMember,
+                Expression.Constant( memberContext.TargetMember.Type )
+            );
 
-            Expression addToLookupCall = Expression.Call( Expression.Constant( addToTracker.Target ),
-                ReferenceMapper.addToTracker.Method, memberContext.ReferenceTracker, memberContext.SourceMember,
-                Expression.Constant( memberContext.TargetMember.Type ), memberContext.TargetMember );
+            Expression itemCacheCall = Expression.Call
+            (
+                Expression.Constant( addToTracker.Target ),
+                addToTracker.Method,
+                memberContext.ReferenceTracker,
+                memberContext.SourceMember,
+                Expression.Constant( memberContext.TargetMember.Type ),
+                memberContext.TargetMember
+            );
 
             return Expression.Block
             (
@@ -202,7 +214,7 @@ namespace UltraMapper.Mappers
                      (
                         //object lookup. An intermediate variable (TrackedReference) is needed in order to deal with ReferenceMappingStrategies
                         Expression.Assign( memberContext.TrackedReference,
-                            Expression.Convert( lookupCall, memberContext.TargetMember.Type ) ),
+                            Expression.Convert( itemLookupCall, memberContext.TargetMember.Type ) ),
 
                         Expression.IfThenElse
                         (
@@ -212,24 +224,15 @@ namespace UltraMapper.Mappers
                             (
                                 new[] { memberContext.Mapper },
 
-                                ((IReferenceMapperExpressionBuilder)mapping.Mapper)
+                                ((IMemberMappingExpressionBuilder)mapping.Mapper)
                                     .GetTargetInstanceAssignment( memberContext, mapping ),
 
                                 Expression.Assign( memberContext.Mapper, Expression.Constant( _mapper ) ),
                                 Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
-                                    memberContext.TargetMember, memberContext.ReferenceTracker ),
-
-                                ////Add to the list of instance-pair to recurse on (only way to avoid StackOverflow if the mapping object contains anywhere 
-                                ////down the tree a member of the same type of the mapping object itself)
-                                //Expression.Call
-                                //(
-                                //    memberContext.ReturnObject, memberContext.AddObjectPairToReturnList,
-                                //    Expression.New( memberContext.ReturnElementConstructor,
-                                //        memberContext.SourceMember, memberContext.TargetMember )
-                                //),
+                                    memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) ),
 
                                 //cache reference
-                                addToLookupCall
+                                itemCacheCall
                             )
                         )
                     )

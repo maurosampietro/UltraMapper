@@ -8,6 +8,7 @@ using UltraMapper.Internals;
 using UltraMapper.Mappers;
 using UltraMapper.MappingConventions;
 using UltraMapper;
+using System.Collections.ObjectModel;
 
 namespace UltraMapper.Tests
 {
@@ -201,5 +202,23 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
+
+        //[TestMethod]
+        //[TestCategory("ReadOnlyCollection")]
+        //public void ListToReadOnlyListDifferentElementType()
+        //{
+        //    List<int> source = Enumerable.Range( 0, 10 ).ToList();
+        //    source.Capacity = 100;
+        //    ReadOnlyCollection<double> target = null;
+
+        //    var ultraMapper = new UltraMapper();
+        //    ultraMapper.Map( source, target );
+
+        //    Assert.IsTrue( source.SequenceEqual(
+        //        target.Select( item => (int)item ) ) );
+
+        //    bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+        //    Assert.IsTrue( isResultOk );
+        //}
     }
 }

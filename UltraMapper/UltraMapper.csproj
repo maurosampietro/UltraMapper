@@ -49,6 +49,7 @@
     <Compile Include="ExtensionMethods\ExpressionExtensions.cs" />
     <Compile Include="ExtensionMethods\MemberInfoExtensions.cs" />
     <Compile Include="Internals\ExpressionParameterReplacer.cs" />
+    <Compile Include="Internals\IMemberMapping.cs" />
     <Compile Include="Internals\ObjectPair.cs" />
     <Compile Include="Internals\MappingMemberBase.cs" />
     <Compile Include="Internals\MemberMapping.cs" />

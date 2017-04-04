@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using UltraMapper.CollectionMappingStrategies;
 using UltraMapper.Configuration;
 using UltraMapper.Mappers;
 
 namespace UltraMapper.Internals
 {
-    public class TypeMapping : ITypeOptions
+    public class TypeMapping : ITypeOptions, IMapping
     {
         /*
          *A source member can be mapped to multiple target members.
@@ -22,6 +21,13 @@ namespace UltraMapper.Internals
         public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
         public readonly GlobalConfiguration GlobalConfiguration;
         public readonly TypePair TypePair;
+
+        public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
+        {
+            this.GlobalConfiguration = globalConfig;
+            this.TypePair = typePair;
+            this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
+        }
 
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression CustomTargetConstructor { get; set; }
@@ -54,15 +60,15 @@ namespace UltraMapper.Internals
             set { _referenceMappingStrategy = value; }
         }
 
-        private ICollectionMappingStrategy _collectionMappingStrategy;
-        public ICollectionMappingStrategy CollectionMappingStrategy
+        private CollectionMappingStrategies? _collectionMappingStrategy;
+        public CollectionMappingStrategies CollectionMappingStrategy
         {
             get
             {
                 if( _collectionMappingStrategy == null )
                     return GlobalConfiguration.CollectionMappingStrategy;
 
-                return _collectionMappingStrategy;
+                return _collectionMappingStrategy.Value;
             }
 
             set { _collectionMappingStrategy = value; }
@@ -86,14 +92,7 @@ namespace UltraMapper.Internals
             }
         }
 
-        public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
-        {
-            this.GlobalConfiguration = globalConfig;
-            this.TypePair = typePair;
-            this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
-        }
-
-        private LambdaExpression _expression;
+        private LambdaExpression _mappingExpression;
         public LambdaExpression MappingExpression
         {
             get
@@ -101,19 +100,19 @@ namespace UltraMapper.Internals
                 if( this.CustomConverter != null )
                     return this.CustomConverter;
 
-                if( _expression != null ) return _expression;
+                if( _mappingExpression != null ) return _mappingExpression;
 
-                return _expression = this.Mapper.GetMappingExpression(
-                    this.TypePair.SourceType, this.TypePair.TargetType );
+                return _mappingExpression = this.Mapper.GetMappingExpression(
+                    this.TypePair.SourceType, this.TypePair.TargetType, this );
             }
         }
 
-        private Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> _mapperFunc;
-        public Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MapperFunc
+        private Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> _mappingFunc;
+        public Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MappingFunc
         {
             get
             {
-                if( _mapperFunc != null ) return _mapperFunc;
+                if( _mappingFunc != null ) return _mappingFunc;
 
                 var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
                 var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
@@ -128,7 +127,7 @@ namespace UltraMapper.Internals
                 var bodyExp = Expression.Invoke( this.MappingExpression,
                     referenceTrack, sourceInstance, targetInstance );
 
-                return _mapperFunc = Expression.Lambda<Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>>>(
+                return _mappingFunc = Expression.Lambda<Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>>>(
                     bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
             }
         }

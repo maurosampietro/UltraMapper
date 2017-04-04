@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UltraMapper.CollectionMappingStrategies;
 using UltraMapper.Internals;
 using UltraMapper.MappingConventions;
 
@@ -35,10 +34,12 @@ namespace UltraMapper.Tests
             public override bool Equals( object obj )
             {
                 var otherObj = obj as ComplexType;
+                if( otherObj == null ) return false;
 
                 return this.A.Equals( otherObj?.A ) &&
-                    (Object.ReferenceEquals( this.InnerType, otherObj ) ||
-                    this.InnerType.Equals( otherObj.InnerType ));
+                    (this.InnerType == null && otherObj.InnerType == null) ||
+                    ((this.InnerType != null && otherObj.InnerType != null) &&
+                        this.InnerType.Equals( otherObj.InnerType ));
             }
         }
 
@@ -102,9 +103,30 @@ namespace UltraMapper.Tests
                     target.Select( item => (int)item ) ) );
 
             var ultraMapper = new UltraMapper();
+            ultraMapper.Map( source, target );
 
-            var typeMapping = ultraMapper.MappingConfiguration[
-                source.GetType(), target.GetType() ];
+            Assert.IsTrue( source.SequenceEqual(
+                target.Select( item => (int)item ) ) );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void MergeCollections()
+        {
+            List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            source.Capacity = 100;
+            List<double> target = new List<double>() { 1, 2, 3 };
+
+            Assert.IsTrue( !source.SequenceEqual(
+                    target.Select( item => (int)item ) ) );
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.GlobalConfiguration.ReferenceMappingStrategy =
+                    ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+            } );
 
             ultraMapper.Map( source, target );
 
@@ -414,18 +436,26 @@ namespace UltraMapper.Tests
                 source.ObservableCollection.Add( new ComplexType() { A = i } );
             }
 
-            var target = new GenericCollections<ComplexType>( false );
+            var target = new GenericCollections<ComplexType>( false )
+            {
+                List = new List<Tests.CollectionTests.ComplexType>() { new ComplexType() { A = 100 } }
+            };
 
             var ultraMapper = new UltraMapper( cfg =>
             {
                 cfg.GlobalConfiguration.IgnoreMemberMappingResolvedByConvention = true;
 
-                cfg.MapTypes( source, target )
-                    .MapMember( a => a.List, b => b.List, options =>
-                    {
-                        options.CollectionMappingStrategy = new ClearCollection();
-                        options.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-                    } );
+                cfg.MapTypes<ComplexType, ComplexType>( typeCfg =>
+                {
+                    typeCfg.IgnoreMemberMappingResolvedByConvention = false;
+                } );
+
+                cfg.MapTypes<GenericCollections<ComplexType>, GenericCollections<ComplexType>>()
+                   .MapMember( a => a.List, b => b.List, memberConfig =>
+                   {
+                       memberConfig.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
+                       memberConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                   } );
             } );
 
             ultraMapper.Map( source, target );

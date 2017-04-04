@@ -11,10 +11,8 @@ namespace UltraMapper.Mappers
 {
     public class CollectionMapper : ReferenceMapper
     {
-        protected bool NeedsImmediateRecursion { get; set; }
-
         public CollectionMapper( TypeConfigurator configuration )
-            : base( configuration ) { this.NeedsImmediateRecursion = true; }
+            : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
         {
@@ -22,16 +20,16 @@ namespace UltraMapper.Mappers
                 !source.IsBuiltInType( false ) && !target.IsBuiltInType( false ); //avoid strings
         }
 
-        protected override ReferenceMapperContext GetMapperContext( Type source, Type target )
+        protected override ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
         {
-            return new CollectionMapperContext( source, target );
+            return new CollectionMapperContext( source, target, options );
         }
 
         protected Expression SimpleCollectionLoop( CollectionMapperContext context,
             ParameterExpression sourceCollection, ParameterExpression targetCollection )
         {
-            var targetCollectionAddMethod = GetTargetCollectionInsertionMethod( context );
-            if( targetCollectionAddMethod == null )
+            var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
+            if( targetCollectionInsertionMethod == null )
             {
                 string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
@@ -44,7 +42,7 @@ namespace UltraMapper.Mappers
 
             Expression loopBody = Expression.Call
             (
-                targetCollection, targetCollectionAddMethod,
+                targetCollection, targetCollectionInsertionMethod,
                 itemMapping.Body.ReplaceParameter(
                     context.SourceCollectionLoopingVar, itemMapping.Parameters[ 0 ].Name )
             );
@@ -53,11 +51,11 @@ namespace UltraMapper.Mappers
                 context.SourceCollectionLoopingVar, loopBody );
         }
 
-        protected Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
+        public Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
             ParameterExpression sourceCollection, ParameterExpression targetCollection )
         {
-            var targetCollectionAddMethod = GetTargetCollectionInsertionMethod( context );
-            if( targetCollectionAddMethod == null )
+            var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
+            if( targetCollectionInsertionMethod == null )
             {
                 string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
@@ -79,45 +77,35 @@ namespace UltraMapper.Mappers
                 ExpressionLoops.ForEach( sourceCollection, context.SourceCollectionLoopingVar, Expression.Block
                 (
                     LookUpBlock( context, context.SourceCollectionLoopingVar, newElement ),
-                    Expression.Call( targetCollection, targetCollectionAddMethod, newElement )
+                    Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
                 )
             ) );
         }
 
-        protected BlockExpression LookUpBlock( CollectionMapperContext context,
+        public BlockExpression LookUpBlock( CollectionMapperContext context,
             ParameterExpression sourceParam, ParameterExpression targetParam )
         {
             Expression itemLookupCall = Expression.Call
-            ( 
+            (
                 Expression.Constant( refTrackingLookup.Target ),
-                refTrackingLookup.Method, context.ReferenceTracker, 
-                Expression.Convert( sourceParam, typeof( object ) ),
+                refTrackingLookup.Method,
+                context.ReferenceTracker,
+                sourceParam,
                 Expression.Constant( targetParam.Type )
             );
 
             Expression itemCacheCall = Expression.Call
-            ( 
+            (
                 Expression.Constant( addToTracker.Target ),
-                addToTracker.Method, context.ReferenceTracker, 
-                Expression.Convert( sourceParam, typeof( object ) ),
-                Expression.Constant( targetParam.Type ), 
-                Expression.Convert( targetParam, typeof( object ) ) 
+                addToTracker.Method,
+                context.ReferenceTracker,
+                sourceParam,
+                Expression.Constant( targetParam.Type ),
+                targetParam
             );
 
             var mapMethod = context.RecursiveMapMethodInfo
                 .MakeGenericMethod( sourceParam.Type, targetParam.Type );
-
-            Expression cacheItemAndRecurseImmediately = Expression.Block
-            (
-                itemCacheCall,
-                Expression.Call( context.Mapper, mapMethod, sourceParam, targetParam, context.ReferenceTracker )
-            );
-
-            Expression deferItemRecursion = Expression.Call
-            (
-                context.ReturnObject, context.AddObjectPairToReturnList,
-                Expression.New( context.ReturnElementConstructor, sourceParam, targetParam )
-            );
 
             return Expression.Block
             (
@@ -130,7 +118,11 @@ namespace UltraMapper.Mappers
                     Expression.Block
                     (
                         Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
-                        NeedsImmediateRecursion ? cacheItemAndRecurseImmediately : deferItemRecursion
+
+                        itemCacheCall,
+
+                        Expression.Call( context.Mapper, mapMethod,
+                            sourceParam, targetParam, context.ReferenceTracker )
                     )
                 )
             );
@@ -140,7 +132,7 @@ namespace UltraMapper.Mappers
         {
             var context = contextObj as CollectionMapperContext;
 
-            /* By default try to retrieve the item-insertion method of the collection.
+            /* By default I try to retrieve the item-insertion method of the collection.
              * The exact name of the method can be overridden so that, for example, 
              * on Queue you search for 'Enqueue'. The default method name searched is 'Add'.
              * 
@@ -153,16 +145,13 @@ namespace UltraMapper.Mappers
              */
 
             /* -Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
-             *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).
-             * 
-             * -Must also manage the case where SourceElementType and TargetElementType differ:
-             *  cannot use directly the target constructor: use add method or temp collection.
+             *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).             
              */
 
             var clearMethod = GetTargetCollectionClearMethod( context );
-            if( clearMethod == null )
+            if( clearMethod == null && context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET )
             {
-                string msg = $@"Cannot map to type '{nameof( context.TargetInstance.Type )}' does not provide a clear method";
+                string msg = $@"Cannot reset the collection. Type '{nameof( context.TargetInstance.Type )}' does not provide a Clear method";
                 throw new Exception( msg );
             }
 
@@ -170,35 +159,20 @@ namespace UltraMapper.Mappers
             {
                 return Expression.Block
                 (
-                    Expression.Call( context.TargetInstance, clearMethod ),
+                    context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET ?
+                        Expression.Call( context.TargetInstance, clearMethod ) : (Expression)Expression.Empty(),
+
                     SimpleCollectionLoop( context, context.SourceInstance, context.TargetInstance )
                 );
             }
 
             return Expression.Block
             (
-                Expression.Call( context.TargetInstance, clearMethod ),
+                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET ?
+                    Expression.Call( context.TargetInstance, clearMethod ) : (Expression)Expression.Empty(),
+
                 CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
             );
-        }
-
-        protected override Expression ReturnListInitialization( ReferenceMapperContext contextObj )
-        {
-            var context = contextObj as CollectionMapperContext;
-
-            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
-
-            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor
-                , Expression.Call( context.SourceInstance, getCountMethod ) ) );
-        }
-
-        /// <summary>
-        /// Returns the method that allows to insert items in the target collection.
-        /// </summary>
-        protected virtual MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
-        {
-            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-            return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
         /// <summary>
@@ -208,6 +182,25 @@ namespace UltraMapper.Mappers
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Clear ) );
+        }
+
+        protected override Expression ReturnListInitialization( ReferenceMapperContext contextObj )
+        {
+            var context = contextObj as CollectionMapperContext;
+
+            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
+
+            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
+                Expression.Call( context.SourceInstance, getCountMethod ) ) );
+        }
+
+        /// <summary>
+        /// Returns the method that allows to insert items in the target collection.
+        /// </summary>
+        protected virtual MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
+        {
+            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
+            return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
         public override Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )

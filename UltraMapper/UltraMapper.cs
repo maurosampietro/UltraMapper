@@ -98,8 +98,13 @@ namespace UltraMapper
             Type targetType = target.GetType();
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
+            this.Map( source, target, referenceTracking, mapping );
+        }
 
-            var references = mapping.MapperFunc?.Invoke( referenceTracking, source, target );
+        internal void Map<TSource, TTarget>( TSource source, TTarget target,
+            ReferenceTracking referenceTracking, IMapping mapping )
+        {
+            var references = mapping.MappingFunc?.Invoke( referenceTracking, source, target );
             if( references != null )
             {
                 foreach( var reference in references )

@@ -59,6 +59,38 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void ReferenceCustomConverterTest()
+        {
+            var innerType = new InnerType() { A = "this is a test" };
+
+            var source = new OuterType()
+            {
+                InnerType = innerType,
+                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
+                ComplexList = new List<InnerType>() { innerType },
+                String = "ok"
+            };
+
+            source.InnerType.C = source;
+
+            var target = new OuterType();
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes<OuterType, OuterType>( s => new OuterType()
+                {
+                    PrimitiveList = new List<int>( s.PrimitiveList ),
+                    InnerType = new Tests.ReferenceTypeTests.InnerType()
+                } );
+
+            } );
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
         public void ReferenceSimpleTest()
         {
             var innerType = new InnerType() { A = "this is a test" };

@@ -13,9 +13,9 @@ namespace UltraMapper.Mappers
             this.MapperConfiguration = configuration;
         }
 
-        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType )
+        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType, IMappingOptions options )
         {
-            var context = this.GetContext( sourceType, targetType );
+            var context = this.GetContext( sourceType, targetType, options );
             var getValueExpression = this.GetValueExpression( context );
 
             var delegateType = typeof( Func<,> )
@@ -25,9 +25,9 @@ namespace UltraMapper.Mappers
                 getValueExpression, context.SourceInstance );
         }
 
-        protected virtual MapperContext GetContext( Type sourceType, Type targetType )
+        protected virtual MapperContext GetContext( Type sourceType, Type targetType, IMappingOptions options )
         {
-            return new MapperContext( sourceType, targetType );
+            return new MapperContext( sourceType, targetType, options );
         }
 
         public abstract bool CanHandle( Type sourceType, Type targetType );

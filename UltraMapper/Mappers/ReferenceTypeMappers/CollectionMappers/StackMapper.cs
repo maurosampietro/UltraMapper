@@ -7,14 +7,9 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Mappers
 {
-    /*NOTES:
-    * 
-    *- Stack<T> and other LIFO collections require the list to be read in reverse  
-    * to preserve order and have a specular clone. This is done with Stack<T> by
-    * creating the list two times: 'new Stack( new Stack( sourceCollection ) )'
-    * 
-    */
-    public class StackMapper : CollectionMapper
+    /*- Stack<T> and other LIFO collections require the list to be read in reverse  
+    * to preserve order and have a specular clone */
+    public class StackMapper : CollectionMapperViaTemporaryCollection
     {
         public StackMapper( TypeConfigurator configuration )
             : base( configuration ) { }
@@ -30,6 +25,17 @@ namespace UltraMapper.Mappers
             return context.TargetInstance.Type.GetMethod( "Push" );
         }
 
+        protected override Type GetTemporaryCollectionType( CollectionMapperContext context )
+        {
+            return typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
+        }
+    }
+
+    public abstract class CollectionMapperViaTemporaryCollection : CollectionMapper
+    {
+        public CollectionMapperViaTemporaryCollection( TypeConfigurator configuration )
+            : base( configuration ) { }
+
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
         {
             var context = contextObj as CollectionMapperContext;
@@ -40,7 +46,7 @@ namespace UltraMapper.Mappers
             var paramType = new Type[] { typeof( IEnumerable<> )
                 .MakeGenericType( context.SourceCollectionElementType ) };
 
-            var tempCollectionType = typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
+            var tempCollectionType = this.GetTemporaryCollectionType( context );
             var tempCollectionConstructorInfo = tempCollectionType.GetConstructor( paramType );
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
@@ -65,5 +71,22 @@ namespace UltraMapper.Mappers
                 CollectionLoopWithReferenceTracking( context, tempCollection, context.TargetInstance )
             );
         }
+
+        protected virtual Type GetTemporaryCollectionType( CollectionMapperContext context )
+        {
+            return typeof( List<> ).MakeGenericType( context.SourceCollectionElementType );
+        }
     }
+
+    //public class ReadOnlyCollectionMapper : CollectionMapperViaTemporaryCollection
+    //{
+    //    public ReadOnlyCollectionMapper( TypeConfigurator configuration )
+    //        : base( configuration ) { }
+
+    //    public override bool CanHandle( Type source, Type target )
+    //    {
+    //        return base.CanHandle( source, target ) &&
+    //           target.ImplementsInterface( typeof( IReadOnlyCollection<> ) );
+    //    }
+    //}
 }

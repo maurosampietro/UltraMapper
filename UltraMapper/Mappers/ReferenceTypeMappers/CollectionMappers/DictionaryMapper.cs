@@ -21,9 +21,9 @@ namespace UltraMapper.Mappers
             return sourceIsDictionary || targetIsDictionary;
         }
 
-        protected override ReferenceMapperContext GetMapperContext( Type source, Type target )
+        protected override ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
         {
-            return new DictionaryMapperContext( source, target );
+            return new DictionaryMapperContext( source, target, options );
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
@@ -42,7 +42,7 @@ namespace UltraMapper.Mappers
             (
                 new[] { context.Mapper, context.SourceCollectionElementKey, context.SourceCollectionElementValue,
                     context.TargetCollectionElementKey, context.TargetCollectionElementValue },
-                
+
                 Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
 
                 ExpressionLoops.ForEach( context.SourceInstance,
@@ -66,7 +66,7 @@ namespace UltraMapper.Mappers
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             ParameterExpression sourceParam, ParameterExpression targetParam )
         {
-            if( sourceParam.Type.IsBuiltInType( false ) && 
+            if( sourceParam.Type.IsBuiltInType( false ) &&
                 targetParam.Type.IsBuiltInType( false ) )
             {
                 var itemMapping = MapperConfiguration[ sourceParam.Type,

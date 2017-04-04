@@ -17,8 +17,8 @@ namespace UltraMapper.Mappers
 
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
 
-        public CollectionMapperContext( Type source, Type target )
-            : base( source, target )
+        public CollectionMapperContext( Type source, Type target, IMappingOptions options )
+            : base( source, target, options )
         {
             ReturnTypeConstructor = ReturnObject.Type.GetConstructor( new[] { typeof( int ) } );
 

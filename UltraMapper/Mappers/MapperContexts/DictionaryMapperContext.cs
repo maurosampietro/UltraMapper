@@ -13,8 +13,8 @@ namespace UltraMapper.Mappers
         public ParameterExpression TargetCollectionElementKey { get; private set; }
         public ParameterExpression TargetCollectionElementValue { get; private set; }
 
-        public DictionaryMapperContext( Type source, Type target )
-            : base( source, target )
+        public DictionaryMapperContext( Type source, Type target, IMappingOptions options )
+            : base( source, target, options )
         {
             var sourceCollectionElementKeyType = SourceCollectionElementType.GetGenericArguments()[ 0 ];
             var sourceCollectionElementValueType = SourceCollectionElementType.GetGenericArguments()[ 1 ];

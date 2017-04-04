@@ -6,7 +6,6 @@ using System.ComponentModel;
 using UltraMapper.MappingConventions;
 using UltraMapper.Configuration;
 using UltraMapper.Mappers;
-using UltraMapper.CollectionMappingStrategies;
 using System.Linq;
 
 namespace UltraMapper.Tests

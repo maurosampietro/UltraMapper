@@ -1,13 +1,12 @@
 ﻿
-TODO WITH MAX PRIORITY (AFTER ARCHITECTURAL REFACTORING):
-
-- Collections now work only by clear/adding. 
-  Before we could work with constructor(IEnumeable<T>), which is much faster.
-  
-
 TODO:
 
 - Collection mapping strategies 
+
+- Collections now work only by clear/adding. 
+  Before we could work with constructor(IEnumeable<T>) in some particular case, which is much faster.
+
+- ReadOnlyCollection support, at least on members (directly on type is a problem because it does not have a parameterless constructor)
 
 - Dynamic mapping
 
@@ -24,6 +23,11 @@ TODO:
 - Multidimensional/jagged arrays; Array mapping.
 
 - CustomConverter for reference type do not support return of an object to recurse on (?).
+
+- Analyze how to manage structs correctly (complex struct should be mapped with reference mapper,
+simple structs with a primitive mapper)
+
+- Configuration inheritance (ie. IgnoreConvention)
 
 KNOWN (POTENTIAL) PROBLEMS:
 

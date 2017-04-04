@@ -52,9 +52,7 @@ namespace UltraMapper.Mappers
             var methodParams = new[] { context.SourceInstance.Type };
 
             var convertMethod = _convertType.GetMethod( methodName, methodParams );
-            var convertMethodCall = Expression.Call( convertMethod, context.SourceInstance );
-
-            return convertMethodCall;
+            return Expression.Call( convertMethod, context.SourceInstance );
         }
     }
 }

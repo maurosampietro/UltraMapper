@@ -77,7 +77,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void ExtractNestedMethodInfo()
+        public void ExtractNestedMethodViaProperty()
         {
             var test = new FirstLevel();
             Expression<Func<FirstLevel, ThirdLevel>> func = 
@@ -85,6 +85,48 @@ namespace UltraMapper.Tests
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
+
+            var extractedMember = func.ExtractMember();
+            Assert.IsTrue( expectedMember == extractedMember );
+        }
+
+        [TestMethod]
+        public void ExtractNestedMethodViaMethod()
+        {
+            var test = new FirstLevel();
+            Expression<Func<FirstLevel, ThirdLevel>> func =
+                ( fl ) => fl.GetSecond().GetThird();
+
+            var expectedMember = typeof( SecondLevel )
+                .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
+
+            var extractedMember = func.ExtractMember();
+            Assert.IsTrue( expectedMember == extractedMember );
+        }
+
+        [TestMethod]
+        public void ExtractNestedPropertyViaMethod()
+        {
+            var test = new FirstLevel();
+            Expression<Func<FirstLevel, ThirdLevel>> func =
+                ( fl ) => fl.GetSecond().ThirdLevel;
+
+            var expectedMember = typeof( SecondLevel )
+                .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
+
+            var extractedMember = func.ExtractMember();
+            Assert.IsTrue( expectedMember == extractedMember );
+        }
+
+        [TestMethod]
+        public void ExtractNestedPropertyViaProperty()
+        {
+            var test = new FirstLevel();
+            Expression<Func<FirstLevel, ThirdLevel>> func =
+                ( fl ) => fl.SecondLevel.ThirdLevel;
+
+            var expectedMember = typeof( SecondLevel )
+                .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
 
             var extractedMember = func.ExtractMember();
             Assert.IsTrue( expectedMember == extractedMember );

@@ -6,7 +6,7 @@ namespace UltraMapper.Mappers
 {
     public sealed class BuiltInTypeMapper : PrimitiveMapperBase
     {
-        public BuiltInTypeMapper( TypeConfigurator configuration ) 
+        public BuiltInTypeMapper( TypeConfigurator configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -14,7 +14,7 @@ namespace UltraMapper.Mappers
             bool areTypesBuiltIn = source.IsBuiltInType( false )
                 && target.IsBuiltInType( false );
 
-            return (areTypesBuiltIn) && (source == target ||
+            return (areTypesBuiltIn ) && (source == target ||
                     source.IsImplicitlyConvertibleTo( target ) ||
                     source.IsExplicitlyConvertibleTo( target ));
         }
@@ -24,10 +24,8 @@ namespace UltraMapper.Mappers
             if( context.SourceInstance.Type == context.TargetInstance.Type )
                 return context.SourceInstance;
 
-            var conversionExp = Expression.Convert(
-                context.SourceInstance, context.TargetInstance.Type );
-
-            return conversionExp;
+            return Expression.Convert( context.SourceInstance,
+                context.TargetInstance.Type );
         }
     }
 }

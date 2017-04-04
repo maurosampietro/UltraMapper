@@ -24,7 +24,8 @@ namespace UltraMapper.Mappers.MapperContexts
         public Expression SourceMemberNullValue { get; internal set; }
 
         public MemberMappingContext( MemberMapping mapping )
-            : base( mapping.InstanceTypeMapping.TypePair.SourceType, mapping.InstanceTypeMapping.TypePair.TargetType )
+            : base( mapping.InstanceTypeMapping.TypePair.SourceType,
+                    mapping.InstanceTypeMapping.TypePair.TargetType, mapping )
         {
             var sourceMemberType = mapping.SourceMember.MemberInfo.GetMemberType();
             var targetMemberType = mapping.TargetMember.MemberInfo.GetMemberType();
