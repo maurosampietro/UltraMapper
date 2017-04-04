@@ -14,12 +14,7 @@ Why UltraMapper?
 --------------------------------
 
 UltraMapper was coded to solve some major problems with 'AutoMapper', the most famous mapper available at the time (early 2017).
-
-I found 'AutoMapper' to be a great tool, as long as things remained simple but had nightmares as soon as I started facing the real world because of bugs (self-references^, reference tracking^, ignoring members), the complexity of its options, configuration and registration mechanism and the messy codebase (yes, i tried to fix some of the problems i found. Headaches, no luck).
-
-I filed bugs on github, tried to solve them by myself and tried to work around them, but the tool at one point became the ruler of my architectual choices, and so I started to code UltraMapper.
-
-^Automapper is subject to throw StackOverflow exceptions when the hierarchy of the object being mapped involves self-references anywhere down the tree. That's due to problems in the reference tracking.
+It has problems with self-references, reference tracking, ignoring members and so on...
 
 Getting started
 --------------------------------
