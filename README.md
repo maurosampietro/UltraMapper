@@ -13,8 +13,8 @@ It avoids you the need to manually write the (boring) code that instantiate/assi
 Why UltraMapper?
 --------------------------------
 
-UltraMapper was coded to solve some major problems with 'AutoMapper', the most famous mapper available at the time (early 2017).
-It has problems with self-references, reference tracking, ignoring members and so on...
+UltraMapper was coded to solve some major problems with 'AutoMapper', the most famous mapper available at the time (end 2016).
+It had problems with self-references, reference tracking, ignoring members and so on...
 
 Getting started
 --------------------------------
