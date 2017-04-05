@@ -57,39 +57,7 @@ namespace UltraMapper.Tests
             public object String { get; set; }
             public object OuterType { get; set; }
         }
-
-        [TestMethod]
-        public void ReferenceCustomConverterTest()
-        {
-            var innerType = new InnerType() { A = "this is a test" };
-
-            var source = new OuterType()
-            {
-                InnerType = innerType,
-                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
-                ComplexList = new List<InnerType>() { innerType },
-                String = "ok"
-            };
-
-            source.InnerType.C = source;
-
-            var target = new OuterType();
-
-            var ultraMapper = new UltraMapper( cfg =>
-            {
-                cfg.MapTypes<OuterType, OuterType>( s => new OuterType()
-                {
-                    PrimitiveList = new List<int>( s.PrimitiveList ),
-                    InnerType = new Tests.ReferenceTypeTests.InnerType()
-                } );
-
-            } );
-            ultraMapper.Map( source, target );
-
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
-        }
-
+ 
         [TestMethod]
         public void ReferenceSimpleTest()
         {
@@ -189,24 +157,6 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
             Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
             Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
-        }
-
-        [TestMethod]
-        public void ObjectToObject()
-        {
-            throw new Exception( "plain wrong" );
-
-            object source = new AllObjects() { String = "prova", OuterType = new OuterType() { String = "prova" } };
-            object target = new AllObjects();
-
-            var ultraMapper = new UltraMapper();
-            ultraMapper.Map( source, target );
-
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-
-            Assert.IsTrue( isResultOk );
-            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
-            Assert.IsFalse( Object.ReferenceEquals( ((AllObjects)source).OuterType, ((AllObjects)target).OuterType ) );
         }
     }
 }
