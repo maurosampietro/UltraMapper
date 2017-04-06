@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using UltraMapper.Configuration;
 using UltraMapper.Internals;
 using UltraMapper.Mappers.MapperContexts;
 
@@ -11,7 +10,7 @@ namespace UltraMapper.Mappers
 {
     public class CollectionMapper : ReferenceMapper
     {
-        public CollectionMapper( TypeConfigurator configuration )
+        public CollectionMapper( Configuration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -70,9 +69,7 @@ namespace UltraMapper.Mappers
 
             return Expression.Block
             (
-                new[] { newElement, context.Mapper },
-
-                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
+                new[] { newElement },
 
                 ExpressionLoops.ForEach( sourceCollection, context.SourceCollectionLoopingVar, Expression.Block
                 (
@@ -107,6 +104,8 @@ namespace UltraMapper.Mappers
             var mapMethod = context.RecursiveMapMethodInfo
                 .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
+            var itemMapping = MapperConfiguration[ sourceParam.Type, targetParam.Type ];
+
             return Expression.Block
             (
                 Expression.Assign( targetParam, Expression.Convert( itemLookupCall, targetParam.Type ) ),
@@ -121,8 +120,8 @@ namespace UltraMapper.Mappers
 
                         itemCacheCall,
 
-                        Expression.Call( context.Mapper, mapMethod,
-                            sourceParam, targetParam, context.ReferenceTracker )
+                        Expression.Call( context.Mapper, mapMethod, sourceParam, targetParam,
+                            context.ReferenceTracker, Expression.Constant( itemMapping ) )
                     )
                 )
             );

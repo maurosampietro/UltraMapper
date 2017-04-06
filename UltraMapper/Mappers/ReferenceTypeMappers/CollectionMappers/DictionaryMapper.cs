@@ -3,14 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using UltraMapper.Configuration;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Mappers
 {
     public class DictionaryMapper : CollectionMapper
     {
-        public DictionaryMapper( TypeConfigurator configuration )
+        public DictionaryMapper( Configuration configuration )
              : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )

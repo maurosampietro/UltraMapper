@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
-using UltraMapper.Configuration;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Mappers
 {
     public class NullableMapper : PrimitiveMapperBase
     {
-        public NullableMapper( TypeConfigurator configuration )
+        public NullableMapper( Configuration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -29,23 +28,20 @@ namespace UltraMapper.Mappers
                 var nullableValueAccess = Expression.MakeMemberAccess( context.SourceInstance,
                     context.SourceInstance.Type.GetProperty( nameof( Nullable<int>.Value ) ) );
 
-                var typeMapping = MapperConfiguration[
-                     sourceUnderlyingType, targetUnderlyingType ];
-
-                var convert = typeMapping.MappingExpression;
+                var convert = MapperConfiguration[ sourceUnderlyingType, targetUnderlyingType ].MappingExpression;
 
                 var constructor = context.TargetInstance.Type.GetConstructor( new Type[] { targetUnderlyingType } );
                 var newNullable = Expression.New( constructor, Expression.Invoke( convert, nullableValueAccess ) );
 
                 return Expression.Block
-                ( 
-                    new[] { context.TargetInstance }, 
-                    
+                (
+                    new[] { context.TargetInstance },
+
                     Expression.IfThenElse
                     (
                         Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
                         Expression.Assign( context.TargetInstance, Expression.Default( context.TargetInstance.Type ) ),
-                        Expression.Assign( context.TargetInstance, newNullable ) 
+                        Expression.Assign( context.TargetInstance, newNullable )
                     ),
 
                     context.TargetInstance
@@ -62,9 +58,9 @@ namespace UltraMapper.Mappers
                 if( sourceUnderlyingType == context.TargetInstance.Type )
                 {
                     return Expression.Block
-                    ( 
-                        new[] { context.TargetInstance }, 
-                        
+                    (
+                        new[] { context.TargetInstance },
+
                         Expression.IfThenElse
                         (
                             Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
@@ -80,9 +76,9 @@ namespace UltraMapper.Mappers
                     sourceUnderlyingType.IsExplicitlyConvertibleTo( context.TargetInstance.Type ) )
                 {
                     return Expression.Block
-                    ( 
-                        new[] { context.TargetInstance}, 
-                        
+                    (
+                        new[] { context.TargetInstance },
+
                         Expression.IfThenElse
                         (
                             Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
@@ -96,14 +92,14 @@ namespace UltraMapper.Mappers
 
                 var convertMethod = typeof( Convert ).GetMethod( $"To{context.TargetInstance.Type.Name}", new[] { context.SourceInstance.Type } );
                 return Expression.Block
-                ( 
-                    new[] { context.TargetInstance }, 
-                    
+                (
+                    new[] { context.TargetInstance },
+
                     Expression.IfThenElse
                     (
                         Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
                         Expression.Assign( context.TargetInstance, Expression.Default( context.TargetInstance.Type ) ),
-                        Expression.Assign( context.TargetInstance, Expression.Call( convertMethod, nullableValueAccess ) ) 
+                        Expression.Assign( context.TargetInstance, Expression.Call( convertMethod, nullableValueAccess ) )
                     ),
 
                     context.TargetInstance

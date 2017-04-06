@@ -37,6 +37,9 @@ namespace UltraMapper
 
                 else if( expBody.NodeType == ExpressionType.Parameter )
                     return ((ParameterExpression)expBody).Type;
+
+                else if( expBody.NodeType == ExpressionType.Constant )
+                    return ((ConstantExpression)expBody).Type;
             }
 
             if( memberExpression == null )
@@ -117,7 +120,7 @@ namespace UltraMapper
 
             var breakLabel = Expression.Label( "LoopBreak" );
 
-            var loop = Expression.Block
+            return Expression.Block
             (
                 new[] { enumeratorVar },
 
@@ -142,8 +145,6 @@ namespace UltraMapper
                     breakLabel
                )
             );
-
-            return loop;
         }
     }
 

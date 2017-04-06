@@ -1,29 +1,28 @@
 ﻿using System;
 using System.Diagnostics;
-using UltraMapper.Configuration;
 using UltraMapper.Internals;
 using UltraMapper.MappingConventions;
 
 namespace UltraMapper
 {
-    public class UltraMapper<T> : UltraMapper where T : IMappingConvention, new()
-    {
-        public UltraMapper( Action<TypeConfigurator<T>> config )
-              : base( new TypeConfigurator<T>() )
-        {
-            config?.Invoke( (TypeConfigurator<T>)base.MappingConfiguration );
-        }
-    }
+    //public class UltraMapper<T> : UltraMapper where T : IMappingConvention, new()
+    //{
+    //    public UltraMapper( Action<TypeConfigurator> config )
+    //          : base( new TypeConfigurator() )
+    //    {
+    //        config?.Invoke( base.MappingConfiguration );
+    //    }
+    //}
 
     public class UltraMapper
     {
-        public TypeConfigurator MappingConfiguration { get; protected set; }
+        public Configuration MappingConfiguration { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
-        public UltraMapper( TypeConfigurator config )
+        public UltraMapper( Configuration config )
         {
             this.MappingConfiguration = config;
         }
@@ -33,11 +32,8 @@ namespace UltraMapper
         /// as mapping convention allowing inline editing of the configuraton itself.
         /// </summary>
         /// <param name="config"></param>
-        public UltraMapper( Action<TypeConfigurator<DefaultMappingConvention>> config = null )
-        {
-            this.MappingConfiguration = new TypeConfigurator<DefaultMappingConvention>();
-            config?.Invoke( (TypeConfigurator<DefaultMappingConvention>)this.MappingConfiguration );
-        }
+        public UltraMapper( Action<Configuration> config = null )
+            : this( new Configuration() ) { config?.Invoke( this.MappingConfiguration ); }
 
         public TTarget Map<TSource, TTarget>( TSource source ) where TTarget : class, new()
         {
@@ -55,6 +51,19 @@ namespace UltraMapper
         public TSource Map<TSource>( TSource source ) where TSource : class, new()
         {
             var target = new TSource();
+            this.Map( source, target );
+            return target;
+        }
+
+        /// <summary>
+        /// Maps <paramref name="source"/> on a new instance of the same type.
+        /// </summary>
+        /// <typeparam name="TSource">Type of the source instance.</typeparam>
+        /// <param name="source">The instance to be copied.</param>
+        /// <returns>A deep copy of the source instance.</returns>
+        public TTarget Map<TTarget>( object source ) where TTarget : class, new()
+        {
+            var target = new TTarget();
             this.Map( source, target );
             return target;
         }

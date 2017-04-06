@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UltraMapper.Configuration;
 using UltraMapper.Internals;
 using UltraMapper.Mappers;
 using UltraMapper.MappingConventions;
@@ -63,8 +62,7 @@ namespace UltraMapper.Tests
         public void BuiltInToBuiltIn()
         {
             var source = new BuiltInTypes();
-            var target = new BuiltInTypes();
-
+            
             var ultraMapper = new UltraMapper( cfg =>
             {
                 cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
@@ -75,7 +73,9 @@ namespace UltraMapper.Tests
                     .MapMember( a => a.Char, d => d.Single )
                     .MapMember( a => a.Char, d => d.Int32 )
 
-                    //same sourceproperty/destinationProperty: second mapping overrides and adds the converter 
+                    .MapMember( a => 123, d => d.Single )
+                    
+                    //same source and destination members: last mapping overrides and adds the converter 
                     .MapMember( a => a.String, d => d.Single )
                     .MapMember( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
 
@@ -84,7 +84,7 @@ namespace UltraMapper.Tests
                     .MapMember( a => a.Single, y => y.Double );
             } );
 
-            ultraMapper.Map( source, target );
+            var target = ultraMapper.Map( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using UltraMapper.Configuration;
 using UltraMapper.Mappers;
 
 namespace UltraMapper.Internals
@@ -19,10 +18,10 @@ namespace UltraMapper.Internals
          *The target member can be therefore used as the key of this dictionary
          */
         public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
-        public readonly GlobalConfiguration GlobalConfiguration;
+        public readonly Configuration GlobalConfiguration;
         public readonly TypePair TypePair;
 
-        public TypeMapping( GlobalConfiguration globalConfig, TypePair typePair )
+        public TypeMapping( Configuration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
             this.TypePair = typePair;

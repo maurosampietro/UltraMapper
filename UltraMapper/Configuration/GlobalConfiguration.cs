@@ -1,25 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
-using UltraMapper.Configuration;
+using UltraMapper.Internals;
 using UltraMapper.Mappers;
 using UltraMapper.MappingConventions;
+using UltraMapper.ExtensionMethods;
 
 namespace UltraMapper
 {
+    public enum ReferenceMappingStrategies { CREATE_NEW_INSTANCE, USE_TARGET_INSTANCE_IF_NOT_NULL }
+
     public interface IMappingOptions
     {
         CollectionMappingStrategies CollectionMappingStrategy { get; set; }
         ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
     }
 
-    public interface ITypeOptions : IMappingOptions
+    public interface IMemberOptions : IMappingOptions
     {
-        bool IgnoreMemberMappingResolvedByConvention { get; }
+        bool Ignore { get; set; }
     }
 
-    public class GlobalConfiguration
+    public interface ITypeOptions : IMappingOptions
     {
-        public readonly TypeConfigurator Configuration;
+        bool IgnoreMemberMappingResolvedByConvention { get; set; }
+    }
+
+    public class Configuration
+    {
+        private readonly Dictionary<TypePair, TypeMapping> _typeMappings =
+            new Dictionary<TypePair, TypeMapping>();
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -34,33 +44,122 @@ namespace UltraMapper
         public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
 
         public IMappingConvention MappingConvention { get; set; }
-        public HashSet<IMapperExpressionBuilder> Mappers { get; private set; }
+        public List<IMapperExpressionBuilder> Mappers { get; private set; }
 
-        public GlobalConfiguration( TypeConfigurator configuration )
+        public Configuration( Action<Configuration> config = null )
         {
-            this.Configuration = configuration;
+            this.MappingConvention = new DefaultMappingConvention();
 
             this.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
             this.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
 
-            this.Mappers = new HashSet<IMapperExpressionBuilder>()
+            this.Mappers = new List<IMapperExpressionBuilder>()
             {
-                //Order is important: the first mapper that can handle a mapping is used.
-                //Make sure to use collection which preserve insertion order!
-                new BuiltInTypeMapper( configuration ),
-                new NullableMapper( configuration ),
-                new ConvertMapper( configuration ),
-                new StructMapper( configuration ),
-                new DictionaryMapper( configuration ),
-                //new SetMapper( configuration ),
-                new StackMapper( configuration ),
-                new QueueMapper( configuration ),
-                new LinkedListMapper( configuration ),
-                new CollectionMapper( configuration ),
-                new ReferenceMapper( configuration ),
+                //Order is important: the first MapperExpressionBuilder that can handle a mapping is used.
+                //Make sure to use a collection which preserve insertion order!
+                new BuiltInTypeMapper( this ),
+                new NullableMapper( this ),
+                new ConvertMapper( this ),
+                new StructMapper( this ),
+                new DictionaryMapper( this ),
+                new StackMapper( this ),
+                new QueueMapper( this ),
+                new LinkedListMapper( this ),
+                new CollectionMapper( this ),
+                new ReferenceMapper( this ),
             };
+
+            config?.Invoke( this );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
+        {
+            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMappingConfig?.Invoke( typeMapping );
+
+            return new MemberConfigurator<TSource, TTarget>( typeMapping );
+        }
+
+        /// <summary>
+        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
+        /// This overrides mapping conventions.
+        /// </summary>
+        /// <typeparam name="TSource">Source type</typeparam>
+        /// <typeparam name="TTarget">Target type</typeparam>
+        /// <param name="targetConstructor">The conversion mechanism to be used to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
+        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
+            Expression<Func<TSource, TTarget>> converter, Action<ITypeOptions> typeMappingConfig = null )
+        {
+            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMapping.CustomConverter = converter;
+            typeMappingConfig?.Invoke( typeMapping );
+
+            return new MemberConfigurator<TSource, TTarget>( typeMapping );
+        }
+
+        /// <summary>
+        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
+        /// This overrides mapping conventions.
+        /// </summary>
+        /// <typeparam name="TSource">Source type</typeparam>
+        /// <typeparam name="TTarget">Target type</typeparam>
+        /// <param name="targetConstructor">The expression providing an instance of <typeparamref name="TTarget"/>.</param>
+        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
+            Expression<Func<TTarget>> targetConstructor, Action<ITypeOptions> typeMappingConfig = null )
+        {
+            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMapping.CustomTargetConstructor = targetConstructor;
+            typeMappingConfig?.Invoke( typeMapping );
+
+            return new MemberConfigurator<TSource, TTarget>( typeMapping );
+        }
+
+        /// <summary>
+        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
+        /// This overrides mapping conventions.
+        /// </summary>
+        /// <typeparam name="TSource">Source type</typeparam>
+        /// <typeparam name="TTarget">Target type</typeparam>
+        /// <param name="source">Source instance</param>
+        /// <param name="target">Target instance</param>
+        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( TSource source, TTarget target,
+            Action<ITypeOptions> typeMappingConfig = null )
+        {
+            var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
+            typeMappingConfig?.Invoke( typeMapping );
+
+            return new MemberConfigurator<TSource, TTarget>( typeMapping );
+        }
+
+        private TypeMapping GetTypeMapping( Type source, Type target )
+        {
+            var typePair = new TypePair( source, target );
+
+            return _typeMappings.GetOrAdd( typePair,
+                () => new TypeMapping( this, typePair ) );
+        }
+
+        public TypeMapping this[ Type source, Type target ]
+        {
+            get
+            {
+                var typePair = new TypePair( source, target );
+
+                TypeMapping typeMapping;
+                if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
+                    return typeMapping;
+
+                typeMapping = new TypeMapping( this, typePair );
+
+                //configure by convention
+                new MemberConfigurator( typeMapping );
+
+                _typeMappings.Add( typePair, typeMapping );
+                return typeMapping;
+            }
         }
     }
-
-    public enum ReferenceMappingStrategies { CREATE_NEW_INSTANCE, USE_TARGET_INSTANCE_IF_NOT_NULL }
 }

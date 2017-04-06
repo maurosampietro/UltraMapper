@@ -23,9 +23,8 @@ namespace UltraMapper.Mappers
         public ParameterExpression ReferenceTracker { get; protected set; }
         public ConstructorInfo ReturnElementConstructor { get; protected set; }
 
-        public MethodInfo RecursiveMapMethodInfo { get; protected set; }
         public ParameterExpression Mapper { get; private set; }
-        public MethodInfo RecursiveMemberMappingMapMethodInfo { get; private set; }
+        public MethodInfo RecursiveMapMethodInfo { get; protected set; }
 
         public ReferenceMapperContext( Type source, Type target, IMappingOptions options )
              : base( source, target, options )
@@ -48,30 +47,9 @@ namespace UltraMapper.Mappers
             if( !TargetInstance.Type.IsValueType )
                 TargetNullValue = Expression.Constant( null, TargetInstance.Type );
 
-            RecursiveMapMethodInfo = GetUltraMapperMapGenericMethod();
-            RecursiveMemberMappingMapMethodInfo = GetUltraMapperMapGenericMethodMemberMapping();
+            RecursiveMapMethodInfo = GetUltraMapperMapGenericMethodMemberMapping();
             Mapper = Expression.Variable( typeof( UltraMapper ), "mapper" );
         }
-
-        private static MethodInfo GetUltraMapperMapGenericMethod()
-        {
-            return typeof( UltraMapper ).GetMethods()
-                .Where( m => m.Name == "Map" )
-                .Select( m => new
-                {
-                    Method = m,
-                    Params = m.GetParameters(),
-                    GenericArgs = m.GetGenericArguments()
-                } )
-                .Where( x => x.Params.Length == 3
-                            && x.GenericArgs.Length == 2
-                            && x.Params[ 0 ].ParameterType == x.GenericArgs[ 0 ] &&
-                             x.Params[ 1 ].ParameterType == x.GenericArgs[ 1 ] &&
-                             x.Params[ 2 ].ParameterType == typeof( ReferenceTracking ) )
-                .Select( x => x.Method )
-                .First();
-        }
-
 
         private static MethodInfo GetUltraMapperMapGenericMethodMemberMapping()
         {
@@ -92,6 +70,5 @@ namespace UltraMapper.Mappers
                 .Select( x => x.Method )
                 .First();
         }
-
     }
 }

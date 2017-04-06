@@ -124,7 +124,7 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new UltraMapper( cfg =>
             {
-                cfg.GlobalConfiguration.ReferenceMappingStrategy =
+                cfg.ReferenceMappingStrategy =
                     ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
             } );
 
@@ -410,7 +410,7 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new UltraMapper( cfg =>
             {
-                cfg.GlobalConfiguration.IgnoreMemberMappingResolvedByConvention = true;
+                cfg.IgnoreMemberMappingResolvedByConvention = true;
 
                 cfg.MapTypes<ComplexType, ComplexType>( typeCfg =>
                 {

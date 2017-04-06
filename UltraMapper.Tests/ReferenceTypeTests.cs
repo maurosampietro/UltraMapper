@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UltraMapper.Configuration;
 using UltraMapper.Mappers;
 using UltraMapper.MappingConventions;
 using System.Collections;
@@ -52,12 +51,6 @@ namespace UltraMapper.Tests
             public OuterType C { get; set; }
         }
 
-        private class AllObjects
-        {
-            public object String { get; set; }
-            public object OuterType { get; set; }
-        }
- 
         [TestMethod]
         public void ReferenceSimpleTest()
         {
@@ -105,9 +98,9 @@ namespace UltraMapper.Tests
             var beforeMapPrimitiveList = target.PrimitiveList;
             var beforeMapComplexList = target.ComplexList;
 
-            var ultraMapper = new UltraMapper<CustomMappingConvention>( cfg =>
+            var ultraMapper = new UltraMapper( cfg =>
             {
-                cfg.GlobalConfiguration.ReferenceMappingStrategy =
+                cfg.ReferenceMappingStrategy =
                     ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
             } );
 
@@ -148,9 +141,9 @@ namespace UltraMapper.Tests
 
             var primitiveList = target.PrimitiveList;
 
-            var ultraMapper = new UltraMapper<CustomMappingConvention>( cfg =>
+            var ultraMapper = new UltraMapper( cfg =>
             {
-                cfg.GlobalConfiguration.ReferenceMappingStrategy =
+                cfg.ReferenceMappingStrategy =
                     ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
             } );
 

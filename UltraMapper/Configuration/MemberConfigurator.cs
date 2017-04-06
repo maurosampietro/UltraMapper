@@ -7,7 +7,7 @@ using System.Reflection;
 using UltraMapper.ExtensionMethods;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Configuration
+namespace UltraMapper
 {
     public class MemberConfigurator
     {
@@ -20,22 +20,12 @@ namespace UltraMapper.Configuration
             = new Dictionary<MemberInfo, MappingTarget>();
 
         protected readonly TypeMapping _typeMapping;
-        protected readonly GlobalConfiguration _globalConfiguration;
 
-        public MemberConfigurator( TypeMapping typeMapping,
-            GlobalConfiguration globalConfiguration )
+        public MemberConfigurator( TypeMapping typeMapping )
         {
             _typeMapping = typeMapping;
-            _globalConfiguration = globalConfiguration;
-
             this.MapByConvention( typeMapping );
         }
-
-        public MemberConfigurator( TypePair typePair, GlobalConfiguration globalConfiguration )
-            : this( new TypeMapping( globalConfiguration, typePair ), globalConfiguration ) { }
-
-        public MemberConfigurator( Type sourceType, Type targetType, GlobalConfiguration globalConfiguration )
-            : this( new TypeMapping( globalConfiguration, new TypePair( sourceType, targetType ) ), globalConfiguration ) { }
 
         public MemberConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
         {
@@ -95,6 +85,8 @@ namespace UltraMapper.Configuration
 
         protected void MapByConvention( TypeMapping typeMapping )
         {
+            var mappingConvention = typeMapping.GlobalConfiguration.MappingConvention;
+
             var source = typeMapping.TypePair.SourceType;
             var target = typeMapping.TypePair.TargetType;
 
@@ -117,7 +109,7 @@ namespace UltraMapper.Configuration
             {
                 foreach( var targetMember in targetMembers )
                 {
-                    if( _globalConfiguration.MappingConvention.IsMatch( sourceMember, targetMember ) )
+                    if( mappingConvention.IsMatch( sourceMember, targetMember ) )
                     {
                         var mapping = this.MapMemberInternal( sourceMember, targetMember );
                         mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
@@ -131,11 +123,7 @@ namespace UltraMapper.Configuration
 
     public class MemberConfigurator<TSource, TTarget> : MemberConfigurator
     {
-        public MemberConfigurator( GlobalConfiguration globalConfiguration )
-            : base( typeof( TSource ), typeof( TTarget ), globalConfiguration ) { }
-
-        public MemberConfigurator( TypeMapping typeMapping, GlobalConfiguration globalConfiguration )
-            : base( typeMapping, globalConfiguration ) { }
+        public MemberConfigurator( TypeMapping typeMapping ) : base( typeMapping ) { }
 
         public MemberConfigurator<TSource, TTarget> IgnoreSourceMember<TSourceMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
@@ -179,25 +167,54 @@ namespace UltraMapper.Configuration
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
             Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
-            Expression<Action<TTarget, TSourceMember>> targetMemberSetter )
+            Expression<Action<TTarget, TSourceMember>> targetMemberSetter,
+            Action<IMemberOptions> memberMappingConfig = null )
         {
             var mapping = base.MapMemberInternal( sourceMemberSelector, targetMemberGetter, targetMemberSetter );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            memberMappingConfig?.Invoke( mapping );
 
             return this;
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector )
+        {
+            return MapMember( sourceSelector, targetSelector, null, null );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
-            Expression<Func<TSourceMember, TTargetMember>> converter = null )
+            Expression<Func<TSourceMember, TTargetMember>> converter )
+        {
+            return MapMember( sourceSelector, targetSelector, converter, null );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Action<IMemberOptions> memberMappingConfig )
+        {
+            return MapMember( sourceSelector, targetSelector, null, memberMappingConfig );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Expression<Func<TSourceMember, TTargetMember>> converter,
+            Action<IMemberOptions> memberMappingConfig )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
             mapping.CustomConverter = converter;
+            memberMappingConfig?.Invoke( mapping );
 
             return this;
         }
+
+        //COLLECTION OVERLOADS
 
         /// <summary>
         /// Map a member implementing IEnumerable to another IEnumerable for updating.
@@ -225,7 +242,7 @@ namespace UltraMapper.Configuration
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
             Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
-            Action<IMappingOptions> memberMappingConfig )
+            Action<IMemberOptions> memberMappingConfig = null )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;

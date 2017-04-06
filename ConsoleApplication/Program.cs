@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UltraMapper;
-using UltraMapper.Configuration;
 using UltraMapper.Internals;
 using UltraMapper.Mappers;
 using UltraMapper.MappingConventions;

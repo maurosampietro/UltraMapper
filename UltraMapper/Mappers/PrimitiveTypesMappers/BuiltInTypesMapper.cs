@@ -6,7 +6,7 @@ namespace UltraMapper.Mappers
 {
     public sealed class BuiltInTypeMapper : PrimitiveMapperBase
     {
-        public BuiltInTypeMapper( TypeConfigurator configuration )
+        public BuiltInTypeMapper( Configuration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )

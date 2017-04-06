@@ -8,7 +8,7 @@ namespace UltraMapper.Internals
 {
     public enum MappingResolution { RESOLVED_BY_CONVENTION, USER_DEFINED }
 
-    public class MemberMapping : IMappingOptions, IMapping
+    public class MemberMapping : IMemberOptions, IMapping
     {
         private readonly Lazy<string> _toString;
 
@@ -33,6 +33,8 @@ namespace UltraMapper.Internals
 
         public MappingResolution MappingResolution { get; internal set; }
 
+        public bool Ignore { get; set; }
+
         private TypeMapping _memberTypeMapping;
         public TypeMapping MemberTypeMapping
         {
@@ -40,7 +42,7 @@ namespace UltraMapper.Internals
             {
                 if( _memberTypeMapping == null )
                 {
-                    _memberTypeMapping = InstanceTypeMapping.GlobalConfiguration.Configuration[
+                    _memberTypeMapping = InstanceTypeMapping.GlobalConfiguration[
                         SourceMember.MemberType, TargetMember.MemberType ];
                 }
 
@@ -84,7 +86,8 @@ namespace UltraMapper.Internals
             get
             {
                 if( _referenceMappingStrategy == null )
-                    return MemberTypeMapping.ReferenceMappingStrategy;
+                    // return MemberTypeMapping.ReferenceMappingStrategy;
+                    return InstanceTypeMapping.ReferenceMappingStrategy;
 
                 return _referenceMappingStrategy.Value;
             }
@@ -98,7 +101,8 @@ namespace UltraMapper.Internals
             get
             {
                 if( _collectionMappingStrategy == null )
-                    return MemberTypeMapping.CollectionMappingStrategy;
+                    //    return MemberTypeMapping.CollectionMappingStrategy;
+                    return InstanceTypeMapping.CollectionMappingStrategy;
 
                 return _collectionMappingStrategy.Value;
             }

@@ -9,10 +9,10 @@ namespace UltraMapper.Mappers
 {
     public class ReferenceMapper : IMemberMappingExpressionBuilder
     {
-        public readonly UltraMapper _mapper;
-        public readonly TypeConfigurator MapperConfiguration;
+        protected readonly UltraMapper _mapper;
+        public readonly Configuration MapperConfiguration;
 
-        public ReferenceMapper( TypeConfigurator configuration )
+        public ReferenceMapper( Configuration configuration )
         {
             this.MapperConfiguration = configuration;
             _mapper = new UltraMapper( configuration );
@@ -58,18 +58,20 @@ namespace UltraMapper.Mappers
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
             var memberMappings = this.GetMemberMappings( typeMapping )
                 .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
+                .ReplaceParameter( context.Mapper, context.Mapper.Name )
                 .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                 .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
                 .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name );
 
             var expression = Expression.Block
             (
-                new[] { context.ReturnObject },
+                new[] { context.ReturnObject, context.Mapper },
 
+                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
                 this.ReturnListInitialization( context ),
 
-                this.GetExpressionBody( context ),
                 memberMappings,
+                this.GetExpressionBody( context ),
 
                 context.ReturnObject
             );
@@ -151,8 +153,11 @@ namespace UltraMapper.Mappers
                     mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
             }
 
-            var memberMappingExps = memberMappings.OrderBy( mm => mm, _memberComparer )
-                .Where( mapping => !mapping.SourceMember.Ignore && !mapping.TargetMember.Ignore )
+            var memberMappingExps = memberMappings
+                .Where( mapping => !mapping.Ignore )
+                .Where( mapping => !mapping.SourceMember.Ignore )
+                .Where( mapping => !mapping.TargetMember.Ignore )
+                .OrderBy( mm => mm, _memberComparer )
                 .Select( mapping =>
                 {
                     if( mapping.Mapper is ReferenceMapper )
@@ -171,12 +176,12 @@ namespace UltraMapper.Mappers
              * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
              * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
              * 
-             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NULL) = ASSIGN NEW OBJECT 
-             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET(NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
+             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NULL) = ASSIGN NEW OBJECT 
+             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
              */
             var memberContext = new MemberMappingContext( mapping );
 
-            var mapMethod = memberContext.RecursiveMemberMappingMapMethodInfo.MakeGenericMethod(
+            var mapMethod = memberContext.RecursiveMapMethodInfo.MakeGenericMethod(
                 memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 
             Expression itemLookupCall = Expression.Call
@@ -222,12 +227,9 @@ namespace UltraMapper.Mappers
                             Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
                             Expression.Block
                             (
-                                new[] { memberContext.Mapper },
-
                                 ((IMemberMappingExpressionBuilder)mapping.Mapper)
                                     .GetTargetInstanceAssignment( memberContext, mapping ),
 
-                                Expression.Assign( memberContext.Mapper, Expression.Constant( _mapper ) ),
                                 Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
                                     memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) ),
 

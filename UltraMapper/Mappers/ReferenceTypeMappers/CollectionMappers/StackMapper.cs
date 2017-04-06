@@ -11,7 +11,7 @@ namespace UltraMapper.Mappers
     * to preserve order and have a specular clone */
     public class StackMapper : CollectionMapperViaTemporaryCollection
     {
-        public StackMapper( TypeConfigurator configuration )
+        public StackMapper( Configuration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
@@ -33,7 +33,7 @@ namespace UltraMapper.Mappers
 
     public abstract class CollectionMapperViaTemporaryCollection : CollectionMapper
     {
-        public CollectionMapperViaTemporaryCollection( TypeConfigurator configuration )
+        public CollectionMapperViaTemporaryCollection( Configuration configuration )
             : base( configuration ) { }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )

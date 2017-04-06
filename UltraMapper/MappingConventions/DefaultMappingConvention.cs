@@ -3,8 +3,7 @@
 namespace UltraMapper.MappingConventions
 {
     /// <summary>
-    /// Two properties match if they have the same name and the type
-    /// is the same or implicitly convertible to the target type.
+    /// Two members match if they have the same name.
     /// </summary>
     public class DefaultMappingConvention : IMappingConvention
     {
@@ -15,7 +14,6 @@ namespace UltraMapper.MappingConventions
             this.PropertyMatchingRules = new PropertyMatchingConfiguration( cfg =>
             {
                 cfg.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = false );
-                //cfg.GetOrAdd<TypeMatchingRule>( rule => rule.AllowImplicitConversions = true );
             } );
         }
 

@@ -6,9 +6,9 @@ namespace UltraMapper.Mappers
 {
     public abstract class PrimitiveMapperBase : IMapperExpressionBuilder
     {
-        protected readonly TypeConfigurator MapperConfiguration;
+        protected readonly Configuration MapperConfiguration;
 
-        public PrimitiveMapperBase( TypeConfigurator configuration )
+        public PrimitiveMapperBase( Configuration configuration )
         {
             this.MapperConfiguration = configuration;
         }
