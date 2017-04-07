@@ -4,7 +4,7 @@ namespace UltraMapper.MappingConventions
 {
     public interface IMappingConvention
     {
-        PropertyMatchingConfiguration PropertyMatchingRules { get; }
+        MatchingRuleConfiguration MatchingRules { get; }
         bool IsMatch( MemberInfo source, MemberInfo target );
     }
 }

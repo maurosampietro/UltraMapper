@@ -44,7 +44,7 @@ namespace UltraMapper
         public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
 
         public IMappingConvention MappingConvention { get; set; }
-        public List<IMapperExpressionBuilder> Mappers { get; private set; }
+        public List<IMappingExpressionBuilder> Mappers { get; private set; }
 
         public Configuration( Action<Configuration> config = null )
         {
@@ -53,7 +53,7 @@ namespace UltraMapper
             this.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
             this.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
 
-            this.Mappers = new List<IMapperExpressionBuilder>()
+            this.Mappers = new List<IMappingExpressionBuilder>()
             {
                 //Order is important: the first MapperExpressionBuilder that can handle a mapping is used.
                 //Make sure to use a collection which preserve insertion order!
@@ -72,6 +72,7 @@ namespace UltraMapper
             config?.Invoke( this );
         }
 
+        #region Type-to-Type Mapping
         public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
@@ -132,7 +133,8 @@ namespace UltraMapper
             typeMappingConfig?.Invoke( typeMapping );
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
+        } 
+        #endregion
 
         private TypeMapping GetTypeMapping( Type source, Type target )
         {

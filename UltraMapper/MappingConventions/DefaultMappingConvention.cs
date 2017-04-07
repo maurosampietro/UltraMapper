@@ -7,11 +7,11 @@ namespace UltraMapper.MappingConventions
     /// </summary>
     public class DefaultMappingConvention : IMappingConvention
     {
-        public PropertyMatchingConfiguration PropertyMatchingRules { get; set; }
+        public MatchingRuleConfiguration MatchingRules { get; set; }
 
         public DefaultMappingConvention()
         {
-            this.PropertyMatchingRules = new PropertyMatchingConfiguration( cfg =>
+            this.MatchingRules = new MatchingRuleConfiguration( cfg =>
             {
                 cfg.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = false );
             } );
@@ -19,7 +19,7 @@ namespace UltraMapper.MappingConventions
 
         public bool IsMatch( MemberInfo source, MemberInfo target )
         {
-            return this.PropertyMatchingRules
+            return this.MatchingRules
                 .MatchingEvaluator( source, target );
         }
     }

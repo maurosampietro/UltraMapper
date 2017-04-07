@@ -11,14 +11,6 @@ namespace UltraMapper
 {
     public class MemberConfigurator
     {
-        //Each source and target member is instantiated only once per configuration
-        //so we can handle their options/configuration override correctly.
-        protected readonly Dictionary<MemberInfo, MappingSource> _sourceProperties
-            = new Dictionary<MemberInfo, MappingSource>();
-
-        protected readonly Dictionary<MemberInfo, MappingTarget> _targetProperties
-            = new Dictionary<MemberInfo, MappingTarget>();
-
         protected readonly TypeMapping _typeMapping;
 
         public MemberConfigurator( TypeMapping typeMapping )
@@ -71,14 +63,14 @@ namespace UltraMapper
             LambdaExpression sourceMemberGetterExpression, LambdaExpression targetMemberGetterExpression,
             LambdaExpression targetMemberSetterExpression )
         {
-            var mappingSource = _sourceProperties.GetOrAdd( sourceMember,
-                () => new MappingSource( sourceMemberGetterExpression ) );
+            var mappingSource = _typeMapping.GetMappingSource( sourceMember,
+                sourceMemberGetterExpression );
 
-            var mappingTarget = _targetProperties.GetOrAdd( targetMember,
-                () => new MappingTarget( targetMemberGetterExpression, targetMemberSetterExpression ) );
+            var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
+                targetMemberGetterExpression, targetMemberSetterExpression );
 
-            var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget );
-            _typeMapping.MemberMappings[ targetMember ] = mapping;
+            var mapping = _typeMapping.GetMemberMapping( mappingSource, mappingTarget );
+            _typeMapping.MemberMappings[ mappingTarget ] = mapping;
 
             return mapping;
         }
@@ -134,8 +126,8 @@ namespace UltraMapper
 
             foreach( var selector in selectors )
             {
-                var mappingSource = _sourceProperties.GetOrAdd(
-                    selector.ExtractMember(), () => new MappingSource( selector ) );
+                var mappingSource = _typeMapping.GetMappingSource( 
+                    selector.ExtractMember(), selector );
 
                 mappingSource.Ignore = true;
             }
@@ -155,8 +147,8 @@ namespace UltraMapper
                 var targetMember = selector.ExtractMember();
                 var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
-                var mappingTarget = _targetProperties.GetOrAdd(
-                    targetMember, () => new MappingTarget( selector, targetMemberSetterExpression ) );
+                var mappingTarget =_typeMapping.GetMappingTarget( targetMember, 
+                    selector, targetMemberSetterExpression );
 
                 mappingTarget.Ignore = true;
             }
@@ -234,6 +226,7 @@ namespace UltraMapper
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
             mapping.CollectionEqualityComparer = elementEqualityComparer;
 
             return this;

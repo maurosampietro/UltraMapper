@@ -7,7 +7,7 @@ namespace UltraMapper.MappingConventions
     /// Two properties match if the source type is of the same type 
     /// or (optionally) implicitly convertible to the target type.
     /// </summary>
-    public class TypeMatchingRule : PropertyMatchingRuleBase
+    public class TypeMatchingRule : MatchingRuleBase
     {
         public bool AllowImplicitConversions { get; set; } = true;
         public bool AllowExplicitConversions { get; set; } = true;

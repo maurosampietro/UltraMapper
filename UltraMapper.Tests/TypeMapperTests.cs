@@ -61,7 +61,7 @@ namespace UltraMapper.Tests
 
             var config = new Configuration( cfg =>
             {
-                cfg.MappingConvention.PropertyMatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
+                cfg.MappingConvention.MatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
                 {
                     ruleConfig.AllowImplicitConversions = false;
                     ruleConfig.AllowExplicitConversions = false;
@@ -83,7 +83,7 @@ namespace UltraMapper.Tests
 
             var mapper = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.PropertyMatchingRules
+                cfg.MappingConvention.MatchingRules
                     .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
                     .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
                     .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )

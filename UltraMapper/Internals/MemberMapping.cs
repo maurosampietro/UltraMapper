@@ -34,6 +34,7 @@ namespace UltraMapper.Internals
         public MappingResolution MappingResolution { get; internal set; }
 
         public bool Ignore { get; set; }
+        public LambdaExpression CollectionEqualityComparer { get; set; }
 
         private TypeMapping _memberTypeMapping;
         public TypeMapping MemberTypeMapping
@@ -78,8 +79,6 @@ namespace UltraMapper.Internals
             set { _customTargetConstructor = value; }
         }
 
-        public LambdaExpression CollectionEqualityComparer { get; internal set; }
-
         private ReferenceMappingStrategies? _referenceMappingStrategy;
         public ReferenceMappingStrategies ReferenceMappingStrategy
         {
@@ -110,8 +109,8 @@ namespace UltraMapper.Internals
             set { _collectionMappingStrategy = value; }
         }
 
-        private IMapperExpressionBuilder _mapper;
-        public IMapperExpressionBuilder Mapper
+        private IMappingExpressionBuilder _mapper;
+        public IMappingExpressionBuilder Mapper
         {
             get
             {

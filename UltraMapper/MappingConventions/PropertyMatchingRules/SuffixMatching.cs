@@ -5,10 +5,9 @@ using System.Reflection;
 namespace UltraMapper.MappingConventions
 {
     /// <summary>
-    /// Two properties match if targetName = sourceName + suffix.
-    /// Name case can be optionally ignored.
+    /// Two members match if targetName = sourceName + suffix.
     /// </summary>
-    public class SuffixMatching : PropertyMatchingRuleBase
+    public class SuffixMatching : MatchingRuleBase
     {
         public bool IgnoreCase { get; set; }
         public string[] Suffixes { get; set; }
@@ -27,7 +26,7 @@ namespace UltraMapper.MappingConventions
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-            return this.Suffixes.Any( ( suffix ) =>
+            return this.Suffixes.Any( suffix =>
                 target.Name.Equals( source.Name + suffix, comparisonType ) );
         }
     }

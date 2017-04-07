@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
-using UltraMapper.Internals;
-using UltraMapper.Mappers.MapperContexts;
 
 namespace UltraMapper.Mappers
 {
-    public interface IMapperExpressionBuilder
+    public interface IMappingExpressionBuilder
     {
         /// <summary>
         /// Gets a value indicating whether the mapper can handle the
@@ -25,10 +23,5 @@ namespace UltraMapper.Mappers
         /// <param name="options">Mapping options</param>
         /// <returns>The mapping expression</returns>
         LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options );
-    }
-
-    public interface IMemberMappingExpressionBuilder : IMapperExpressionBuilder
-    {
-        Expression GetTargetInstanceAssignment( MemberMappingContext memberContext, MemberMapping mapping );
     }
 }

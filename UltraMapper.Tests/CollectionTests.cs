@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using UltraMapper.Internals;
@@ -431,38 +432,97 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-        //[TestMethod]
-        //public void CollectionItemComparer()
-        //{
-        //    throw new NotImplementedException();
+        [TestMethod]
+        public void CollectionUpdate()
+        {
+            var innerType = new InnerType() { String = "test" };
 
-        //    var source = new GenericCollections<ComplexType>( false );
+            var source = new GenericCollections<ComplexType>( false );
 
-        //    //initialize source
-        //    for( int i = 0; i < 50; i++ )
-        //    {
-        //        source.List.Add( new ComplexType() { A = i } );
-        //        source.HashSet.Add( new ComplexType() { A = i } );
-        //        source.SortedSet.Add( new ComplexType() { A = i } );
-        //        source.Stack.Push( new ComplexType() { A = i } );
-        //        source.Queue.Enqueue( new ComplexType() { A = i } );
-        //        source.LinkedList.AddLast( new ComplexType() { A = i } );
-        //        source.ObservableCollection.Add( new ComplexType() { A = i } );
-        //    }
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
 
-        //    var target = new GenericCollections<ComplexType>( false );
+            var target = new GenericCollections<ComplexType>( false );
 
-        //    var ultraMapper = new UltraMapper( cfg =>
-        //    {
-        //        cfg.MapTypes( source, target )
-        //            .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemA.A );
-        //    } );
+            var temp = new List<ComplexType>()
+            {
+                new ComplexType() { A = 1 },
+                new ComplexType() { A = 49 },
+                new ComplexType() { A = 50 }
+            };
 
-        //    ultraMapper.Map( source, target );
 
-        //    bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-        //    Assert.IsTrue( isResultOk );
-        //}
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemB.A );
+            } );
 
+            LinqExtensions.Update( ultraMapper, source.List, temp, new RelayEqualityComparison<ComplexType>( ( itemA, itemB ) => itemA.A == itemB.A ) );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        public static class LinqExtensions
+        {
+            public static void Update<T>( UltraMapper mapper, IEnumerable<T> source, ICollection<T> target, IEqualityComparer<T> comparer )
+                where T : class
+            {
+                var itemsToRemove = target.Except( source, comparer ).ToList();
+                foreach( var item in itemsToRemove ) target.Remove( item );
+
+                List<T> itemsToAdd = new List<T>();
+                foreach( var sourceItem in source )
+                {
+                    bool match = false;
+                    foreach( var targetItem in target )
+                    {
+                        if( comparer.Equals( sourceItem, targetItem ) )
+                        {
+                            match = true;
+                            mapper.Map( sourceItem, targetItem );
+                        }
+                    }
+
+                    if( !match )
+                        itemsToAdd.Add( sourceItem );
+                }
+
+                foreach( var item in itemsToAdd ) target.Add( item );
+            }
+        }
+
+        private class RelayEqualityComparison<T> : IEqualityComparer<T>
+        {
+            private Func<T, T, bool> _comparer;
+
+            public RelayEqualityComparison( Func<T, T, bool> comparer )
+            {
+                _comparer = comparer;
+            }
+
+            public bool Equals( T x, T y )
+            {
+                var result = _comparer( x, y );
+                return result;
+            }
+
+            public int GetHashCode( T obj )
+            {
+                return -1;
+            }
+        }
     }
 }

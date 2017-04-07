@@ -3,12 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using UltraMapper.ExtensionMethods;
 using UltraMapper.Mappers;
 
 namespace UltraMapper.Internals
 {
-    public class TypeMapping : ITypeOptions, IMapping
+    public sealed class TypeMapping : ITypeOptions, IMapping
     {
+        //Each source and target member is instantiated only once per typemapping
+        //so we can handle their options/configuration override correctly.
+        private readonly Dictionary<MemberInfo, MappingSource> _sourceProperties
+            = new Dictionary<MemberInfo, MappingSource>();
+
+        private readonly Dictionary<MemberInfo, MappingTarget> _targetProperties
+            = new Dictionary<MemberInfo, MappingTarget>();
+
         /*
          *A source member can be mapped to multiple target members.
          *
@@ -17,7 +26,7 @@ namespace UltraMapper.Internals
          *
          *The target member can be therefore used as the key of this dictionary
          */
-        public readonly Dictionary<MemberInfo, MemberMapping> MemberMappings;
+        public readonly Dictionary<MappingTarget, MemberMapping> MemberMappings;
         public readonly Configuration GlobalConfiguration;
         public readonly TypePair TypePair;
 
@@ -25,13 +34,13 @@ namespace UltraMapper.Internals
         {
             this.GlobalConfiguration = globalConfig;
             this.TypePair = typePair;
-            this.MemberMappings = new Dictionary<MemberInfo, MemberMapping>();
+            this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
         }
 
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression CustomTargetConstructor { get; set; }
 
-        private bool? _ignoreMappingResolvedByConvention = null;
+        private bool? _ignoreMappingResolvedByConvention;
         public bool IgnoreMemberMappingResolvedByConvention
         {
             get
@@ -73,8 +82,8 @@ namespace UltraMapper.Internals
             set { _collectionMappingStrategy = value; }
         }
 
-        private IMapperExpressionBuilder _mapper = null;
-        public IMapperExpressionBuilder Mapper
+        private IMappingExpressionBuilder _mapper;
+        public IMappingExpressionBuilder Mapper
         {
             get
             {
@@ -129,6 +138,25 @@ namespace UltraMapper.Internals
                 return _mappingFunc = Expression.Lambda<Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>>>(
                     bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
             }
+        }
+
+        public MappingSource GetMappingSource( MemberInfo sourceMember,
+            LambdaExpression sourceMemberGetterExpression )
+        {
+            return _sourceProperties.GetOrAdd( sourceMember,
+               () => new MappingSource( sourceMemberGetterExpression ) );
+        }
+
+        public MappingTarget GetMappingTarget( MemberInfo targetMember,
+            LambdaExpression targetMemberGetterExpression, LambdaExpression targetMemberSetterExpression )
+        {
+            return _targetProperties.GetOrAdd( targetMember,
+                () => new MappingTarget( targetMemberGetterExpression, targetMemberSetterExpression ) );
+        }
+
+        public MemberMapping GetMemberMapping( MappingSource mappingSource, MappingTarget mappingTarget )
+        {
+            return new MemberMapping( this, mappingSource, mappingTarget );
         }
     }
 }

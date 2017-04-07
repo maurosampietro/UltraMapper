@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace UltraMapper.MappingConventions
 {
-    public static class PropertyMatchingRuleChainingExtensions
+    public static class MatchingRuleChainingExtensions
     {
         private static readonly Type _propertyMatchingRuleType = typeof( IMatchingRule );
         private static readonly Type _propertInfoType = typeof( MemberInfo );

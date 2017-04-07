@@ -4,7 +4,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Mappers
 {
-    public abstract class PrimitiveMapperBase : IMapperExpressionBuilder
+    public abstract class PrimitiveMapperBase : IMappingExpressionBuilder
     {
         protected readonly Configuration MapperConfiguration;
 

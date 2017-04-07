@@ -72,6 +72,7 @@ namespace UltraMapper.Tests
                     memberConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
                     memberConfig.CollectionMappingStrategy = CollectionMappingStrategies.MERGE;
                 } );
+
             } );
 
             mapper.Map( source, target );

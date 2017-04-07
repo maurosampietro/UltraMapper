@@ -6,16 +6,16 @@ using System.Reflection;
 
 namespace UltraMapper.MappingConventions
 {
-    public class PropertyMatchingConfiguration : IEnumerable<IMatchingRule>
+    public class MatchingRuleConfiguration : IEnumerable<IMatchingRule>
     {
         protected Dictionary<Type, IMatchingRule> _propertyMatchingRules;
 
         public Func<MemberInfo, MemberInfo, bool> MatchingEvaluator { get; set; }
 
-        public PropertyMatchingConfiguration( Action<PropertyMatchingConfiguration> config )
+        public MatchingRuleConfiguration( Action<MatchingRuleConfiguration> config )
                 : this() { config?.Invoke( this ); }
 
-        public PropertyMatchingConfiguration()
+        public MatchingRuleConfiguration()
         {
             _propertyMatchingRules = new Dictionary<Type, IMatchingRule>();
             this.RespectAll();
@@ -34,7 +34,7 @@ namespace UltraMapper.MappingConventions
             return new PropertyMatchingConfiguration<T>( this );
         }
 
-        public PropertyMatchingConfiguration Remove<T>() where T : IMatchingRule
+        public MatchingRuleConfiguration Remove<T>() where T : IMatchingRule
         {
             _propertyMatchingRules.Remove( typeof( T ) );
             return this;
@@ -74,9 +74,9 @@ namespace UltraMapper.MappingConventions
 
     public class PropertyMatchingConfiguration<T1>
     {
-        protected PropertyMatchingConfiguration _baseConfig;
+        protected MatchingRuleConfiguration _baseConfig;
 
-        public PropertyMatchingConfiguration( PropertyMatchingConfiguration baseConfig )
+        public PropertyMatchingConfiguration( MatchingRuleConfiguration baseConfig )
         {
             _baseConfig = baseConfig;
         }

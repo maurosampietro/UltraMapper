@@ -7,7 +7,7 @@ using UltraMapper.Mappers.MapperContexts;
 
 namespace UltraMapper.Mappers
 {
-    public class ReferenceMapper : IMemberMappingExpressionBuilder
+    public class ReferenceMapper : IMappingExpressionBuilder
     {
         protected readonly UltraMapper _mapper;
         public readonly Configuration MapperConfiguration;
@@ -227,8 +227,7 @@ namespace UltraMapper.Mappers
                             Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
                             Expression.Block
                             (
-                                ((IMemberMappingExpressionBuilder)mapping.Mapper)
-                                    .GetTargetInstanceAssignment( memberContext, mapping ),
+                                this.GetTargetInstanceAssignment( memberContext, mapping ),
 
                                 Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
                                     memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) ),
