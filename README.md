@@ -13,7 +13,7 @@ It avoids you the need to manually write the (boring) code that instantiate/assi
 Getting started
 --------------------------------
 
-https://github.com/maurosampietro/UltraMapper/wiki
+https://github.com/maurosampietro/UltraMapper/wiki/Getting-started
 
 
 Key features
