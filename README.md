@@ -10,16 +10,10 @@ UltraMapper is a tool that allows you to map one object of type T to another obj
 It avoids you the need to manually write the (boring) code that instantiate/assign all the members of the object.
 
 
-Why UltraMapper?
---------------------------------
-
-UltraMapper was coded to solve some major problems with 'AutoMapper', the most famous mapper available at the time (end 2016).
-It had problems with self-references, reference tracking, ignoring members and so on...
-
 Getting started
 --------------------------------
 
-Examples and documentation will be ready soon.
+https://github.com/maurosampietro/UltraMapper/wiki
 
 
 Key features
