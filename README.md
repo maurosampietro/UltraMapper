@@ -8,6 +8,7 @@ What is UltraMapper?
 UltraMapper is a tool that allows you to map one object of type T to another object of type V.
 
 It avoids you the need to manually write the (boring) code that instantiate/assign all the members of the object.
+It can be used to get deep copies of an object.
 
 
 Getting started
