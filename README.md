@@ -1,5 +1,5 @@
 # UltraMapper
-A nicely coded object-mapper for .NET
+A nicely coded object-mapper for .NET 
 
 
 What is UltraMapper?
@@ -21,7 +21,9 @@ Key features
 --------------------------------
 
 **Please note that UltraMapper at the time is published solely in order to be reviewed by the community and receive feedbacks.
-This early version is not considered stable, and may lack some of the feature you would expect from a mapper**
+This early version may lack some of the feature you would expect from a mapper**
+
+Implemented features:
 
 - Full reference tracking
 - Supports self-references
