@@ -23,7 +23,7 @@ With UltraMapper, any reference object is cached and before creating any new ref
 
 ReferenceTracking mechanism is so important that cannot be disabled and offers a huge performance boost in real-world scenarios. 
 
-UltraMapper is just ~1000 lines of code and generates and compiles minimal mapping expressions.
+UltraMapper is just ~1100 lines of code and generates and compiles minimal mapping expressions.
 MappingExpressionBuilders are very well structured in a simple object-oriented way.
 
 
@@ -52,7 +52,7 @@ Implemented features:
 
 Moreover UltraMapper is:
 - very fast in any scenario (faster than any other .NET mapper i tried, just let me know if otherwise)
-- just 1300 lines of code (more easily maintainable and understandable)
+- just ~1100 lines of code (more easily maintainable and understandable)
 - developer-friendly (should be easy to contribute)
 
 What's missing?
