@@ -19,7 +19,9 @@ The ReferenceTracking mechanism of UltraMapper guarantees that the cloned or map
 
 This is something theorically simple but crucial, yet **uncommon among mappers**; in facts other mappers tipically will create new instances on the target even if the same instance is being referenced twice in the source.
 
-With UltraMapper, any reference object is cached and before creating any new reference a cache lookup is performed to check if that instance has already been mapped. If the reference has already been mapped, it is assigned. This technique allows great performance on complex objects, allows self-references anywhere down the hierarchical tree of the objects involved in the mapping process, avoids StackOverflows and **guarantees that the target object is actually a clone/map of the source and not just a similar object with identical values.**
+With UltraMapper, any reference object is cached and before creating any new reference a cache lookup is performed to check if that instance has already been mapped. If the reference has already been mapped, the mapped instance is used.   
+
+This technique allows self-references anywhere down the hierarchical tree of the objects involved in the mapping process, avoids StackOverflows and **guarantees that the target object is actually a deep copy or a mapped version of the source and not just a similar object with identical values.**
 
 ReferenceTracking mechanism is so important that cannot be disabled and offers a huge performance boost in real-world scenarios. 
 
