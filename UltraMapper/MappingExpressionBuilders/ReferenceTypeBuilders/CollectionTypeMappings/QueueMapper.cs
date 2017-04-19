@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class QueueMapper : CollectionMapper
     {

@@ -6,7 +6,7 @@ namespace UltraMapper.Internals
 {
     public interface IMapping
     {
-        Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MappingFunc { get; }
+        Action<ReferenceTracking, object, object> MappingFunc { get; }
         LambdaExpression MappingExpression { get; }
     }
 }

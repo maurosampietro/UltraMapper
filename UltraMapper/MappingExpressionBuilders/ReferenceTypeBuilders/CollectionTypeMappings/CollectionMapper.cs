@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
-using UltraMapper.Mappers.MapperContexts;
+using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class CollectionMapper : ReferenceMapper
     {
@@ -117,11 +117,11 @@ namespace UltraMapper.Mappers
                     Expression.Block
                     (
                         Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
-
+                        
                         itemCacheCall,
-
+                        
                         Expression.Call( context.Mapper, mapMethod, sourceParam, targetParam,
-                            context.ReferenceTracker, Expression.Constant( itemMapping ) )
+                            context.ReferenceTracker, Expression.Constant( itemMapping ) )                     
                     )
                 )
             );
@@ -181,16 +181,6 @@ namespace UltraMapper.Mappers
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Clear ) );
-        }
-
-        protected override Expression ReturnListInitialization( ReferenceMapperContext contextObj )
-        {
-            var context = contextObj as CollectionMapperContext;
-
-            var getCountMethod = context.SourceInstance.Type.GetProperty( "Count" ).GetGetMethod();
-
-            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnTypeConstructor,
-                Expression.Call( context.SourceInstance, getCountMethod ) ) );
         }
 
         /// <summary>

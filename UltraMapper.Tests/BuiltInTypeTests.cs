@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UltraMapper.Internals;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.MappingConventions;
 
 namespace UltraMapper.Tests
 {
     [TestClass]
     public class BuiltInTypeTests
-    {
+    {      
         private class PrimitiveTypes
         {
             public bool Boolean { get; set; } = true;
@@ -95,7 +95,7 @@ namespace UltraMapper.Tests
         {
             var source = new BuiltInTypes();
             var target = new NullableBuiltInTypes();
-
+            
             var ultraMapper = new UltraMapper
             (
                 cfg =>

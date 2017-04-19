@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
@@ -145,8 +145,8 @@ namespace UltraMapper.Internals
             }
         }
 
-        private Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> _mapperFunc;
-        public Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>> MappingFunc
+        private Action<ReferenceTracking, object, object> _mapperFunc;
+        public Action<ReferenceTracking, object, object> MappingFunc
         {
             get
             {
@@ -165,7 +165,7 @@ namespace UltraMapper.Internals
                 var bodyExp = Expression.Invoke( this.MappingExpression,
                     referenceTrack, sourceInstance, targetInstance );
 
-                return _mapperFunc = Expression.Lambda<Func<ReferenceTracking, object, object, IEnumerable<ObjectPair>>>(
+                return _mapperFunc = Expression.Lambda<Action<ReferenceTracking, object, object>>(
                     bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
             }
         }

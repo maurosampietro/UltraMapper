@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public sealed class BuiltInTypeMapper : PrimitiveMapperBase
     {

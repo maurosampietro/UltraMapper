@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     /*- Stack<T> and other LIFO collections require the list to be read in reverse  
     * to preserve order and have a specular clone */

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class DictionaryMapper : CollectionMapper
     {

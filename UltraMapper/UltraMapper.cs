@@ -69,7 +69,6 @@ namespace UltraMapper
         }
 
         public void Map<TSource, TTarget>( TSource source, out TTarget target )
-            where TSource : struct
             where TTarget : struct
         {
             //Non è il massimo: salta la funzione di map principale
@@ -92,7 +91,6 @@ namespace UltraMapper
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target )
-            where TTarget : class
         {
             var referenceTracking = new ReferenceTracking();
             referenceTracking.Add( source, target.GetType(), target );
@@ -113,15 +111,7 @@ namespace UltraMapper
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracking referenceTracking, IMapping mapping )
         {
-            var references = mapping.MappingFunc?.Invoke( referenceTracking, source, target );
-            if( references != null )
-            {
-                foreach( var reference in references )
-                {
-                    if( reference != null )
-                        this.Map( reference.Source, reference.Target, referenceTracking );
-                }
-            }
+            mapping.MappingFunc.Invoke( referenceTracking, source, target );
         }
     }
 }

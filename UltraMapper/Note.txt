@@ -31,12 +31,6 @@ simple structs with a primitive mapper)
 
 KNOWN (POTENTIAL) PROBLEMS:
 
-- ReferenceTracking and other dictionaries that should take as key a pair of object ( such as Dictionary<TypePair,*> ),
-  for performance reasons, calculate a hashcode of the pair itself and use this hashcode as the key.
-  When dealing with many many objects and types, this can lead to collisions and therefore unexpected behaviors of the mapper.
-  Since it is unknown if this can happen in practice and due to the performance cost of using any different approach,
-  the problem is ignored until it shows up in real world usage.
-
 - When manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
   all instances referred by the selector (both on source and target) must be instantiated. 
   

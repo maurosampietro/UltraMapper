@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UltraMapper.MappingConventions;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 using System.Linq;
 
 namespace UltraMapper.Tests

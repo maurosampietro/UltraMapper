@@ -53,7 +53,9 @@
   <ItemGroup>
     <Compile Include="CollectionTests.cs" />
     <Compile Include="DictionaryTests.cs" />
+    <Compile Include="EnumTests.cs" />
     <Compile Include="InheritTypeMappingTests.cs" />
+    <Compile Include="Utils\InstanceFactory.cs" />
     <Compile Include="MappingConventionTests.cs" />
     <Compile Include="MemberExtractionTests.cs" />
     <Compile Include="ProjectionTests.cs" />

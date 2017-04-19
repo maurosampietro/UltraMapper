@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class CollectionMapperContext : ReferenceMapperContext
     {
@@ -20,7 +20,7 @@ namespace UltraMapper.Mappers
         public CollectionMapperContext( Type source, Type target, IMappingOptions options )
             : base( source, target, options )
         {
-            ReturnTypeConstructor = ReturnObject.Type.GetConstructor( new[] { typeof( int ) } );
+            //ReturnTypeConstructor = ReturnObject.Type.GetConstructor( new[] { typeof( int ) } );
 
             SourceCollectionElementType = SourceInstance.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetInstance.Type.GetCollectionGenericType();

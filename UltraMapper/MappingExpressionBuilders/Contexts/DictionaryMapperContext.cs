@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class DictionaryMapperContext : CollectionMapperContext
     {

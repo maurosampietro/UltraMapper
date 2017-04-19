@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.MappingConventions;
 using UltraMapper.ExtensionMethods;
 
@@ -57,6 +57,8 @@ namespace UltraMapper
             {
                 //Order is important: the first MapperExpressionBuilder that can handle a mapping is used.
                 //Make sure to use a collection which preserve insertion order!
+                new StringToEnumMapper( this ),
+                new EnumMapper( this ),
                 new BuiltInTypeMapper( this ),
                 new NullableMapper( this ),
                 new ConvertMapper( this ),
@@ -133,7 +135,7 @@ namespace UltraMapper
             typeMappingConfig?.Invoke( typeMapping );
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        } 
+        }
         #endregion
 
         private TypeMapping GetTypeMapping( Type source, Type target )

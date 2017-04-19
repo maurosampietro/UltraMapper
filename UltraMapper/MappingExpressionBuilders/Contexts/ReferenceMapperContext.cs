@@ -4,24 +4,23 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
-using UltraMapper.Mappers.MapperContexts;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReferenceMapperContext : MapperContext
     {
-        public Type ReturnElementType { get; protected set; }
+        //public Type ReturnElementType { get; protected set; }
 
-        public ConstructorInfo ReturnTypeConstructor { get; protected set; }
-        public MethodInfo AddObjectPairToReturnList { get; protected set; }
+        //public ConstructorInfo ReturnTypeConstructor { get; protected set; }
+        //public MethodInfo AddObjectPairToReturnList { get; protected set; }
 
-        public ParameterExpression ReturnObject { get; protected set; }
+        //public ParameterExpression ReturnObject { get; protected set; }
 
         public ConstantExpression SourceNullValue { get; protected set; }
         public ConstantExpression TargetNullValue { get; protected set; }
 
         public ParameterExpression ReferenceTracker { get; protected set; }
-        public ConstructorInfo ReturnElementConstructor { get; protected set; }
+        //public ConstructorInfo ReturnElementConstructor { get; protected set; }
 
         public ParameterExpression Mapper { get; private set; }
         public MethodInfo RecursiveMapMethodInfo { get; protected set; }
@@ -29,15 +28,15 @@ namespace UltraMapper.Mappers
         public ReferenceMapperContext( Type source, Type target, IMappingOptions options )
              : base( source, target, options )
         {
-            ReturnElementType = typeof( ObjectPair );
-            var returnType = typeof( List<> ).MakeGenericType( ReturnElementType );
+            //ReturnElementType = typeof( ObjectPair );
+            //var returnType = typeof( List<> ).MakeGenericType( ReturnElementType );
 
-            ReturnObject = Expression.Variable( returnType, "returnObject" );
-            ReturnTypeConstructor = returnType.GetConstructors().First();
-            ReturnElementConstructor = ReturnElementType.GetConstructors()[ 0 ];
+            //ReturnObject = Expression.Variable( returnType, "returnObject" );
+            //ReturnTypeConstructor = returnType.GetConstructors().First();
+            //ReturnElementConstructor = ReturnElementType.GetConstructors()[ 0 ];
 
-            var methodParams = new[] { ReturnElementType };
-            AddObjectPairToReturnList = returnType.GetMethod( nameof( List<ObjectPair>.Add ), methodParams );
+            //var methodParams = new[] { ReturnElementType };
+            //AddObjectPairToReturnList = returnType.GetMethod( nameof( List<ObjectPair>.Add ), methodParams );
 
             ReferenceTracker = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
 

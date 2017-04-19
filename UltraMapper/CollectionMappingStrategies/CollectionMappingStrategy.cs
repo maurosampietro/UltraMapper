@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper
 {

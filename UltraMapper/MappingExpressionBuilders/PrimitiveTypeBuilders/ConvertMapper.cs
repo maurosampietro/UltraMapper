@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using UltraMapper.Internals;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class ConvertMapper : PrimitiveMapperBase
     {
@@ -28,7 +28,7 @@ namespace UltraMapper.Mappers
                     if( source == target )
                         return false;
 
-                    var testValue = InstanceFactory.CreateObject( source );
+                    var testValue = Activator.CreateInstance( source );
                     Convert.ChangeType( testValue, target );
 
                     return true;

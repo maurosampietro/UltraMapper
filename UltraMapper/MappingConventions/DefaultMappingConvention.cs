@@ -19,8 +19,7 @@ namespace UltraMapper.MappingConventions
 
         public bool IsMatch( MemberInfo source, MemberInfo target )
         {
-            return this.MatchingRules
-                .MatchingEvaluator( source, target );
+            return this.MatchingRules.MatchingEvaluator( source, target );
         }
     }
 }

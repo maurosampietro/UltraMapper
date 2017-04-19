@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using UltraMapper.ExtensionMethods;
 using UltraMapper.Internals;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.MappingConventions;
 
 namespace UltraMapper

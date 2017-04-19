@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UltraMapper.Internals;
-using UltraMapper.Mappers;
+using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.MappingConventions;
 using UltraMapper;
 

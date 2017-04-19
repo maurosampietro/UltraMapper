@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
-using UltraMapper.Mappers.MapperContexts;
+using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
-namespace UltraMapper.Mappers
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReferenceMapper : IMappingExpressionBuilder
     {
@@ -56,8 +56,7 @@ namespace UltraMapper.Mappers
             var context = this.GetMapperContext( source, target, options ) as ReferenceMapperContext;
 
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
-            var memberMappings = this.GetMemberMappings( typeMapping )
-                .ReplaceParameter( context.ReturnObject, context.ReturnObject.Name )
+            var memberMappings = this.GetMemberMappings( typeMapping )            
                 .ReplaceParameter( context.Mapper, context.Mapper.Name )
                 .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                 .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
@@ -65,20 +64,17 @@ namespace UltraMapper.Mappers
 
             var expression = Expression.Block
             (
-                new[] { context.ReturnObject, context.Mapper },
+                new[] { context.Mapper },
 
                 Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
-                this.ReturnListInitialization( context ),
 
                 memberMappings,
-                this.GetExpressionBody( context ),
-
-                context.ReturnObject
+                this.GetExpressionBody( context )
             );
 
-            var delegateType = typeof( Func<,,,> ).MakeGenericType(
+            var delegateType = typeof( Action<,,> ).MakeGenericType(
                 context.ReferenceTracker.Type, context.SourceInstance.Type,
-                context.TargetInstance.Type, context.ReturnObject.Type );
+                context.TargetInstance.Type );
 
             return Expression.Lambda( delegateType, expression,
                 context.ReferenceTracker, context.SourceInstance, context.TargetInstance );
@@ -92,12 +88,6 @@ namespace UltraMapper.Mappers
         protected virtual Expression GetExpressionBody( ReferenceMapperContext contextObj )
         {
             return Expression.Empty();
-        }
-
-        protected virtual Expression ReturnListInitialization( ReferenceMapperContext contextObj )
-        {
-            var context = contextObj as ReferenceMapperContext;
-            return Expression.Assign( context.ReturnObject, Expression.New( context.ReturnObject.Type ) );
         }
 
         public virtual Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
@@ -229,11 +219,11 @@ namespace UltraMapper.Mappers
                             (
                                 this.GetTargetInstanceAssignment( memberContext, mapping ),
 
-                                Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
-                                    memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) ),
-
                                 //cache reference
-                                itemCacheCall
+                                itemCacheCall,
+
+                                Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
+                                    memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )                     
                             )
                         )
                     )

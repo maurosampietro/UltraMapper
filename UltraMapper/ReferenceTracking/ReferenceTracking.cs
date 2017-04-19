@@ -9,8 +9,33 @@ namespace UltraMapper
     /// </summary>
     public class ReferenceTracking
     {
-        private Dictionary<int, object> _mappings
-            = new Dictionary<int, object>( 8 );
+        private struct Key
+        {
+            public readonly object Instance;
+            public readonly Type TargetType;
+
+            public Key( object instance, Type targetType )
+            {
+                this.Instance = instance;
+                this.TargetType = targetType;
+            }
+
+            public override int GetHashCode()
+            {
+                return Instance.GetHashCode() ^ TargetType.GetHashCode();
+            }
+
+            public override bool Equals( object obj )
+            {
+                var otherKey = (Key)obj;
+
+                return Object.ReferenceEquals( Instance, otherKey.Instance )
+                    && TargetType == otherKey.TargetType;
+            }
+        }
+
+        private Dictionary<Key, object> _mappings
+            = new Dictionary<Key, object>( 8 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {
@@ -41,9 +66,9 @@ namespace UltraMapper
             }
         }
 
-        private int GetKey( object sourceInstance, Type targetType )
+        private Key GetKey( object sourceInstance, Type targetType )
         {
-            return sourceInstance.GetHashCode() ^ targetType.GetHashCode();
+            return new Key( sourceInstance, targetType );
         }
     }
 }
