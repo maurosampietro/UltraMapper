@@ -11,8 +11,8 @@ namespace UltraMapper
         private static Configuration _configuration = new Configuration();
         private static UltraMapper _mapper = new UltraMapper( _configuration );
 
-        public static void MapTo<TSource, TTarget>( this TSource source, 
-            TTarget target, Action<Configuration> config = null )
+        public static void MapTo<TSource, TTarget>( this TSource source,
+            TTarget target, Action<Configuration> config = null ) where TTarget : class
         {
             config?.Invoke( _configuration );
             _mapper.Map( source, target );

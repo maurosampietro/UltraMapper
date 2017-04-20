@@ -20,8 +20,6 @@ namespace UltraMapper.MappingExpressionBuilders
         public CollectionMapperContext( Type source, Type target, IMappingOptions options )
             : base( source, target, options )
         {
-            //ReturnTypeConstructor = ReturnObject.Type.GetConstructor( new[] { typeof( int ) } );
-
             SourceCollectionElementType = SourceInstance.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetInstance.Type.GetCollectionGenericType();
 

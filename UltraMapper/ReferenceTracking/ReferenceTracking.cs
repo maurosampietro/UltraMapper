@@ -22,14 +22,14 @@ namespace UltraMapper
 
             public override int GetHashCode()
             {
-                return Instance.GetHashCode() ^ TargetType.GetHashCode();
+                return this.Instance.GetHashCode() ^ this.TargetType.GetHashCode();
             }
 
             public override bool Equals( object obj )
             {
                 var otherKey = (Key)obj;
 
-                return Object.ReferenceEquals( Instance, otherKey.Instance )
+                return Object.ReferenceEquals( this.Instance, otherKey.Instance )
                     && TargetType == otherKey.TargetType;
             }
         }

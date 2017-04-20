@@ -1,6 +1,10 @@
 ﻿
 TODO:
 
+- Flattening convention
+
+- Automatic reverse mapping (at the time a reverse mapping is resolved by convention. Take into account manual overrides.)
+
 - Collection mapping strategies 
 
 - Collections now work only by clear/adding. 

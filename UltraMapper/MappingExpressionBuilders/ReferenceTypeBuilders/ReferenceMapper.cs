@@ -42,21 +42,18 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public virtual bool CanHandle( Type source, Type target )
         {
-            bool valueTypes = source.IsValueType
-                || target.IsValueType;
-
             bool builtInTypes = source.IsBuiltInType( false )
                 && target.IsBuiltInType( false );
 
-            return !valueTypes && !builtInTypes;
+            return !target.IsValueType && !builtInTypes;
         }
 
-        public LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
+        public virtual LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
         {
-            var context = this.GetMapperContext( source, target, options ) as ReferenceMapperContext;
+            var context = this.GetMapperContext( source, target, options );
 
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
-            var memberMappings = this.GetMemberMappings( typeMapping )            
+            var memberMappings = this.GetMemberMappings( typeMapping )
                 .ReplaceParameter( context.Mapper, context.Mapper.Name )
                 .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                 .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
@@ -129,7 +126,7 @@ namespace UltraMapper.MappingExpressionBuilders
             }
         }
 
-        private Expression GetMemberMappings( TypeMapping typeMapping )
+        protected Expression GetMemberMappings( TypeMapping typeMapping )
         {
             var context = new ReferenceMapperContext( typeMapping.TypePair.SourceType,
                 typeMapping.TypePair.TargetType, typeMapping );
@@ -171,7 +168,7 @@ namespace UltraMapper.MappingExpressionBuilders
              */
             var memberContext = new MemberMappingContext( mapping );
 
-            var mapMethod = memberContext.RecursiveMapMethodInfo.MakeGenericMethod(
+            var mapMethod = MemberMappingContext.RecursiveMapMethodInfo.MakeGenericMethod(
                 memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 
             Expression itemLookupCall = Expression.Call
@@ -223,7 +220,7 @@ namespace UltraMapper.MappingExpressionBuilders
                                 itemCacheCall,
 
                                 Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
-                                    memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )                     
+                                    memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                             )
                         )
                     )
@@ -254,7 +251,9 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
-                    .ReplaceParameter( value, targetSetterMemberParamName )
+                    .ReplaceParameter( value, targetSetterMemberParamName ),
+
+                Expression.Invoke( debugExp, Expression.Convert( memberContext.TargetInstance, typeof( object ) ) )
             );
         }
         #endregion

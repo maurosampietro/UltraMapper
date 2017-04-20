@@ -69,6 +69,7 @@ namespace UltraMapper
                 new LinkedListMapper( this ),
                 new CollectionMapper( this ),
                 new ReferenceMapper( this ),
+                new ReferenceToStructMapper( this ),
             };
 
             config?.Invoke( this );

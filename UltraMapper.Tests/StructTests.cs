@@ -13,7 +13,12 @@ namespace UltraMapper.Tests
         private class Test
         {
             public DateTime DateTime { get; set; }
-                = new DateTime( 2017, 03, 13 );
+                = new DateTime( 1988, 05, 29 );
+        }
+
+        private struct StructTest
+        {
+            public DateTime DateTime { get; set; }
         }
 
         [TestMethod]
@@ -39,6 +44,36 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( test.DateTime == clone.DateTime );
             Assert.IsTrue( !Object.ReferenceEquals( test.DateTime, clone.DateTime ) );
+        }
+
+        [TestMethod]
+        public void ClassToStructMapping()
+        {
+            var mapper = new UltraMapper();
+
+            var source = new Test();
+            var target = new StructTest();
+
+            mapper.Map( source, out target );
+
+            var result = mapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( result );
+        }
+
+        [TestMethod]
+        public void StructToClassMapping()
+        {
+            var mapper = new UltraMapper();
+
+            var source = new StructTest()
+            {
+                DateTime = new DateTime( 2013, 12, 18 )
+            };
+
+            var target = mapper.Map<Test>( source );
+
+            var result = mapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( result );
         }
     }
 }

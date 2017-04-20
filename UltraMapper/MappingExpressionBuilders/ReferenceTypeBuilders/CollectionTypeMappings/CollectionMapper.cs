@@ -101,7 +101,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 targetParam
             );
 
-            var mapMethod = context.RecursiveMapMethodInfo
+            var mapMethod = CollectionMapperContext.RecursiveMapMethodInfo
                 .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
             var itemMapping = MapperConfiguration[ sourceParam.Type, targetParam.Type ];

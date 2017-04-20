@@ -85,6 +85,7 @@
     <Compile Include="MappingConventions\PropertyMatchingRules\TypeMatchingRule.cs" />
     <Compile Include="MappingConventions\RuleChaining.cs" />
     <Compile Include="Configuration\TypeConfigurator.cs" />
+    <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\ReferenceToStructMapper.cs" />
     <Compile Include="ReferenceTracking\ReferenceTracking.cs" />
     <Compile Include="ExtensionMethods\TypeExtensions.cs" />
     <Compile Include="UltraMapper.cs" />

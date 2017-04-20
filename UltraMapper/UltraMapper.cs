@@ -5,15 +5,6 @@ using UltraMapper.MappingConventions;
 
 namespace UltraMapper
 {
-    //public class UltraMapper<T> : UltraMapper where T : IMappingConvention, new()
-    //{
-    //    public UltraMapper( Action<TypeConfigurator> config )
-    //          : base( new TypeConfigurator() )
-    //    {
-    //        config?.Invoke( base.MappingConfiguration );
-    //    }
-    //}
-
     public class UltraMapper
     {
         public Configuration MappingConfiguration { get; protected set; }
@@ -35,6 +26,13 @@ namespace UltraMapper
         public UltraMapper( Action<Configuration> config = null )
             : this( new Configuration() ) { config?.Invoke( this.MappingConfiguration ); }
 
+        /// <summary>
+        /// Maps <param name="source"/> on a new instance of type <typeparam name="TTarget">.
+        /// </summary>
+        /// <typeparam name="TSource">Type of the source instance.</typeparam>
+        /// <typeparam name="TTarget">Type of the new instance</typeparam>
+        /// <param name="source">The instance to be copied.</param>
+        /// <returns>A deep copy of the source instance.</returns>
         public TTarget Map<TSource, TTarget>( TSource source ) where TTarget : class, new()
         {
             var target = new TTarget();
@@ -43,7 +41,7 @@ namespace UltraMapper
         }
 
         /// <summary>
-        /// Maps <paramref name="source"/> on a new instance of the same type.
+        /// Maps <param name="source"/> on a new instance of the same type.
         /// </summary>
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
         /// <param name="source">The instance to be copied.</param>
@@ -56,9 +54,9 @@ namespace UltraMapper
         }
 
         /// <summary>
-        /// Maps <paramref name="source"/> on a new instance of the same type.
+        /// Maps <param name="source"> on a new instance of type <typeparam name="TTarget">.
         /// </summary>
-        /// <typeparam name="TSource">Type of the source instance.</typeparam>
+        /// <typeparam name="TTarget">Type of the new instance.</typeparam>
         /// <param name="source">The instance to be copied.</param>
         /// <returns>A deep copy of the source instance.</returns>
         public TTarget Map<TTarget>( object source ) where TTarget : class, new()
@@ -68,41 +66,49 @@ namespace UltraMapper
             return target;
         }
 
-        public void Map<TSource, TTarget>( TSource source, out TTarget target )
-            where TTarget : struct
+        public void Map<TSource, TTarget>( TSource source, out TTarget target,
+            ReferenceTracking referenceTracking = null ) where TTarget : struct
         {
+            if( referenceTracking == null )
+                referenceTracking = new ReferenceTracking();
+
             //Non è il massimo: salta la funzione di map principale
             // e non tiene in cache le espressioni generate.
-
             Type sourceType = typeof( TSource );
             Type targetType = typeof( TTarget );
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
-            var method = (Func<TSource, TTarget>)mapping.MappingExpression.Compile();
 
-            target = method.Invoke( source );
+            try
+            {
+                var method = (Func<TSource, TTarget>)mapping.MappingExpression.Compile();
+                target = method.Invoke( source );
+            }
+            catch( Exception )
+            {
+                var method = (Func<ReferenceTracking, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
+                target = method.Invoke( referenceTracking, source, new TTarget() );
+            }
         }
 
         /// <summary>
-        /// Read the values from <paramref name="source"/> and writes them to <paramref name="target"/>
-        /// </summary>
+        /// Maps from <param name="source"/> to the existing instance <paramref name="target"/>
+        /// Let's you reuse an existing <see cref="ReferenceTracking"/> cache.
+        /// /// </summary>
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
         /// <typeparam name="TTarget">Type of the target instance.</typeparam>
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
-        public void Map<TSource, TTarget>( TSource source, TTarget target )
+        public void Map<TSource, TTarget>( TSource source, TTarget target,
+            ReferenceTracking referenceTracking = null ) where TTarget : class
         {
-            var referenceTracking = new ReferenceTracking();
-            referenceTracking.Add( source, target.GetType(), target );
+            if( referenceTracking == null )
+                referenceTracking = new ReferenceTracking();
 
-            this.Map( source, target, referenceTracking );
-        }
-
-        public void Map<TSource, TTarget>( TSource source,
-            TTarget target, ReferenceTracking referenceTracking )
-        {
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
+
+            referenceTracking.Add( source, targetType, target );
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
             this.Map( source, target, referenceTracking, mapping );
