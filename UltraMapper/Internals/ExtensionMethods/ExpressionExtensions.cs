@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 
-namespace UltraMapper
+namespace UltraMapper.Internals
 {
     internal static class ExpressionExtensions
     {

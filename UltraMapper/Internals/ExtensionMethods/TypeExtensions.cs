@@ -5,9 +5,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
-namespace UltraMapper
+namespace UltraMapper.Internals
 {
-    public static class TypeExtensions
+    internal static class TypeExtensions
     {
         /// <summary>
         /// Check if a type is a base type, optionally unwrapping 

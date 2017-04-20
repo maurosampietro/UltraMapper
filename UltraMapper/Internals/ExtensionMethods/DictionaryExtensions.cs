@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UltraMapper.ExtensionMethods
+namespace UltraMapper.Internals
 {
-    public static class DictionaryExtensions
+    internal static class DictionaryExtensions
     {
         public static TValue GetOrAdd<TKey, TValue>(
             this Dictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueFactory )

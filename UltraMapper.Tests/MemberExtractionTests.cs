@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
 {
@@ -16,7 +17,12 @@ namespace UltraMapper.Tests
             public string A { get; set; }
             public string field;
 
-            public SecondLevel SecondLevel { get; set; }
+            public SecondLevel secondLevel;
+            public SecondLevel SecondLevel
+            {
+                get { return secondLevel; }
+                set { secondLevel = value; }
+            }
 
             public SecondLevel GetSecond() { return SecondLevel; }
         }
@@ -71,6 +77,20 @@ namespace UltraMapper.Tests
 
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.GetSecond ) )[ 0 ];
+
+            var extractedMember = func.ExtractMember();
+            Assert.IsTrue( expectedMember == extractedMember );
+        }
+
+        [TestMethod]
+        public void ExtractNestedMethodViaField()
+        {
+            var test = new FirstLevel();
+            Expression<Func<FirstLevel, ThirdLevel>> func =
+                ( fl ) => fl.secondLevel.GetThird();
+
+            var expectedMember = typeof( SecondLevel )
+                .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
             var extractedMember = func.ExtractMember();
             Assert.IsTrue( expectedMember == extractedMember );

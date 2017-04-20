@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.MappingConventions;
-using UltraMapper.ExtensionMethods;
 
 namespace UltraMapper
 {

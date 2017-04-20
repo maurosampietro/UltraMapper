@@ -37,7 +37,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 {
                     return false;
                 }
-                catch( Exception ex )
+                catch( Exception )
                 {
                     return false;
                 }

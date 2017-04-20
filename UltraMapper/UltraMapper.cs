@@ -79,15 +79,15 @@ namespace UltraMapper
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
 
-            try
-            {
-                var method = (Func<TSource, TTarget>)mapping.MappingExpression.Compile();
-                target = method.Invoke( source );
-            }
-            catch( Exception )
+            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracking ) )
             {
                 var method = (Func<ReferenceTracking, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
                 target = method.Invoke( referenceTracking, source, new TTarget() );
+            }
+            else
+            {
+                var method = (Func<TSource, TTarget>)mapping.MappingExpression.Compile();
+                target = method.Invoke( source );
             }
         }
 
