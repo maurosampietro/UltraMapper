@@ -8,7 +8,7 @@
     <projectUrl>https://maurosampietro.github.io/UltraMapper/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>UltraMapper is a .NET object-mapper. It can be useful to deep-copy an object, or transform (map) an object of a certain type to another.</description>
-    <releaseNotes> </releaseNotes>
+    <releaseNotes></releaseNotes>
     <copyright>Copyright 2015 ExpressMapper</copyright>
     <tags>Mapper object mapping deep copy clone cloner .net</tags>
   </metadata>
