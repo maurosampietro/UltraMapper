@@ -1,5 +1,16 @@
+version: '{build}'
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+nuget:
+  disable_publish_on_pr: true
+artifacts:
+- path: UltraMapper\bin\release\*.nupkg
+  name: NuGet
 deploy:
-  provider: NuGet
+- provider: NuGet
   api_key:
     secure: u+KuVfwNaVSx3MHSnyjvIAn25rTxUF9HxQs6F7VOG1OlLYtDT7+19f4zskbiXCP2
   skip_symbols: true
