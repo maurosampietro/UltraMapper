@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
 
-namespace UltraMapper.MappingConventions
+namespace UltraMapper.Conventions
 {
     /// <summary>
-    /// Two properties match if they have the same name.
+    /// Two members match if they have the same name.
     /// Name case can be optionally ignored.
     /// </summary>
     public class ExactNameMatching : MatchingRuleBase

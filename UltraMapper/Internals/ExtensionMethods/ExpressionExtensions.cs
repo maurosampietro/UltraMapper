@@ -72,7 +72,8 @@ namespace UltraMapper.Internals
                 else if( item is MethodCallExpression )
                     memberName = ((MethodCallExpression)item).Method.Name;
 
-                member = member.GetMemberType().GetMember( memberName )[ 0 ];
+                member = member.GetMemberType().GetMember( memberName,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic )[ 0 ];
             }
 
             return member;
@@ -226,7 +227,7 @@ namespace UltraMapper.Internals
         {
             // (target) => target.get_Property()
             var targetType = propertyInfo.ReflectedType;
-            var methodInfo = propertyInfo.GetGetMethod();
+            var methodInfo = propertyInfo.GetGetMethod( true );
 
             var targetInstance = Expression.Parameter( targetType, "target" );
             var body = Expression.Call( targetInstance, methodInfo );

@@ -2,7 +2,7 @@
 using System.Reflection;
 using UltraMapper.Internals;
 
-namespace UltraMapper.MappingConventions
+namespace UltraMapper.Conventions
 {
     /// <summary>
     /// Two properties match if the source type is of the same type 
@@ -43,7 +43,7 @@ namespace UltraMapper.MappingConventions
             } );
 
             return source == target || primitiveToNullablePrimitive.Value ||
-                (this.AllowExplicitConversions && source.IsImplicitlyConvertibleTo( target )) ||
+                (this.AllowImplicitConversions && source.IsImplicitlyConvertibleTo( target )) ||
                 (this.AllowExplicitConversions && source.IsExplicitlyConvertibleTo( target ));
         }
     }

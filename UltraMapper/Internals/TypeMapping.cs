@@ -35,6 +35,32 @@ namespace UltraMapper.Internals
             this.GlobalConfiguration = globalConfig;
             this.TypePair = typePair;
             this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
+
+            MapByConvention();
+        }
+
+        private void MapByConvention()
+        {
+            var memberPairings = GlobalConfiguration.ConventionResolver
+                .Resolve( TypePair.SourceType, TypePair.TargetType );
+
+            foreach( var memberPair in memberPairings )
+            {
+                var sourceMemberGetterExpression = memberPair.SourceMember.GetGetterLambdaExpression();
+                var targetMemberGetterExpression = memberPair.TargetMember.GetGetterLambdaExpression();
+                var targetMemberSetterExpression = memberPair.TargetMember.GetSetterLambdaExpression();
+
+                var mappingSource = GetMappingSource( memberPair.SourceMember,
+                    sourceMemberGetterExpression );
+
+                var mappingTarget = GetMappingTarget( memberPair.TargetMember,
+                    targetMemberGetterExpression, targetMemberSetterExpression );
+
+                var mapping = GetMemberMapping( mappingSource, mappingTarget );
+                mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
+
+                this.MemberMappings[ mappingTarget ] = mapping;
+            }
         }
 
         public LambdaExpression CustomConverter { get; set; }

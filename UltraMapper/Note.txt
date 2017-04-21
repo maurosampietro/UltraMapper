@@ -8,10 +8,11 @@ TODO:
 - Collection mapping strategies 
 
 - Collections now work only by clear/adding. 
-  Before we could work with constructor(IEnumeable<T>) in some particular case, which is much faster.
+  Before we could work with constructor(IEnumeable<T>) in some particular cases
+  (identical source and target types), which is much faster.
 
-- ReadOnlyCollection support, at least on members (directly on type is a problem because it does not have a parameterless constructor)
-
+- ReadOnlyCollection support, at least on members (directly on type is a problem because it does not have a parameterless constructor).
+  
 - Dynamic mapping
 
 - Object to Object mapping should inspect object types and use ReferenceMapper.
@@ -21,8 +22,6 @@ TODO:
 
 - VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
-
-- private members mapping
 
 - Multidimensional/jagged arrays; Array mapping.
 
@@ -34,6 +33,9 @@ simple structs with a primitive mapper)
 - Configuration inheritance (ie. IgnoreConvention)
 
 KNOWN (POTENTIAL) PROBLEMS:
+
+- Configurations can be shared, but not susequently edited because conventions and expression builders are not run again.
+  Introduce a seal mechanism to inform the user or a configuration refresh mechanism. 
 
 - When manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
   all instances referred by the selector (both on source and target) must be instantiated. 

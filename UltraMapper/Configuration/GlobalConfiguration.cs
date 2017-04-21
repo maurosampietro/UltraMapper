@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
-using UltraMapper.MappingConventions;
+using UltraMapper.Conventions;
 
 namespace UltraMapper
 {
@@ -30,6 +30,8 @@ namespace UltraMapper
         private readonly Dictionary<TypePair, TypeMapping> _typeMappings =
             new Dictionary<TypePair, TypeMapping>();
 
+        public readonly ConventionResolver ConventionResolver;
+
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
         /// taken into account in the mapping process.
@@ -48,6 +50,7 @@ namespace UltraMapper
         public Configuration( Action<Configuration> config = null )
         {
             this.MappingConvention = new DefaultMappingConvention();
+            this.ConventionResolver = new ConventionResolver( this.MappingConvention );
 
             this.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
             this.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
@@ -148,22 +151,7 @@ namespace UltraMapper
 
         public TypeMapping this[ Type source, Type target ]
         {
-            get
-            {
-                var typePair = new TypePair( source, target );
-
-                TypeMapping typeMapping;
-                if( _typeMappings.TryGetValue( typePair, out typeMapping ) )
-                    return typeMapping;
-
-                typeMapping = new TypeMapping( this, typePair );
-
-                //configure by convention
-                new MemberConfigurator( typeMapping );
-
-                _typeMappings.Add( typePair, typeMapping );
-                return typeMapping;
-            }
+            get { return GetTypeMapping( source, target ); }
         }
     }
 }

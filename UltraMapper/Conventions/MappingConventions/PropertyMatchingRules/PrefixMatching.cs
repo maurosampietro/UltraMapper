@@ -2,23 +2,23 @@
 using System.Linq;
 using System.Reflection;
 
-namespace UltraMapper.MappingConventions
+namespace UltraMapper.Conventions
 {
     /// <summary>
-    /// Two members match if targetName = sourceName + suffix.
+    /// Two members match if targetName = suffix + sourceName.
     /// </summary>
-    public class SuffixMatching : MatchingRuleBase
+    public class PrefixMatching : MatchingRuleBase
     {
         public bool IgnoreCase { get; set; }
-        public string[] Suffixes { get; set; }
+        public string[] Prefixes { get; set; }
 
-        public SuffixMatching()
+        public PrefixMatching()
             : this( new string[] { "Dto", "DataTransferObject" } ) { }
 
-        public SuffixMatching( params string[] suffixes )
+        public PrefixMatching( params string[] prefixes )
         {
             this.IgnoreCase = false;
-            this.Suffixes = suffixes;
+            this.Prefixes = prefixes;
         }
 
         public override bool IsCompliant( MemberInfo source, MemberInfo target )
@@ -26,8 +26,8 @@ namespace UltraMapper.MappingConventions
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-            return this.Suffixes.Any( suffix =>
-                target.Name.Equals( source.Name + suffix, comparisonType ) );
+            return this.Prefixes.Any( prefix =>
+                target.Name.Equals( prefix + source.Name, comparisonType ) );
         }
     }
 }

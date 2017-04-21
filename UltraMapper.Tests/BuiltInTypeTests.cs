@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
-using UltraMapper.MappingConventions;
+using UltraMapper.Conventions;
 
 namespace UltraMapper.Tests
 {

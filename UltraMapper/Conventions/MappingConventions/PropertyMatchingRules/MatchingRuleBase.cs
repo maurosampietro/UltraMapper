@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace UltraMapper.MappingConventions
+namespace UltraMapper.Conventions
 {
     public abstract class MatchingRuleBase : IMatchingRule
     {

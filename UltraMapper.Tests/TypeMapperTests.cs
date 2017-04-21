@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.ComponentModel;
-using UltraMapper.MappingConventions;
+using UltraMapper.Conventions;
 using UltraMapper.MappingExpressionBuilders;
 using System.Linq;
 

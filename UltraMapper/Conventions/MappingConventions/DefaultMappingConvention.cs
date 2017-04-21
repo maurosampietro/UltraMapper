@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace UltraMapper.MappingConventions
+namespace UltraMapper.Conventions
 {
     /// <summary>
     /// Two members match if they have the same name.

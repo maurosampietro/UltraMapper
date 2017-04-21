@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
+using UltraMapper.Conventions;
 
 namespace UltraMapper
 {
@@ -15,12 +16,17 @@ namespace UltraMapper
         public MemberConfigurator( TypeMapping typeMapping )
         {
             _typeMapping = typeMapping;
-            this.MapByConvention( typeMapping );
         }
 
         public MemberConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
         {
-            MemberMapping mapping = MapMemberInternal( sourceMember, targetMember );
+            var sourceMemberGetterExpression = sourceMember.GetGetterLambdaExpression();
+            var targetMemberGetterExpression = targetMember.GetGetterLambdaExpression();
+            var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
+
+            MemberMapping mapping = this.MapMemberInternal( sourceMember, targetMember, 
+                sourceMemberGetterExpression, targetMemberGetterExpression, targetMemberSetterExpression );
+
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
 
             return this;
@@ -33,7 +39,7 @@ namespace UltraMapper
             var targetMember = targetMemberGetterExpression.ExtractMember();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
-              targetMemberGetterExpression, targetMemberSetterExpression );
+                targetMemberGetterExpression, targetMemberSetterExpression );
         }
 
         protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetterExpression,
@@ -42,16 +48,6 @@ namespace UltraMapper
             var sourceMember = sourceMemberGetterExpression.ExtractMember();
             var targetMember = targetMemberGetterExpression.ExtractMember();
 
-            var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
-
-            return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
-                targetMemberGetterExpression, targetMemberSetterExpression );
-        }
-
-        protected MemberMapping MapMemberInternal( MemberInfo sourceMember, MemberInfo targetMember )
-        {
-            var sourceMemberGetterExpression = sourceMember.GetGetterLambdaExpression();
-            var targetMemberGetterExpression = targetMember.GetGetterLambdaExpression();
             var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetterExpression,
@@ -73,43 +69,6 @@ namespace UltraMapper
 
             return mapping;
         }
-
-        protected void MapByConvention( TypeMapping typeMapping )
-        {
-            var mappingConvention = typeMapping.GlobalConfiguration.MappingConvention;
-
-            var source = typeMapping.TypePair.SourceType;
-            var target = typeMapping.TypePair.TargetType;
-
-            var bindingAttributes = BindingFlags.Instance | BindingFlags.Public;
-
-            var sourceProperties = source.GetProperties( bindingAttributes )
-                .Where( p => p.CanRead && p.GetIndexParameters().Length == 0 ); //no indexed properties
-
-            var targetProperties = target.GetProperties( bindingAttributes )
-                .Where( p => p.CanWrite && p.GetSetMethod() != null &&
-                    p.GetIndexParameters().Length == 0 ); //no indexed properties
-
-            var sourceFields = source.GetFields( bindingAttributes );
-            var targetFields = target.GetFields( bindingAttributes );
-
-            var sourceMembers = sourceProperties.Cast<MemberInfo>().Concat( sourceFields );
-            var targetMembers = targetProperties.Cast<MemberInfo>().Concat( targetFields );
-
-            foreach( var sourceMember in sourceMembers )
-            {
-                foreach( var targetMember in targetMembers )
-                {
-                    if( mappingConvention.IsMatch( sourceMember, targetMember ) )
-                    {
-                        var mapping = this.MapMemberInternal( sourceMember, targetMember );
-                        mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
-
-                        break; //sourceMember is now mapped, jump directly to the next sourceMember
-                    }
-                }
-            }
-        }
     }
 
     public class MemberConfigurator<TSource, TTarget> : MemberConfigurator
@@ -125,7 +84,7 @@ namespace UltraMapper
 
             foreach( var selector in selectors )
             {
-                var mappingSource = _typeMapping.GetMappingSource( 
+                var mappingSource = _typeMapping.GetMappingSource(
                     selector.ExtractMember(), selector );
 
                 mappingSource.Ignore = true;
@@ -146,7 +105,7 @@ namespace UltraMapper
                 var targetMember = selector.ExtractMember();
                 var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
-                var mappingTarget =_typeMapping.GetMappingTarget( targetMember, 
+                var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
                     selector, targetMemberSetterExpression );
 
                 mappingTarget.Ignore = true;

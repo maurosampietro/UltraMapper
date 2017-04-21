@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using UltraMapper.Internals;
-using UltraMapper.MappingConventions;
+using UltraMapper.Conventions;
 
 namespace UltraMapper.Tests
 {
