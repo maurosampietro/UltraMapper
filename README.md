@@ -2,7 +2,7 @@
 A nicely coded object-mapper for .NET 
 
 [![Build status](https://ci.appveyor.com/api/projects/status/github/UltraMapper)](https://ci.appveyor.com/project/maurosampietro/ultramapper/branch/master)
-[![NuGet](http://img.shields.io/nuget/v/AutoMapper.svg)](https://www.nuget.org/packages/UltraMapper/)
+[![NuGet](http://img.shields.io/nuget/v/UltraMapper.svg)](https://www.nuget.org/packages/UltraMapper/)
 
 What is UltraMapper?
 --------------------------------
