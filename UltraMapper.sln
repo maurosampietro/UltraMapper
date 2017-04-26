@@ -10,7 +10,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1A5DCC8D-E59E-4052-8A69-8CB1362A2A9A}"
 	ProjectSection(SolutionItems) = preProject
 		appveyor.yml = appveyor.yml
-		UltraMapper.nuspec = UltraMapper.nuspec
 	EndProjectSection
 EndProject
 Global

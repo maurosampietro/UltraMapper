@@ -104,17 +104,17 @@ namespace UltraMapper.Tests
             Assert.IsTrue( source.List2.SequenceEqual( target.List2 ) );
         }
 
-        [TestMethod]
-        public void MethodMatching()
-        {
-            var source = new GetMethodConventions();
-            var target = new SetMethodConventions();
+        //[TestMethod]
+        //public void MethodMatching()
+        //{
+        //    var source = new GetMethodConventions();
+        //    var target = new SetMethodConventions();
 
-            var mapper = new UltraMapper();
-            mapper.Map( source, target );
+        //    var mapper = new UltraMapper();
+        //    mapper.Map( source, target );
 
-            throw new NotImplementedException();
-        }
+        //    throw new NotImplementedException();
+        //}
 
         private class A
         {
@@ -202,38 +202,6 @@ namespace UltraMapper.Tests
         private class F
         {
             public double Double { get; set; }
-        }
-
-        [TestMethod]
-        public void ExactNameAndNullableUnwrappingTypeMatching()
-        {
-            var source = new E() { Double = 11 };
-
-            var mapper = new UltraMapper( cfg =>
-            {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<ExactNameMatching>()
-                    .GetOrAdd<TypeMatchingRule>( ruleCfg =>
-                    {
-                        ruleCfg.AllowImplicitConversions = false;
-                    } );
-            } );
-
-            var result = mapper.Map<D>( source );
-            Assert.IsTrue( result.Double == 0 );
-
-            var mapper2 = new UltraMapper( cfg =>
-            {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<ExactNameMatching>()
-                    .GetOrAdd<TypeMatchingRule>( ruleCfg =>
-                    {
-                        ruleCfg.AllowImplicitConversions = true;
-                    } );
-            } );
-
-            result = mapper2.Map<D>( source );
-            Assert.IsTrue( result.Double == 11 );
-        }
+        }    
     }
 }

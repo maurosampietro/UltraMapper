@@ -12,7 +12,7 @@ namespace UltraMapper.Conventions
     {
         public bool AllowImplicitConversions { get; set; } = true;
         public bool AllowExplicitConversions { get; set; } = true;
-        public bool AllowNullableUnwrappings { get; set; } = true;
+        //public bool AllowNullableUnwrappings { get; set; } = true;
 
         public override bool IsCompliant( MemberInfo source, MemberInfo target )
         {
