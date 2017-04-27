@@ -5,7 +5,7 @@ TODO:
 
 - Automatic reverse mapping (at the time a reverse mapping is resolved by convention. Take into account manual overrides.)
 
-- Collection mapping strategies 
+- Collection mapping strategies (update is missing) 
 
 - Collections now work only by clear/adding. 
   Before we could work with constructor(IEnumeable<T>) in some particular cases

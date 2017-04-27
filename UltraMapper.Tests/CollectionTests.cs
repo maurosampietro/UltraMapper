@@ -473,12 +473,14 @@ namespace UltraMapper.Tests
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+
+            throw new NotImplementedException();
         }
 
         public static class LinqExtensions
         {
-            public static void Update<T>( UltraMapper mapper, IEnumerable<T> source, ICollection<T> target, IEqualityComparer<T> comparer )
-                where T : class
+            public static void Update<T>( UltraMapper mapper, IEnumerable<T> source,
+                ICollection<T> target, IEqualityComparer<T> comparer ) where T : class
             {
                 var itemsToRemove = target.Except( source, comparer ).ToList();
                 foreach( var item in itemsToRemove ) target.Remove( item );
@@ -515,13 +517,12 @@ namespace UltraMapper.Tests
 
             public bool Equals( T x, T y )
             {
-                var result = _comparer( x, y );
-                return result;
+                return _comparer( x, y );
             }
 
             public int GetHashCode( T obj )
             {
-                return -1;
+                return obj.GetHashCode();
             }
         }
     }

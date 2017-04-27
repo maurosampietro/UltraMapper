@@ -37,6 +37,9 @@ namespace UltraMapper.Tests
 
             public void SetList1( List<int> value ) { _list1 = value; }
             public void Set_List2( List<int> value ) { _list2 = value; }
+
+            public List<int> GetList1() { return _list1; }
+            public List<int> GetList2() { return _list2; }
         }
 
         [TestMethod]
@@ -112,6 +115,9 @@ namespace UltraMapper.Tests
 
             var mapper = new UltraMapper();
             mapper.Map( source, target );
+
+            Assert.IsTrue( source.GetList1().SequenceEqual( target.GetList1() ) );
+            Assert.IsTrue( source.Get_List2().SequenceEqual( target.GetList2() ) );
         }
 
         private class A
@@ -257,36 +263,36 @@ namespace UltraMapper.Tests
             public decimal Total { get; set; }
         }
 
-        //[TestMethod]
-        //public void Flattening()
-        //{
-        //    var customer = new Customer
-        //    {
-        //        Name = "George Costanza"
-        //    };
+        [TestMethod]
+        public void Flattening()
+        {
+            var customer = new Customer
+            {
+                Name = "George Costanza"
+            };
 
-        //    var order = new Order
-        //    {
-        //        Customer = customer
-        //    };
+            var order = new Order
+            {
+                Customer = customer
+            };
 
-        //    var bosco = new Product
-        //    {
-        //        Name = "Bosco",
-        //        Price = 4.99m
-        //    };
+            var bosco = new Product
+            {
+                Name = "Bosco",
+                Price = 4.99m
+            };
 
-        //    order.AddOrderLineItem( bosco, 15 );
+            order.AddOrderLineItem( bosco, 15 );
 
-        //    var mapper = new UltraMapper( cfg =>
-        //    {
-        //        cfg.ConventionResolver = new FlatteningConventionResolver( );
-        //    } );
+            var mapper = new UltraMapper( cfg =>
+            {
+               // cfg.ConventionResolver = new FlatteningConventionResolver();
+            } );
 
-        //    OrderDto dto = mapper.Map<Order, OrderDto>( order );
+            OrderDto dto = mapper.Map<Order, OrderDto>( order );
 
-        //    Assert.IsTrue( dto.CustomerName == "George Costanza" );
-        //    Assert.IsTrue( dto.Total == 74.85m );
-        //}
+            Assert.IsTrue( dto.CustomerName == "George Costanza" );
+            Assert.IsTrue( dto.Total == 74.85m );
+        }
     }
 }
