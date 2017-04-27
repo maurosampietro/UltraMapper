@@ -91,7 +91,10 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var newInstanceExp = Expression.New( context.TargetMember.Type );
 
-            if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+            bool isCreateNewInstance = mapping.ReferenceMappingStrategy ==
+                ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+
+            if( isCreateNewInstance || context.TargetMemberValueGetter == null )
                 return Expression.Assign( context.TargetMember, newInstanceExp );
 
             return Expression.Block
@@ -113,11 +116,11 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             public int Compare( MemberMapping x, MemberMapping y )
             {
-                var xGetter = x.TargetMember.ValueGetter.ToString();
-                var yGetter = y.TargetMember.ValueGetter.ToString();
+                var xSetter = x.TargetMember.ValueSetter.ToString();
+                var ySetter = y.TargetMember.ValueSetter.ToString();
 
-                int xCount = xGetter.Split( '.' ).Count();
-                int yCount = yGetter.Split( '.' ).Count();
+                int xCount = xSetter.Split( '.' ).Count();
+                int yCount = ySetter.Split( '.' ).Count();
 
                 if( xCount > yCount ) return 1;
                 if( xCount < yCount ) return -1;
@@ -251,9 +254,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
-                    .ReplaceParameter( value, targetSetterMemberParamName ),
-
-                Expression.Invoke( debugExp, Expression.Convert( memberContext.TargetInstance, typeof( object ) ) )
+                    .ReplaceParameter( value, targetSetterMemberParamName )
             );
         }
         #endregion

@@ -30,7 +30,7 @@ namespace UltraMapper
         private readonly Dictionary<TypePair, TypeMapping> _typeMappings =
             new Dictionary<TypePair, TypeMapping>();
 
-        public readonly ConventionResolver ConventionResolver;
+        public IConventionResolver ConventionResolver;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -57,7 +57,7 @@ namespace UltraMapper
 
             this.Mappers = new List<IMappingExpressionBuilder>()
             {
-                //Order is important: the first MapperExpressionBuilder that can handle a mapping is used.
+                //Order is important: it is used the first MapperExpressionBuilder able to handle a mapping.
                 //Make sure to use a collection which preserve insertion order!
                 new StringToEnumMapper( this ),
                 new EnumMapper( this ),

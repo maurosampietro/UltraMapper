@@ -47,11 +47,14 @@ namespace UltraMapper.MappingExpressionBuilders.MapperContexts
             SourceMemberValueGetter = mapping.SourceMember.ValueGetter.Body
                 .ReplaceParameter( SourceInstance, sourceGetterInstanceParamName );
 
-            var targetGetterInstanceParamName = mapping.TargetMember
-                .ValueGetter.Parameters[ 0 ].Name;
+            if( mapping.TargetMember.ValueGetter != null )
+            {
+                var targetGetterInstanceParamName = mapping.TargetMember
+                    .ValueGetter.Parameters[ 0 ].Name;
 
-            TargetMemberValueGetter = mapping.TargetMember.ValueGetter.Body
-                .ReplaceParameter( TargetInstance, targetGetterInstanceParamName );
+                TargetMemberValueGetter = mapping.TargetMember.ValueGetter.Body
+                    .ReplaceParameter( TargetInstance, targetGetterInstanceParamName );
+            }
 
             var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
             var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;

@@ -83,11 +83,12 @@ namespace UltraMapper.Tests
 
             var mapper = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
-                    .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
-                    .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
-                    .Respect( ( rule1, rule2, rule3 ) => rule1 & (rule2 | rule3) );
+                cfg.MappingConvention.MatchingRules = new MatchingRules( rules => 
+                {
+                    rules.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
+                        .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                        .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true );
+                } );
             } );
 
             mapper.Map( source, target );

@@ -7,7 +7,7 @@ namespace UltraMapper.Conventions
     /// <summary>
     /// Two members match if targetName = sourceName + suffix.
     /// </summary>
-    public class SuffixMatching : MatchingRuleBase
+    public class SuffixMatching : INameMatchingRule
     {
         public bool IgnoreCase { get; set; }
         public string[] Suffixes { get; set; }
@@ -21,7 +21,7 @@ namespace UltraMapper.Conventions
             this.Suffixes = suffixes;
         }
 
-        public override bool IsCompliant( MemberInfo source, MemberInfo target )
+        public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

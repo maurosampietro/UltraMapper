@@ -7,11 +7,11 @@ namespace UltraMapper.Conventions
     /// Two members match if they have the same name.
     /// Name case can be optionally ignored.
     /// </summary>
-    public class ExactNameMatching : MatchingRuleBase
+    public class ExactNameMatching : INameMatchingRule
     {
-        public bool IgnoreCase { get; set; } = false;
+        public bool IgnoreCase { get; set; } = true;
 
-        public override bool IsCompliant( MemberInfo source, MemberInfo target )
+        public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

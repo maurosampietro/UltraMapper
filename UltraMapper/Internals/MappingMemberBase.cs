@@ -6,6 +6,8 @@ namespace UltraMapper.Internals
 {
     public abstract class MappingMemberBase
     {
+        public readonly MemberAccessPath MemberAccessPath;
+
         public readonly MemberInfo MemberInfo;
         public readonly Type MemberType;
 

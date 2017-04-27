@@ -39,11 +39,11 @@ namespace UltraMapper.Tests
 
             var mapper = new UltraMapper( config =>
             {
-                config.ConventionResolver.IgnoreSourceFields = false;
-                config.ConventionResolver.IgnoreSourceNonPublicMembers = false;
-
-                config.ConventionResolver.IgnoreTargetFields = false;
-                config.ConventionResolver.IgnoreTargetNonPublicMembers = false;
+                config.ConventionResolver.SourceMemberProvider.IgnoreFields = false;
+                config.ConventionResolver.SourceMemberProvider.IgnoreNonPublicMembers = false;
+                                                                           
+                config.ConventionResolver.TargetMemberProvider.IgnoreFields = false;
+                config.ConventionResolver.TargetMemberProvider.IgnoreNonPublicMembers = false;
             } );
 
             mapper.Map( source, target );

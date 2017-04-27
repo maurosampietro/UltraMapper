@@ -24,19 +24,13 @@ namespace UltraMapper.Internals
             var method = (memberInfo as MethodInfo);
             if( method != null )
             {
-                bool isGetterMethod = method.ReturnType != typeof( void ) &&
-                    method.GetParameters().Length == 0;
-
-                if( isGetterMethod )
+                if( method.IsGetterMethod() )
                     return method.ReturnType;
 
-                //it is not mandatory to return void for the setter
-                bool isSetterMethod = method.GetParameters().Length == 1;
-
-                if( isSetterMethod )
+                if( method.IsSetterMethod() )
                     return method.GetParameters()[ 0 ].ParameterType;
 
-                throw new ArgumentException( "Only methods in the form of (T)Get_Value() or (anything)Set_Value(T value) are supported." );
+                throw new ArgumentException( "Only methods in the form of (T)Get_Value() or (void)Set_Value(T value) are supported." );
             }
 
             throw new ArgumentException( $"'{memberInfo}' is not supported." );

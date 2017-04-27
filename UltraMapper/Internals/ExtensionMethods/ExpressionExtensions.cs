@@ -40,6 +40,9 @@ namespace UltraMapper.Internals
 
                 else if( expBody.NodeType == ExpressionType.Constant )
                     return ((ConstantExpression)expBody).Type;
+
+                else if( expBody.NodeType == ExpressionType.Assign )
+                    expBody = ((BinaryExpression)expBody).Left;
             }
 
             if( memberExpression == null )
@@ -210,7 +213,6 @@ namespace UltraMapper.Internals
         public static LambdaExpression GetSetterLambdaExpression( this FieldInfo fieldInfo )
         {
             // (target, value) => target.field = value;
-
             var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
             var value = Expression.Parameter( fieldInfo.FieldType, "value" );
 
@@ -233,7 +235,7 @@ namespace UltraMapper.Internals
             var body = Expression.Call( targetInstance, methodInfo );
 
             var delegateType = typeof( Func<,> ).MakeGenericType(
-                propertyInfo.ReflectedType, propertyInfo.PropertyType );
+                targetType, propertyInfo.PropertyType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
@@ -259,7 +261,7 @@ namespace UltraMapper.Internals
         public static LambdaExpression GetGetterLambdaExpression( this MethodInfo methodInfo )
         {
             if( methodInfo.GetParameters().Length > 0 )
-                throw new NotImplementedException( "Only parameterless methods are currently supported" );
+                throw new NotImplementedException( "Only parameterless methods are supported" );
 
             var targetType = methodInfo.ReflectedType;
 
@@ -275,7 +277,7 @@ namespace UltraMapper.Internals
         public static LambdaExpression GetSetterLambdaExpression( this MethodInfo methodInfo )
         {
             if( methodInfo.GetParameters().Length != 1 )
-                throw new NotImplementedException( $"Only methods taking as input exactly one parameter are currently supported." );
+                throw new NotImplementedException( $"Only methods taking as input exactly one parameter are supported." );
 
             var targetInstance = Expression.Parameter( methodInfo.ReflectedType, "target" );
             var value = Expression.Parameter( methodInfo.GetParameters()[ 0 ].ParameterType, "value" );
@@ -286,6 +288,53 @@ namespace UltraMapper.Internals
                 methodInfo.ReflectedType, methodInfo.GetParameters()[ 0 ].ParameterType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+        }
+    }
+
+    internal static class MemberAccessPathExpressionBuilder
+    {
+        public static LambdaExpression GetGetterLambdaExpression( this MemberAccessPath memberAccessPath )
+        {
+            var instanceType = memberAccessPath.First().ReflectedType;
+            var returnType = memberAccessPath.Last().GetMemberType();
+
+            var accessInstance = Expression.Parameter( instanceType, "instance" );
+            Expression accessPath = accessInstance;
+            foreach( var memberAccess in memberAccessPath )
+            {
+                if( memberAccess is MethodInfo )
+                    accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess );
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+            }
+
+            var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
+            return LambdaExpression.Lambda( delegateType, accessPath, accessInstance );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpression( this MemberAccessPath memberAccessPath )
+        {
+            var instanceType = memberAccessPath.First().ReflectedType;
+            var valueType = memberAccessPath.Last().GetMemberType();
+
+            var value = Expression.Parameter( valueType, "value" );
+            var accessInstance = Expression.Parameter( instanceType, "instance" );
+
+            Expression accessPath = accessInstance;
+
+            foreach( var memberAccess in memberAccessPath )
+            {
+                if( memberAccess is MethodInfo )
+                    accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+            }
+
+            if( !(accessPath is MethodCallExpression) )
+                accessPath = Expression.Assign( accessPath, value );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
+            return LambdaExpression.Lambda( delegateType, accessPath, accessInstance, value );
         }
     }
 }

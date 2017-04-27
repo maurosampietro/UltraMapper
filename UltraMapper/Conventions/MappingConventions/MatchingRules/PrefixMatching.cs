@@ -7,7 +7,7 @@ namespace UltraMapper.Conventions
     /// <summary>
     /// Two members match if targetName = suffix + sourceName.
     /// </summary>
-    public class PrefixMatching : MatchingRuleBase
+    public class PrefixMatching : INameMatchingRule
     {
         public bool IgnoreCase { get; set; }
         public string[] Prefixes { get; set; }
@@ -17,11 +17,11 @@ namespace UltraMapper.Conventions
 
         public PrefixMatching( params string[] prefixes )
         {
-            this.IgnoreCase = false;
+            this.IgnoreCase = true;
             this.Prefixes = prefixes;
         }
 
-        public override bool IsCompliant( MemberInfo source, MemberInfo target )
+        public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;

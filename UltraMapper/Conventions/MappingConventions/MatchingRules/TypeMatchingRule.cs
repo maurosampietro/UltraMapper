@@ -8,13 +8,13 @@ namespace UltraMapper.Conventions
     /// Two properties match if the source type is of the same type 
     /// or (optionally) implicitly convertible to the target type.
     /// </summary>
-    public class TypeMatchingRule : MatchingRuleBase
+    public class TypeMatchingRule : ITypeMatchingRule
     {
         public bool AllowImplicitConversions { get; set; } = true;
         public bool AllowExplicitConversions { get; set; } = true;
         //public bool AllowNullableUnwrappings { get; set; } = true;
 
-        public override bool IsCompliant( MemberInfo source, MemberInfo target )
+        public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var sourceType = source.GetMemberType();
             var targetType = target.GetMemberType();

@@ -9,13 +9,38 @@ namespace UltraMapper.Internals
 {
     public struct MemberPair
     {
-        public readonly MemberInfo SourceMember;
-        public readonly MemberInfo TargetMember;
+        public readonly MemberAccessPath SourceMemberAccess;
+        public readonly MemberAccessPath TargetMemberAccess;
+
+        public MemberPair( MemberAccessPath source, MemberAccessPath target )
+        {
+            this.SourceMemberAccess = source;
+            this.TargetMemberAccess = target;
+        }
+
+        public MemberPair( MemberAccessPath source, MemberInfo target )
+        {
+            this.SourceMemberAccess = source;
+
+            this.TargetMemberAccess = new MemberAccessPath();
+            this.TargetMemberAccess.Add( target );
+        }
+
+        public MemberPair( MemberInfo source, MemberAccessPath target )
+        {
+            this.SourceMemberAccess = new MemberAccessPath();
+            this.SourceMemberAccess.Add( source );
+
+            this.TargetMemberAccess = target;
+        }
 
         public MemberPair( MemberInfo source, MemberInfo target )
         {
-            this.SourceMember = source;
-            this.TargetMember = target;
+            this.SourceMemberAccess = new MemberAccessPath();
+            this.SourceMemberAccess.Add( source );
+
+            this.TargetMemberAccess = new MemberAccessPath();
+            this.TargetMemberAccess.Add( target );
         }
     }
 }

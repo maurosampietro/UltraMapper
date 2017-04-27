@@ -104,17 +104,15 @@ namespace UltraMapper.Tests
             Assert.IsTrue( source.List2.SequenceEqual( target.List2 ) );
         }
 
-        //[TestMethod]
-        //public void MethodMatching()
-        //{
-        //    var source = new GetMethodConventions();
-        //    var target = new SetMethodConventions();
+        [TestMethod]
+        public void MethodMatching()
+        {
+            var source = new GetMethodConventions();
+            var target = new SetMethodConventions();
 
-        //    var mapper = new UltraMapper();
-        //    mapper.Map( source, target );
-
-        //    throw new NotImplementedException();
-        //}
+            var mapper = new UltraMapper();
+            mapper.Map( source, target );
+        }
 
         private class A
         {
@@ -202,6 +200,93 @@ namespace UltraMapper.Tests
         private class F
         {
             public double Double { get; set; }
-        }    
+        }
+    }
+
+    [TestClass]
+    public class FlatteningConventionTest
+    {
+        private class Order
+        {
+            private readonly IList<OrderLineItem> _orderLineItems = new List<OrderLineItem>();
+
+            public Customer Customer { get; set; }
+
+            public void AddOrderLineItem( Product product, int quantity )
+            {
+                _orderLineItems.Add( new OrderLineItem( product, quantity ) );
+            }
+
+            public decimal GetTotal()
+            {
+                return _orderLineItems.Sum( li => li.GetTotal() );
+            }
+        }
+
+        private class Product
+        {
+            public decimal Price { get; set; }
+            public string Name { get; set; }
+        }
+
+        private class OrderLineItem
+        {
+            public OrderLineItem( Product product, int quantity )
+            {
+                Product = product;
+                Quantity = quantity;
+            }
+
+            public Product Product { get; private set; }
+            public int Quantity { get; private set; }
+
+            public decimal GetTotal()
+            {
+                return Quantity * Product.Price;
+            }
+        }
+
+        private class Customer
+        {
+            public string Name { get; set; }
+        }
+
+        private class OrderDto
+        {
+            public string CustomerName { get; set; }
+            public decimal Total { get; set; }
+        }
+
+        //[TestMethod]
+        //public void Flattening()
+        //{
+        //    var customer = new Customer
+        //    {
+        //        Name = "George Costanza"
+        //    };
+
+        //    var order = new Order
+        //    {
+        //        Customer = customer
+        //    };
+
+        //    var bosco = new Product
+        //    {
+        //        Name = "Bosco",
+        //        Price = 4.99m
+        //    };
+
+        //    order.AddOrderLineItem( bosco, 15 );
+
+        //    var mapper = new UltraMapper( cfg =>
+        //    {
+        //        cfg.ConventionResolver = new FlatteningConventionResolver( );
+        //    } );
+
+        //    OrderDto dto = mapper.Map<Order, OrderDto>( order );
+
+        //    Assert.IsTrue( dto.CustomerName == "George Costanza" );
+        //    Assert.IsTrue( dto.Total == 74.85m );
+        //}
     }
 }

@@ -46,14 +46,23 @@ namespace UltraMapper.Internals
 
             foreach( var memberPair in memberPairings )
             {
-                var sourceMemberGetterExpression = memberPair.SourceMember.GetGetterLambdaExpression();
-                var targetMemberGetterExpression = memberPair.TargetMember.GetGetterLambdaExpression();
-                var targetMemberSetterExpression = memberPair.TargetMember.GetSetterLambdaExpression();
+                var sourceMemberGetterExpression = memberPair.SourceMemberAccess.GetGetterLambdaExpression();
+                LambdaExpression targetMemberGetterExpression = null;
+                try
+                {
+                    targetMemberGetterExpression = memberPair.TargetMemberAccess.GetGetterLambdaExpression();
+                }
+                catch( Exception )
+                {
 
-                var mappingSource = GetMappingSource( memberPair.SourceMember,
+                }
+
+                var targetMemberSetterExpression = memberPair.TargetMemberAccess.GetSetterLambdaExpression();
+
+                var mappingSource = GetMappingSource( memberPair.SourceMemberAccess.Last(),
                     sourceMemberGetterExpression );
 
-                var mappingTarget = GetMappingTarget( memberPair.TargetMember,
+                var mappingTarget = GetMappingTarget( memberPair.TargetMemberAccess.Last(),
                     targetMemberGetterExpression, targetMemberSetterExpression );
 
                 var mapping = GetMemberMapping( mappingSource, mappingTarget );
