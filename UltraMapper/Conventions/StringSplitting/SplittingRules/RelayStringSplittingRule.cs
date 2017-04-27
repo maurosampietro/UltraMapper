@@ -6,14 +6,17 @@ using System.Threading.Tasks;
 
 namespace UltraMapper.Conventions
 {
-    public class RelaySplittingRule : IStringSplittingRule
+    public class RelayStringSplittingRule : IStringSplittingRule
     {
         private readonly Func<char, bool> _splittingRule;
 
+        public bool RemoveSplitChar { get; private set; }
+
         public bool IsSplitChar( char ch ) => _splittingRule( ch );
 
-        public RelaySplittingRule( Func<char, bool> splittingRule )
+        public RelayStringSplittingRule( Func<char, bool> splittingRule, bool removeSplitChar )
         {
+            this.RemoveSplitChar = removeSplitChar;
             _splittingRule = splittingRule;
         }
     }

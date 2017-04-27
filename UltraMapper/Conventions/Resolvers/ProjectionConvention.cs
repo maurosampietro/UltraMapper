@@ -17,7 +17,7 @@ namespace UltraMapper.Conventions.Resolvers
         public IStringSplittingRule SplittingRule { get; private set; }
 
         public ProjectionConvention()
-            : this( new SourceMemberProvider(), new TargetMemberProvider(), new PascalCaseStringSplittingRule() ) { }
+            : this( new SourceMemberProvider(), new TargetMemberProvider(), StringSplittingRules.PascalCaseRule ) { }
 
         public ProjectionConvention( IMemberProvider sourceMemberProvider,
             IMemberProvider targetMembetProvider, IStringSplittingRule splittingRule )

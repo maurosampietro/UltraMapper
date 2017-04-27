@@ -432,50 +432,50 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-        [TestMethod]
-        public void CollectionUpdate()
-        {
-            var innerType = new InnerType() { String = "test" };
+        //[TestMethod]
+        //public void CollectionUpdate()
+        //{
+        //    var innerType = new InnerType() { String = "test" };
 
-            var source = new GenericCollections<ComplexType>( false );
+        //    var source = new GenericCollections<ComplexType>( false );
 
-            //initialize source
-            for( int i = 0; i < 50; i++ )
-            {
-                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
-                source.HashSet.Add( new ComplexType() { A = i } );
-                source.SortedSet.Add( new ComplexType() { A = i } );
-                source.Stack.Push( new ComplexType() { A = i } );
-                source.Queue.Enqueue( new ComplexType() { A = i } );
-                source.LinkedList.AddLast( new ComplexType() { A = i } );
-                source.ObservableCollection.Add( new ComplexType() { A = i } );
-            }
+        //    //initialize source
+        //    for( int i = 0; i < 50; i++ )
+        //    {
+        //        source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.HashSet.Add( new ComplexType() { A = i } );
+        //        source.SortedSet.Add( new ComplexType() { A = i } );
+        //        source.Stack.Push( new ComplexType() { A = i } );
+        //        source.Queue.Enqueue( new ComplexType() { A = i } );
+        //        source.LinkedList.AddLast( new ComplexType() { A = i } );
+        //        source.ObservableCollection.Add( new ComplexType() { A = i } );
+        //    }
 
-            var target = new GenericCollections<ComplexType>( false );
+        //    var target = new GenericCollections<ComplexType>( false );
 
-            var temp = new List<ComplexType>()
-            {
-                new ComplexType() { A = 1 },
-                new ComplexType() { A = 49 },
-                new ComplexType() { A = 50 }
-            };
+        //    var temp = new List<ComplexType>()
+        //    {
+        //        new ComplexType() { A = 1 },
+        //        new ComplexType() { A = 49 },
+        //        new ComplexType() { A = 50 }
+        //    };
 
 
-            var ultraMapper = new UltraMapper( cfg =>
-            {
-                cfg.MapTypes( source, target )
-                    .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemB.A );
-            } );
+        //    var ultraMapper = new UltraMapper( cfg =>
+        //    {
+        //        cfg.MapTypes( source, target )
+        //            .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemB.A );
+        //    } );
 
-            LinqExtensions.Update( ultraMapper, source.List, temp, new RelayEqualityComparison<ComplexType>( ( itemA, itemB ) => itemA.A == itemB.A ) );
+        //    LinqExtensions.Update( ultraMapper, source.List, temp, new RelayEqualityComparison<ComplexType>( ( itemA, itemB ) => itemA.A == itemB.A ) );
 
-            ultraMapper.Map( source, target );
+        //    ultraMapper.Map( source, target );
 
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
+        //    bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+        //    Assert.IsTrue( isResultOk );
 
-            throw new NotImplementedException();
-        }
+        //    throw new NotImplementedException();
+        //}
 
         public static class LinqExtensions
         {

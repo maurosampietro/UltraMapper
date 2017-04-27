@@ -8,7 +8,7 @@ namespace UltraMapper.Conventions
 {
     public sealed class StringSplitter
     {
-        public IStringSplittingRule SplittingRule { get; set; }
+        public readonly IStringSplittingRule SplittingRule;
 
         public StringSplitter( IStringSplittingRule splittingRule )
         {
@@ -19,13 +19,15 @@ namespace UltraMapper.Conventions
         {
             if( String.IsNullOrEmpty( str ) ) yield break;
 
+            int removeCharOffset = this.SplittingRule.RemoveSplitChar ? 1 : 0;
+
             int lastSplit = 0;
             for( int i = 1; i < str.Length; i++ )
             {
                 if( this.SplittingRule.IsSplitChar( str[ i ] ) )
                 {
                     yield return str.Substring( lastSplit, i - lastSplit );
-                    lastSplit = i;
+                    lastSplit = i + removeCharOffset;
                 }
             }
 

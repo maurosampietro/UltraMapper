@@ -52,10 +52,9 @@
     <Compile Include="Conventions\MemberProviders\SourceMemberProvider.cs" />
     <Compile Include="Conventions\MemberProviders\TargetMemberProvider.cs" />
     <Compile Include="Conventions\Resolvers\ProjectionConvention.cs" />
-    <Compile Include="Conventions\StringSplitting\SplittingRules\RelaySplittingRule.cs" />
+    <Compile Include="Conventions\StringSplitting\SplittingRules\RelayStringSplittingRule.cs" />
     <Compile Include="Conventions\StringSplitting\SplittingRules\IStringSplittingRule.cs" />
-    <Compile Include="Conventions\StringSplitting\SplittingRules\PascalCaseStringSplittingRule.cs" />
-    <Compile Include="Conventions\StringSplitting\SplittingRules\UnderscoreStringSplittingRule.cs" />
+    <Compile Include="Conventions\StringSplitting\SplittingRules\StringSplittingRules.cs" />
     <Compile Include="Conventions\StringSplitting\StringSplitter.cs" />
     <Compile Include="Internals\ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="Internals\ExtensionMethods\ExpressionExtensions.cs" />

@@ -263,36 +263,36 @@ namespace UltraMapper.Tests
             public decimal Total { get; set; }
         }
 
-        [TestMethod]
-        public void Flattening()
-        {
-            var customer = new Customer
-            {
-                Name = "George Costanza"
-            };
+        //[TestMethod]
+        //public void Flattening()
+        //{
+        //    var customer = new Customer
+        //    {
+        //        Name = "George Costanza"
+        //    };
 
-            var order = new Order
-            {
-                Customer = customer
-            };
+        //    var order = new Order
+        //    {
+        //        Customer = customer
+        //    };
 
-            var bosco = new Product
-            {
-                Name = "Bosco",
-                Price = 4.99m
-            };
+        //    var bosco = new Product
+        //    {
+        //        Name = "Bosco",
+        //        Price = 4.99m
+        //    };
 
-            order.AddOrderLineItem( bosco, 15 );
+        //    order.AddOrderLineItem( bosco, 15 );
 
-            var mapper = new UltraMapper( cfg =>
-            {
-               // cfg.ConventionResolver = new FlatteningConventionResolver();
-            } );
+        //    var mapper = new UltraMapper( cfg =>
+        //    {
+        //       // cfg.ConventionResolver = new FlatteningConventionResolver();
+        //    } );
 
-            OrderDto dto = mapper.Map<Order, OrderDto>( order );
+        //    OrderDto dto = mapper.Map<Order, OrderDto>( order );
 
-            Assert.IsTrue( dto.CustomerName == "George Costanza" );
-            Assert.IsTrue( dto.Total == 74.85m );
-        }
+        //    Assert.IsTrue( dto.CustomerName == "George Costanza" );
+        //    Assert.IsTrue( dto.Total == 74.85m );
+        //}
     }
 }

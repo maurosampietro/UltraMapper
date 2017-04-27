@@ -14,10 +14,10 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split1()
         {
-            var splitter = new StringSplitter( new PascalCaseSplittingRule() );
+            var splitter = new StringSplitter( StringSplittingRules.PascalCaseRule );
             var result = splitter.Split( "ABCDEFG" ).ToList();
 
-            var isTrue = result.SequenceEqual( new List<string>() {
+            var isTrue = result.SequenceEqual( new[] {
                 "A", "B", "C", "D", "E", "F", "G" } );
 
             Assert.IsTrue( isTrue );
@@ -26,10 +26,10 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split2()
         {
-            var splitter = new StringSplitter( new PascalCaseSplittingRule() );
+            var splitter = new StringSplitter( StringSplittingRules.PascalCaseRule );
             var result = splitter.Split( "AxBxCxDxExFxGx" ).ToList();
 
-            var isTrue = result.SequenceEqual( new List<string>() {
+            var isTrue = result.SequenceEqual( new[] {
                 "Ax", "Bx", "Cx", "Dx", "Ex", "Fx", "Gx" } );
 
             Assert.IsTrue( isTrue );
@@ -38,11 +38,22 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split3()
         {
-            var splitter = new StringSplitter( new PascalCaseSplittingRule() );
+            var splitter = new StringSplitter( StringSplittingRules.PascalCaseRule );
             var result = splitter.Split( "xAxBxCxDxExFxGxe" ).ToList();
 
-            var isTrue = result.SequenceEqual( new List<string>() {
+            var isTrue = result.SequenceEqual( new[] {
                 "x","Ax", "Bx", "Cx", "Dx", "Ex", "Fx", "Gxe" } );
+
+            Assert.IsTrue( isTrue );
+        }
+
+        [TestMethod]
+        public void Split4()
+        {
+            var splitter = new StringSplitter( StringSplittingRules.UnderscoreRule );
+            var result = splitter.Split( "xAxBxCxDx_ExFxGxe" ).ToList();
+
+            var isTrue = result.SequenceEqual( new[] { "xAxBxCxDx", "ExFxGxe" } );
 
             Assert.IsTrue( isTrue );
         }
