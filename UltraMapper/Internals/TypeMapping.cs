@@ -41,34 +41,35 @@ namespace UltraMapper.Internals
 
         private void MapByConvention()
         {
-            var memberPairings = GlobalConfiguration.ConventionResolver
-                .Resolve( TypePair.SourceType, TypePair.TargetType );
-
-            foreach( var memberPair in memberPairings )
+            foreach( var convention in GlobalConfiguration.Conventions )
             {
-                var sourceMemberGetterExpression = memberPair.SourceMemberAccess.GetGetterLambdaExpression();
-                LambdaExpression targetMemberGetterExpression = null;
-                try
+                var memberPairings = convention.MapByConvention( TypePair.SourceType, TypePair.TargetType );
+                foreach( var memberPair in memberPairings )
                 {
-                    targetMemberGetterExpression = memberPair.TargetMemberAccess.GetGetterLambdaExpression();
+                    var sourceMemberGetterExpression = memberPair.SourceMemberAccess.GetGetterLambdaExpression();
+                    LambdaExpression targetMemberGetterExpression = null;
+                    try
+                    {
+                        targetMemberGetterExpression = memberPair.TargetMemberAccess.GetGetterLambdaExpression();
+                    }
+                    catch( Exception )
+                    {
+
+                    }
+
+                    var targetMemberSetterExpression = memberPair.TargetMemberAccess.GetSetterLambdaExpression();
+
+                    var mappingSource = GetMappingSource( memberPair.SourceMemberAccess.Last(),
+                        sourceMemberGetterExpression );
+
+                    var mappingTarget = GetMappingTarget( memberPair.TargetMemberAccess.Last(),
+                        targetMemberGetterExpression, targetMemberSetterExpression );
+
+                    var mapping = GetMemberMapping( mappingSource, mappingTarget );
+                    mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
+
+                    this.MemberMappings[ mappingTarget ] = mapping;
                 }
-                catch( Exception )
-                {
-
-                }
-
-                var targetMemberSetterExpression = memberPair.TargetMemberAccess.GetSetterLambdaExpression();
-
-                var mappingSource = GetMappingSource( memberPair.SourceMemberAccess.Last(),
-                    sourceMemberGetterExpression );
-
-                var mappingTarget = GetMappingTarget( memberPair.TargetMemberAccess.Last(),
-                    targetMemberGetterExpression, targetMemberSetterExpression );
-
-                var mapping = GetMemberMapping( mappingSource, mappingTarget );
-                mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
-
-                this.MemberMappings[ mappingTarget ] = mapping;
             }
         }
 
@@ -186,7 +187,7 @@ namespace UltraMapper.Internals
             LambdaExpression targetMemberGetterExpression, LambdaExpression targetMemberSetterExpression )
         {
             return _targetProperties.GetOrAdd( targetMember,
-                () => new MappingTarget( targetMemberGetterExpression, targetMemberSetterExpression ) );
+                () => new MappingTarget( targetMemberSetterExpression, targetMemberGetterExpression ) );
         }
 
         public MemberMapping GetMemberMapping( MappingSource mappingSource, MappingTarget mappingTarget )

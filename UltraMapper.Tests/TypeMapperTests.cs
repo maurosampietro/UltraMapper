@@ -61,10 +61,13 @@ namespace UltraMapper.Tests
 
             var config = new Configuration( cfg =>
             {
-                cfg.MappingConvention.MatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
+                cfg.Conventions.GetOrAdd<DefaultConvention>( conventionConfig =>
                 {
-                    ruleConfig.AllowImplicitConversions = false;
-                    ruleConfig.AllowExplicitConversions = false;
+                    conventionConfig.MatchingRules.GetOrAdd<TypeMatchingRule>( ruleConfig =>
+                    {
+                        ruleConfig.AllowImplicitConversions = false;
+                        ruleConfig.AllowExplicitConversions = false;
+                    } );
                 } );
             } );
 
@@ -83,11 +86,14 @@ namespace UltraMapper.Tests
 
             var mapper = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.MatchingRules = new MatchingRules( rules => 
+                cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
-                    rules.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
-                        .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
-                        .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true );
+                    convention.MatchingRules = new MatchingRules( rules =>
+                    {
+                        rules.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
+                            .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                            .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true );
+                    } );
                 } );
             } );
 

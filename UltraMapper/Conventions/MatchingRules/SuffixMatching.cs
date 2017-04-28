@@ -17,7 +17,7 @@ namespace UltraMapper.Conventions
 
         public SuffixMatching( params string[] suffixes )
         {
-            this.IgnoreCase = false;
+            this.IgnoreCase = true;
             this.Suffixes = suffixes;
         }
 

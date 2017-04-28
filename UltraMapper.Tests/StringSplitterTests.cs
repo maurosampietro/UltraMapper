@@ -14,7 +14,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split1()
         {
-            var splitter = new StringSplitter( StringSplittingRules.PascalCaseRule );
+            var splitter = new StringSplitter( StringSplittingRules.PascalCase );
             var result = splitter.Split( "ABCDEFG" ).ToList();
 
             var isTrue = result.SequenceEqual( new[] {
@@ -26,7 +26,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split2()
         {
-            var splitter = new StringSplitter( StringSplittingRules.PascalCaseRule );
+            var splitter = new StringSplitter( StringSplittingRules.PascalCase );
             var result = splitter.Split( "AxBxCxDxExFxGx" ).ToList();
 
             var isTrue = result.SequenceEqual( new[] {
@@ -38,7 +38,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split3()
         {
-            var splitter = new StringSplitter( StringSplittingRules.PascalCaseRule );
+            var splitter = new StringSplitter( StringSplittingRules.PascalCase );
             var result = splitter.Split( "xAxBxCxDxExFxGxe" ).ToList();
 
             var isTrue = result.SequenceEqual( new[] {
@@ -50,7 +50,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void Split4()
         {
-            var splitter = new StringSplitter( StringSplittingRules.UnderscoreRule );
+            var splitter = new StringSplitter( StringSplittingRules.SnakeCase );
             var result = splitter.Split( "xAxBxCxDx_ExFxGxe" ).ToList();
 
             var isTrue = result.SequenceEqual( new[] { "xAxBxCxDx", "ExFxGxe" } );

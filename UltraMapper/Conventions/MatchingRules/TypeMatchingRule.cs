@@ -6,7 +6,7 @@ namespace UltraMapper.Conventions
 {
     /// <summary>
     /// Two properties match if the source type is of the same type 
-    /// or (optionally) implicitly convertible to the target type.
+    /// or (optionally) implicitly/explicitly convertible to the target type.
     /// </summary>
     public class TypeMatchingRule : ITypeMatchingRule
     {
@@ -39,7 +39,8 @@ namespace UltraMapper.Conventions
             //PrimitiveType -> Nullable<PrimitiveType> always possible. No flag to disable that.
             Lazy<bool> primitiveToNullablePrimitive = new Lazy<bool>( () =>
             {
-                return !source.IsNullable() && target.IsNullable() && target.IsAssignableFrom( source );
+                return !source.IsNullable() && target.IsNullable() 
+                    && target.IsAssignableFrom( source );
             } );
 
             return source == target || primitiveToNullablePrimitive.Value ||

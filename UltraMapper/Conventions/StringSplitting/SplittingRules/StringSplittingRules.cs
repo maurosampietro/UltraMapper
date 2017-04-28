@@ -12,13 +12,14 @@ namespace UltraMapper.Conventions
         /// <summary>
         /// Informs to split if an upper case character is encountered
         /// </summary>
-        public static IStringSplittingRule PascalCaseRule =
+        public static IStringSplittingRule PascalCase =
             new RelayStringSplittingRule( c => Char.IsUpper( c ), removeSplitChar: false );
 
         /// <summary>
-        /// Informs the caller to split if an underscore character is encountered
+        /// Informs the caller to split if an underscore character is encountered.
+        /// The underscore itself is not considered part of the split.
         /// </summary>
-        public static IStringSplittingRule UnderscoreRule =
+        public static IStringSplittingRule SnakeCase =
             new RelayStringSplittingRule( c => c == '_', removeSplitChar: true );
     }
 }

@@ -113,7 +113,14 @@ namespace UltraMapper.Tests
             var source = new GetMethodConventions();
             var target = new SetMethodConventions();
 
-            var mapper = new UltraMapper();
+            var mapper = new UltraMapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
+                {
+                    convention.MatchingRules.GetOrAdd<MethodMatching>();
+                } );
+            } );
+
             mapper.Map( source, target );
 
             Assert.IsTrue( source.GetList1().SequenceEqual( target.GetList1() ) );
@@ -137,9 +144,13 @@ namespace UltraMapper.Tests
 
             var mapper = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<ExactNameMatching>()
-                    .GetOrAdd<TypeMatchingRule>( ruleCfg => ruleCfg.AllowExplicitConversions = false );
+                var matching = new MatchingRules();
+
+                cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
+                {
+                    convention.MatchingRules.GetOrAdd<ExactNameMatching>()
+                        .GetOrAdd<TypeMatchingRule>( ruleCfg => ruleCfg.AllowExplicitConversions = false );
+                } );
             } );
 
             var result = mapper.Map<B>( source );
@@ -147,9 +158,11 @@ namespace UltraMapper.Tests
 
             var mapper2 = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<ExactNameMatching>()
-                    .GetOrAdd<TypeMatchingRule>( ruleCfg => ruleCfg.AllowExplicitConversions = true );
+                cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
+                {
+                    convention.MatchingRules.GetOrAdd<ExactNameMatching>()
+                        .GetOrAdd<TypeMatchingRule>( ruleCfg => ruleCfg.AllowExplicitConversions = true );
+                } );
             } );
 
             result = mapper2.Map<B>( source );
@@ -167,18 +180,17 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void ExactNameAndImplicitConversionTypeMatching()
+        public void ExactNameAndConversionTypeMatching()
         {
             var source = new C() { Double = 11 };
 
             var mapper = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<ExactNameMatching>()
-                    .GetOrAdd<TypeMatchingRule>( ruleCfg =>
-                    {
-                        ruleCfg.AllowImplicitConversions = false;
-                    } );
+                cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
+                {
+                    convention.MatchingRules.GetOrAdd<ExactNameMatching>()
+                        .GetOrAdd<TypeMatchingRule>( ruleCfg => ruleCfg.AllowImplicitConversions = false );
+                } );
             } );
 
             var result = mapper.Map<D>( source );
@@ -186,12 +198,11 @@ namespace UltraMapper.Tests
 
             var mapper2 = new UltraMapper( cfg =>
             {
-                cfg.MappingConvention.MatchingRules
-                    .GetOrAdd<ExactNameMatching>()
-                    .GetOrAdd<TypeMatchingRule>( ruleCfg =>
-                    {
-                        ruleCfg.AllowImplicitConversions = true;
-                    } );
+                cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
+                {
+                    convention.MatchingRules.GetOrAdd<ExactNameMatching>()
+                        .GetOrAdd<TypeMatchingRule>( ruleCfg => ruleCfg.AllowExplicitConversions = true );
+                } );
             } );
 
             result = mapper2.Map<D>( source );
@@ -263,36 +274,40 @@ namespace UltraMapper.Tests
             public decimal Total { get; set; }
         }
 
-        //[TestMethod]
-        //public void Flattening()
-        //{
-        //    var customer = new Customer
-        //    {
-        //        Name = "George Costanza"
-        //    };
+        [TestMethod]
+        public void Flattening()
+        {
+            var customer = new Customer
+            {
+                Name = "George Costanza"
+            };
 
-        //    var order = new Order
-        //    {
-        //        Customer = customer
-        //    };
+            var order = new Order
+            {
+                Customer = customer
+            };
 
-        //    var bosco = new Product
-        //    {
-        //        Name = "Bosco",
-        //        Price = 4.99m
-        //    };
+            var bosco = new Product
+            {
+                Name = "Bosco",
+                Price = 4.99m
+            };
 
-        //    order.AddOrderLineItem( bosco, 15 );
+            order.AddOrderLineItem( bosco, 15 );
 
-        //    var mapper = new UltraMapper( cfg =>
-        //    {
-        //       // cfg.ConventionResolver = new FlatteningConventionResolver();
-        //    } );
+            var mapper = new UltraMapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<ProjectionConvention>()
+                    .GetOrAdd<DefaultConvention>( convention =>
+                    {
+                        convention.MatchingRules.GetOrAdd<MethodMatching>();
+                    } );
+            } );
 
-        //    OrderDto dto = mapper.Map<Order, OrderDto>( order );
+            OrderDto dto = mapper.Map<Order, OrderDto>( order );
 
-        //    Assert.IsTrue( dto.CustomerName == "George Costanza" );
-        //    Assert.IsTrue( dto.Total == 74.85m );
-        //}
+            Assert.IsTrue( dto.CustomerName == "George Costanza" );
+            Assert.IsTrue( dto.Total == 74.85m );
+        }
     }
 }

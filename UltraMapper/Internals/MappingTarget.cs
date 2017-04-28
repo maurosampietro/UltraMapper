@@ -10,7 +10,7 @@ namespace UltraMapper.Internals
 
         public LambdaExpression CustomConstructor { get; set; }
 
-        internal MappingTarget( LambdaExpression memberGetter, LambdaExpression memberSetter )
+        internal MappingTarget( LambdaExpression memberSetter, LambdaExpression memberGetter = null )
             : base( memberSetter.ExtractMember() )
         {
             this.ValueGetter = memberGetter;

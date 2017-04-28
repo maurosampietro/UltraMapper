@@ -30,8 +30,6 @@ namespace UltraMapper
         private readonly Dictionary<TypePair, TypeMapping> _typeMappings =
             new Dictionary<TypePair, TypeMapping>();
 
-        public IConventionResolver ConventionResolver;
-
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
         /// taken into account in the mapping process.
@@ -44,13 +42,15 @@ namespace UltraMapper
         public CollectionMappingStrategies CollectionMappingStrategy { get; set; }
         public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
 
-        public IMappingConvention MappingConvention { get; set; }
-        public List<IMappingExpressionBuilder> Mappers { get; private set; }
+        public List<IMappingExpressionBuilder> Mappers { get; set; }
+        public MappingConventions Conventions { get; set; }
 
         public Configuration( Action<Configuration> config = null )
         {
-            this.MappingConvention = new DefaultMappingConvention();
-            this.ConventionResolver = new ConventionResolver( this.MappingConvention );
+            this.Conventions = new MappingConventions( cfg =>
+            {
+                cfg.GetOrAdd<DefaultConvention>();
+            } );
 
             this.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
             this.CollectionMappingStrategy = CollectionMappingStrategies.RESET;

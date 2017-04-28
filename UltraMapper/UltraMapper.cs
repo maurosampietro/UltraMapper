@@ -19,7 +19,7 @@ namespace UltraMapper
         }
 
         /// <summary>
-        /// Initialize a new instance using <see cref="DefaultMappingConvention"/> 
+        /// Initialize a new instance using <see cref="DefaultMatchingRuleEvaluator"/> 
         /// as mapping convention allowing inline editing of the configuraton itself.
         /// </summary>
         /// <param name="config"></param>

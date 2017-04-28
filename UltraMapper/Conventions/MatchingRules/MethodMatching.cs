@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -48,7 +49,7 @@ namespace UltraMapper.Conventions
         {
             foreach( var affix in affixes )
             {
-                if( input.StartsWith( affix ) )
+                if( input.StartsWith( affix, this.IgnoreCase, CultureInfo.InvariantCulture ) )
                     return input.Remove( 0, affix.Length );
             }
 

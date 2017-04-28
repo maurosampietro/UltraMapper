@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace UltraMapper.Internals
 {
-    public interface IMapping
+    internal interface IMapping
     {
         Action<ReferenceTracking, object, object> MappingFunc { get; }
         LambdaExpression MappingExpression { get; }
