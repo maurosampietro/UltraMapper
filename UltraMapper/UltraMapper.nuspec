@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>UltraMapper</id>
-    <version>0.1.{build}</version>
+    <version>$version$</version>
     <authors>Mauro Sampietro</authors>
     <owners>Mauro Sampietro</owners>
     <projectUrl>https://maurosampietro.github.io/UltraMapper/</projectUrl>

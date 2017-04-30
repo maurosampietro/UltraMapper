@@ -1,6 +1,12 @@
 version: 0.1.{build}
 pull_requests:
   do_not_increment_build_number: true
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
 build:
   publish_nuget: true
   verbosity: minimal
