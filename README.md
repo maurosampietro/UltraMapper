@@ -64,7 +64,6 @@ Moreover UltraMapper is:
 What's missing?
 --------------------------------
 
-- Flattening by convention
 - Dynamic mapper
 - Arrays, Multidimensional/Jagged arrays
 - Proper documentation
