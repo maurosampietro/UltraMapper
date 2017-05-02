@@ -30,6 +30,8 @@ namespace UltraMapper.Internals
         public readonly Configuration GlobalConfiguration;
         public readonly TypePair TypePair;
 
+        public MappingResolution MappingResolution { get; internal set; }
+
         public TypeMapping( Configuration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
@@ -75,6 +77,7 @@ namespace UltraMapper.Internals
 
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression CustomTargetConstructor { get; set; }
+        public LambdaExpression CollectionItemEqualityComparer { get; set; }
 
         private bool? _ignoreMappingResolvedByConvention;
         public bool IgnoreMemberMappingResolvedByConvention

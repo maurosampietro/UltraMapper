@@ -59,6 +59,7 @@
     <Compile Include="Conventions\StringSplitting\StringSplitter.cs" />
     <Compile Include="Internals\ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="Internals\ExtensionMethods\ExpressionExtensions.cs" />
+    <Compile Include="Internals\ExtensionMethods\LinqExtensions.cs" />
     <Compile Include="Internals\ExtensionMethods\MemberInfoExtensions.cs" />
     <Compile Include="Internals\ExpressionParameterReplacer.cs" />
     <Compile Include="Internals\ExtensionMethods\MethodInfoExtensions.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Internals\MemberMapping.cs" />
     <Compile Include="Internals\MappingSource.cs" />
     <Compile Include="Internals\MappingTarget.cs" />
+    <Compile Include="Internals\RelayEqualityComparer.cs" />
     <Compile Include="Internals\SingletonList.cs" />
     <Compile Include="Internals\TypeMapping.cs" />
     <Compile Include="MappingExpressionBuilders\PrimitiveTypeBuilders\EnumMapper.cs" />
@@ -79,7 +81,9 @@
     <Compile Include="MappingExpressionBuilders\Contexts\MemberMappingContext.cs" />
     <Compile Include="MappingExpressionBuilders\Contexts\ReferenceMapperContext.cs" />
     <Compile Include="MappingExpressionBuilders\Contexts\CollectionMapperContext.cs" />
+    <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMappingViaTemporaryCollection.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\QueueMapper.cs" />
+    <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\ReadOnlyCollectionMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\StackMapper.cs" />
     <Compile Include="MappingExpressionBuilders\PrimitiveTypeBuilders\BuiltInTypesMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMapper.cs" />

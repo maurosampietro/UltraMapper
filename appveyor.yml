@@ -4,6 +4,8 @@ pull_requests:
 build:
   publish_nuget: true
   verbosity: minimal
+only_commits:
+  message: /build/
 deploy:
 - provider: NuGet
   api_key:

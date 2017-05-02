@@ -117,11 +117,11 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Block
                     (
                         Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
-                        
+
                         itemCacheCall,
-                        
+
                         Expression.Call( context.Mapper, mapMethod, sourceParam, targetParam,
-                            context.ReferenceTracker, Expression.Constant( itemMapping ) )                     
+                            context.ReferenceTracker, Expression.Constant( itemMapping ) )
                     )
                 )
             );
@@ -170,7 +170,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET ?
                     Expression.Call( context.TargetInstance, clearMethod ) : (Expression)Expression.Empty(),
 
-                CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
+                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.UPDATE ?
+                    context.UpdateCollection : CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
             );
         }
 
@@ -192,7 +193,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
-        public override Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
+        protected override Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
         {
             if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
                 && context.SourceInstance.Type.ImplementsInterface( typeof( ICollection<> ) )

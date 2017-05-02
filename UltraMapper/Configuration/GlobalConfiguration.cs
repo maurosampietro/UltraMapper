@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.Conventions;
+using System.Collections;
 
 namespace UltraMapper
 {
@@ -13,6 +14,8 @@ namespace UltraMapper
     {
         CollectionMappingStrategies CollectionMappingStrategy { get; set; }
         ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
+
+        LambdaExpression CollectionItemEqualityComparer { get; set; }
     }
 
     public interface IMemberOptions : IMappingOptions
@@ -66,6 +69,7 @@ namespace UltraMapper
                 new ConvertMapper( this ),
                 new StructMapper( this ),
                 new DictionaryMapper( this ),
+                //new ReadOnlyCollectionMapper( this ),
                 new StackMapper( this ),
                 new QueueMapper( this ),
                 new LinkedListMapper( this ),
@@ -78,9 +82,23 @@ namespace UltraMapper
         }
 
         #region Type-to-Type Mapping
+
+        public MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>> MapTypes<TSource, TTarget>( IEnumerable<TSource> source, IEnumerable<TTarget> target,
+            Expression<Func<TSource, TTarget, bool>> elementEqualityComparison )
+        {
+            var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
+            typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+            typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
+            typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
+
+            return new MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>>( typeMapping );
+        }
+
         public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
             typeMappingConfig?.Invoke( typeMapping );
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
@@ -98,6 +116,7 @@ namespace UltraMapper
             Expression<Func<TSource, TTarget>> converter, Action<ITypeOptions> typeMappingConfig = null )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
             typeMapping.CustomConverter = converter;
             typeMappingConfig?.Invoke( typeMapping );
 
@@ -116,6 +135,7 @@ namespace UltraMapper
             Expression<Func<TTarget>> targetConstructor, Action<ITypeOptions> typeMappingConfig = null )
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
             typeMapping.CustomTargetConstructor = targetConstructor;
             typeMappingConfig?.Invoke( typeMapping );
 
@@ -135,11 +155,23 @@ namespace UltraMapper
             Action<ITypeOptions> typeMappingConfig = null )
         {
             var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
             typeMappingConfig?.Invoke( typeMapping );
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
         }
         #endregion
+
+        public bool ContainsMapping( TypeMapping typeMapping )
+        {
+            return _typeMappings.ContainsKey( typeMapping.TypePair );
+        }
+
+        internal bool ContainsMapping( Type source, Type target )
+        {
+            var typePair = new TypePair( source, target );
+            return _typeMappings.ContainsKey( typePair );
+        }
 
         private TypeMapping GetTypeMapping( Type source, Type target )
         {

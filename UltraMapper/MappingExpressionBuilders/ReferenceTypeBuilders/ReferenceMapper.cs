@@ -87,7 +87,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.Empty();
         }
 
-        public virtual Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
+        protected virtual Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
         {
             var newInstanceExp = Expression.New( context.TargetMember.Type );
 

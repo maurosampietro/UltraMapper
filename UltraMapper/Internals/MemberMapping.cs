@@ -13,7 +13,6 @@ namespace UltraMapper.Internals
         private readonly Lazy<string> _toString;
 
         public readonly TypeMapping InstanceTypeMapping;
-
         public readonly MappingSource SourceMember;
         public readonly MappingTarget TargetMember;
 
@@ -34,7 +33,20 @@ namespace UltraMapper.Internals
         public MappingResolution MappingResolution { get; internal set; }
 
         public bool Ignore { get; set; }
-        public LambdaExpression CollectionEqualityComparer { get; set; }
+
+        private LambdaExpression _collectionItemEqualityComparer = null;
+        public LambdaExpression CollectionItemEqualityComparer
+        {
+            get
+            {
+                if( _collectionItemEqualityComparer == null )
+                    return MemberTypeMapping.CollectionItemEqualityComparer;
+
+                return _collectionItemEqualityComparer;
+            }
+
+            set { _collectionItemEqualityComparer = value; }
+        }
 
         private TypeMapping _memberTypeMapping;
         public TypeMapping MemberTypeMapping
@@ -85,7 +97,12 @@ namespace UltraMapper.Internals
             get
             {
                 if( _referenceMappingStrategy == null )
+                {
+                    if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
+                        return MemberTypeMapping.ReferenceMappingStrategy;
+
                     return InstanceTypeMapping.ReferenceMappingStrategy;
+                }
 
                 return _referenceMappingStrategy.Value;
             }
@@ -98,8 +115,13 @@ namespace UltraMapper.Internals
         {
             get
             {
-                if( _collectionMappingStrategy == null )
+                if( _referenceMappingStrategy == null )
+                {
+                    if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
+                        return MemberTypeMapping.CollectionMappingStrategy;
+
                     return InstanceTypeMapping.CollectionMappingStrategy;
+                }
 
                 return _collectionMappingStrategy.Value;
             }

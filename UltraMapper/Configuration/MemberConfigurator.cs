@@ -184,8 +184,9 @@ namespace UltraMapper
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
             mapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
-            mapping.CollectionEqualityComparer = elementEqualityComparer;
+            mapping.CollectionItemEqualityComparer = elementEqualityComparer;
 
             return this;
         }

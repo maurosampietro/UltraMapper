@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
+using UltraMapper.Internals.ExtensionMethods;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -16,6 +17,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public bool IsTargetElementTypeBuiltIn { get; set; }
 
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
+        public Expression UpdateCollection { get; internal set; }
 
         public CollectionMapperContext( Type source, Type target, IMappingOptions options )
             : base( source, target, options )
@@ -27,6 +29,20 @@ namespace UltraMapper.MappingExpressionBuilders
             IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( true );
 
             SourceCollectionLoopingVar = Expression.Parameter( SourceCollectionElementType, "loopVar" );
+
+            if( options.CollectionItemEqualityComparer != null )
+            {
+                var updateCollectionMethodInfo = typeof( LinqExtensions ).GetMethod(
+                    nameof( LinqExtensions.Update ), BindingFlags.Static | BindingFlags.Public )
+                    .MakeGenericMethod( SourceCollectionElementType );
+
+                var relayComparison = typeof( RelayEqualityComparer<> ).MakeGenericType( SourceCollectionElementType );
+                var relayComparisonCtor = relayComparison.GetConstructors().First();
+
+                UpdateCollection = Expression.Call( null, updateCollectionMethodInfo, Mapper, SourceInstance,
+                    TargetInstance, Expression.New( relayComparisonCtor, Expression.Convert( Expression.Constant( options.CollectionItemEqualityComparer.Compile() ),
+                        typeof( Func<,,> ).MakeGenericType( SourceCollectionElementType, TargetCollectionElementType, typeof( bool ) ) ) ) );
+            }
         }
     }
 }

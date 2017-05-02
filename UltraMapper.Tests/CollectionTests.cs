@@ -59,7 +59,7 @@ namespace UltraMapper.Tests
             public LinkedList<T> LinkedList { get; set; }
             public ObservableCollection<T> ObservableCollection { get; set; }
 
-            public GenericCollections( bool initializeRandomly )
+            public GenericCollections( bool initializeRandomlyIfPrimitiveGenericArg )
             {
                 this.List = new List<T>();
                 this.HashSet = new HashSet<T>();
@@ -69,28 +69,41 @@ namespace UltraMapper.Tests
                 this.LinkedList = new LinkedList<T>();
                 this.ObservableCollection = new ObservableCollection<T>();
 
-                if( initializeRandomly )
+                if( initializeRandomlyIfPrimitiveGenericArg )
                     InitializeRandomly();
             }
 
             private void InitializeRandomly()
             {
                 var elementType = typeof( T );
-
-                for( int i = 0; i < 10; i++ )
+                if( elementType.IsBuiltInType( true ) )
                 {
-                    T value = (T)Convert.ChangeType( i,
-                        elementType.GetUnderlyingTypeIfNullable() );
+                    for( int i = 0; i < 10; i++ )
+                    {
+                        T value = (T)Convert.ChangeType( i,
+                            elementType.GetUnderlyingTypeIfNullable() );
 
-                    this.List.Add( value );
-                    this.HashSet.Add( value );
-                    this.SortedSet.Add( value );
-                    this.Stack.Push( value );
-                    this.Queue.Enqueue( value );
-                    this.LinkedList.AddLast( value );
-                    this.ObservableCollection.Add( value );
+                        this.List.Add( value );
+                        this.HashSet.Add( value );
+                        this.SortedSet.Add( value );
+                        this.Stack.Push( value );
+                        this.Queue.Enqueue( value );
+                        this.LinkedList.AddLast( value );
+                        this.ObservableCollection.Add( value );
+                    }
                 }
             }
+        }
+
+        private class ReadOnlyGeneric<T>
+        {
+            public ReadOnlyCollection<T> HashSet { get; set; }
+            public ReadOnlyCollection<T> SortedSet { get; set; }
+            public ReadOnlyCollection<T> List { get; set; }
+            public ReadOnlyCollection<T> Stack { get; set; }
+            public ReadOnlyCollection<T> Queue { get; set; }
+            public ReadOnlyCollection<T> LinkedList { get; set; }
+            public ReadOnlyCollection<T> ObservableCollection { get; set; }
         }
 
         [TestMethod]
@@ -253,6 +266,17 @@ namespace UltraMapper.Tests
                     Assert.IsTrue( isResultOk );
                 }
             }
+        }
+
+        [TestMethod]
+        public void CollectionToReadOnlyCollection()
+        {
+            var source = new GenericCollections<int>( true );
+            var target = new ReadOnlyGeneric<int>();
+
+            var ultraMapper = new UltraMapper();
+            ultraMapper.Map( source, target );
+
         }
 
         [TestMethod]
@@ -451,15 +475,18 @@ namespace UltraMapper.Tests
                 source.ObservableCollection.Add( new ComplexType() { A = i } );
             }
 
-            var target = new GenericCollections<ComplexType>( false );
+            var tempItemA = new ComplexType() { A = 1 };
+            var tempItemB = new ComplexType() { A = 49 };
 
-            var temp = new List<ComplexType>()
+            var target = new GenericCollections<ComplexType>( false )
             {
-                new ComplexType() { A = 1 },
-                new ComplexType() { A = 49 },
-                new ComplexType() { A = 50 }
+                List = new List<ComplexType>()
+                {
+                    tempItemA,
+                    tempItemB,
+                    new ComplexType() { A = 50 }
+                }
             };
-
 
             var ultraMapper = new UltraMapper( cfg =>
             {
@@ -467,63 +494,135 @@ namespace UltraMapper.Tests
                     .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemB.A );
             } );
 
-            LinqExtensions.Update( ultraMapper, source.List, temp, new RelayEqualityComparison<ComplexType>( ( itemA, itemB ) => itemA.A == itemB.A ) );
+            ultraMapper.Map( source, target );
+            Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 49 ), tempItemB ) );
+        }
+
+        private class Case
+        {
+            public int Id { get; set; }
+            public string CaseId { get; set; }
+
+            public virtual Collection<Media> Media { get; set; }
+                = new Collection<Media>();
+        }
+
+        private class Media
+        {
+            public int Id { get; set; }
+            public string HashCode { get; set; }
+
+            public virtual Collection<Drawing> Drawings { get; set; }
+                = new Collection<Drawing>();
+        }
+
+        private class Drawing
+        {
+            public int Id { get; set; }
+            public virtual Media Image { get; set; }
+            public string Data { get; set; }
+        }
+
+        [TestMethod]
+        public void MultipleNestedCollectionsUpdate()
+        {
+            var source = new Case()
+            {
+                Media = new Collection<Media>
+                {
+                    new Media()
+                    {
+                        HashCode = "a",
+                        Id = 13,
+                        Drawings = new Collection<Drawing>()
+                        {
+                            new Drawing() { Id=11, Data="bo" }
+                        }
+                    }
+                }
+            };
+
+            var target = new Case()
+            {
+                Media = new Collection<Media>
+                {
+                    new Media()
+                    {
+                        HashCode ="a",
+                        Id =17,
+                        Drawings = new Collection<Drawing>()
+                        {
+                            new Drawing() { Id=19, Data="bo" }
+                        }
+                    }
+                }
+            };
+
+            var targetMedia = target.Media.First();
+            var targetDrawing = targetMedia.Drawings.First();
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes<Case, Case>()
+                    .MapMember( a => a.Media, b => b.Media, ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
+
+                cfg.MapTypes<Media, Media>()
+                    .MapMember( a => a.Drawings, b => b.Drawings, ( itemA, itemB ) => itemA.Data == itemB.Data );
+            } );
 
             ultraMapper.Map( source, target );
 
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
-
-            throw new NotImplementedException();
+            Assert.IsTrue( target.Media.First().Id == 13 );
+            Assert.IsTrue( target.Media.First().Drawings.First().Id == 11 );
+            Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.Media.First() ) );
+            Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.Media.First().Drawings.First() ) );
         }
 
-        public static class LinqExtensions
+        [TestMethod]
+        public void DirectMultipleNestedCollectionsUpdate()
         {
-            public static void Update<T>( UltraMapper mapper, IEnumerable<T> source,
-                ICollection<T> target, IEqualityComparer<T> comparer ) where T : class
+            var source = new Collection<Media>
             {
-                var itemsToRemove = target.Except( source, comparer ).ToList();
-                foreach( var item in itemsToRemove ) target.Remove( item );
-
-                List<T> itemsToAdd = new List<T>();
-                foreach( var sourceItem in source )
+                new Media()
                 {
-                    bool match = false;
-                    foreach( var targetItem in target )
+                    HashCode = "a",
+                    Id = 13,
+                    Drawings = new Collection<Drawing>()
                     {
-                        if( comparer.Equals( sourceItem, targetItem ) )
-                        {
-                            match = true;
-                            mapper.Map( sourceItem, targetItem );
-                        }
+                        new Drawing() { Id=11, Data="bo" }
                     }
-
-                    if( !match )
-                        itemsToAdd.Add( sourceItem );
                 }
+            };
 
-                foreach( var item in itemsToAdd ) target.Add( item );
-            }
-        }
-
-        private class RelayEqualityComparison<T> : IEqualityComparer<T>
-        {
-            private Func<T, T, bool> _comparer;
-
-            public RelayEqualityComparison( Func<T, T, bool> comparer )
+            var target = new Collection<Media>
             {
-                _comparer = comparer;
-            }
+                new Media()
+                {
+                    HashCode ="a",
+                    Id =17,
+                    Drawings = new Collection<Drawing>()
+                    {
+                        new Drawing() { Id=19, Data="bo" }
+                    }
+                }
+            };
 
-            public bool Equals( T x, T y )
-            {
-                return _comparer( x, y );
-            }
+            var targetMedia = target.First();
+            var targetDrawing = targetMedia.Drawings.First();
 
-            public int GetHashCode( T obj )
+            var ultraMapper = new UltraMapper( cfg =>
             {
-                return obj.GetHashCode();
-            }
+                cfg.MapTypes( source, target, ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
+                cfg.MapTypes( source.First().Drawings, target.First().Drawings, ( itemA, itemB ) => itemA.Data == itemB.Data );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.First().Id == 13 );
+            Assert.IsTrue( target.First().Drawings.First().Id == 11 );
+            Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.First() ) );
+            Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.First().Drawings.First() ) );
         }
     }
 }

@@ -151,5 +151,30 @@ namespace UltraMapper.Tests
             Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
             Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
         }
+
+        [TestMethod]
+        public void CustomConverterRecursion()
+        {
+            var innerType = new InnerType() { A = "fadadfsadsffsd" };
+
+            var source = new OuterType()
+            {
+                InnerType = innerType,
+                PrimitiveList = Enumerable.Range( 0, 10 ).ToList(),
+                ComplexList = new List<InnerType>() { innerType }
+            };
+
+            var target = new OuterType();
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes<OuterType, OuterType>( ot => new OuterType()
+                {
+                    PrimitiveList = Enumerable.Range( 0, 10 ).ToList()
+                } );
+            } );
+
+            ultraMapper.Map( source, target );
+        }
     }
 }
