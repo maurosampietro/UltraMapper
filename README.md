@@ -1,5 +1,5 @@
 # UltraMapper
-[![Build status](https://ci.appveyor.com/api/projects/status/github/UltraMapper)](https://ci.appveyor.com/project/maurosampietro/ultramapper/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/maurosampietro/UltraMapper?svg=true)](https://ci.appveyor.com/project/maurosampietro/ultramapper/branch/master)
 [![NuGet](http://img.shields.io/nuget/v/UltraMapper.svg)](https://www.nuget.org/packages/UltraMapper/)
 
 A nicely coded object-mapper for .NET 
@@ -47,19 +47,20 @@ This early version may lack some of the feature you would expect from a mapper, 
 
 Implemented features:
 
-- Full reference tracking
-- Supports self-references
+- Powerful Full reference tracking
+- Powerful type/members configuration override mechanism, with configuration inheritance
+- Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
 - Supports mapping by convention
-- Supports object flattening
-- Supports manual flattening.
+- Supports flattening/projections by convention
+- Supports manual flattening/unflattening/projections.
 - Supports collections (Dictionary, HashSet, List, LinkedList, ObservableCollection, SortedSet, Stack, Queue)
-- Support type/members configuration override mechanism
+- Supports collection merging/updating
 
 Moreover UltraMapper is:
 - very fast in any scenario (faster than any other .NET mapper i tried, just let me know if otherwise)
 - just ~1100 lines of code (more easily maintainable and understandable)
-- developer-friendly (should be easy to contribute)
+- developer-friendly (should be easy to contribute, extend and maintain)
 
 What's missing?
 --------------------------------
@@ -69,3 +70,5 @@ What's missing?
 - Proper documentation
 - Examples
 - Benchmarks
+
+**ANY FEEDBACK IS WELCOME**
