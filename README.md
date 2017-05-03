@@ -1,5 +1,5 @@
 # UltraMapper
-[![Build status](https://ci.appveyor.com/api/projects/status/github/maurosampietro/UltraMapper)](https://ci.appveyor.com/project/maurosampietro/ultramapper/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/maurosampietro/UltraMapper?svg=true)](https://ci.appveyor.com/project/maurosampietro/ultramapper/branch/master)
 [![NuGet](http://img.shields.io/nuget/v/UltraMapper.svg)](https://www.nuget.org/packages/UltraMapper/)
 
 A nicely coded object-mapper for .NET 
