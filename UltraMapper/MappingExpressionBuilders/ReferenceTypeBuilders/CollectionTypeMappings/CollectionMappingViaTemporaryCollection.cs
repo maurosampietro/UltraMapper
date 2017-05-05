@@ -30,6 +30,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
             var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
+            var temporaryCollectionInsertionMethod = this.GetTargetCollectionInsertionMethod( context );
 
             if( context.IsTargetElementTypeBuiltIn )
             {
@@ -38,9 +39,16 @@ namespace UltraMapper.MappingExpressionBuilders
                     new[] { tempCollection },
 
                     Expression.Assign( tempCollection, newTempCollectionExp ),
-                    SimpleCollectionLoop( tempCollection, context.SourceCollectionElementType,
-                        context.TargetInstance, context.TargetCollectionElementType,
-                        this.GetTargetCollectionInsertionMethod( context ), context.SourceCollectionLoopingVar )
+
+                    SimpleCollectionLoop
+                    (
+                        tempCollection,
+                        context.SourceCollectionElementType,
+                        context.TargetInstance,
+                        context.TargetCollectionElementType,
+                        temporaryCollectionInsertionMethod,
+                        context.SourceCollectionLoopingVar
+                    )
                 );
             }
 
@@ -49,7 +57,18 @@ namespace UltraMapper.MappingExpressionBuilders
                 new[] { tempCollection },
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
-                CollectionLoopWithReferenceTracking( context, tempCollection, context.TargetInstance )
+
+                CollectionLoopWithReferenceTracking
+                (
+                    tempCollection,
+                    context.SourceCollectionElementType,
+                    context.TargetInstance,
+                    context.TargetCollectionElementType,
+                    temporaryCollectionInsertionMethod,
+                    context.SourceCollectionLoopingVar,
+                    context.ReferenceTracker,
+                    context.Mapper
+                )
             );
         }
 

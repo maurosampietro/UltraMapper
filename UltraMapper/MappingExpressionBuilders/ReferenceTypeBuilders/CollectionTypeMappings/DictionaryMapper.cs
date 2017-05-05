@@ -77,7 +77,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 return Expression.Assign( targetParam, itemMappingExp );
             }
 
-            return base.LookUpBlock( context, sourceParam, targetParam );
+            return base.LookUpBlock( sourceParam, targetParam, 
+                context.ReferenceTracker, context.Mapper );
         }
     }
 }

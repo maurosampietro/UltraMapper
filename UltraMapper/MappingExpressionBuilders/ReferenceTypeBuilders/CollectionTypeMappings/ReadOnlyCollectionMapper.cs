@@ -117,6 +117,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 return parameters[ 0 ].ParameterType.IsEnumerable();
             } );
 
+            var temporaryCollectionInsertionMethod = this.GetTemporaryCollectionInsertionMethod( collectionContext );
             if( collectionContext.IsTargetElementTypeBuiltIn )
             {
                 return Expression.Block
@@ -124,8 +125,15 @@ namespace UltraMapper.MappingExpressionBuilders
                     new[] { tempCollection },
                     Expression.Assign( tempCollection, newTempCollectionExp ),
 
-                    SimpleCollectionLoop( context.SourceMember, collectionContext.SourceCollectionElementType, tempCollection, collectionContext.TargetCollectionElementType,
-                        this.GetTemporaryCollectionInsertionMethod( collectionContext ), collectionContext.SourceCollectionLoopingVar ),
+                    SimpleCollectionLoop
+                    (
+                        context.SourceMember,
+                        collectionContext.SourceCollectionElementType,
+                        tempCollection,
+                        collectionContext.TargetCollectionElementType,
+                        temporaryCollectionInsertionMethod,
+                        collectionContext.SourceCollectionLoopingVar
+                    ),
 
                     Expression.Assign( context.TargetMember, Expression.New( newTargetCtor, tempCollection ) )
                 );
@@ -136,7 +144,20 @@ namespace UltraMapper.MappingExpressionBuilders
                 new[] { tempCollection },
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
-                CollectionLoopWithReferenceTracking( collectionContext, tempCollection, context.TargetMember )
+
+                CollectionLoopWithReferenceTracking
+                (
+                    context.SourceMember,
+                    collectionContext.SourceCollectionElementType,
+                    tempCollection,
+                    collectionContext.TargetCollectionElementType,
+                    temporaryCollectionInsertionMethod,
+                    collectionContext.SourceCollectionLoopingVar,
+                    context.ReferenceTracker,
+                    context.Mapper
+                ),
+
+                Expression.Assign( context.TargetMember, Expression.New( newTargetCtor, tempCollection ) )
             );
         }
     }

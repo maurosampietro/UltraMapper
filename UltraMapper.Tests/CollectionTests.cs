@@ -319,6 +319,32 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
+        [TestMethod]
+        public void CollectionToReadOnlyComplexCollection()
+        {
+            var innerType = new InnerType() { String = "test" };
+
+            var source = new GenericCollections<ComplexType>( false );
+            for( int i = 0; i < 3; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+            }
+
+            var target = new ReadOnlyGeneric<ComplexType>();
+
+            var ultraMapper = new UltraMapper();
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
         //[TestMethod]
         //public void DirectCollectionToReadOnlyCollection()
         //{

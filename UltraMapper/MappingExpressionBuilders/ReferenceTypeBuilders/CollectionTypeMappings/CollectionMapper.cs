@@ -26,7 +26,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar)
+            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar )
         {
             if( targetCollectionInsertionMethod == null )
             {
@@ -42,52 +42,53 @@ namespace UltraMapper.MappingExpressionBuilders
             Expression loopBody = Expression.Call
             (
                 targetCollection, targetCollectionInsertionMethod,
-                
-                itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, 
-                    itemMapping.Parameters[ 0 ].Name )                
+
+                itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar,
+                    itemMapping.Parameters[ 0 ].Name )
             );
 
             return ExpressionLoops.ForEach( sourceCollection,
                 sourceCollectionLoopingVar, loopBody );
         }
 
-        public Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
-            ParameterExpression sourceCollection, ParameterExpression targetCollection )
+        public Expression CollectionLoopWithReferenceTracking( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+            ParameterExpression targetCollection, Type targetCollectionElementType,
+            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
+            ParameterExpression referenceTracker, ParameterExpression mapper )
         {
-            var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
             if( targetCollectionInsertionMethod == null )
             {
-                string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertion method. " +
+                string msg = $@"'{nameof( targetCollection.Type )}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
 
                 throw new Exception( msg );
             }
 
-            var itemMapping = MapperConfiguration[ context.SourceCollectionLoopingVar.Type,
-                context.TargetCollectionElementType ].MappingExpression;
+            var itemMapping = MapperConfiguration[ sourceCollectionLoopingVar.Type,
+                targetCollectionElementType ].MappingExpression;
 
-            var newElement = Expression.Variable( context.TargetCollectionElementType, "newElement" );
+            var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
             return Expression.Block
             (
                 new[] { newElement },
 
-                ExpressionLoops.ForEach( sourceCollection, context.SourceCollectionLoopingVar, Expression.Block
+                ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( context, context.SourceCollectionLoopingVar, newElement ),
+                    LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper ),
                     Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
                 )
             ) );
         }
 
-        public BlockExpression LookUpBlock( CollectionMapperContext context,
-            ParameterExpression sourceParam, ParameterExpression targetParam )
+        public BlockExpression LookUpBlock( ParameterExpression sourceParam, ParameterExpression targetParam,
+            ParameterExpression referenceTracker, ParameterExpression mapper )
         {
             Expression itemLookupCall = Expression.Call
             (
                 Expression.Constant( refTrackingLookup.Target ),
                 refTrackingLookup.Method,
-                context.ReferenceTracker,
+                referenceTracker,
                 sourceParam,
                 Expression.Constant( targetParam.Type )
             );
@@ -96,7 +97,7 @@ namespace UltraMapper.MappingExpressionBuilders
             (
                 Expression.Constant( addToTracker.Target ),
                 addToTracker.Method,
-                context.ReferenceTracker,
+                referenceTracker,
                 sourceParam,
                 Expression.Constant( targetParam.Type ),
                 targetParam
@@ -121,8 +122,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
                         itemCacheCall,
 
-                        Expression.Call( context.Mapper, mapMethod, sourceParam, targetParam,
-                            context.ReferenceTracker, Expression.Constant( itemMapping ) )
+                        Expression.Call( mapper, mapMethod, sourceParam, targetParam,
+                            referenceTracker, Expression.Constant( itemMapping ) )
                     )
                 )
             );
@@ -151,7 +152,7 @@ namespace UltraMapper.MappingExpressionBuilders
             bool isResetCollection = /*context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL && */
                 context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET;
 
-            bool isUpdateCollection = context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL && 
+            bool isUpdateCollection = context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL &&
                 context.Options.CollectionMappingStrategy == CollectionMappingStrategies.UPDATE;
 
             var clearMethod = GetTargetCollectionClearMethod( context );
@@ -161,16 +162,16 @@ namespace UltraMapper.MappingExpressionBuilders
                 throw new Exception( msg );
             }
 
+            var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
+
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
             {
-                var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
-
                 return Expression.Block
                 (
-                    isResetCollection ? Expression.Call( context.TargetInstance, clearMethod ) 
+                    isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
                         : (Expression)Expression.Empty(),
 
-                    SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType, 
+                    SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
                         targetCollectionInsertionMethod, context.SourceCollectionLoopingVar )
                 );
@@ -178,11 +179,13 @@ namespace UltraMapper.MappingExpressionBuilders
 
             return Expression.Block
             (
-                isResetCollection ? Expression.Call( context.TargetInstance, clearMethod ) 
+                isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
                     : (Expression)Expression.Empty(),
 
-                isUpdateCollection ? context.UpdateCollection 
-                    : CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
+                isUpdateCollection ? context.UpdateCollection
+                    : CollectionLoopWithReferenceTracking( context.SourceInstance, context.SourceCollectionElementType,
+                        context.TargetInstance, context.TargetCollectionElementType,
+                        targetCollectionInsertionMethod, context.SourceCollectionLoopingVar, context.ReferenceTracker, context.Mapper )
             );
         }
 
