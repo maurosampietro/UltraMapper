@@ -1,13 +1,15 @@
-﻿using System;
+﻿using Microsoft.CSharp.RuntimeBinder;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
-    public class ReferenceMapper : IMappingExpressionBuilder
+    public class ReferenceMapper : IMappingExpressionBuilder, IMappingExpressionMember
     {
         protected readonly UltraMapper _mapper;
         public readonly Configuration MapperConfiguration;
@@ -87,11 +89,11 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.Empty();
         }
 
-        protected virtual Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
+        public virtual Expression GetTargetInstanceAssignment( MemberMappingContext context )
         {
-            var newInstanceExp = Expression.New( context.TargetMember.Type );
+            Expression newInstanceExp = this.GetNewTargetInstance( context );
 
-            bool isCreateNewInstance = mapping.ReferenceMappingStrategy ==
+            bool isCreateNewInstance = context.Options.ReferenceMappingStrategy ==
                 ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
 
             if( isCreateNewInstance || context.TargetMemberValueGetter == null )
@@ -107,6 +109,48 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Assign( context.TargetMember, newInstanceExp )
                 )
             );
+        }
+
+        protected virtual Expression GetNewTargetInstance( MemberMappingContext context )
+        {
+            if( context.Options.CustomTargetConstructor != null )
+                return Expression.Invoke( context.Options.CustomTargetConstructor );
+
+            if( context.TargetMember.Type.IsInterface && context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) )
+            {
+                var createInstanceMethodInfo = typeof( Activator )
+                    .GetMethods( BindingFlags.Static | BindingFlags.Public )
+                    .Where( method => method.Name == nameof( Activator.CreateInstance ) )
+                    .Select( method => new
+                    {
+                        Method = method,
+                        Params = method.GetParameters(),
+                        Args = method.GetGenericArguments()
+                    } )
+                    .Where( x => x.Params.Length == 0 && x.Args.Length == 1 )
+                    .Select( x => x.Method )
+                    .First();
+
+                MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
+
+                var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
+                var makeGenericMethodInfo = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
+                var arrayParameter = Expression.Parameter( typeof( List<Type> ), "pararray" );
+                var parArray = Expression.Call( null, typeof( System.Linq.Enumerable ).GetMethod( "ToArray" ).MakeGenericMethod( new[] { typeof( Type ) } ), arrayParameter );
+                var createInstance = Expression.Call( Expression.Constant( createInstanceMethodInfo ), makeGenericMethodInfo, parArray );
+
+                return Expression.Block
+                (
+                    new[] { arrayParameter },
+                    Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
+                    Expression.Call( arrayParameter, typeof( List<Type> ).GetMethod( "Add" ), getSourceType ),
+                    Expression.Convert(
+                       Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( "Invoke", new[] { typeof( object ), typeof( object[] ) } ),
+                       Expression.Constant( null ), Expression.Constant( null, typeof( Object[] ) ) ), context.TargetMember.Type )
+                );
+            }
+
+            return Expression.New( context.TargetMember.Type );
         }
 
         #region MemberMapping
@@ -131,9 +175,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected Expression GetMemberMappings( TypeMapping typeMapping )
         {
-            var context = new ReferenceMapperContext( typeMapping.TypePair.SourceType,
-                typeMapping.TypePair.TargetType, typeMapping );
-
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
             var memberMappings = typeMapping.MemberMappings.Values.ToList();
@@ -147,7 +188,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 .Where( mapping => !mapping.Ignore )
                 .Where( mapping => !mapping.SourceMember.Ignore )
                 .Where( mapping => !mapping.TargetMember.Ignore )
-                .OrderBy( mm => mm, _memberComparer )
+                .OrderBy( mapping => mapping, _memberComparer )
                 .Select( mapping =>
                 {
                     if( mapping.Mapper is ReferenceMapper )
@@ -169,6 +210,7 @@ namespace UltraMapper.MappingExpressionBuilders
              * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NULL) = ASSIGN NEW OBJECT 
              * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
              */
+
             var memberContext = new MemberMappingContext( mapping );
 
             var mapMethod = MemberMappingContext.RecursiveMapMethodInfo.MakeGenericMethod(
@@ -217,7 +259,8 @@ namespace UltraMapper.MappingExpressionBuilders
                             Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
                             Expression.Block
                             (
-                                this.GetTargetInstanceAssignment( memberContext, mapping ),
+                                ((IMappingExpressionMember)mapping.Mapper)
+                                    .GetTargetInstanceAssignment( memberContext ),
 
                                 //cache reference
                                 itemCacheCall,

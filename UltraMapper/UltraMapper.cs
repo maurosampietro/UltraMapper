@@ -69,6 +69,8 @@ namespace UltraMapper
         public void Map<TSource, TTarget>( TSource source, out TTarget target,
             ReferenceTracking referenceTracking = null ) where TTarget : struct
         {
+            /*TEMPORARY IMPLEMENTATION*/
+
             if( referenceTracking == null )
                 referenceTracking = new ReferenceTracking();
 

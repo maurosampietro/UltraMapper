@@ -48,8 +48,8 @@ namespace UltraMapper.Tests
 
             mapper.Map( source, target );
 
-            var result = mapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( result );
+            var isResultOk = mapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
     }
 }

@@ -12,7 +12,7 @@ namespace UltraMapper.Conventions
     {
         public bool IgnoreFields { get; set; } = true;
         public bool IgnoreProperties { get; set; } = false;
-        public bool IgnoreMethods { get; set; } = false;
+        public bool IgnoreMethods { get; set; } = true;
         public bool IgnoreNonPublicMembers { get; set; } = true;
 
         /// <summary>
@@ -28,11 +28,13 @@ namespace UltraMapper.Conventions
 
         public IEnumerable<MemberInfo> GetMembers( Type type )
         {
-            var bindingAttributes = BindingFlags.Instance | BindingFlags.Public;
+            var bindingAttributes = BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy;
             if( !this.IgnoreNonPublicMembers ) bindingAttributes |= BindingFlags.NonPublic;
 
             if( !this.IgnoreFields )
             {
+                //- In case of an interface type we do nothing special since interfaces do not support fields
+
                 var targetFields = type.GetFields( bindingAttributes )
                   .Select( field => field );
 
@@ -45,8 +47,17 @@ namespace UltraMapper.Conventions
             if( !this.IgnoreProperties )
             {
                 var targetProperties = type.GetProperties( bindingAttributes )
-                    .Where( p => p.CanWrite && p.GetSetMethod() != null &&
-                    p.GetIndexParameters().Length == 0 ); //no indexed properties
+                    .Select( property => property );
+
+                if( type.IsInterface )
+                {
+                    targetProperties = targetProperties.Concat( type.GetInterfaces()
+                        .SelectMany( i => i.GetProperties( bindingAttributes ) ) );
+                }
+
+                targetProperties = targetProperties.Where( property =>
+                     property.CanWrite && property.GetSetMethod() != null
+                     && property.GetIndexParameters().Length == 0 ); //no indexed properties
 
                 foreach( var property in targetProperties ) yield return property;
             }
@@ -54,7 +65,15 @@ namespace UltraMapper.Conventions
             if( !this.IgnoreMethods )
             {
                 var targetMethods = type.GetMethods( bindingAttributes )
-                    .Where( method => method.IsSetterMethod() );
+                    .Select( method => method );
+
+                if( type.IsInterface )
+                {
+                    targetMethods = targetMethods.Concat( type.GetInterfaces()
+                        .SelectMany( i => i.GetMethods( bindingAttributes ) ) );
+                }
+
+                targetMethods = targetMethods.Where( method => method.IsSetterMethod() );
 
                 foreach( var method in targetMethods ) yield return method;
             }

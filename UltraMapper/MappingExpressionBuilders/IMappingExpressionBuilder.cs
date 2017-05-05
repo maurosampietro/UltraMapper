@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
+using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -23,5 +25,10 @@ namespace UltraMapper.MappingExpressionBuilders
         /// <param name="options">Mapping options</param>
         /// <returns>The mapping expression</returns>
         LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options );
+    }
+
+    internal interface IMappingExpressionMember
+    {
+        Expression GetTargetInstanceAssignment( MemberMappingContext memberContext );
     }
 }

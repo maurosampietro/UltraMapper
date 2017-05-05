@@ -117,6 +117,9 @@ namespace UltraMapper.Tests
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
+                    convention.SourceMemberProvider.IgnoreMethods = false;
+                    convention.TargetMemberProvider.IgnoreMethods = false;
+
                     convention.MatchingRules.GetOrAdd<MethodMatching>();
                 } );
             } );
@@ -300,6 +303,7 @@ namespace UltraMapper.Tests
                 cfg.Conventions.GetOrAdd<ProjectionConvention>()
                     .GetOrAdd<DefaultConvention>( convention =>
                     {
+                        convention.SourceMemberProvider.IgnoreMethods = false;
                         convention.MatchingRules.GetOrAdd<MethodMatching>();
                     } );
             } );

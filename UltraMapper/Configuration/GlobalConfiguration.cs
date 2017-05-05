@@ -8,7 +8,51 @@ using System.Collections;
 
 namespace UltraMapper
 {
-    public enum ReferenceMappingStrategies { CREATE_NEW_INSTANCE, USE_TARGET_INSTANCE_IF_NOT_NULL }
+    public enum ReferenceMappingStrategies
+    {
+        /// <summary>
+        /// Creates a new instance, but only if the reference has not been mapped and tracked yet.
+        /// If the reference has been mapped and tracked, the tracked object is assigned.
+        /// This is the default.
+        /// </summary>
+        CREATE_NEW_INSTANCE,
+
+        /// <summary>
+        /// The instance of the target is used in one particular case, following this table:
+        /// SOURCE (NULL) -> TARGET = NULL
+        /// 
+        /// SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
+        /// SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
+        /// 
+        /// SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NULL) = ASSIGN NEW OBJECT 
+        /// SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
+        /// </summary>
+        USE_TARGET_INSTANCE_IF_NOT_NULL
+    }
+
+    public enum CollectionMappingStrategies
+    {
+        /// <summary>
+        /// Keeps using the input collection (same reference). 
+        /// The collection is cleared and then elements are added. 
+        /// </summary>
+        RESET,
+
+        /// <summary>
+        /// Keep using the input collection (same reference).
+        /// The collection is untouched and elements are added.
+        /// </summary>
+        MERGE,
+
+        /// <summary>
+        /// Keeps using the input collection (same reference).
+        /// Each source item matching a target item is updated.
+        /// Each source item non existing in the target collection is added.
+        /// Each target item non existing in the source collection is removed.
+        /// A way to compare two items must also be provided.
+        /// </summary>
+        UPDATE
+    }
 
     public interface IMappingOptions
     {
@@ -16,6 +60,7 @@ namespace UltraMapper
         ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
 
         LambdaExpression CollectionItemEqualityComparer { get; set; }
+        LambdaExpression CustomTargetConstructor { get; set; }
     }
 
     public interface IMemberOptions : IMappingOptions
@@ -69,7 +114,7 @@ namespace UltraMapper
                 new ConvertMapper( this ),
                 new StructMapper( this ),
                 new DictionaryMapper( this ),
-                //new ReadOnlyCollectionMapper( this ),
+                new ReadOnlyCollectionMapper( this ),
                 new StackMapper( this ),
                 new QueueMapper( this ),
                 new LinkedListMapper( this ),
@@ -83,17 +128,33 @@ namespace UltraMapper
 
         #region Type-to-Type Mapping
 
-        public MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>> MapTypes<TSource, TTarget>( IEnumerable<TSource> source, IEnumerable<TTarget> target,
-            Expression<Func<TSource, TTarget, bool>> elementEqualityComparison )
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget, TSourceElement, TTargetElement>(
+            Expression<Func<TSourceElement, TTargetElement, bool>> elementEqualityComparison )
+            where TSource : IEnumerable
+            where TTarget : IEnumerable
         {
-            var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
+            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
             typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
             typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
             typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
             typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
 
-            return new MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>>( typeMapping );
+            return new MemberConfigurator<TSource, TTarget>( typeMapping );
         }
+
+
+        //public MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>> MapTypes<TSource, TTarget>(
+        //    IEnumerable<TSource> source, IEnumerable<TTarget> target,
+        //    Expression<Func<TSource, TTarget, bool>> elementEqualityComparison )
+        //{
+        //    var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+        //    typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
+        //    typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+        //    typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
+        //    typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
+
+        //    return new MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>>( typeMapping );
+        //}
 
         public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
         {

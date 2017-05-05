@@ -30,7 +30,7 @@ namespace UltraMapper
                 var otherKey = (Key)obj;
 
                 return Object.ReferenceEquals( this.Instance, otherKey.Instance )
-                    && TargetType == otherKey.TargetType;
+                    && this.TargetType == otherKey.TargetType;
             }
         }
 

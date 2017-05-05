@@ -24,30 +24,31 @@ namespace UltraMapper.MappingExpressionBuilders
             return new CollectionMapperContext( source, target, options );
         }
 
-        protected Expression SimpleCollectionLoop( CollectionMapperContext context,
-            ParameterExpression sourceCollection, ParameterExpression targetCollection )
+        protected Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+            ParameterExpression targetCollection, Type targetCollectionElementType,
+            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar)
         {
-            var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
             if( targetCollectionInsertionMethod == null )
             {
-                string msg = $@"'{nameof( context.TargetInstance.Type )}' does not provide an insertion method. " +
+                string msg = $@"'{nameof( targetCollection.Type )}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
 
                 throw new Exception( msg );
             }
 
-            var itemMapping = MapperConfiguration[ context.SourceCollectionElementType,
-                context.TargetCollectionElementType ].MappingExpression;
+            var itemMapping = MapperConfiguration[ sourceCollectionElementType,
+                targetCollectionElementType ].MappingExpression;
 
             Expression loopBody = Expression.Call
             (
                 targetCollection, targetCollectionInsertionMethod,
-                itemMapping.Body.ReplaceParameter(
-                    context.SourceCollectionLoopingVar, itemMapping.Parameters[ 0 ].Name )
+                
+                itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, 
+                    itemMapping.Parameters[ 0 ].Name )                
             );
 
             return ExpressionLoops.ForEach( sourceCollection,
-                context.SourceCollectionLoopingVar, loopBody );
+                sourceCollectionLoopingVar, loopBody );
         }
 
         public Expression CollectionLoopWithReferenceTracking( CollectionMapperContext context,
@@ -147,8 +148,14 @@ namespace UltraMapper.MappingExpressionBuilders
              *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).             
              */
 
+            bool isResetCollection = /*context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL && */
+                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET;
+
+            bool isUpdateCollection = context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL && 
+                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.UPDATE;
+
             var clearMethod = GetTargetCollectionClearMethod( context );
-            if( clearMethod == null && context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET )
+            if( clearMethod == null && isResetCollection )
             {
                 string msg = $@"Cannot reset the collection. Type '{nameof( context.TargetInstance.Type )}' does not provide a Clear method";
                 throw new Exception( msg );
@@ -156,29 +163,33 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
             {
+                var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
+
                 return Expression.Block
                 (
-                    context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET ?
-                        Expression.Call( context.TargetInstance, clearMethod ) : (Expression)Expression.Empty(),
+                    isResetCollection ? Expression.Call( context.TargetInstance, clearMethod ) 
+                        : (Expression)Expression.Empty(),
 
-                    SimpleCollectionLoop( context, context.SourceInstance, context.TargetInstance )
+                    SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType, 
+                        context.TargetInstance, context.TargetCollectionElementType,
+                        targetCollectionInsertionMethod, context.SourceCollectionLoopingVar )
                 );
             }
 
             return Expression.Block
             (
-                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET ?
-                    Expression.Call( context.TargetInstance, clearMethod ) : (Expression)Expression.Empty(),
+                isResetCollection ? Expression.Call( context.TargetInstance, clearMethod ) 
+                    : (Expression)Expression.Empty(),
 
-                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.UPDATE ?
-                    context.UpdateCollection : CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
+                isUpdateCollection ? context.UpdateCollection 
+                    : CollectionLoopWithReferenceTracking( context, context.SourceInstance, context.TargetInstance )
             );
         }
 
         /// <summary>
         /// Returns the method that allows to clear the target collection.
         /// </summary>
-        private MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
+        protected virtual MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Clear ) );
@@ -193,23 +204,37 @@ namespace UltraMapper.MappingExpressionBuilders
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
-        protected override Expression GetTargetInstanceAssignment( MemberMappingContext context, MemberMapping mapping )
+        public override Expression GetTargetInstanceAssignment( MemberMappingContext context )
         {
-            if( mapping.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
-                && context.SourceInstance.Type.ImplementsInterface( typeof( ICollection<> ) )
-                && context.TargetInstance.Type.ImplementsInterface( typeof( ICollection<> ) ) )
+            //A little optimization: if we need to create a new instance of a collection
+            //we can try to reserve just the right capacity thus avoiding reallocations.
+            //If the source collection implements ICollection we can read 'Count' property without any iteration.
+
+            if( context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
+                && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
-                var constructorWithCapacity = context.TargetInstance.Type.GetConstructor( new Type[] { typeof( int ) } );
+                var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
                 if( constructorWithCapacity != null )
                 {
                     //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-                    var getCountMethod = context.SourceInstance.Type.GetProperty( nameof( ICollection<int>.Count ) ).GetGetMethod();
-                    return Expression.Assign( context.TargetInstance, Expression.New( constructorWithCapacity,
-                        Expression.Call( context.SourceInstance, getCountMethod ) ) );
+                    var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
+                        BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
+                    if( getCountProperty == null )
+                    {
+                        //ICollection<T> interface implementation is injected in the Array class at runtime.
+                        //Array implements ICollection.Count explicitly. 
+                        //For simplicity, we just look for property Length :)
+                        getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
+                    }
+
+                    var getCountMethod = getCountProperty.GetGetMethod();
+
+                    return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
+                        Expression.Call( context.SourceMember, getCountMethod ) ) );
                 }
             }
 
-            return base.GetTargetInstanceAssignment( context, mapping );
+            return base.GetTargetInstanceAssignment( context );
         }
     }
 }

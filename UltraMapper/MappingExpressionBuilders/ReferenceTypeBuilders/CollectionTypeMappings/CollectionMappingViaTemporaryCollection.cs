@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using UltraMapper.Internals;
+using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -35,7 +38,9 @@ namespace UltraMapper.MappingExpressionBuilders
                     new[] { tempCollection },
 
                     Expression.Assign( tempCollection, newTempCollectionExp ),
-                    SimpleCollectionLoop( context, tempCollection, context.TargetInstance )
+                    SimpleCollectionLoop( tempCollection, context.SourceCollectionElementType,
+                        context.TargetInstance, context.TargetCollectionElementType,
+                        this.GetTargetCollectionInsertionMethod( context ), context.SourceCollectionLoopingVar )
                 );
             }
 
@@ -48,9 +53,28 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
+        protected virtual MethodInfo GetTemporaryCollectionInsertionMethod( CollectionMapperContext context )
+        {
+            return this.GetTemporaryCollectionType( context ).GetMethod( nameof( List<int>.Add ) );
+        }
+
         protected virtual Type GetTemporaryCollectionType( CollectionMapperContext context )
         {
             return typeof( List<> ).MakeGenericType( context.SourceCollectionElementType );
         }
+
+        //protected override Expression GetNewTargetInstanceExpression( MemberMappingContext context )
+        //{
+        //    var constructorWithInputCollection = context.TargetMember.Type.GetConstructors()
+        //        .FirstOrDefault( ctor =>
+        //        {
+        //            var parameters = ctor.GetParameters();
+        //            if( parameters.Length != 1 ) return false;
+
+        //            return parameters[ 0 ].ParameterType.IsEnumerable();
+        //        } );
+
+        //    return Expression.New( constructorWithInputCollection, context.SourceMember );
+        //}
     }
 }

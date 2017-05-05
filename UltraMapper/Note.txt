@@ -1,6 +1,8 @@
 ﻿
 TODO:
 
+- Custom target constructors (which also can be used to provide a concrete type to a mapping involving interfaces)
+
 - Mapping not working if interfaces are involved (ie: a collection property defined as ICollection<>)
 
 - Automatic reverse mapping (at the time a reverse mapping is resolved by convention. Take into account manual overrides.)
@@ -28,7 +30,7 @@ TODO:
 - Multidimensional/jagged arrays; Array mapping.
 
 - CustomConverter for reference types do not support return of an object to recurse on (this might be correct?).
-  CustomConverter for reference types do not add the reference to the ReferenceTracker.
+  CustomConverter for reference types do not add references to the ReferenceTracker.
 
 - Analyze how to manage structs correctly (complex struct should be mapped with reference mapper,
 simple structs with a primitive mapper)

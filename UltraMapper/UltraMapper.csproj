@@ -41,8 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CollectionMappingStrategies\CollectionMappingStrategy.cs" />
-    <Compile Include="CollectionMappingStrategies\ICollectionMappingStrategy.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
     <Compile Include="Configuration\MemberConfigurator.cs" />
     <Compile Include="Conventions\MappingConventions.cs" />

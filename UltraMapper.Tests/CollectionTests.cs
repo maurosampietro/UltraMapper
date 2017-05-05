@@ -106,6 +106,11 @@ namespace UltraMapper.Tests
             public ReadOnlyCollection<T> ObservableCollection { get; set; }
         }
 
+        public class GenericArray<T>
+        {
+            public T[] Array { get; set; }
+        }
+
         [TestMethod]
         public void CollectionItemsAndMembersMapping()
         {
@@ -269,7 +274,40 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void CollectionToReadOnlyCollection()
+        public void DirectArrayToCollection()
+        {
+            var source = Enumerable.Range( 0, 100 ).ToArray();
+            var target = new List<int>();
+
+            var ultraMapper = new UltraMapper();
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.SequenceEqual( target ) );
+        }
+
+        [TestMethod]
+        public void ArrayToCollection()
+        {
+            var source = new GenericArray<int>()
+            {
+                Array = Enumerable.Range( 0, 100 ).ToArray()
+            };
+
+            var target = new GenericCollections<int>( false );
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.Array, b => b.List );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.Array.SequenceEqual( target.List ) );
+        }
+
+        [TestMethod]
+        public void CollectionToReadOnlySimpleCollection()
         {
             var source = new GenericCollections<int>( true );
             var target = new ReadOnlyGeneric<int>();
@@ -277,7 +315,20 @@ namespace UltraMapper.Tests
             var ultraMapper = new UltraMapper();
             ultraMapper.Map( source, target );
 
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
+
+        //[TestMethod]
+        //public void DirectCollectionToReadOnlyCollection()
+        //{
+        //    var source = new List<int>() { 1, 2, 3 };
+
+        //    var ultraMapper = new UltraMapper();
+        //    var target = ultraMapper.Map<ReadOnlyCollection<int>>( source );
+
+        //    Assert.IsTrue( source.SequenceEqual( target ) );
+        //}
 
         [TestMethod]
         public void ComplexCollection()
@@ -504,8 +555,7 @@ namespace UltraMapper.Tests
             public int Id { get; set; }
             public string CaseId { get; set; }
 
-            public virtual Collection<Media> Media { get; set; }
-                = new Collection<Media>();
+            public virtual ICollection<Media> Media { get; set; }
         }
 
         private class Media
@@ -513,8 +563,7 @@ namespace UltraMapper.Tests
             public int Id { get; set; }
             public string HashCode { get; set; }
 
-            public virtual Collection<Drawing> Drawings { get; set; }
-                = new Collection<Drawing>();
+            public virtual ICollection<Drawing> Drawings { get; set; }
         }
 
         private class Drawing
@@ -613,8 +662,11 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new UltraMapper( cfg =>
             {
-                cfg.MapTypes( source, target, ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
-                cfg.MapTypes( source.First().Drawings, target.First().Drawings, ( itemA, itemB ) => itemA.Data == itemB.Data );
+                cfg.MapTypes<Collection<Media>, Collection<Media>, Media, Media>(
+                    ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
+
+                cfg.MapTypes<ICollection<Drawing>, ICollection<Drawing>, Drawing, Drawing>( 
+                    ( itemA, itemB ) => itemA.Data == itemB.Data );
             } );
 
             ultraMapper.Map( source, target );
