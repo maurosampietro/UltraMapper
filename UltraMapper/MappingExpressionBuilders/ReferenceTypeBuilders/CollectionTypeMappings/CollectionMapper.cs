@@ -24,7 +24,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return new CollectionMapperContext( source, target, options );
         }
 
-        protected Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+        protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar )
         {
@@ -51,7 +51,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 sourceCollectionLoopingVar, loopBody );
         }
 
-        public Expression CollectionLoopWithReferenceTracking( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+        public virtual Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
             ParameterExpression referenceTracker, ParameterExpression mapper )
@@ -166,6 +166,22 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
             {
+                ////OPTIMIZATION: If the types involved are primitives of exactly the same type
+                ////and we need to create a new instance,
+                ////we can use the constructor taking as input the collection and avoid looping
+
+                //if( context.SourceCollectionElementType == context.TargetCollectionElementType &&
+                //    context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+                //{
+                //    var targetConstructor = context.TargetInstance.Type.GetConstructor(
+                //        new[] { typeof( IEnumerable<> ).MakeGenericType( context.TargetCollectionElementType ) } );
+                //    if( targetConstructor != null )
+                //    {
+                //        //CANNOT ASSIGN THE INSTANCE: WE LOSE THE REFERENCE!
+                //        return Expression.New( targetConstructor, context.SourceInstance );
+                //    }
+                //}
+
                 return Expression.Block
                 (
                     isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
@@ -183,7 +199,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     : (Expression)Expression.Empty(),
 
                 isUpdateCollection ? context.UpdateCollection
-                    : CollectionLoopWithReferenceTracking( context.SourceInstance, context.SourceCollectionElementType,
+                    : ComplexCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
                         targetCollectionInsertionMethod, context.SourceCollectionLoopingVar, context.ReferenceTracker, context.Mapper )
             );
@@ -209,7 +225,29 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override Expression GetTargetInstanceAssignment( MemberMappingContext context )
         {
-            //A little optimization: if we need to create a new instance of a collection
+            var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
+                context.TargetMember.Type, context.Options );
+            if( collectionContext.IsSourceElementTypeBuiltIn || collectionContext.IsTargetElementTypeBuiltIn )
+            {
+                //OPTIMIZATION: If the types involved are primitives of exactly the same type
+                //and we need to create a new instance,
+                //we can use the constructor taking as input the collection and avoid looping
+
+                if( collectionContext.SourceCollectionElementType == collectionContext.TargetCollectionElementType &&
+                    context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+                {
+                    var targetConstructor = context.TargetInstance.Type.GetConstructor(
+                        new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
+
+                    if( targetConstructor != null )
+                    {
+                        context.NeedRecursion = false;
+                        return Expression.New( targetConstructor, context.SourceMember );
+                    }
+                }
+            }
+
+            //OPTIMIZATION: if we need to create a new instance of a collection
             //we can try to reserve just the right capacity thus avoiding reallocations.
             //If the source collection implements ICollection we can read 'Count' property without any iteration.
 
@@ -238,6 +276,79 @@ namespace UltraMapper.MappingExpressionBuilders
             }
 
             return base.GetTargetInstanceAssignment( context );
+        }
+
+        protected override Expression GetNewTargetInstance( MemberMappingContext context )
+        {
+            if( context.Options.CustomTargetConstructor != null )
+                return Expression.Invoke( context.Options.CustomTargetConstructor );
+
+            Type sourceType = context.SourceMember.Type.IsGenericType ?
+                 context.SourceMember.Type.GetGenericTypeDefinition() : context.SourceMember.Type;
+
+            Type targetType = context.TargetMember.Type.IsGenericType ?
+                    context.TargetMember.Type.GetGenericTypeDefinition() : context.TargetMember.Type;
+
+            if( context.TargetMember.Type.IsInterface && (context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) ||
+                targetType.IsAssignableFrom( sourceType ) || sourceType.ImplementsInterface( targetType )) )
+            {
+                var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
+                    context.TargetMember.Type, context.Options );
+
+                var createInstanceMethodInfo = typeof( Activator )
+                    .GetMethods( BindingFlags.Static | BindingFlags.Public )
+                    .Where( method => method.Name == nameof( Activator.CreateInstance ) )
+                    .Select( method => new
+                    {
+                        Method = method,
+                        Params = method.GetParameters(),
+                        Args = method.GetGenericArguments()
+                    } )
+                    .Where( x => x.Params.Length == 0 && x.Args.Length == 1 )
+                    .Select( x => x.Method )
+                    .First();
+
+                MethodInfo getType = typeof( object ).GetMethod( nameof( object.GetType ) );
+                MethodInfo getGenericTypeDefinition = typeof( Type ).GetMethod( nameof( Type.GetGenericTypeDefinition ) );
+
+                var getSourceTypeGenericDefinition = Expression.Call( Expression.Call( context.SourceMemberValueGetter, getType ), getGenericTypeDefinition );
+                var makeGenericMethod = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
+                var makeGenericType = typeof( Type ).GetMethod( nameof( Type.MakeGenericType ) );
+
+                var arrayParameter = Expression.Parameter( typeof( List<Type> ), "pararray" );
+                var arrayParameter2 = Expression.Parameter( typeof( List<Type> ), "pararray2" );
+
+                var toArray = typeof( Enumerable )
+                    .GetMethod( nameof( Enumerable.ToArray ) )
+                    .MakeGenericMethod( new[] { typeof( Type ) } );
+
+                var addType = typeof( List<Type> ).GetMethod( nameof( List<Type>.Add ) );
+
+                var parArray = Expression.Call( null, toArray, arrayParameter );
+                var parArray2 = Expression.Call( null, toArray, arrayParameter2 );
+
+                var createInstance = Expression.Call( Expression.Constant( createInstanceMethodInfo ), makeGenericMethod, parArray );
+
+                return Expression.Block
+                (
+                    new[] { arrayParameter, arrayParameter2 },
+
+                    Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
+                    Expression.Assign( arrayParameter2, Expression.New( typeof( List<Type> ) ) ),
+
+                    Expression.Call( arrayParameter2, addType, Expression.Constant( collectionContext.TargetCollectionElementType ) ),
+                    Expression.Call( arrayParameter, addType, Expression.Call( getSourceTypeGenericDefinition, makeGenericType, parArray2 ) ),
+
+                    Expression.Invoke( debugExp, arrayParameter ),
+                    Expression.Invoke( debugExp, arrayParameter2 ),
+
+                    Expression.Convert(
+                       Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( nameof( MethodInfo.Invoke ), new[] { typeof( object ), typeof( object[] ) } ),
+                       Expression.Constant( null ), Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type )
+                );
+            }
+
+            return Expression.New( context.TargetMember.Type );
         }
     }
 }

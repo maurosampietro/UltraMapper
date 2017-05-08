@@ -79,6 +79,7 @@
     <Compile Include="MappingExpressionBuilders\Contexts\MemberMappingContext.cs" />
     <Compile Include="MappingExpressionBuilders\Contexts\ReferenceMapperContext.cs" />
     <Compile Include="MappingExpressionBuilders\Contexts\CollectionMapperContext.cs" />
+    <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\ArrayMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMappingViaTemporaryCollection.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\QueueMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\ReadOnlyCollectionMapper.cs" />

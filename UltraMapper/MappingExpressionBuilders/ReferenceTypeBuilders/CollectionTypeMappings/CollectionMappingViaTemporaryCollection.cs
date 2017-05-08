@@ -58,7 +58,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
 
-                CollectionLoopWithReferenceTracking
+                ComplexCollectionLoop
                 (
                     tempCollection,
                     context.SourceCollectionElementType,

@@ -1,20 +1,10 @@
 ﻿
 TODO:
 
-- Custom target constructors (which also can be used to provide a concrete type to a mapping involving interfaces)
-
-- Mapping not working if interfaces are involved (ie: a collection property defined as ICollection<>)
+- ArrayMapper do not implement ReferenceMappingStrategies and CollectionMappingStrategies.
 
 - Automatic reverse mapping (at the time a reverse mapping is resolved by convention. Take into account manual overrides.)
 
-- Collection mapping strategies: when updating order is not preserved (could be right since it is implied that ww keep using the existing target collection).
-
-- Collections now work only by clear/adding. 
-  Before we could work with constructor(IEnumeable<T>) in some particular cases
-  (identical source and target types), which is much faster.
-
-- ReadOnlyCollection support, at least on members (directly on type is a problem because it does not have a parameterless constructor).
-  
 - Dynamic mapping
 
 - Object to Object mapping should inspect object types and use ReferenceMapper.
@@ -27,14 +17,7 @@ TODO:
 - VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
 
-- Multidimensional/jagged arrays; Array mapping.
-
-- CustomConverter for reference types do not support return of an object to recurse on (this might be correct?).
-  CustomConverter for reference types do not add references to the ReferenceTracker.
-
-- Analyze how to manage structs correctly (complex struct should be mapped with reference mapper,
-simple structs with a primitive mapper)
-
+- Multidimensional/jagged arrays; 
 
 KNOWN (POTENTIAL) PROBLEMS:
 
@@ -53,3 +36,13 @@ KNOWN (POTENTIAL) PROBLEMS:
   
   TARGET SIDE: An automatic mechanism instantiating a null reference could be useful 
   to solve the problem on target side but implies the splitting and the analysis of the selctor.
+
+- Collection mapping strategies: when updating order is not preserved 
+  (this could be right since it is implied that we keep using the existing target collection).
+
+- a. Reference type's CustomConverters do not recurse on inner references.
+  (this might be correct since the entire mapping is delegated to the user).   
+  b. CustomConverters do not add references to the ReferenceTracker.
+
+- Mapping types not providing a parameterless constructor directly is probably feasible but would need a big refactor.
+  One example is ReadOnlyCollection support: it is supported only if we find it as a target's member.

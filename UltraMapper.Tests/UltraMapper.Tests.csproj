@@ -52,6 +52,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CollectionTests.cs" />
+    <Compile Include="CollectionUpdateTests.cs" />
     <Compile Include="DictionaryTests.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="InheritTypeMappingTests.cs" />

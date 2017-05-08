@@ -113,6 +113,7 @@ namespace UltraMapper
                 new NullableMapper( this ),
                 new ConvertMapper( this ),
                 new StructMapper( this ),
+                new ArrayMapper( this ),
                 new DictionaryMapper( this ),
                 new ReadOnlyCollectionMapper( this ),
                 new StackMapper( this ),

@@ -136,17 +136,17 @@ namespace UltraMapper.MappingExpressionBuilders
                 var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
                 var makeGenericMethodInfo = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
                 var arrayParameter = Expression.Parameter( typeof( List<Type> ), "pararray" );
-                var parArray = Expression.Call( null, typeof( System.Linq.Enumerable ).GetMethod( "ToArray" ).MakeGenericMethod( new[] { typeof( Type ) } ), arrayParameter );
+                var parArray = Expression.Call( null, typeof( Enumerable ).GetMethod( nameof( Enumerable.ToArray ) ).MakeGenericMethod( new[] { typeof( Type ) } ), arrayParameter );
                 var createInstance = Expression.Call( Expression.Constant( createInstanceMethodInfo ), makeGenericMethodInfo, parArray );
 
                 return Expression.Block
                 (
                     new[] { arrayParameter },
                     Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
-                    Expression.Call( arrayParameter, typeof( List<Type> ).GetMethod( "Add" ), getSourceType ),
+                    Expression.Call( arrayParameter, typeof( List<Type> ).GetMethod( nameof( List<Type>.Add ) ), getSourceType ),
                     Expression.Convert(
-                       Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( "Invoke", new[] { typeof( object ), typeof( object[] ) } ),
-                       Expression.Constant( null ), Expression.Constant( null, typeof( Object[] ) ) ), context.TargetMember.Type )
+                       Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( nameof( MethodInfo.Invoke ), new[] { typeof( object ), typeof( object[] ) } ),
+                       Expression.Constant( null ), Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type )
                 );
             }
 
@@ -265,6 +265,7 @@ namespace UltraMapper.MappingExpressionBuilders
                                 //cache reference
                                 itemCacheCall,
 
+                                !memberContext.NeedRecursion ? (Expression)Expression.Empty() :
                                 Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
                                     memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                             )

@@ -34,14 +34,11 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 var updateCollectionMethodInfo = typeof( LinqExtensions ).GetMethod(
                     nameof( LinqExtensions.Update ), BindingFlags.Static | BindingFlags.Public )
-                    .MakeGenericMethod( SourceCollectionElementType );
-
-                var relayComparison = typeof( RelayEqualityComparer<> ).MakeGenericType( SourceCollectionElementType );
-                var relayComparisonCtor = relayComparison.GetConstructors().First();
+                    .MakeGenericMethod( SourceCollectionElementType, TargetCollectionElementType );
 
                 UpdateCollection = Expression.Call( null, updateCollectionMethodInfo, Mapper, SourceInstance,
-                    TargetInstance, Expression.New( relayComparisonCtor, Expression.Convert( Expression.Constant( options.CollectionItemEqualityComparer.Compile() ),
-                        typeof( Func<,,> ).MakeGenericType( SourceCollectionElementType, TargetCollectionElementType, typeof( bool ) ) ) ) );
+                    TargetInstance, Expression.Convert( Expression.Constant( options.CollectionItemEqualityComparer.Compile() ),
+                        typeof( Func<,,> ).MakeGenericType( SourceCollectionElementType, TargetCollectionElementType, typeof( bool ) ) ) );
             }
         }
     }

@@ -16,7 +16,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override bool CanHandle( Type source, Type target )
         {
-            return base.CanHandle( source, target ) &&
+            return base.CanHandle( source, target ) && target.IsGenericType &&
                 target.GetGenericTypeDefinition() == typeof( Stack<> );
         }
 

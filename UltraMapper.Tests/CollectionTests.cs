@@ -286,7 +286,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void ArrayToCollection()
+        public void SimpleArrayToCollection()
         {
             var source = new GenericArray<int>()
             {
@@ -304,6 +304,86 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.Array.SequenceEqual( target.List ) );
+        }
+
+        [TestMethod]
+        public void SimpleCollectionToArray()
+        {
+            var source = new GenericCollections<int>( false )
+            {
+                List = Enumerable.Range( 0, 100 ).ToList()
+            };
+
+            var target = new GenericArray<int>();
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.List, b => b.Array );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.List.SequenceEqual( target.Array ) );
+        }
+
+        [TestMethod]
+        public void ComplexArrayToCollection()
+        {
+            var innerType = new InnerType() { String = "test" };
+            var source = new GenericArray<ComplexType>()
+            {
+                Array = new ComplexType[ 3 ]
+            };
+
+            for( int i = 0; i < 3; i++ )
+            {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
+            }
+
+            var target = new GenericCollections<ComplexType>( false );
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.Array, b => b.List );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void ComplexCollectionToArray()
+        {
+            var innerType = new InnerType() { String = "test" };
+            var source = new GenericCollections<ComplexType>( false );
+
+            for( int i = 0; i < 3; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+            }
+
+            var target = new GenericArray<ComplexType>();
+
+            var ultraMapper = new UltraMapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.List, b => b.Array );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -574,133 +654,6 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 49 ), tempItemB ) );
-        }
-
-        private class Case
-        {
-            public int Id { get; set; }
-            public string CaseId { get; set; }
-
-            public virtual ICollection<Media> Media { get; set; }
-        }
-
-        private class Media
-        {
-            public int Id { get; set; }
-            public string HashCode { get; set; }
-
-            public virtual ICollection<Drawing> Drawings { get; set; }
-        }
-
-        private class Drawing
-        {
-            public int Id { get; set; }
-            public virtual Media Image { get; set; }
-            public string Data { get; set; }
-        }
-
-        [TestMethod]
-        public void MultipleNestedCollectionsUpdate()
-        {
-            var source = new Case()
-            {
-                Media = new Collection<Media>
-                {
-                    new Media()
-                    {
-                        HashCode = "a",
-                        Id = 13,
-                        Drawings = new Collection<Drawing>()
-                        {
-                            new Drawing() { Id=11, Data="bo" }
-                        }
-                    }
-                }
-            };
-
-            var target = new Case()
-            {
-                Media = new Collection<Media>
-                {
-                    new Media()
-                    {
-                        HashCode ="a",
-                        Id =17,
-                        Drawings = new Collection<Drawing>()
-                        {
-                            new Drawing() { Id=19, Data="bo" }
-                        }
-                    }
-                }
-            };
-
-            var targetMedia = target.Media.First();
-            var targetDrawing = targetMedia.Drawings.First();
-
-            var ultraMapper = new UltraMapper( cfg =>
-            {
-                cfg.MapTypes<Case, Case>()
-                    .MapMember( a => a.Media, b => b.Media, ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
-
-                cfg.MapTypes<Media, Media>()
-                    .MapMember( a => a.Drawings, b => b.Drawings, ( itemA, itemB ) => itemA.Data == itemB.Data );
-            } );
-
-            ultraMapper.Map( source, target );
-
-            Assert.IsTrue( target.Media.First().Id == 13 );
-            Assert.IsTrue( target.Media.First().Drawings.First().Id == 11 );
-            Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.Media.First() ) );
-            Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.Media.First().Drawings.First() ) );
-        }
-
-        [TestMethod]
-        public void DirectMultipleNestedCollectionsUpdate()
-        {
-            var source = new Collection<Media>
-            {
-                new Media()
-                {
-                    HashCode = "a",
-                    Id = 13,
-                    Drawings = new Collection<Drawing>()
-                    {
-                        new Drawing() { Id=11, Data="bo" }
-                    }
-                }
-            };
-
-            var target = new Collection<Media>
-            {
-                new Media()
-                {
-                    HashCode ="a",
-                    Id =17,
-                    Drawings = new Collection<Drawing>()
-                    {
-                        new Drawing() { Id=19, Data="bo" }
-                    }
-                }
-            };
-
-            var targetMedia = target.First();
-            var targetDrawing = targetMedia.Drawings.First();
-
-            var ultraMapper = new UltraMapper( cfg =>
-            {
-                cfg.MapTypes<Collection<Media>, Collection<Media>, Media, Media>(
-                    ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
-
-                cfg.MapTypes<ICollection<Drawing>, ICollection<Drawing>, Drawing, Drawing>( 
-                    ( itemA, itemB ) => itemA.Data == itemB.Data );
-            } );
-
-            ultraMapper.Map( source, target );
-
-            Assert.IsTrue( target.First().Id == 13 );
-            Assert.IsTrue( target.First().Drawings.First().Id == 11 );
-            Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.First() ) );
-            Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.First().Drawings.First() ) );
         }
     }
 }
