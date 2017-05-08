@@ -51,6 +51,7 @@ Implemented features:
 - Powerful type/members configuration override mechanism, with configuration inheritance
 - Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
+- Supports interfaces 
 - Supports mapping by convention
 - Supports flattening/projections by convention
 - Supports manual flattening/unflattening/projections.
