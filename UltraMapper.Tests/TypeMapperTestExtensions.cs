@@ -11,12 +11,12 @@ namespace UltraMapper.Tests
 {
     public static class TypeMapperTestExtensions
     {
-        public static bool VerifyMapperResult( this UltraMapper ultraMapper, object source, object target )
+        public static bool VerifyMapperResult( this Mapper ultraMapper, object source, object target )
         {
             return VerifyMapperResultHelper( ultraMapper, source, target, new ReferenceTracking() );
         }
 
-        private static bool VerifyMapperResultHelper( this UltraMapper ultraMapper,
+        private static bool VerifyMapperResultHelper( this Mapper ultraMapper,
             object source, object target, ReferenceTracking referenceTracking )
         {
             //sharing the same reference or both null

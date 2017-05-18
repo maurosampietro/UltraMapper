@@ -9,7 +9,7 @@ namespace UltraMapper
     public static class UltraMapperExtensionMethods
     {
         private static Configuration _configuration = new Configuration();
-        private static UltraMapper _mapper = new UltraMapper( _configuration );
+        private static Mapper _mapper = new Mapper( _configuration );
 
         public static void MapTo<TSource, TTarget>( this TSource source,
             TTarget target, Action<Configuration> config = null ) where TTarget : class

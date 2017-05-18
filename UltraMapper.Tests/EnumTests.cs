@@ -20,7 +20,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void StringToEnum()
         {
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
 
             string source = Types.Value1.ToString();
             Types target = Types.Value3;
@@ -32,7 +32,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void EnumToEnum()
         {
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
 
             string source = Types.Value1.ToString();
             Types target = Types.Value3;

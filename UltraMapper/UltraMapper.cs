@@ -5,7 +5,7 @@ using UltraMapper.Conventions;
 
 namespace UltraMapper
 {
-    public class UltraMapper
+    public class Mapper
     {
         public Configuration MappingConfiguration { get; protected set; }
 
@@ -13,7 +13,7 @@ namespace UltraMapper
         /// Initialize a new instance with the specified mapping configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
-        public UltraMapper( Configuration config )
+        public Mapper( Configuration config )
         {
             this.MappingConfiguration = config;
         }
@@ -23,7 +23,7 @@ namespace UltraMapper
         /// as mapping convention allowing inline editing of the configuraton itself.
         /// </summary>
         /// <param name="config"></param>
-        public UltraMapper( Action<Configuration> config = null )
+        public Mapper( Action<Configuration> config = null )
             : this( new Configuration() ) { config?.Invoke( this.MappingConfiguration ); }
 
         /// <summary>

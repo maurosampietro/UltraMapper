@@ -46,7 +46,7 @@ namespace UltraMapper.Tests
             var source = new SourceClass();
             var target = new TargetClass();
 
-            var mapper = new UltraMapper();
+            var mapper = new Mapper();
             mapper.Map( source, target );
 
             Assert.IsTrue( source.A == target.A );
@@ -71,7 +71,7 @@ namespace UltraMapper.Tests
                 } );
             } );
 
-            var mapper = new UltraMapper( config );
+            var mapper = new Mapper( config );
             mapper.Map( source, target );
 
             Assert.IsTrue( source.A != target.A );
@@ -84,7 +84,7 @@ namespace UltraMapper.Tests
             var source = new SourceClass();
             var target = new TargetClassDto();
 
-            var mapper = new UltraMapper( cfg =>
+            var mapper = new Mapper( cfg =>
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {

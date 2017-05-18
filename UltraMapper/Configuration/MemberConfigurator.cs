@@ -94,8 +94,8 @@ namespace UltraMapper
         }
 
         public MemberConfigurator<TSource, TTarget> IgnoreTargetMember<TTargetMember>(
-            Expression<Func<TSource, TTargetMember>> targetMemberSelector,
-            params Expression<Func<TSource, TTargetMember>>[] targetMemberSelectors )
+            Expression<Func<TTarget, TTargetMember>> targetMemberSelector,
+            params Expression<Func<TTarget, TTargetMember>>[] targetMemberSelectors )
         {
             var selectors = new[] { targetMemberSelector }
                 .Concat( targetMemberSelectors );

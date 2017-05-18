@@ -29,7 +29,7 @@ namespace UltraMapper.Tests
         {
             var source = new MyType() { Interface = new IB() { MyProperty = 1 } };
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             var target = ultraMapper.Map( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -49,7 +49,7 @@ namespace UltraMapper.Tests
                 }
             };
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             var target = ultraMapper.Map<MyType>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -63,7 +63,7 @@ namespace UltraMapper.Tests
         {
             var source = new MyType() { Interface = new IB() { MyProperty = 1 } };
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<I, I2>( () => new IA2() );
             } );

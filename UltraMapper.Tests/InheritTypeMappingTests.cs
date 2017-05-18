@@ -30,7 +30,7 @@ namespace UltraMapper.Tests
 
             var target = new TestClass();
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<bool, string>( b => b ? "1" : "0" );
 

@@ -11,13 +11,13 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReferenceMapper : IMappingExpressionBuilder, IMappingExpressionMember
     {
-        protected readonly UltraMapper _mapper;
+        protected readonly Mapper _mapper;
         public readonly Configuration MapperConfiguration;
 
         public ReferenceMapper( Configuration configuration )
         {
             this.MapperConfiguration = configuration;
-            _mapper = new UltraMapper( configuration );
+            _mapper = new Mapper( configuration );
         }
 
 #if DEBUG

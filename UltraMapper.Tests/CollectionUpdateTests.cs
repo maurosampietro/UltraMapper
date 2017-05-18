@@ -96,7 +96,7 @@ namespace UltraMapper.Tests
             var targetMedia = target.Media.First();
             var targetDrawing = targetMedia.Drawings.First();
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<Case, Case>()
                     .MapMember( a => a.Media, b => b.Media, ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
@@ -145,7 +145,7 @@ namespace UltraMapper.Tests
             var targetMedia = target.First();
             var targetDrawing = targetMedia.Drawings.First();
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<Collection<Media>, Collection<Media>, Media, Media>(
                     ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
@@ -200,7 +200,7 @@ namespace UltraMapper.Tests
             var targetMedia = target.Media.First();
             var targetDrawing = targetMedia.Drawings.First();
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<Case, Case2>()
                     .MapMember( a => a.Media, b => b.Media, ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );

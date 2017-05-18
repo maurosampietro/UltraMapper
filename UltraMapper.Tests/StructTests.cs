@@ -27,7 +27,7 @@ namespace UltraMapper.Tests
             DateTime dateTime = new DateTime( 2017, 03, 13 );
             DateTime clone;
 
-            var mapper = new UltraMapper();
+            var mapper = new Mapper();
             mapper.Map( dateTime, out clone );
 
             Assert.IsTrue( dateTime == clone );
@@ -38,7 +38,7 @@ namespace UltraMapper.Tests
         public void DateTimeMemberMapping()
         {
             var test = new Test();
-            var mapper = new UltraMapper();
+            var mapper = new Mapper();
 
             var clone = mapper.Map( test );
 
@@ -49,7 +49,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void ClassToStructMapping()
         {
-            var mapper = new UltraMapper();
+            var mapper = new Mapper();
 
             var source = new Test();
             var target = new StructTest();
@@ -63,7 +63,7 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void StructToClassMapping()
         {
-            var mapper = new UltraMapper();
+            var mapper = new Mapper();
 
             var source = new StructTest()
             {

@@ -83,7 +83,7 @@ namespace UltraMapper.Tests
 
             var targetPrimitiveListCount = target.List1.Count;
 
-            var mapper = new UltraMapper( cfg =>
+            var mapper = new Mapper( cfg =>
             {
                 cfg.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
                 cfg.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
@@ -113,7 +113,7 @@ namespace UltraMapper.Tests
             var source = new GetMethodConventions();
             var target = new SetMethodConventions();
 
-            var mapper = new UltraMapper( cfg =>
+            var mapper = new Mapper( cfg =>
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
@@ -145,7 +145,7 @@ namespace UltraMapper.Tests
         {
             var source = new A() { Double = 11 };
 
-            var mapper = new UltraMapper( cfg =>
+            var mapper = new Mapper( cfg =>
             {
                 var matching = new MatchingRules();
 
@@ -159,7 +159,7 @@ namespace UltraMapper.Tests
             var result = mapper.Map<B>( source );
             Assert.IsTrue( result.Double == 0 );
 
-            var mapper2 = new UltraMapper( cfg =>
+            var mapper2 = new Mapper( cfg =>
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
@@ -187,7 +187,7 @@ namespace UltraMapper.Tests
         {
             var source = new C() { Double = 11 };
 
-            var mapper = new UltraMapper( cfg =>
+            var mapper = new Mapper( cfg =>
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
@@ -199,7 +199,7 @@ namespace UltraMapper.Tests
             var result = mapper.Map<D>( source );
             Assert.IsTrue( result.Double == 0 );
 
-            var mapper2 = new UltraMapper( cfg =>
+            var mapper2 = new Mapper( cfg =>
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
@@ -298,7 +298,7 @@ namespace UltraMapper.Tests
 
             order.AddOrderLineItem( bosco, 15 );
 
-            var mapper = new UltraMapper( cfg =>
+            var mapper = new Mapper( cfg =>
             {
                 cfg.Conventions.GetOrAdd<ProjectionConvention>()
                     .GetOrAdd<DefaultConvention>( convention =>

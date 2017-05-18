@@ -336,11 +336,10 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
                     Expression.Assign( arrayParameter2, Expression.New( typeof( List<Type> ) ) ),
 
+                    Expression.Invoke( debugExp, context.SourceMemberValueGetter ),
+
                     Expression.Call( arrayParameter2, addType, Expression.Constant( collectionContext.TargetCollectionElementType ) ),
                     Expression.Call( arrayParameter, addType, Expression.Call( getSourceTypeGenericDefinition, makeGenericType, parArray2 ) ),
-
-                    Expression.Invoke( debugExp, arrayParameter ),
-                    Expression.Invoke( debugExp, arrayParameter2 ),
 
                     Expression.Convert(
                        Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( nameof( MethodInfo.Invoke ), new[] { typeof( object ), typeof( object[] ) } ),

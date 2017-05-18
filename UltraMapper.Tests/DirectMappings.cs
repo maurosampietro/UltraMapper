@@ -54,7 +54,7 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( source != target );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, out target );
 
             Assert.IsTrue( source == target );
@@ -71,7 +71,7 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( source != target );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, out target );
 
             Assert.IsTrue( source == target );
@@ -88,7 +88,7 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( !source.SequenceEqual( target ) );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual( target ) );
@@ -107,7 +107,7 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( !source.SequenceEqual( target ) );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual( target ) );
@@ -130,7 +130,7 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( !source.SequenceEqual( target ) );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual( target, comparer ) );
@@ -149,7 +149,7 @@ namespace UltraMapper.Tests
             Assert.IsTrue( !source.SequenceEqual(
                 target.Select( item => (int)item ) ) );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual(
@@ -170,7 +170,7 @@ namespace UltraMapper.Tests
                 new ComplexType() { PropertyA = 2 }
             };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<int, ComplexType>( c => new ComplexType() { PropertyA = c } )
             );
@@ -192,7 +192,7 @@ namespace UltraMapper.Tests
 
             var target = new List<int>() { 11, 13, 17 };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<ComplexType, int>( a => a.PropertyA )
             );

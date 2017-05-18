@@ -11,7 +11,7 @@ namespace UltraMapper.Internals
     internal static class ExpressionExtensions
     {
         private static string invalidExpressionMsg =
-            "Invalid expression. Please select a property from your model (eg. x => x.MyProperty)";
+            "Invalid expression. Please select a member from your model (eg. x => x.MyProperty)";
 
         public static MemberInfo ExtractMember( this Expression method )
         {

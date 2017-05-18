@@ -12,8 +12,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override bool CanHandle( Type source, Type target )
         {
-            return base.CanHandle( source, target ) && target.IsGenericType
-                && target.GetGenericTypeDefinition() == typeof( LinkedList<> );
+            return base.CanHandle( source, target ) &&
+                target.IsCollectionOfType( typeof( LinkedList<> ) );
         }
 
         protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )

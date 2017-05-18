@@ -38,7 +38,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.PropertyA, t => t.PropertyA )
@@ -55,7 +55,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.PropertyA, t => t.FieldA )
@@ -72,7 +72,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.PropertyA, t => t.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
@@ -89,7 +89,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg =>
                 {
@@ -111,7 +111,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.FieldA, t => t.PropertyA )
@@ -128,7 +128,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.FieldA, t => t.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
@@ -145,7 +145,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.GetFieldA(), t => t.GetFieldA(), ( t, val ) => t.SetFieldA( val ) )
@@ -162,7 +162,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.GetFieldA(), t => t.PropertyA )
@@ -179,7 +179,7 @@ namespace UltraMapper.Tests
             var source = new TestType() { PropertyA = "test" };
             var target = new TestType() { PropertyA = "overwrite this" };
 
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg => cfg.MapTypes<TestType, TestType>()
                     .MapMember( s => s.GetFieldA(), t => t.FieldA )

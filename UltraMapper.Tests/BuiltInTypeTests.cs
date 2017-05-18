@@ -63,7 +63,7 @@ namespace UltraMapper.Tests
         {
             var source = new BuiltInTypes();
             
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
                     //map with custom converter
@@ -96,7 +96,7 @@ namespace UltraMapper.Tests
             var source = new BuiltInTypes();
             var target = new NullableBuiltInTypes();
             
-            var ultraMapper = new UltraMapper
+            var ultraMapper = new Mapper
             (
                 cfg =>
                 {
@@ -117,7 +117,7 @@ namespace UltraMapper.Tests
             var source = new NullableBuiltInTypes();
             var target = new NullableBuiltInTypes();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -163,7 +163,7 @@ namespace UltraMapper.Tests
                 UInt64 = 28
             };
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -204,7 +204,7 @@ namespace UltraMapper.Tests
                     return !p.GetValue( target ).Equals( defaultValue );
                 } ) );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             var isResultOk = ultraMapper.VerifyMapperResult( source, target );

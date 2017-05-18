@@ -34,7 +34,7 @@ KNOWN (POTENTIAL) PROBLEMS:
   SOURCE SIDE: An automatic mechanism checking for null reference for each reference
   access could solve the problem on source side but implies the splitting and the analysis of the selctor.
   
-  TARGET SIDE: An automatic mechanism instantiating a null reference could be useful 
+  TARGET SIDE: An automatic mechanism instantiating a new instance if a null reference is found could be useful 
   to solve the problem on target side but implies the splitting and the analysis of the selctor.
 
 - Collection mapping strategies: when updating order is not preserved 

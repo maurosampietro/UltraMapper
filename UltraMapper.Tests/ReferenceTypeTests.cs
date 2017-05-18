@@ -68,7 +68,7 @@ namespace UltraMapper.Tests
 
             var target = new OuterType();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -98,7 +98,7 @@ namespace UltraMapper.Tests
             var beforeMapPrimitiveList = target.PrimitiveList;
             var beforeMapComplexList = target.ComplexList;
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.ReferenceMappingStrategy =
                     ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
@@ -141,7 +141,7 @@ namespace UltraMapper.Tests
 
             var primitiveList = target.PrimitiveList;
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.ReferenceMappingStrategy =
                     ReferenceMappingStrategies.CREATE_NEW_INSTANCE;

@@ -9,9 +9,9 @@ namespace UltraMapper.Internals.ExtensionMethods
 {
     internal static class LinqExtensions
     {
-        public static void Update<TSourceElement, TTargetElement>( UltraMapper mapper, IEnumerable<TSourceElement> source,
-            ICollection<TTargetElement> target, Func<TSourceElement, TTargetElement, bool> comparer ) 
-            where TSourceElement : class 
+        internal static void Update<TSourceElement, TTargetElement>( Mapper mapper, ReferenceTracking referenceTracker,
+            IEnumerable<TSourceElement> source, ICollection<TTargetElement> target, Func<TSourceElement, TTargetElement, bool> comparer )
+            where TSourceElement : class
             where TTargetElement : class, new()
         {
             //search items to remove...
@@ -41,14 +41,18 @@ namespace UltraMapper.Internals.ExtensionMethods
                 {
                     if( comparer( sourceItem, targetItem ) )
                     {
-                        mapper.Map( sourceItem, targetItem );
+                        mapper.Map( sourceItem, targetItem, referenceTracker );
                         addToList = false; //we already updated
                         break; //next source item
                     }
                 }
 
                 if( addToList )
-                    target.Add( mapper.Map<TTargetElement>( sourceItem ) );
+                {
+                    var targetItem = new TTargetElement();
+                    mapper.Map( sourceItem, targetItem, referenceTracker );
+                    target.Add( targetItem );
+                }
             }
         }
     }

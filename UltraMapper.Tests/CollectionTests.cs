@@ -121,7 +121,7 @@ namespace UltraMapper.Tests
             Assert.IsTrue( !source.SequenceEqual(
                     target.Select( item => (int)item ) ) );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual(
@@ -141,7 +141,7 @@ namespace UltraMapper.Tests
             Assert.IsTrue( !source.SequenceEqual(
                     target.Select( item => (int)item ) ) );
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.ReferenceMappingStrategy =
                     ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
@@ -202,7 +202,7 @@ namespace UltraMapper.Tests
                     var source = sourceTypeCtor( true );
                     var target = targetTypeCtor( false );
 
-                    var ultraMapper = new UltraMapper();
+                    var ultraMapper = new Mapper();
                     ultraMapper.Map( source, target );
 
                     bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -264,7 +264,7 @@ namespace UltraMapper.Tests
                     var source = sourceTypeCtor( true );
                     var target = targetTypeCtor( true );
 
-                    var ultraMapper = new UltraMapper();
+                    var ultraMapper = new Mapper();
                     ultraMapper.Map( source, target );
 
                     bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -279,7 +279,7 @@ namespace UltraMapper.Tests
             var source = Enumerable.Range( 0, 100 ).ToArray();
             var target = new List<int>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.SequenceEqual( target ) );
@@ -295,7 +295,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<int>( false );
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.Array, b => b.List );
@@ -316,7 +316,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericArray<int>();
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.List, b => b.Array );
@@ -343,7 +343,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<ComplexType>( false );
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.Array, b => b.List );
@@ -374,7 +374,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericArray<ComplexType>();
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.List, b => b.Array );
@@ -392,7 +392,7 @@ namespace UltraMapper.Tests
             var source = new GenericCollections<int>( true );
             var target = new ReadOnlyGeneric<int>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -418,7 +418,7 @@ namespace UltraMapper.Tests
 
             var target = new ReadOnlyGeneric<ComplexType>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -455,7 +455,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<ComplexType>( false );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -493,7 +493,7 @@ namespace UltraMapper.Tests
             {
                 var target = new GenericCollections<double>( false );
 
-                var ultraMapper = new UltraMapper();
+                var ultraMapper = new Mapper();
                 var typeMappingConfig = ultraMapper.MappingConfiguration.MapTypes( source, target );
 
                 foreach( var targetProp in targetProperties )
@@ -527,7 +527,7 @@ namespace UltraMapper.Tests
 
             foreach( var sourceProp in typeProperties )
             {
-                var ultraMapper = new UltraMapper( cfg =>
+                var ultraMapper = new Mapper( cfg =>
                 {
                     //cfg.GlobalConfiguration.IgnoreConventions = true;
                 } );
@@ -561,7 +561,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<int>( true );
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -590,7 +590,7 @@ namespace UltraMapper.Tests
                 List = new List<Tests.CollectionTests.ComplexType>() { new ComplexType() { A = 100 } }
             };
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.IgnoreMemberMappingResolvedByConvention = true;
 
@@ -645,7 +645,7 @@ namespace UltraMapper.Tests
                 }
             };
 
-            var ultraMapper = new UltraMapper( cfg =>
+            var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemB.A );

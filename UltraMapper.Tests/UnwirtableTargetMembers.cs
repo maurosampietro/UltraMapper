@@ -37,7 +37,7 @@ namespace UltraMapper.Tests
             var source = new UnreadableMembers();
             var target = new UnwritableMembers();
 
-            var mapper = new UltraMapper( config =>
+            var mapper = new Mapper( config =>
             {
                 //config.ConventionResolvers.SourceMemberProvider.IgnoreFields = false;
                 //config.ConventionResolver.SourceMemberProvider.IgnoreNonPublicMembers = false;

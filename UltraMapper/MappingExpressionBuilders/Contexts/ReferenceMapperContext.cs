@@ -34,12 +34,12 @@ namespace UltraMapper.MappingExpressionBuilders
             if( !TargetInstance.Type.IsValueType )
                 TargetNullValue = Expression.Constant( null, TargetInstance.Type );
 
-            Mapper = Expression.Variable( typeof( UltraMapper ), "mapper" );
+            Mapper = Expression.Variable( typeof( Mapper ), "mapper" );
         }
 
         private static MethodInfo GetUltraMapperMapGenericMethodMemberMapping()
         {
-            return typeof( UltraMapper ).GetMethods( BindingFlags.Instance | BindingFlags.NonPublic )
+            return typeof( Mapper ).GetMethods( BindingFlags.Instance | BindingFlags.NonPublic )
                 .Where( m => m.Name == "Map" )
                 .Select( m => new
                 {

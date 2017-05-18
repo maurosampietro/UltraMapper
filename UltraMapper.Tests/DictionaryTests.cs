@@ -73,7 +73,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericDictionaries<int, int>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -90,7 +90,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericDictionaries<double, int>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -109,7 +109,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericDictionaries<double, ComplexType>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -128,7 +128,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericDictionaries<double, ComplexType2>();
 
-            var ultraMapper = new UltraMapper();
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
