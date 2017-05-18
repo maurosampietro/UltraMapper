@@ -51,9 +51,11 @@ Implemented features:
 - Powerful type/members configuration override mechanism, with configuration inheritance
 - Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
+- Supports interfaces 
 - Supports mapping by convention
 - Supports flattening/projections by convention
 - Supports manual flattening/unflattening/projections.
+- Supports simple arrays
 - Supports collections (Dictionary, HashSet, List, LinkedList, ObservableCollection, SortedSet, Stack, Queue)
 - Supports collection merging/updating
 
@@ -66,7 +68,7 @@ What's missing?
 --------------------------------
 
 - Dynamic mapper
-- Arrays, Multidimensional/Jagged arrays
+- Multidimensional/Jagged arrays, matrix
 - Proper documentation
 - Examples
 - Benchmarks
