@@ -19,6 +19,9 @@ TODO:
 
 - Multidimensional/jagged arrays; 
 
+- When working with interface if the source has an instance we use the same type by convention 
+  but i'm not checking if the source is null.
+  
 KNOWN (POTENTIAL) PROBLEMS:
 
 - Configurations can be shared, but not susequently edited because conventions and expression builders are not run again.
