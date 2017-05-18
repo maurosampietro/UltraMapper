@@ -1,4 +1,4 @@
 theme: jekyll-theme-cayman
-title: "UltraMapper :: .NET mapper"
+title: "UltraMapper"
 description: "UltraMapper is a .NET object-mapper. It can be useful to deep-copy an object, or transform (map) an object of a certain type to another."
 show_downloads: "true"
