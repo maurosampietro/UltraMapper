@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 title: "UltraMapper"
+description: "The tool you need to map/transform an object of a certain type to another. The tool you need to deep-copy an object."
 show_downloads: "true"
