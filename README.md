@@ -42,9 +42,6 @@ https://github.com/maurosampietro/UltraMapper/wiki/Getting-started
 Key features
 --------------------------------
 
-**Please note that UltraMapper at the time is published solely in order to be reviewed by the community and receive feedbacks.
-This early version may lack some of the feature you would expect from a mapper, but seems to be stable for the features it offers.**
-
 Implemented features:
 
 - Powerful Full reference tracking
