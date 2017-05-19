@@ -36,7 +36,8 @@ MappingExpressionBuilders are very well structured in a simple object-oriented w
 Getting started
 --------------------------------
 
-https://github.com/maurosampietro/UltraMapper/wiki/Getting-started
+Check out the [wiki](https://github.com/maurosampietro/UltraMapper/wiki/Getting-started)
+
 
 
 Key features
