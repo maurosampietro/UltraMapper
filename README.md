@@ -36,18 +36,16 @@ MappingExpressionBuilders are very well structured in a simple object-oriented w
 Getting started
 --------------------------------
 
-https://github.com/maurosampietro/UltraMapper/wiki/Getting-started
+Check out the [wiki](https://github.com/maurosampietro/UltraMapper/wiki/Getting-started)
+
 
 
 Key features
 --------------------------------
 
-**Please note that UltraMapper at the time is published solely in order to be reviewed by the community and receive feedbacks.
-This early version may lack some of the feature you would expect from a mapper, but seems to be stable for the features it offers.**
-
 Implemented features:
 
-- Powerful Full reference tracking
+- Powerful reference tracking mechanism
 - Powerful type/members configuration override mechanism, with configuration inheritance
 - Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
