@@ -150,10 +150,10 @@ namespace UltraMapper.MappingExpressionBuilders
              */
 
             bool isResetCollection = /*context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL && */
-                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.RESET;
+                context.Options.CollectionBehavior == CollectionBehaviors.RESET;
 
-            bool isUpdateCollection = context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL &&
-                context.Options.CollectionMappingStrategy == CollectionMappingStrategies.UPDATE;
+            bool isUpdateCollection = context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&
+                context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
 
             var clearMethod = GetTargetCollectionClearMethod( context );
             if( clearMethod == null && isResetCollection )
@@ -223,10 +223,19 @@ namespace UltraMapper.MappingExpressionBuilders
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
+        protected virtual Expression GetMemberNewInstance( MemberMappingContext context, CollectionMapperContext collectionContext )
+        {
+            var targetConstructor = context.TargetMember.Type.GetConstructor(
+               new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
+
+            return Expression.New( targetConstructor, context.SourceMember );
+        }
+
         public override Expression GetTargetInstanceAssignment( MemberMappingContext context )
         {
             var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
                 context.TargetMember.Type, context.Options );
+
             if( collectionContext.IsSourceElementTypeBuiltIn || collectionContext.IsTargetElementTypeBuiltIn )
             {
                 //OPTIMIZATION: If the types involved are primitives of exactly the same type
@@ -234,15 +243,28 @@ namespace UltraMapper.MappingExpressionBuilders
                 //we can use the constructor taking as input the collection and avoid looping
 
                 if( collectionContext.SourceCollectionElementType == collectionContext.TargetCollectionElementType &&
-                    context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
+                    context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE )
                 {
-                    var targetConstructor = context.TargetInstance.Type.GetConstructor(
+                    var targetConstructor = context.TargetMember.Type.GetConstructor(
                         new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
 
                     if( targetConstructor != null )
                     {
                         context.NeedRecursion = false;
-                        return Expression.New( targetConstructor, context.SourceMember );
+
+                        var typeMapping = MapperConfiguration[ context.SourceMember.Type,
+                            context.TargetMember.Type ];
+
+                        //We do not want recursion on each collection's item
+                        //but Capacity and other collection members must be mapped.
+                        var memberMappings = this.GetMemberMappings( typeMapping )
+                          .ReplaceParameter( context.Mapper, context.Mapper.Name )
+                          .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
+                          .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
+                          .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
+
+                        return Expression.Block( Expression.Assign( context.TargetMember,
+                            GetMemberNewInstance( context, collectionContext ) ), memberMappings );
                     }
                 }
             }
@@ -251,7 +273,7 @@ namespace UltraMapper.MappingExpressionBuilders
             //we can try to reserve just the right capacity thus avoiding reallocations.
             //If the source collection implements ICollection we can read 'Count' property without any iteration.
 
-            if( context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE
+            if( context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE
                 && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
                 var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
@@ -260,6 +282,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
                     var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
                         BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
+
                     if( getCountProperty == null )
                     {
                         //ICollection<T> interface implementation is injected in the Array class at runtime.
@@ -292,6 +315,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( context.TargetMember.Type.IsInterface && (context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) ||
                 targetType.IsAssignableFrom( sourceType ) || sourceType.ImplementsInterface( targetType )) )
             {
+                //TODO: this need to be coded much more clearly!
                 var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
                     context.TargetMember.Type, context.Options );
 
@@ -315,8 +339,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 var makeGenericMethod = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
                 var makeGenericType = typeof( Type ).GetMethod( nameof( Type.MakeGenericType ) );
 
-                var arrayParameter = Expression.Parameter( typeof( List<Type> ), "pararray" );
-                var arrayParameter2 = Expression.Parameter( typeof( List<Type> ), "pararray2" );
+                var arrayParameter = Expression.Parameter( typeof( List<Type> ), "array" );
+                var arrayParameter2 = Expression.Parameter( typeof( List<Type> ), "array2" );
 
                 var toArray = typeof( Enumerable )
                     .GetMethod( nameof( Enumerable.ToArray ) )
@@ -336,8 +360,6 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
                     Expression.Assign( arrayParameter2, Expression.New( typeof( List<Type> ) ) ),
 
-                    Expression.Invoke( debugExp, context.SourceMemberValueGetter ),
-
                     Expression.Call( arrayParameter2, addType, Expression.Constant( collectionContext.TargetCollectionElementType ) ),
                     Expression.Call( arrayParameter, addType, Expression.Call( getSourceTypeGenericDefinition, makeGenericType, parArray2 ) ),
 
@@ -351,4 +373,3 @@ namespace UltraMapper.MappingExpressionBuilders
         }
     }
 }
-

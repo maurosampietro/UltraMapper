@@ -10,7 +10,7 @@ namespace UltraMapper.Internals
 {
     public sealed class TypeMapping : ITypeOptions, IMapping
     {
-        //Each source and target member is instantiated only once per typemapping
+        //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
         private readonly Dictionary<MemberInfo, MappingSource> _sourceProperties
             = new Dictionary<MemberInfo, MappingSource>();
@@ -37,42 +37,6 @@ namespace UltraMapper.Internals
             this.GlobalConfiguration = globalConfig;
             this.TypePair = typePair;
             this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
-
-            MapByConvention();
-        }
-
-        private void MapByConvention()
-        {
-            foreach( var convention in GlobalConfiguration.Conventions )
-            {
-                var memberPairings = convention.MapByConvention( TypePair.SourceType, TypePair.TargetType );
-                foreach( var memberPair in memberPairings )
-                {
-                    var sourceMemberGetterExpression = memberPair.SourceMemberAccess.GetGetterLambdaExpression();
-                    LambdaExpression targetMemberGetterExpression = null;
-                    try
-                    {
-                        targetMemberGetterExpression = memberPair.TargetMemberAccess.GetGetterLambdaExpression();
-                    }
-                    catch( Exception )
-                    {
-
-                    }
-
-                    var targetMemberSetterExpression = memberPair.TargetMemberAccess.GetSetterLambdaExpression();
-
-                    var mappingSource = GetMappingSource( memberPair.SourceMemberAccess.Last(),
-                        sourceMemberGetterExpression );
-
-                    var mappingTarget = GetMappingTarget( memberPair.TargetMemberAccess.Last(),
-                        targetMemberGetterExpression, targetMemberSetterExpression );
-
-                    var mapping = GetMemberMapping( mappingSource, mappingTarget );
-                    mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
-
-                    this.MemberMappings[ mappingTarget ] = mapping;
-                }
-            }
         }
 
         public LambdaExpression CustomConverter { get; set; }
@@ -93,13 +57,13 @@ namespace UltraMapper.Internals
             set { _ignoreMappingResolvedByConvention = value; }
         }
 
-        private ReferenceMappingStrategies? _referenceMappingStrategy;
-        public ReferenceMappingStrategies ReferenceMappingStrategy
+        private ReferenceBehaviors? _referenceMappingStrategy;
+        public ReferenceBehaviors ReferenceBehavior
         {
             get
             {
                 if( _referenceMappingStrategy == null )
-                    return GlobalConfiguration.ReferenceMappingStrategy;
+                    return GlobalConfiguration.ReferenceBehavior;
 
                 return _referenceMappingStrategy.Value;
             }
@@ -107,13 +71,13 @@ namespace UltraMapper.Internals
             set { _referenceMappingStrategy = value; }
         }
 
-        private CollectionMappingStrategies? _collectionMappingStrategy;
-        public CollectionMappingStrategies CollectionMappingStrategy
+        private CollectionBehaviors? _collectionMappingStrategy;
+        public CollectionBehaviors CollectionBehavior
         {
             get
             {
                 if( _collectionMappingStrategy == null )
-                    return GlobalConfiguration.CollectionMappingStrategy;
+                    return GlobalConfiguration.CollectionBehavior;
 
                 return _collectionMappingStrategy.Value;
             }
@@ -187,15 +151,24 @@ namespace UltraMapper.Internals
         }
 
         public MappingTarget GetMappingTarget( MemberInfo targetMember,
-            LambdaExpression targetMemberGetterExpression, LambdaExpression targetMemberSetterExpression )
+            LambdaExpression targetMemberGetter, LambdaExpression targetMemberSetter )
         {
             return _targetProperties.GetOrAdd( targetMember,
-                () => new MappingTarget( targetMemberSetterExpression, targetMemberGetterExpression ) );
+                () => new MappingTarget( targetMemberSetter, targetMemberGetter ) );
         }
 
-        public MemberMapping GetMemberMapping( MappingSource mappingSource, MappingTarget mappingTarget )
+        public MappingSource GetMappingSource( MemberInfo sourceMember,
+            MemberAccessPath sourceMemberPath )
         {
-            return new MemberMapping( this, mappingSource, mappingTarget );
+            return _sourceProperties.GetOrAdd( sourceMember,
+                () => new MappingSource( sourceMemberPath ) );
+        }
+
+        public MappingTarget GetMappingTarget( MemberInfo targetMember,
+            MemberAccessPath targetMemberPath )
+        {
+            return _targetProperties.GetOrAdd( targetMember,
+                () => new MappingTarget( targetMemberPath ) );
         }
     }
 }

@@ -15,13 +15,13 @@ namespace UltraMapper.Internals
             var type = memberInfo as Type;
             if( type != null ) return type;
 
-            var field = (memberInfo as FieldInfo);
+            var field = memberInfo as FieldInfo;
             if( field != null ) return field.FieldType;
 
-            var property = (memberInfo as PropertyInfo);
+            var property = memberInfo as PropertyInfo;
             if( property != null ) return property.PropertyType;
 
-            var method = (memberInfo as MethodInfo);
+            var method = memberInfo as MethodInfo;
             if( method != null )
             {
                 if( method.IsGetterMethod() )
@@ -30,7 +30,8 @@ namespace UltraMapper.Internals
                 if( method.IsSetterMethod() )
                     return method.GetParameters()[ 0 ].ParameterType;
 
-                throw new ArgumentException( "Only methods in the form of (T)Get_Value() or (void)Set_Value(T value) are supported." );
+                throw new ArgumentException( "Only methods in the form of (T)Get_Value() " +
+                    "or (void)Set_Value(T value) are supported." );
             }
 
             throw new ArgumentException( $"'{memberInfo}' is not supported." );

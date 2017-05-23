@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
+using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -32,6 +33,15 @@ namespace UltraMapper.MappingExpressionBuilders
         protected override Type GetTemporaryCollectionType( CollectionMapperContext context )
         {
             return typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
+        }
+
+        protected override Expression GetMemberNewInstance( MemberMappingContext context, CollectionMapperContext collectionContext )
+        {
+            var targetConstructor = context.TargetMember.Type.GetConstructor(
+               new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
+
+            return Expression.New( targetConstructor, 
+                Expression.New( targetConstructor, context.SourceMember ) );
         }
     }
 }

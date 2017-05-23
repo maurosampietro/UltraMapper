@@ -5,10 +5,11 @@ using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.Conventions;
 using System.Collections;
+using System.Linq;
 
 namespace UltraMapper
 {
-    public enum ReferenceMappingStrategies
+    public enum ReferenceBehaviors
     {
         /// <summary>
         /// Creates a new instance, but only if the reference has not been mapped and tracked yet.
@@ -30,7 +31,7 @@ namespace UltraMapper
         USE_TARGET_INSTANCE_IF_NOT_NULL
     }
 
-    public enum CollectionMappingStrategies
+    public enum CollectionBehaviors
     {
         /// <summary>
         /// Keeps using the input collection (same reference). 
@@ -56,8 +57,8 @@ namespace UltraMapper
 
     public interface IMappingOptions
     {
-        CollectionMappingStrategies CollectionMappingStrategy { get; set; }
-        ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
+        CollectionBehaviors CollectionBehavior { get; set; }
+        ReferenceBehaviors ReferenceBehavior { get; set; }
 
         LambdaExpression CollectionItemEqualityComparer { get; set; }
         LambdaExpression CustomTargetConstructor { get; set; }
@@ -87,21 +88,21 @@ namespace UltraMapper
         /// </summary>
         public bool IgnoreMemberMappingResolvedByConvention { get; set; }
 
-        public CollectionMappingStrategies CollectionMappingStrategy { get; set; }
-        public ReferenceMappingStrategies ReferenceMappingStrategy { get; set; }
+        public CollectionBehaviors CollectionBehavior { get; set; }
+        public ReferenceBehaviors ReferenceBehavior { get; set; }
 
         public List<IMappingExpressionBuilder> Mappers { get; set; }
         public MappingConventions Conventions { get; set; }
 
         public Configuration( Action<Configuration> config = null )
         {
+            this.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+            this.CollectionBehavior = CollectionBehaviors.RESET;
+
             this.Conventions = new MappingConventions( cfg =>
             {
                 cfg.GetOrAdd<DefaultConvention>();
             } );
-
-            this.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
-            this.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
 
             this.Mappers = new List<IMappingExpressionBuilder>()
             {
@@ -136,13 +137,12 @@ namespace UltraMapper
         {
             var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
             typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-            typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
+            typeMapping.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+            typeMapping.CollectionBehavior = CollectionBehaviors.UPDATE;
             typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
         }
-
 
         //public MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>> MapTypes<TSource, TTarget>(
         //    IEnumerable<TSource> source, IEnumerable<TTarget> target,
@@ -224,28 +224,44 @@ namespace UltraMapper
         }
         #endregion
 
-        public bool ContainsMapping( TypeMapping typeMapping )
-        {
-            return _typeMappings.ContainsKey( typeMapping.TypePair );
-        }
-
-        internal bool ContainsMapping( Type source, Type target )
-        {
-            var typePair = new TypePair( source, target );
-            return _typeMappings.ContainsKey( typePair );
-        }
-
         private TypeMapping GetTypeMapping( Type source, Type target )
         {
             var typePair = new TypePair( source, target );
 
-            return _typeMappings.GetOrAdd( typePair,
-                () => new TypeMapping( this, typePair ) );
+            return _typeMappings.GetOrAdd( typePair, () =>
+            {
+                var typeMapping = new TypeMapping( this, typePair );
+                this.MapByConvention( typeMapping );
+                return typeMapping;
+            } );
         }
 
         public TypeMapping this[ Type source, Type target ]
         {
             get { return GetTypeMapping( source, target ); }
+        }
+
+        private void MapByConvention( TypeMapping typeMapping )
+        { 
+            foreach( var convention in Conventions )
+            {
+                var memberPairings = convention.MapByConvention(
+                    typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
+
+                foreach( var memberPair in memberPairings )
+                {
+                    var sourceMember = memberPair.SourceMemberAccess.Last();
+                    var mappingSource = typeMapping.GetMappingSource( sourceMember, memberPair.SourceMemberAccess );
+
+                    var targetMember = memberPair.TargetMemberAccess.Last();
+                    var mappingTarget = typeMapping.GetMappingTarget( targetMember, memberPair.TargetMemberAccess );
+
+                    var mapping = new MemberMapping( typeMapping, mappingSource, mappingTarget );
+                    mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
+
+                    typeMapping.MemberMappings[ mappingTarget ] = mapping;
+                }
+            }
         }
     }
 }

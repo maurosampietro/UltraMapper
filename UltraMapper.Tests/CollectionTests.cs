@@ -143,8 +143,8 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.ReferenceMappingStrategy =
-                    ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                cfg.ReferenceBehavior =
+                    ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
             } );
 
             ultraMapper.Map( source, target );
@@ -602,8 +602,8 @@ namespace UltraMapper.Tests
                 cfg.MapTypes<GenericCollections<ComplexType>, GenericCollections<ComplexType>>()
                    .MapMember( a => a.List, b => b.List, memberConfig =>
                    {
-                       memberConfig.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
-                       memberConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                       memberConfig.CollectionBehavior = CollectionBehaviors.RESET;
+                       memberConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                    } );
             } );
 

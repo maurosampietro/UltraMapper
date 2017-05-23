@@ -4,30 +4,46 @@ using System.Linq.Expressions;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.Conventions;
+using System.Collections;
 
 namespace UltraMapper
 {
     //public class TypeConfigurator
     //{
-    //    public readonly GlobalConfiguration GlobalConfiguration;
-
-    //    public TypeConfigurator()
-    //    {
-    //        GlobalConfiguration = new GlobalConfiguration( )
-    //        {
-    //            MappingConvention = new DefaultMappingConvention(),
-    //        };
-    //    }
-
-    //    public TypeConfigurator( Action<TypeConfigurator> config )
-    //        : this() { config?.Invoke( this ); }
-
-    //    public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<TypeMapping> typeMappingConfig = null )
+    //    public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget, TSourceElement, TTargetElement>(
+    //      Expression<Func<TSourceElement, TTargetElement, bool>> elementEqualityComparison )
+    //      where TSource : IEnumerable
+    //      where TTarget : IEnumerable
     //    {
     //        var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+    //        typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
+    //        typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+    //        typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
+    //        typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
+
+    //        return new MemberConfigurator<TSource, TTarget>( typeMapping );
+    //    }
+
+    //    //public MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>> MapTypes<TSource, TTarget>(
+    //    //    IEnumerable<TSource> source, IEnumerable<TTarget> target,
+    //    //    Expression<Func<TSource, TTarget, bool>> elementEqualityComparison )
+    //    //{
+    //    //    var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+    //    //    typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
+    //    //    typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+    //    //    typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
+    //    //    typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
+
+    //    //    return new MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>>( typeMapping );
+    //    //}
+
+    //    public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
+    //    {
+    //        var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+    //        typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
     //        typeMappingConfig?.Invoke( typeMapping );
 
-    //        return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+    //        return new MemberConfigurator<TSource, TTarget>( typeMapping );
     //    }
 
     //    /// <summary>
@@ -39,13 +55,14 @@ namespace UltraMapper
     //    /// <param name="targetConstructor">The conversion mechanism to be used to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
     //    /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
     //    public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-    //        Expression<Func<TSource, TTarget>> converter, Action<TypeMapping> typeMappingConfig = null )
+    //        Expression<Func<TSource, TTarget>> converter, Action<ITypeOptions> typeMappingConfig = null )
     //    {
     //        var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+    //        typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
     //        typeMapping.CustomConverter = converter;
     //        typeMappingConfig?.Invoke( typeMapping );
 
-    //        return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+    //        return new MemberConfigurator<TSource, TTarget>( typeMapping );
     //    }
 
     //    /// <summary>
@@ -57,13 +74,14 @@ namespace UltraMapper
     //    /// <param name="targetConstructor">The expression providing an instance of <typeparamref name="TTarget"/>.</param>
     //    /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
     //    public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-    //        Expression<Func<TTarget>> targetConstructor, Action<TypeMapping> typeMappingConfig = null )
+    //        Expression<Func<TTarget>> targetConstructor, Action<ITypeOptions> typeMappingConfig = null )
     //    {
     //        var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+    //        typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
     //        typeMapping.CustomTargetConstructor = targetConstructor;
     //        typeMappingConfig?.Invoke( typeMapping );
 
-    //        return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
+    //        return new MemberConfigurator<TSource, TTarget>( typeMapping );
     //    }
 
     //    /// <summary>
@@ -76,20 +94,13 @@ namespace UltraMapper
     //    /// <param name="target">Target instance</param>
     //    /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
     //    public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( TSource source, TTarget target,
-    //        Action<TypeMapping> typeMappingConfig = null )
+    //        Action<ITypeOptions> typeMappingConfig = null )
     //    {
     //        var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
+    //        typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
     //        typeMappingConfig?.Invoke( typeMapping );
 
-    //        return new MemberConfigurator<TSource, TTarget>( typeMapping, GlobalConfiguration );
-    //    }
-
-    //    private TypeMapping GetTypeMapping( Type source, Type target )
-    //    {
-    //        var typePair = new TypePair( source, target );
-
-    //        return _typeMappings.GetOrAdd( typePair,
-    //            () => new TypeMapping( GlobalConfiguration, typePair ) );
+    //        return new MemberConfigurator<TSource, TTarget>( typeMapping );
     //    }
     //}
 }

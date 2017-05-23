@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Reflection;
-using UltraMapper.Internals;
+using System.Linq;
 
 namespace UltraMapper.Internals
 {
     public abstract class MappingMemberBase
     {
+        public readonly MemberAccessPath MemberAccessPath;
         public readonly MemberInfo MemberInfo;
         public readonly Type MemberType;
 
@@ -13,9 +14,10 @@ namespace UltraMapper.Internals
 
         public bool Ignore { get; set; }
 
-        internal MappingMemberBase( MemberInfo memberInfo )
+        internal MappingMemberBase( MemberAccessPath memberAccessPath )
         {
-            this.MemberInfo = memberInfo;
+            this.MemberAccessPath = memberAccessPath;
+            this.MemberInfo = memberAccessPath.Last();
             this.MemberType = this.MemberInfo.GetMemberType();
 
             _toString = new Lazy<string>( () =>

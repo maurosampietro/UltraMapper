@@ -21,6 +21,7 @@ namespace UltraMapper.Conventions
             this.SourceMemberProvider = new SourceMemberProvider();
             this.TargetMemberProvider = new TargetMemberProvider();
             this.Stringsplitter = new StringSplitter( StringSplittingRules.PascalCase );
+            this.MatchingRules = new MatchingRules();
         }
 
         public IEnumerable<MemberPair> MapByConvention( Type source, Type target )

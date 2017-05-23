@@ -8,6 +8,7 @@ using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 using UltraMapper.Conventions;
 using UltraMapper;
+using System.Linq.Expressions;
 
 namespace UltraMapper.Tests
 {

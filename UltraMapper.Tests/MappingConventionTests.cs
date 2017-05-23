@@ -85,18 +85,18 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-                cfg.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
-                cfg.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                cfg.CollectionBehavior = CollectionBehaviors.UPDATE;
+                cfg.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
 
                 cfg.MapTypes<TestType, TestType>( typeConfig =>
                 {
-                    typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
-                    typeConfig.CollectionMappingStrategy = CollectionMappingStrategies.RESET;
+                    typeConfig.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                    typeConfig.CollectionBehavior = CollectionBehaviors.RESET;
                 } )
                 .MapMember( s => s.List1, t => t.List1, memberConfig =>
                 {
-                    memberConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-                    memberConfig.CollectionMappingStrategy = CollectionMappingStrategies.MERGE;
+                    memberConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                    memberConfig.CollectionBehavior = CollectionBehaviors.MERGE;
                 } );
 
             } );
@@ -300,7 +300,8 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-                cfg.Conventions.GetOrAdd<ProjectionConvention>()
+                cfg.Conventions
+                    .GetOrAdd<ProjectionConvention>()
                     .GetOrAdd<DefaultConvention>( convention =>
                     {
                         convention.SourceMemberProvider.IgnoreMethods = false;

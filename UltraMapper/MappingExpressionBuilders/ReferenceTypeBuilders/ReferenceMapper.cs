@@ -93,8 +93,8 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             Expression newInstanceExp = this.GetNewTargetInstance( context );
 
-            bool isCreateNewInstance = context.Options.ReferenceMappingStrategy ==
-                ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+            bool isCreateNewInstance = context.Options.ReferenceBehavior ==
+                ReferenceBehaviors.CREATE_NEW_INSTANCE;
 
             if( isCreateNewInstance || context.TargetMemberValueGetter == null )
                 return Expression.Assign( context.TargetMember, newInstanceExp );

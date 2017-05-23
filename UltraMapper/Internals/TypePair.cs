@@ -9,7 +9,7 @@ namespace UltraMapper.Internals
         public readonly Type TargetType;
 
         private readonly Lazy<string> _toString;
-        private int _hashcode;
+        private int? _hashcode;
 
         public TypePair( Type sourceType, Type targetType )
         {
@@ -24,7 +24,7 @@ namespace UltraMapper.Internals
                 return $"[{sourceTypeName}, {targetTypeName}]";
             } );
 
-            _hashcode = 0;
+            _hashcode = null;
         }
 
         public override bool Equals( object obj )
@@ -37,13 +37,13 @@ namespace UltraMapper.Internals
 
         public override int GetHashCode()
         {
-            if( _hashcode == 0 )
+            if( _hashcode == null )
             {
                 _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
                     ^ this.TargetType.GetHashCode();
             }
 
-            return _hashcode;
+            return _hashcode.Value;
         }
 
         public override string ToString()

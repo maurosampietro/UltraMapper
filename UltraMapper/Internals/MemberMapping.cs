@@ -6,8 +6,6 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public enum MappingResolution { RESOLVED_BY_CONVENTION, USER_DEFINED }
-
     public class MemberMapping : IMemberOptions, IMapping
     {
         private readonly Lazy<string> _toString;
@@ -24,10 +22,8 @@ namespace UltraMapper.Internals
             this.SourceMember = sourceMember;
             this.TargetMember = targetMember;
 
-            _toString = new Lazy<string>( () =>
-            {
-                return $"{this.SourceMember} -> {this.TargetMember}";
-            } );
+            _toString = new Lazy<string>( () => 
+                $"{this.SourceMember} -> {this.TargetMember}" );
         }
 
         public MappingResolution MappingResolution { get; internal set; }
@@ -91,17 +87,17 @@ namespace UltraMapper.Internals
             set { _customTargetConstructor = value; }
         }
 
-        private ReferenceMappingStrategies? _referenceMappingStrategy;
-        public ReferenceMappingStrategies ReferenceMappingStrategy
+        private ReferenceBehaviors? _referenceMappingStrategy;
+        public ReferenceBehaviors ReferenceBehavior
         {
             get
             {
                 if( _referenceMappingStrategy == null )
                 {
                     if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
-                        return MemberTypeMapping.ReferenceMappingStrategy;
+                        return MemberTypeMapping.ReferenceBehavior;
 
-                    return InstanceTypeMapping.ReferenceMappingStrategy;
+                    return InstanceTypeMapping.ReferenceBehavior;
                 }
 
                 return _referenceMappingStrategy.Value;
@@ -110,17 +106,17 @@ namespace UltraMapper.Internals
             set { _referenceMappingStrategy = value; }
         }
 
-        private CollectionMappingStrategies? _collectionMappingStrategy;
-        public CollectionMappingStrategies CollectionMappingStrategy
+        private CollectionBehaviors? _collectionMappingStrategy;
+        public CollectionBehaviors CollectionBehavior
         {
             get
             {
                 if( _referenceMappingStrategy == null )
                 {
                     if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
-                        return MemberTypeMapping.CollectionMappingStrategy;
+                        return MemberTypeMapping.CollectionBehavior;
 
-                    return InstanceTypeMapping.CollectionMappingStrategy;
+                    return InstanceTypeMapping.CollectionBehavior;
                 }
 
                 return _collectionMappingStrategy.Value;

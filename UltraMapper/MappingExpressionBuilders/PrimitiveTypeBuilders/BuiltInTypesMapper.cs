@@ -15,8 +15,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 && target.IsBuiltInType( false );
 
             return (areTypesBuiltIn ) && (source == target ||
-                    source.IsImplicitlyConvertibleTo( target ) ||
-                    source.IsExplicitlyConvertibleTo( target ));
+                source.IsImplicitlyConvertibleTo( target ) ||
+                source.IsExplicitlyConvertibleTo( target ));
         }
 
         protected override Expression GetValueExpression( MapperContext context )

@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
 {
@@ -77,17 +79,13 @@ namespace UltraMapper.Tests
             {
                 cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
                 {
-                    typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                    typeConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                 } );
 
                 cfg.MapTypes<FirstLevel, FirstLevel>()
-                    //nested property getter: ok
                     .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
-                    //nested mixed member-type getter: ok
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
-                    //nested multiple method getter
                     .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
-                    //nested mixed member-type getter and setter method: ok
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
                         ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
             } );
@@ -98,99 +96,151 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-        //[TestMethod]
-        //public void ManualFlatteningNullSourceMembers()
-        //{
-        //    var source = new FirstLevel();
+        [TestMethod]
+        public void ManualFlatteningNullSourceMembers()
+        {
+            var source = new FirstLevel();
 
-        //    var target = new FirstLevel()
-        //    {
-        //        A = "first",
+            var target = new FirstLevel()
+            {
+                A = "first",
 
-        //        SecondLevel = new SecondLevel()
-        //        {
-        //            A = "suka",
+                SecondLevel = new SecondLevel()
+                {
+                    A = "suka",
 
-        //            ThirdLevel = new ThirdLevel()
-        //            {
-        //                A = "suka"
-        //            }
-        //        }
-        //    };
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "suka"
+                    }
+                }
+            };
 
-        //    var ultraMapper = new Mapper( cfg =>
-        //    {
-        //        cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
-        //        {
-        //            typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-        //        } );
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
+                {
+                    typeConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                } );
 
-        //        cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => { typeConfig.IgnoreMemberMappingResolvedByConvention = true; } )
-        //            .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
-        //            .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
-        //            .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
-        //            .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
-        //                ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
-        //    } );
+                cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => typeConfig.IgnoreMemberMappingResolvedByConvention = true )
+                    .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
+                    .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
+                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
+            } );
 
-        //    ultraMapper.Map( source, target );
+            ultraMapper.Map( source, target );
 
-        //    bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-        //    Assert.IsTrue( isResultOk );
-        //}
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
 
-        //[TestMethod]
-        //public void ManualFlatteningNullTargetMembers()
-        //{
-        //    var source = new FirstLevel()
-        //    {
-        //        A = "first",
+        [TestMethod]
+        public void ManualFlatteningNullTargetMembers()
+        {
+            var source = new FirstLevel()
+            {
+                A = "first",
 
-        //        SecondLevel = new SecondLevel()
-        //        {
-        //            A = "second",
+                SecondLevel = new SecondLevel()
+                {
+                    A = "second",
 
-        //            ThirdLevel = new ThirdLevel()
-        //            {
-        //                A = "third"
-        //            }
-        //        }
-        //    };
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "third"
+                    }
+                }
+            };
 
-        //    var target = new FirstLevel()
-        //    {
-        //        //A = "first",
+            var target = new FirstLevel()
+            {
+                //A = "first",
 
-        //        //SecondLevel = new SecondLevel()
-        //        //{
-        //        //    A = "suka",
+                //SecondLevel = new SecondLevel()
+                //{
+                //    A = "suka",
 
-        //        //    ThirdLevel = new ThirdLevel()
-        //        //    {
-        //        //        A = "suka"
-        //        //    }
-        //        //}
-        //    };
+                //    ThirdLevel = new ThirdLevel()
+                //    {
+                //        A = "suka"
+                //    }
+                //}
+            };
 
-        //    var ultraMapper = new Mapper( cfg =>
-        //    {
-        //        cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
-        //        {
-        //            typeConfig.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-        //        } );
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
+                {
+                    typeConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                } );
 
-        //        cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => { typeConfig.IgnoreMemberMappingResolvedByConvention = true; } )
-        //            .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
-        //            .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
-        //            .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
-        //            .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
-        //                ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
-        //    } );
+                cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => typeConfig.IgnoreMemberMappingResolvedByConvention = true )
+                    .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
+                    .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
+                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
+                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
+            } );
 
-        //    ultraMapper.Map( source, target );
+            ultraMapper.Map( source, target );
 
-        //    bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-        //    Assert.IsTrue( isResultOk );
-        //}
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void BuildGetterWithNullChecks()
+        {
+            Expression<Func<FirstLevel, string>> selector = t => t.SecondLevel.ThirdLevel.A;
+
+            var accessPath = selector.ExtractMember();
+            var expression = accessPath.GetGetterLambdaExpressionCheckNulls();
+            var functor = (Func<FirstLevel, string>)expression.Compile();
+
+            // LEVEL 1
+            var source = new FirstLevel();
+            var result = functor( source );
+
+            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
+
+            // LEVEL 2
+            source = new FirstLevel()
+            {
+                SecondLevel = new SecondLevel()
+            };
+
+            result = functor( source );
+            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
+
+            // LEVEL 3
+            source = new FirstLevel()
+            {
+                SecondLevel = new SecondLevel()
+                {
+                    ThirdLevel = new ThirdLevel()
+                }
+            };
+
+            result = functor( source );
+            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
+
+            // LEVEL 4
+            source = new FirstLevel()
+            {
+                SecondLevel = new SecondLevel()
+                {
+                    ThirdLevel = new ThirdLevel()
+                    {
+                        A = "Ok"
+                    }
+                }
+            };
+
+            result = functor( source );
+            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
+        }
     }
 }

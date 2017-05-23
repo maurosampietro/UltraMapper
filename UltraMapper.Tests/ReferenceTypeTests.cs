@@ -100,8 +100,8 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.ReferenceMappingStrategy =
-                    ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                cfg.ReferenceBehavior =
+                    ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
             } );
 
             ultraMapper.Map( source, target );
@@ -143,8 +143,8 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.ReferenceMappingStrategy =
-                    ReferenceMappingStrategies.CREATE_NEW_INSTANCE;
+                cfg.ReferenceBehavior =
+                    ReferenceBehaviors.CREATE_NEW_INSTANCE;
             } );
 
             ultraMapper.Map( source, target );

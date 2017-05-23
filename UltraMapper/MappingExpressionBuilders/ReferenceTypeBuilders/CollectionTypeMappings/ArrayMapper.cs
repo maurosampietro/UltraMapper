@@ -54,13 +54,6 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        //protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
-        //{
-        //    //'Item' is the default name of an indexer
-        //    return context.TargetInstance.Type.GetMethod( "SetValue", BindingFlags.Instance | BindingFlags.Public,
-        //        null, new Type[] { context.TargetCollectionElementType, typeof( int ) }, null );
-        //}
-
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar )
@@ -76,7 +69,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                 (
-                    Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ), 
+                    Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ),
                         itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, itemMapping.Parameters[ 0 ].Name ) ),
 
                     Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
@@ -108,11 +101,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override Expression GetNewTargetInstance( MemberMappingContext context )
         {
-            //if( context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL )
-            //{
-            //    if( context.SourceMember.Count < context.TargetMember.Count )
-            //        return base.GetNewTargetInstance( context );
-            //}
+            if( context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
+            {
+                //It's up to the user to ensure that the target instance has enough room 
+                //to hold all the elements. We don't check Source.Length <= Target.Length
+                return base.GetNewTargetInstance( context );
+            }
 
             var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
 
@@ -123,8 +117,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( getCountProperty == null )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
-                //Array implements ICollection.Count explicitly. 
-                //For simplicity, we just look for property Length :)
+                //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
                 getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
             }
 

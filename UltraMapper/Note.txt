@@ -1,7 +1,7 @@
 ﻿
 TODO:
 
-- ArrayMapper do not implement ReferenceMappingStrategies and CollectionMappingStrategies.
+- ArrayMapper does not handle CollectionBehaviors.
 
 - Automatic reverse mapping (at the time a reverse mapping is resolved by convention. Take into account manual overrides.)
 
@@ -9,23 +9,36 @@ TODO:
 
 - Object to Object mapping should inspect object types and use ReferenceMapper.
   At this time it copies the reference value (no mapping at all). Remove object from built in types.
+  [This is somehow solved, as we faced a similar issue with interfaces]
 
 - Configuration inheritance (ie. IgnoreConvention)
 - Abstract and base classes map with derived types inheriting the configuration
 - Simple members inherits type mapping configuration BUT complex types do not.
+- Member configuration should work regardless the type of the members involved.
+  This would solve EntityFramework problems with DynamicProxies not reading the 
+  configuration (stored by type and not taken into account because concrete object type != dynamic proxied type).
+  Type configuration, instead, obviously should work only exactly for the specified types
 
 - VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
 
 - Multidimensional/jagged arrays; 
 
-- When working with interface if the source has an instance we use the same type by convention 
+- When working with interfaces if the source has a member instantiated, we use the same type on the target (by convention)
   but i'm not checking if the source is null.
   
+- Configurators need extra overloads to cover target member mapping via methods Get/Set
+  (both untyped (MemberInfo), and strongly types (Lambdas) helpers are missing).
+
+OPTIMIZATIONS:
+
+- Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
+  but here we do a lot of additional work that should be cached and could even be shared among various configuration instances. 
+
 KNOWN (POTENTIAL) PROBLEMS:
 
-- Configurations can be shared, but not susequently edited because conventions and expression builders are not run again.
-  Introduce a seal mechanism to inform the user or a configuration refresh mechanism. 
+- Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
+  Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
 
 - When manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
   all instances referred by the selector (both on source and target) must be instantiated. 
@@ -35,16 +48,20 @@ KNOWN (POTENTIAL) PROBLEMS:
   ReferenceMappingStrategy = USE_TARGET_INSTANCE_IF_NOT_NULL.
   
   SOURCE SIDE: An automatic mechanism checking for null reference for each reference
-  access could solve the problem on source side but implies the splitting and the analysis of the selctor.
+  access could solve the problem on source side but implies the splitting and the analysis of the selector.
+	
+		(a method called BuildGetterWithNullChecks is available. Its integration involves
+		managing structs and primitive types as Nullable<> and need further research.)
   
   TARGET SIDE: An automatic mechanism instantiating a new instance if a null reference is found could be useful 
-  to solve the problem on target side but implies the splitting and the analysis of the selctor.
+  to solve the problem on target side but implies the splitting and the analysis of the selector.
+  Moreover what do we do if CustomConstructors are involved?
 
 - Collection mapping strategies: when updating order is not preserved 
   (this could be right since it is implied that we keep using the existing target collection).
 
 - a. Reference type's CustomConverters do not recurse on inner references.
-  (this might be correct since the entire mapping is delegated to the user).   
+     (this might be correct since the entire mapping is delegated to the user).   
   b. CustomConverters do not add references to the ReferenceTracker.
 
 - Mapping types not providing a parameterless constructor directly is probably feasible but would need a big refactor.

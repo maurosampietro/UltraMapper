@@ -13,15 +13,17 @@ namespace UltraMapper.Internals
         private static string invalidExpressionMsg =
             "Invalid expression. Please select a member from your model (eg. x => x.MyProperty)";
 
-        public static MemberInfo ExtractMember( this Expression method )
+        public static MemberAccessPath ExtractMember( this Expression method )
         {
+            var memberAcessPath = new MemberAccessPath();
+
             var lambda = method as LambdaExpression;
             if( lambda == null )
                 throw new InvalidCastException( "Invalid lambda expression" );
 
             /*
              For value-types automatic boxing operations are inserted as Convert(x).
-             Multiple consecutive calls are possible.            
+             Multiple consecutive calls to Convert() are possible.            
              */
 
             MemberExpression memberExpression = null;
@@ -33,13 +35,22 @@ namespace UltraMapper.Internals
                     expBody = ((UnaryExpression)expBody).Operand as Expression;
 
                 else if( expBody.NodeType == ExpressionType.Call )
-                    return ((MethodCallExpression)expBody).Method;
+                {
+                    memberAcessPath.Add( ((MethodCallExpression)expBody).Method );
+                    return memberAcessPath;
+                }
 
                 else if( expBody.NodeType == ExpressionType.Parameter )
-                    return ((ParameterExpression)expBody).Type;
+                {
+                    memberAcessPath.Add( ((ParameterExpression)expBody).Type );
+                    return memberAcessPath;
+                }
 
                 else if( expBody.NodeType == ExpressionType.Constant )
-                    return ((ConstantExpression)expBody).Type;
+                {
+                    memberAcessPath.Add( ((ConstantExpression)expBody).Type );
+                    return memberAcessPath;
+                }
 
                 else if( expBody.NodeType == ExpressionType.Assign )
                     expBody = ((BinaryExpression)expBody).Left;
@@ -77,9 +88,11 @@ namespace UltraMapper.Internals
 
                 member = member.GetMemberType().GetMember( memberName,
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic )[ 0 ];
+
+                memberAcessPath.Add( member );
             }
 
-            return member;
+            return memberAcessPath;
         }
 
         private static Stack<Expression> GetNaturalExpressionAccessOrder( Expression expression )
@@ -150,7 +163,7 @@ namespace UltraMapper.Internals
                )
             );
         }
- 
+
         //public static Expression For( ParameterExpression loopVar, Expression initValue,
         //    Expression condition, Expression increment, Expression loopContent )
         //{
@@ -317,7 +330,7 @@ namespace UltraMapper.Internals
 
     internal static class MemberAccessPathExpressionBuilder
     {
-        public static LambdaExpression GetGetterLambdaExpression( this MemberAccessPath memberAccessPath )
+        internal static LambdaExpression GetGetterLambdaExpression( this MemberAccessPath memberAccessPath )
         {
             var instanceType = memberAccessPath.First().ReflectedType;
             var returnType = memberAccessPath.Last().GetMemberType();
@@ -336,7 +349,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, accessPath, accessInstance );
         }
 
-        public static LambdaExpression GetSetterLambdaExpression( this MemberAccessPath memberAccessPath )
+        internal static LambdaExpression GetSetterLambdaExpression( this MemberAccessPath memberAccessPath )
         {
             var instanceType = memberAccessPath.First().ReflectedType;
             var valueType = memberAccessPath.Last().GetMemberType();
@@ -359,6 +372,49 @@ namespace UltraMapper.Internals
 
             var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
             return LambdaExpression.Lambda( delegateType, accessPath, accessInstance, value );
+        }
+
+        internal static LambdaExpression GetGetterLambdaExpressionCheckNulls( this MemberAccessPath memberAccessPath )
+        {
+            var instanceType = memberAccessPath.First().ReflectedType;
+            var returnType = memberAccessPath.Last().GetMemberType();
+
+            var entryInstance = Expression.Parameter( instanceType, "instance" );
+            var labelTarget = Expression.Label( returnType, "label" );
+
+            Expression accessPath = entryInstance;
+            var memberAccesses = new List<Expression>();
+
+            foreach( var memberAccess in memberAccessPath )
+            {
+                if( memberAccess is MethodInfo )
+                    accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess );
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+
+                memberAccesses.Add( accessPath );
+            }
+
+            var nullConstant = Expression.Constant( null );
+            var returnNull = Expression.Return( labelTarget, Expression.Constant( null, returnType ) );
+
+            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( memberAccess =>
+            {
+                var equalsNull = Expression.Equal( memberAccess, nullConstant );
+                return (Expression)Expression.IfThen( equalsNull, returnNull );
+
+            } ).ToList();
+
+            var exp = Expression.Block
+            (
+                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() ) 
+                    : (Expression)Expression.Empty(),
+
+                Expression.Label( labelTarget, memberAccesses.Last() )
+            );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
+            return LambdaExpression.Lambda( delegateType, exp, entryInstance );
         }
     }
 }
