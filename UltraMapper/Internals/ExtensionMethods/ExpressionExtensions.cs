@@ -113,9 +113,9 @@ namespace UltraMapper.Internals
             return stack;
         }
 
-        public static Expression ReplaceParameter( this Expression expression, ParameterExpression parameter, string name )
+        public static Expression ReplaceParameter( this Expression expression, Expression newExpression, string name )
         {
-            return new ExpressionParameterReplacer( parameter, name ).Visit( expression );
+            return new ExpressionParameterReplacer( newExpression, name ).Visit( expression );
         }
     }
 

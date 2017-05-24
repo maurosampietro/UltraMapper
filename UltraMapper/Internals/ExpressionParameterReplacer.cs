@@ -4,23 +4,23 @@ namespace UltraMapper.Internals
 {
     internal class ExpressionParameterReplacer : ExpressionVisitor
     {
-        private readonly ParameterExpression _parameter;
+        private readonly Expression _expression;
         private readonly string _name;
 
         protected override Expression VisitParameter( ParameterExpression node )
         {
-            if( node.Name == _name && (node.Type == _parameter.Type ||
-                node.Type.IsAssignableFrom( _parameter.Type )) )
+            if( node.Name == _name && (node.Type == _expression.Type ||
+                node.Type.IsAssignableFrom( _expression.Type )) )
             {
-                return base.VisitParameter( _parameter );
+                return _expression;
             }
 
             return base.VisitParameter( node );
         }
 
-        internal ExpressionParameterReplacer( ParameterExpression parameter, string name )
+        internal ExpressionParameterReplacer( Expression expression, string name )
         {
-            _parameter = parameter;
+            _expression = expression;
             _name = name;
         }
     }

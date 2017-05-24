@@ -35,7 +35,7 @@ namespace UltraMapper
         }
 
         private Dictionary<Key, object> _mappings
-            = new Dictionary<Key, object>( 8 );
+            = new Dictionary<Key, object>( 512 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {

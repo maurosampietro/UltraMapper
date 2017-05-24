@@ -27,7 +27,7 @@ namespace UltraMapper.MappingExpressionBuilders
         LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options );
     }
 
-    internal interface IMappingExpressionMember
+    internal interface IMemberMappingExpression
     {
         Expression GetTargetInstanceAssignment( MemberMappingContext memberContext );
     }

@@ -12,7 +12,7 @@ namespace UltraMapper.Tests
     {
         private interface I { int MyProperty { get; set; } }
         private class IA : I { public int MyProperty { get; set; } }
-        private class IB : I { public int MyProperty { get; set; } }
+        private class IB : I { public int MyProperty { get; set; } public int MyProperty2 { get; set; } }
         private class MyType { public I Interface { get; set; } }
 
         private interface I2 { int MyProperty { get; set; } }
@@ -27,12 +27,15 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void DeepCopyWithInterface()
         {
-            var source = new MyType() { Interface = new IB() { MyProperty = 1 } };
+            var source = new MyType() { Interface = new IB() { MyProperty = 1, MyProperty2 = 2 } };
 
             var ultraMapper = new Mapper();
             var target = ultraMapper.Map( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+
+            AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
+            var tt = AutoMapper.Mapper.Map<MyType>( source );
 
             Assert.IsTrue( isResultOk );
             Assert.IsTrue( !Object.ReferenceEquals( source.Interface, target.Interface ) );
@@ -59,7 +62,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void MappingWithInterface()
+        public void MappingWithInterfaceProvideContructor()
         {
             var source = new MyType() { Interface = new IB() { MyProperty = 1 } };
 

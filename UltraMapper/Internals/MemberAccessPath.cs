@@ -11,16 +11,18 @@ namespace UltraMapper.Internals
 {
     public class MemberAccessPath : IEnumerable<MemberInfo>
     {
-        private readonly List<MemberInfo> _memberAccess 
+        private readonly List<MemberInfo> _memberAccess
             = new List<MemberInfo>();
 
-        public void Add( MemberInfo memberInfo ) 
+        public int Count { get { return _memberAccess.Count; } }
+
+        public void Add( MemberInfo memberInfo )
             => _memberAccess.Add( memberInfo );
 
-        public IEnumerator<MemberInfo> GetEnumerator() 
+        public IEnumerator<MemberInfo> GetEnumerator()
             => _memberAccess.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() 
+        IEnumerator IEnumerable.GetEnumerator()
             => this.GetEnumerator();
     }
 }

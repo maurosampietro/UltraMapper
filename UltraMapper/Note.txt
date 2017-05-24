@@ -26,6 +26,10 @@ TODO:
 
 - When working with interfaces if the source has a member instantiated, we use the same type on the target (by convention)
   but i'm not checking if the source is null.
+
+- Should map using the runtime used type which could be a type inherited/derived from the declared type.  
+  If a member is backed by an interface, only interface's member are mapped.
+  If a member is backed by a super class, only superclass' members are mapped
   
 - Configurators need extra overloads to cover target member mapping via methods Get/Set
   (both untyped (MemberInfo), and strongly types (Lambdas) helpers are missing).

@@ -9,7 +9,7 @@ using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
-    public class ReferenceMapper : IMappingExpressionBuilder, IMappingExpressionMember
+    public class ReferenceMapper : IMappingExpressionBuilder, IMemberMappingExpression
     {
         protected readonly Mapper _mapper;
         public readonly Configuration MapperConfiguration;
@@ -150,6 +150,18 @@ namespace UltraMapper.MappingExpressionBuilders
                 );
             }
 
+            ////If we are mapping on the same type we prefer to use exactly the 
+            ////same runtime type used in the source. SHOULD WE?! (By the way not enough. The mapping
+            ////still inspects a class declaration) 
+            //if( context.SourceMember.Type == context.TargetMember.Type )
+            //{
+            //    MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
+            //    var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
+
+            //    return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
+            //        getSourceType, Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type );
+            //}
+
             return Expression.New( context.TargetMember.Type );
         }
 
@@ -160,11 +172,8 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             public int Compare( MemberMapping x, MemberMapping y )
             {
-                var xSetter = x.TargetMember.ValueSetter.ToString();
-                var ySetter = y.TargetMember.ValueSetter.ToString();
-
-                int xCount = xSetter.Split( '.' ).Count();
-                int yCount = ySetter.Split( '.' ).Count();
+                int xCount = x.TargetMember.MemberAccessPath.Count;
+                int yCount = y.TargetMember.MemberAccessPath.Count;
 
                 if( xCount > yCount ) return 1;
                 if( xCount < yCount ) return -1;
@@ -259,7 +268,7 @@ namespace UltraMapper.MappingExpressionBuilders
                             Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
                             Expression.Block
                             (
-                                ((IMappingExpressionMember)mapping.Mapper)
+                                ((IMemberMappingExpression)mapping.Mapper)
                                     .GetTargetInstanceAssignment( memberContext ),
 
                                 //cache reference
@@ -281,25 +290,15 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var memberContext = new MemberMappingContext( mapping );
 
-            ParameterExpression value = Expression.Parameter( mapping.TargetMember.MemberType, "returnValue" );
-
             var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
             var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
 
-            return Expression.Block
-            (
-                new[] { memberContext.SourceMember, value },
+            var valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
+                memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 0 ].Name );
 
-                Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
-
-                Expression.Assign( value, mapping.MappingExpression.Body
-                    .ReplaceParameter( memberContext.SourceMember,
-                        mapping.MappingExpression.Parameters[ 0 ].Name ) ),
-
-                mapping.TargetMember.ValueSetter.Body
-                    .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
-                    .ReplaceParameter( value, targetSetterMemberParamName )
-            );
+            return mapping.TargetMember.ValueSetter.Body
+                .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
+                .ReplaceParameter( valueReaderExp, targetSetterMemberParamName );
         }
         #endregion
     }

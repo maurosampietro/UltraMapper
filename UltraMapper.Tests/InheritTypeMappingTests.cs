@@ -18,6 +18,16 @@ namespace UltraMapper.Tests
             public List<bool> Booleans { get; set; } = new List<bool>();
         }
 
+        public class SubTestClass : TestClass
+        {
+            public int Integer { get; set; }
+        }
+
+        public class Container
+        {
+            public TestClass TestClass { get; set; }
+        }
+
         [TestMethod]
         public void InheritMapping()
         {
@@ -46,6 +56,35 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( target.Strings.Contains( "1" ) &&
                 target.String.Contains( "0" ) );
+        }
+
+        /// <summary>
+        /// Should not map to the declared type,
+        /// but to the runtime used type which could be 
+        /// a type inherited/derived from the declared type
+        /// </summary>
+        [TestMethod]
+        public void ShouldMapToRuntimeUsedType()
+        {
+            var source = new Container()
+            {
+                TestClass = new SubTestClass()
+                {
+                    Boolean = true,
+                    String = "ciao",
+                    Integer = 11
+                }
+            };
+
+            var target = new Container();
+
+            var ultraMapper = new Mapper( );
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.TestClass.GetType() == source.TestClass.GetType() );
+
+            var isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
     }
 }

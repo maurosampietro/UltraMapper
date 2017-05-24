@@ -13,7 +13,6 @@ namespace UltraMapper.MappingExpressionBuilders
         public ConstantExpression TargetNullValue { get; protected set; }
 
         public ParameterExpression ReferenceTracker { get; protected set; }
-
         public ParameterExpression Mapper { get; private set; }
 
         public static MethodInfo RecursiveMapMethodInfo { get; protected set; }
