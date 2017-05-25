@@ -61,12 +61,4 @@ Moreover UltraMapper is:
 - just ~1100 lines of code (more easily maintainable and understandable)
 - developer-friendly (should be easy to contribute, extend and maintain)
 
-What's missing?
---------------------------------
-
-- Dynamic mapper
-- Multidimensional/Jagged arrays, matrix
-- Proper documentation
-- Examples
-
 **ANY FEEDBACK IS WELCOME**
