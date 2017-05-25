@@ -52,7 +52,7 @@ Implemented features:
 - Supports mapping by convention
 - Supports flattening/projections by convention
 - Supports manual flattening/unflattening/projections.
-- Supports simple arrays
+- Supports arrays
 - Supports collections (Dictionary, HashSet, List, LinkedList, ObservableCollection, SortedSet, Stack, Queue)
 - Supports collection merging/updating
 
