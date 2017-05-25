@@ -1,5 +1,4 @@
-﻿using Microsoft.CSharp.RuntimeBinder;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -50,6 +49,11 @@ namespace UltraMapper.MappingExpressionBuilders
             return !target.IsValueType && !builtInTypes;
         }
 
+        protected virtual ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
+        {
+            return new ReferenceMapperContext( source, target, options );
+        }
+
         public virtual LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
         {
             var context = this.GetMapperContext( source, target, options );
@@ -79,19 +83,14 @@ namespace UltraMapper.MappingExpressionBuilders
                 context.ReferenceTracker, context.SourceInstance, context.TargetInstance );
         }
 
-        protected virtual ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
-        {
-            return new ReferenceMapperContext( source, target, options );
-        }
-
         protected virtual Expression GetExpressionBody( ReferenceMapperContext contextObj )
         {
             return Expression.Empty();
         }
 
-        public virtual Expression GetTargetInstanceAssignment( MemberMappingContext context )
+        public virtual Expression GetMemberAssignment( MemberMappingContext context )
         {
-            Expression newInstanceExp = this.GetNewTargetInstance( context );
+            Expression newInstanceExp = this.GetMemberNewInstance( context );
 
             bool isCreateNewInstance = context.Options.ReferenceBehavior ==
                 ReferenceBehaviors.CREATE_NEW_INSTANCE;
@@ -111,7 +110,7 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        protected virtual Expression GetNewTargetInstance( MemberMappingContext context )
+        protected virtual Expression GetMemberNewInstance( MemberMappingContext context )
         {
             if( context.Options.CustomTargetConstructor != null )
                 return Expression.Invoke( context.Options.CustomTargetConstructor );
@@ -131,9 +130,9 @@ namespace UltraMapper.MappingExpressionBuilders
                     .Select( x => x.Method )
                     .First();
 
-                MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
+                MethodInfo getType = typeof( object ).GetMethod( nameof( object.GetType ) );
 
-                var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
+                var getSourceType = Expression.Call( context.SourceMemberValueGetter, getType );
                 var makeGenericMethodInfo = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
                 var arrayParameter = Expression.Parameter( typeof( List<Type> ), "pararray" );
                 var parArray = Expression.Call( null, typeof( Enumerable ).GetMethod( nameof( Enumerable.ToArray ) ).MakeGenericMethod( new[] { typeof( Type ) } ), arrayParameter );
@@ -269,13 +268,13 @@ namespace UltraMapper.MappingExpressionBuilders
                             Expression.Block
                             (
                                 ((IMemberMappingExpression)mapping.Mapper)
-                                    .GetTargetInstanceAssignment( memberContext ),
+                                    .GetMemberAssignment( memberContext ),
 
                                 //cache reference
                                 itemCacheCall,
 
-                                !memberContext.NeedRecursion ? (Expression)Expression.Empty() :
-                                Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
+                                memberContext.InitializationComplete ? (Expression)Expression.Empty() :
+                                    Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
                                     memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                             )
                         )
@@ -291,14 +290,14 @@ namespace UltraMapper.MappingExpressionBuilders
             var memberContext = new MemberMappingContext( mapping );
 
             var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
-            var targetSetterMemberParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+            var targetSetterValueParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
 
             var valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
                 memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 0 ].Name );
 
             return mapping.TargetMember.ValueSetter.Body
                 .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
-                .ReplaceParameter( valueReaderExp, targetSetterMemberParamName );
+                .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
         }
         #endregion
     }

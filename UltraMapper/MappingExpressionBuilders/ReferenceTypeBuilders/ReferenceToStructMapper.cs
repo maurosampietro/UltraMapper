@@ -21,21 +21,13 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var context = this.GetMapperContext( source, target, options );
 
-            var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
-            var memberMappings = this.GetMemberMappings( typeMapping )
-                .ReplaceParameter( context.Mapper, context.Mapper.Name )
-                .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
-                .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
-                .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name );
-
             var expression = Expression.Block
             (
-                new[] { context.Mapper },
-
-                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
-
-                memberMappings,
-                this.GetExpressionBody( context ),
+                base.GetMappingExpression( source, target, options ).Body
+                    .ReplaceParameter( context.Mapper, context.Mapper.Name )
+                    .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
+                    .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name )
+                    .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name ),
 
                 context.TargetInstance
             );

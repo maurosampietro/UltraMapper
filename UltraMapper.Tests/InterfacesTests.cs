@@ -34,9 +34,6 @@ namespace UltraMapper.Tests
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
 
-            AutoMapper.Mapper.Initialize( cfg => cfg.CreateMissingTypeMaps = true );
-            var tt = AutoMapper.Mapper.Map<MyType>( source );
-
             Assert.IsTrue( isResultOk );
             Assert.IsTrue( !Object.ReferenceEquals( source.Interface, target.Interface ) );
         }

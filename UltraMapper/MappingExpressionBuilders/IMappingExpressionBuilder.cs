@@ -29,6 +29,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
     internal interface IMemberMappingExpression
     {
-        Expression GetTargetInstanceAssignment( MemberMappingContext memberContext );
+        Expression GetMemberAssignment( MemberMappingContext memberContext );
     }
 }

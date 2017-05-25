@@ -39,7 +39,7 @@ namespace UltraMapper.MappingExpressionBuilders
         private static MethodInfo GetUltraMapperMapGenericMethodMemberMapping()
         {
             return typeof( Mapper ).GetMethods( BindingFlags.Instance | BindingFlags.NonPublic )
-                .Where( m => m.Name == "Map" )
+                .Where( m => m.Name == nameof( UltraMapper.Mapper.Map ) )
                 .Select( m => new
                 {
                     Method = m,

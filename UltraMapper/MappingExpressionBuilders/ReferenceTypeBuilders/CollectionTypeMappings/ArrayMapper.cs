@@ -23,35 +23,28 @@ namespace UltraMapper.MappingExpressionBuilders
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
         {
             var context = contextObj as CollectionMapperContext;
-
             var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
 
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
             {
-                return Expression.Block
-                (
-                    SimpleCollectionLoop
-                    (
-                        context.SourceInstance, context.SourceCollectionElementType,
-                        context.TargetInstance, context.TargetCollectionElementType,
-                        targetCollectionInsertionMethod,
-                        context.SourceCollectionLoopingVar
-                    )
-                );
-            }
-
-            return Expression.Block
-            (
-                ComplexCollectionLoop
+                return Expression.Block( SimpleCollectionLoop
                 (
                     context.SourceInstance, context.SourceCollectionElementType,
                     context.TargetInstance, context.TargetCollectionElementType,
                     targetCollectionInsertionMethod,
-                    context.SourceCollectionLoopingVar,
-                    context.ReferenceTracker,
-                    context.Mapper
-                )
-            );
+                    context.SourceCollectionLoopingVar
+                ) );
+            }
+
+            return Expression.Block( ComplexCollectionLoop
+            (
+                context.SourceInstance, context.SourceCollectionElementType,
+                context.TargetInstance, context.TargetCollectionElementType,
+                targetCollectionInsertionMethod,
+                context.SourceCollectionLoopingVar,
+                context.ReferenceTracker,
+                context.Mapper
+            ) );
         }
 
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
@@ -77,7 +70,7 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        public override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+        protected override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
             ParameterExpression referenceTracker, ParameterExpression mapper )
@@ -99,32 +92,17 @@ namespace UltraMapper.MappingExpressionBuilders
             ) );
         }
 
-        protected override Expression GetNewTargetInstance( MemberMappingContext context )
+        protected override Expression GetMemberNewInstance( MemberMappingContext context )
         {
             if( context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
             {
                 //It's up to the user to ensure that the target instance has enough room 
                 //to hold all the elements. We don't check Source.Length <= Target.Length
-                return base.GetNewTargetInstance( context );
+                return base.GetMemberNewInstance( context );
             }
 
-            var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
-
-            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-            var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
-                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
-
-            if( getCountProperty == null )
-            {
-                //ICollection<T> interface implementation is injected in the Array class at runtime.
-                //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
-                getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
-            }
-
-            var getCountMethod = getCountProperty.GetGetMethod();
-
-            return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceMember, getCountMethod ) ) );
+            var newInstanceWithReservedCapacity = this.GetNewInstanceWithReservedCapacity( context );
+            return Expression.Assign( context.TargetMember, newInstanceWithReservedCapacity );
         }
     }
 }

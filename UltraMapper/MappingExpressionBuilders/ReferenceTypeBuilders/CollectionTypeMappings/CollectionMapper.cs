@@ -51,7 +51,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 sourceCollectionLoopingVar, loopBody );
         }
 
-        public virtual Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+        protected virtual Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
             ParameterExpression referenceTracker, ParameterExpression mapper )
@@ -81,7 +81,7 @@ namespace UltraMapper.MappingExpressionBuilders
             ) );
         }
 
-        public BlockExpression LookUpBlock( ParameterExpression sourceParam, ParameterExpression targetParam,
+        protected BlockExpression LookUpBlock( ParameterExpression sourceParam, ParameterExpression targetParam,
             ParameterExpression referenceTracker, ParameterExpression mapper )
         {
             Expression itemLookupCall = Expression.Call
@@ -231,7 +231,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.New( targetConstructor, context.SourceMember );
         }
 
-        public override Expression GetTargetInstanceAssignment( MemberMappingContext context )
+        public override Expression GetMemberAssignment( MemberMappingContext context )
         {
             var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
                 context.TargetMember.Type, context.Options );
@@ -239,8 +239,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( collectionContext.IsSourceElementTypeBuiltIn || collectionContext.IsTargetElementTypeBuiltIn )
             {
                 //OPTIMIZATION: If the types involved are primitives of exactly the same type
-                //and we need to create a new instance,
-                //we can use the constructor taking as input the collection and avoid looping
+                //we can use the constructor taking as input the collection and avoid recursion
 
                 if( collectionContext.SourceCollectionElementType == collectionContext.TargetCollectionElementType &&
                     context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE )
@@ -250,8 +249,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     if( targetConstructor != null )
                     {
-                        context.NeedRecursion = false;
-
                         var typeMapping = MapperConfiguration[ context.SourceMember.Type,
                             context.TargetMember.Type ];
 
@@ -262,6 +259,8 @@ namespace UltraMapper.MappingExpressionBuilders
                           .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                           .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
                           .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
+
+                        context.InitializationComplete = true;
 
                         return Expression.Block( Expression.Assign( context.TargetMember,
                             GetMemberNewInstance( context, collectionContext ) ), memberMappings );
@@ -276,32 +275,37 @@ namespace UltraMapper.MappingExpressionBuilders
             if( context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE
                 && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
-                var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
-                if( constructorWithCapacity != null )
-                {
-                    //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-                    var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
-                        BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
-
-                    if( getCountProperty == null )
-                    {
-                        //ICollection<T> interface implementation is injected in the Array class at runtime.
-                        //Array implements ICollection.Count explicitly. 
-                        //For simplicity, we just look for property Length :)
-                        getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
-                    }
-
-                    var getCountMethod = getCountProperty.GetGetMethod();
-
-                    return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
-                        Expression.Call( context.SourceMember, getCountMethod ) ) );
-                }
+                var newInstanceWithReservedCapacity = this.GetNewInstanceWithReservedCapacity( context );
+                if( newInstanceWithReservedCapacity != null )
+                    return Expression.Assign( context.TargetMember, newInstanceWithReservedCapacity );
             }
 
-            return base.GetTargetInstanceAssignment( context );
+            return base.GetMemberAssignment( context );
         }
 
-        protected override Expression GetNewTargetInstance( MemberMappingContext context )
+        protected Expression GetNewInstanceWithReservedCapacity( MemberMappingContext context )
+        {
+            var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
+            if( constructorWithCapacity == null ) return null;
+
+            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
+            var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
+                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
+
+            if( getCountProperty == null )
+            {
+                //ICollection<T> interface implementation is injected in the Array class at runtime.
+                //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
+                getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
+            }
+
+            var getCountMethod = getCountProperty.GetGetMethod();
+
+            return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
+                Expression.Call( context.SourceMember, getCountMethod ) ) );
+        }
+
+        protected override Expression GetMemberNewInstance( MemberMappingContext context )
         {
             if( context.Options.CustomTargetConstructor != null )
                 return Expression.Invoke( context.Options.CustomTargetConstructor );

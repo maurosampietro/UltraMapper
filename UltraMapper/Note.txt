@@ -3,12 +3,13 @@ TODO:
 
 - ArrayMapper does not handle CollectionBehaviors.
 
-- Automatic reverse mapping (at the time a reverse mapping is resolved by convention. Take into account manual overrides.)
+- Automatic reverse mapping (at the time a reverse mapping is a normal mapping
+  encountered at execution time and resolved by convention. Take into account manual overrides.)
 
 - Dynamic mapping
 
 - Object to Object mapping should inspect object types and use ReferenceMapper.
-  At this time it copies the reference value (no mapping at all). Remove object from built in types.
+  At this time it copies the reference value (no mapping at all).
   [This is somehow solved, as we faced a similar issue with interfaces]
 
 - Configuration inheritance (ie. IgnoreConvention)
@@ -22,22 +23,23 @@ TODO:
 - VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
 
-- Multidimensional/jagged arrays; 
-
 - When working with interfaces if the source has a member instantiated, we use the same type on the target (by convention)
   but i'm not checking if the source is null.
 
-- Should map using the runtime used type which could be a type inherited/derived from the declared type.  
-  If a member is backed by an interface, only interface's member are mapped.
-  If a member is backed by a super class, only superclass' members are mapped
+- Should map using the runtime-used type which could be a type inherited/derived from the declared type.  
+  At the moment: 
+	If a member is backed by an interface, only interface's member are mapped.
+	If a member is backed by a super class, only superclass' members are mapped
   
 - Configurators need extra overloads to cover target member mapping via methods Get/Set
   (both untyped (MemberInfo), and strongly types (Lambdas) helpers are missing).
 
+- Multidimensional/jagged arrays; 
+
 OPTIMIZATIONS:
 
 - Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
-  but here we do a lot of additional work that should be cached and could even be shared among various configuration instances. 
+  but here we do a lot of additional work that should be also cached and could even be shared among various configuration instances. 
 
 KNOWN (POTENTIAL) PROBLEMS:
 
