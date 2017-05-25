@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
 
@@ -7,6 +8,7 @@ namespace UltraMapper.MappingExpressionBuilders
     public class ConvertMapper : PrimitiveMapperBase
     {
         private static Type _convertType = typeof( Convert );
+        private static HashSet<TypePair> _supportedConversions = new HashSet<TypePair>();
 
         public ConvertMapper( Configuration configuration )
             : base( configuration ) { }
@@ -20,17 +22,17 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 try
                 {
-                    if( !source.ImplementsInterface( typeof( IConvertible ) ) )
-                        return false;
+                    var typePair = new TypePair( source, target );
+                    if( _supportedConversions.Contains( typePair ) )
+                        return true;
 
-                    //reference types are ok per se; but if mapping to the same 
-                    //type we should use a ReferenceMapper
-                    if( source == target )
+                    if( !source.ImplementsInterface( typeof( IConvertible ) ) )
                         return false;
 
                     var testValue = Activator.CreateInstance( source );
                     Convert.ChangeType( testValue, target );
 
+                    _supportedConversions.Add( typePair );
                     return true;
                 }
                 catch( InvalidCastException )

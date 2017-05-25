@@ -11,15 +11,15 @@ namespace UltraMapper.Internals
         private readonly Lazy<string> _toString;
         private int? _hashcode;
 
-        public TypePair( Type sourceType, Type targetType )
+        public TypePair( Type source, Type target )
         {
-            this.SourceType = sourceType;
-            this.TargetType = targetType;
+            this.SourceType = source;
+            this.TargetType = target;
 
             _toString = new Lazy<string>( () =>
             {
-                string sourceTypeName = sourceType.GetPrettifiedName();
-                string targetTypeName = targetType.GetPrettifiedName();
+                string sourceTypeName = source.GetPrettifiedName();
+                string targetTypeName = target.GetPrettifiedName();
 
                 return $"[{sourceTypeName}, {targetTypeName}]";
             } );
