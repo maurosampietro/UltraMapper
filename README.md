@@ -52,7 +52,7 @@ Implemented features:
 - Supports mapping by convention
 - Supports flattening/projections by convention
 - Supports manual flattening/unflattening/projections.
-- Supports simple arrays
+- Supports arrays
 - Supports collections (Dictionary, HashSet, List, LinkedList, ObservableCollection, SortedSet, Stack, Queue)
 - Supports collection merging/updating
 
@@ -60,13 +60,5 @@ Moreover UltraMapper is:
 - very fast in any scenario (faster than any other .NET mapper i tried). See the [benchmarks](https://github.com/maurosampietro/UltraMapper/wiki/Benchmarks).
 - just ~1100 lines of code (more easily maintainable and understandable)
 - developer-friendly (should be easy to contribute, extend and maintain)
-
-What's missing?
---------------------------------
-
-- Dynamic mapper
-- Multidimensional/Jagged arrays, matrix
-- Proper documentation
-- Examples
 
 **ANY FEEDBACK IS WELCOME**
