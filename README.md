@@ -9,10 +9,10 @@ A nicely coded object-mapper for .NET
 What is UltraMapper?
 --------------------------------
 
-UltraMapper is a tool that allows you to map one object of type T to another object of type V.
+UltraMapper is a .NET mapper, that is, a tool that avoids you the need to write the code needed to copy values from a source object to a target object. It avoids you the need to manually write the (boring) code that reads the value from the source and instantiate/assign the relative member on the target object.
 
-It avoids you the need to manually write the (boring) code that instantiate/assign all the members of the object.
 It can be used to get deep copies of an object.
+
 
 Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
 --------------------------------
