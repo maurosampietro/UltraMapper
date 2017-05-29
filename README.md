@@ -13,6 +13,34 @@ UltraMapper is a .NET mapper, that is, a tool that avoids you the need to write 
 
 It can be used to get deep copies of an object.
 
+Consider this simple class:
+
+````c#
+public class Person
+{
+    public DateTime Birthday { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string EmailAddress { get; set; }
+}
+````
+
+If you wanted a copy of an instance of the above class your should write something like this:
+
+````c#
+clone.Birthday = person.Birthday
+clone.FirstName = person.FirstName
+clone.LastName = person.LastName
+clone.EmailAddress = person.EmailAddress
+````
+
+What if you have hundreads of simple object like the one above to copy, or if the object is more complex, contains references to other objects or collections of other complex object? Would you still map it manually?
+
+With UltraMapper you can solve this problem like this:
+
+````c#
+Person clone = ultraMpper.Map<Person>( source );
+````
 
 Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
 --------------------------------
