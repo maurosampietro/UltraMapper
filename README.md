@@ -9,10 +9,39 @@ A nicely coded object-mapper for .NET
 What is UltraMapper?
 --------------------------------
 
-UltraMapper is a tool that allows you to map one object of type T to another object of type V.
+UltraMapper is a .NET mapper, that is, a tool that avoids you the need to write the code needed to copy values from a source object to a target object. It avoids you the need to manually write the (boring) code that reads the value from the source and instantiate/assign the relative member on the target object.
 
-It avoids you the need to manually write the (boring) code that instantiate/assign all the members of the object.
 It can be used to get deep copies of an object.
+
+Consider this simple class:
+
+````c#
+public class Person
+{
+    public DateTime Birthday { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string EmailAddress { get; set; }
+}
+````
+
+If you wanted a copy of an instance of the above class your should write something like this:
+
+````c#
+var clone = new Person();
+clone.Birthday = person.Birthday
+clone.FirstName = person.FirstName
+clone.LastName = person.LastName
+clone.EmailAddress = person.EmailAddress
+````
+
+What if you had hundreds of simple objects like the one above to copy? What if the object was more complex, contained references to other complex objects or collections of other complex object? Would you still map it manually!?
+
+With UltraMapper you can solve this problem efficiently like this:
+
+````c#
+Person clone = ultraMpper.Map<Person>( person );
+````
 
 Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
 --------------------------------
@@ -45,7 +74,7 @@ Key features
 Implemented features:
 
 - Powerful reference tracking mechanism
-- Powerful type/members configuration override mechanism, with configuration inheritance
+- Powerful type/member configuration override mechanism, with configuration inheritance
 - Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
 - Supports interfaces 
