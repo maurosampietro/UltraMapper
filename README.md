@@ -28,18 +28,19 @@ public class Person
 If you wanted a copy of an instance of the above class your should write something like this:
 
 ````c#
+var clone = new Person();
 clone.Birthday = person.Birthday
 clone.FirstName = person.FirstName
 clone.LastName = person.LastName
 clone.EmailAddress = person.EmailAddress
 ````
 
-What if you have hundreads of simple object like the one above to copy, or if the object is more complex, contains references to other objects or collections of other complex object? Would you still map it manually?
+What if you have hundreds of simple object like the one above to copy, or if the object is more complex, contains references to other objects or collections of other complex object? Would you still map it manually?
 
-With UltraMapper you can solve this problem like this:
+With UltraMapper you can solve this problem efficiently like this:
 
 ````c#
-Person clone = ultraMpper.Map<Person>( source );
+Person clone = ultraMpper.Map<Person>( person );
 ````
 
 Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
