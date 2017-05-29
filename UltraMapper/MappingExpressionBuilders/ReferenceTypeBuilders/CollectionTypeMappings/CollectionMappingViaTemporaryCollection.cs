@@ -81,19 +81,5 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             return typeof( List<> ).MakeGenericType( context.SourceCollectionElementType );
         }
-
-        //protected override Expression GetNewTargetInstanceExpression( MemberMappingContext context )
-        //{
-        //    var constructorWithInputCollection = context.TargetMember.Type.GetConstructors()
-        //        .FirstOrDefault( ctor =>
-        //        {
-        //            var parameters = ctor.GetParameters();
-        //            if( parameters.Length != 1 ) return false;
-
-        //            return parameters[ 0 ].ParameterType.IsEnumerable();
-        //        } );
-
-        //    return Expression.New( constructorWithInputCollection, context.SourceMember );
-        //}
     }
 }

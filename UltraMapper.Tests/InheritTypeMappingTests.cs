@@ -72,13 +72,33 @@ namespace UltraMapper.Tests
                 {
                     Boolean = true,
                     String = "ciao",
-                    Integer = 11
+                    //Integer = 11
                 }
             };
 
+            //scrivere di questo su github: automapper non mappa niente che non sia 
+            //esplicitamente dichiarato con CreateMap.
+            //CreateMissingTypeMaps non so a cosa serve visto che settarlo a true non cambia le cose.
+            //Automapper copia solo il riferimento di ogni cosa non venga esplicitamente mappato.
+            //Se viene mappato un oggetto contenitore, il senso comune dice che tutto
+            //ciò che vi è all'interno dovrebbe essere mappato automaticamente.
+            //Buona fortuna a mappare oggetti complessi che coinvolgono molti tipi.
+            AutoMapper.Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMissingTypeMaps = true;
+                cfg.CreateMap<TestClass, TestClass>();
+                cfg.CreateMap<Container, Container>();
+            } );
+
+            //var configuration = new AutoMapper.MapperConfiguration( 
+            //var executionPlan = configuration.BuildExecutionPlan( typeof( Container ), typeof( Container ) );
+
+            var target2 = AutoMapper.Mapper.Map<Container>( source );
+            Assert.IsTrue( !Object.ReferenceEquals( source.TestClass, target2.TestClass ) );
+
             var target = new Container();
 
-            var ultraMapper = new Mapper( );
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( target.TestClass.GetType() == source.TestClass.GetType() );

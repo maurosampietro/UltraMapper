@@ -35,7 +35,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
         }
 
-        protected override Expression GetMemberNewInstance( MemberMappingContext context, CollectionMapperContext collectionContext )
+        protected override Expression GetNewInstanceFromSourceCollection( MemberMappingContext context, CollectionMapperContext collectionContext )
         {
             var targetConstructor = context.TargetMember.Type.GetConstructor(
                new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );

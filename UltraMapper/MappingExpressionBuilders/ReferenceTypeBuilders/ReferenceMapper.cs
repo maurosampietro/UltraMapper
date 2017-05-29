@@ -88,15 +88,15 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.Empty();
         }
 
-        public virtual Expression GetMemberAssignment( MemberMappingContext context )
+        public Expression GetMemberAssignment( MemberMappingContext context )
         {
-            Expression newInstanceExp = this.GetMemberNewInstance( context );
+            Expression newInstance = this.GetMemberNewInstance( context );
 
             bool isCreateNewInstance = context.Options.ReferenceBehavior ==
                 ReferenceBehaviors.CREATE_NEW_INSTANCE;
 
             if( isCreateNewInstance || context.TargetMemberValueGetter == null )
-                return Expression.Assign( context.TargetMember, newInstanceExp );
+                return Expression.Assign( context.TargetMember, newInstance );
 
             return Expression.Block
             (
@@ -105,7 +105,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 Expression.IfThen
                 (
                     Expression.Equal( context.TargetMember, context.TargetMemberNullValue ),
-                    Expression.Assign( context.TargetMember, newInstanceExp )
+                    Expression.Assign( context.TargetMember, newInstance )
                 )
             );
         }

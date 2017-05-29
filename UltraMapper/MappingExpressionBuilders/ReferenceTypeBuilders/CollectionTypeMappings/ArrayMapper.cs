@@ -94,15 +94,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override Expression GetMemberNewInstance( MemberMappingContext context )
         {
-            if( context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
-            {
-                //It's up to the user to ensure that the target instance has enough room 
-                //to hold all the elements. We don't check Source.Length <= Target.Length
-                return base.GetMemberNewInstance( context );
-            }
-
-            var newInstanceWithReservedCapacity = this.GetNewInstanceWithReservedCapacity( context );
-            return Expression.Assign( context.TargetMember, newInstanceWithReservedCapacity );
+            return this.GetNewInstanceWithReservedCapacity( context );
         }
     }
 }

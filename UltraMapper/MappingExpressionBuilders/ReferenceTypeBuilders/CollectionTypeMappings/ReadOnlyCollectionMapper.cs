@@ -51,7 +51,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return typeof( List<> ).MakeGenericType( context.SourceCollectionElementType );
         }
 
-        public override Expression GetMemberAssignment( MemberMappingContext context )
+        protected override Expression GetMemberNewInstance( MemberMappingContext context )
         {
             //1. Create a new temporary collection passing source as input
             //2. Read items from the newly created temporary collection and add items to the target
@@ -91,7 +91,7 @@ namespace UltraMapper.MappingExpressionBuilders
                         collectionContext.SourceCollectionLoopingVar
                     ),
 
-                    Expression.Assign( context.TargetMember, Expression.New( newTargetCtor, tempCollection ) )
+                    Expression.New( newTargetCtor, tempCollection )
                 );
             }
 
@@ -113,7 +113,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     context.Mapper
                 ),
 
-                Expression.Assign( context.TargetMember, Expression.New( newTargetCtor, tempCollection ) )
+                Expression.New( newTargetCtor, tempCollection )
             );
         }
     }

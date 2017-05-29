@@ -166,22 +166,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
             {
-                ////OPTIMIZATION: If the types involved are primitives of exactly the same type
-                ////and we need to create a new instance,
-                ////we can use the constructor taking as input the collection and avoid looping
-
-                //if( context.SourceCollectionElementType == context.TargetCollectionElementType &&
-                //    context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.CREATE_NEW_INSTANCE )
-                //{
-                //    var targetConstructor = context.TargetInstance.Type.GetConstructor(
-                //        new[] { typeof( IEnumerable<> ).MakeGenericType( context.TargetCollectionElementType ) } );
-                //    if( targetConstructor != null )
-                //    {
-                //        //CANNOT ASSIGN THE INSTANCE: WE LOSE THE REFERENCE!
-                //        return Expression.New( targetConstructor, context.SourceInstance );
-                //    }
-                //}
-
                 return Expression.Block
                 (
                     isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
@@ -223,50 +207,47 @@ namespace UltraMapper.MappingExpressionBuilders
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
-        protected virtual Expression GetMemberNewInstance( MemberMappingContext context, CollectionMapperContext collectionContext )
+        protected override Expression GetMemberNewInstance( MemberMappingContext context )
         {
-            var targetConstructor = context.TargetMember.Type.GetConstructor(
-               new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
+            if( context.Options.CustomTargetConstructor != null )
+                return Expression.Invoke( context.Options.CustomTargetConstructor );
 
-            return Expression.New( targetConstructor, context.SourceMember );
-        }
-
-        public override Expression GetMemberAssignment( MemberMappingContext context )
-        {
             var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
                 context.TargetMember.Type, context.Options );
 
-            if( collectionContext.IsSourceElementTypeBuiltIn || collectionContext.IsTargetElementTypeBuiltIn )
+            //OPTIMIZATION: If the types involved are primitives of exactly the same type
+            //we can use the constructor taking as input the collection and avoid recursion
+            if( (collectionContext.IsSourceElementTypeBuiltIn || collectionContext.IsTargetElementTypeBuiltIn) &&
+                collectionContext.SourceCollectionElementType == collectionContext.TargetCollectionElementType &&
+                context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE )
             {
-                //OPTIMIZATION: If the types involved are primitives of exactly the same type
-                //we can use the constructor taking as input the collection and avoid recursion
-
-                if( collectionContext.SourceCollectionElementType == collectionContext.TargetCollectionElementType &&
-                    context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE )
+                var newInstance = GetNewInstanceFromSourceCollection( context, collectionContext );
+                if( newInstance != null )
                 {
-                    var targetConstructor = context.TargetMember.Type.GetConstructor(
-                        new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
+                    var typeMapping = MapperConfiguration[ context.SourceMember.Type,
+                        context.TargetMember.Type ];
 
-                    if( targetConstructor != null )
-                    {
-                        var typeMapping = MapperConfiguration[ context.SourceMember.Type,
-                            context.TargetMember.Type ];
+                    //We do not want recursion on each collection's item
+                    //but Capacity and other collection members must be mapped.
+                    var memberMappings = this.GetMemberMappings( typeMapping )
+                        .ReplaceParameter( context.Mapper, context.Mapper.Name )
+                        .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
+                        .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
+                        .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
 
-                        //We do not want recursion on each collection's item
-                        //but Capacity and other collection members must be mapped.
-                        var memberMappings = this.GetMemberMappings( typeMapping )
-                          .ReplaceParameter( context.Mapper, context.Mapper.Name )
-                          .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
-                          .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
-                          .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
+                    context.InitializationComplete = true;
 
-                        context.InitializationComplete = true;
-
-                        return Expression.Block( Expression.Assign( context.TargetMember,
-                            GetMemberNewInstance( context, collectionContext ) ), memberMappings );
-                    }
+                    return Expression.Block
+                    (
+                        //in order to assign inner members we need to assign TargetMember
+                        //(we also replaced TargetInstance with TargetMember)
+                        Expression.Assign( context.TargetMember, newInstance ),
+                        memberMappings,
+                        context.TargetMember
+                    );
                 }
             }
+
 
             //OPTIMIZATION: if we need to create a new instance of a collection
             //we can try to reserve just the right capacity thus avoiding reallocations.
@@ -276,40 +257,11 @@ namespace UltraMapper.MappingExpressionBuilders
                 && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
                 var newInstanceWithReservedCapacity = this.GetNewInstanceWithReservedCapacity( context );
-                if( newInstanceWithReservedCapacity != null )
-                    return Expression.Assign( context.TargetMember, newInstanceWithReservedCapacity );
+                if( newInstanceWithReservedCapacity != null ) return newInstanceWithReservedCapacity;
             }
 
-            return base.GetMemberAssignment( context );
-        }
 
-        protected Expression GetNewInstanceWithReservedCapacity( MemberMappingContext context )
-        {
-            var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
-            if( constructorWithCapacity == null ) return null;
-
-            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-            var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
-                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
-
-            if( getCountProperty == null )
-            {
-                //ICollection<T> interface implementation is injected in the Array class at runtime.
-                //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
-                getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
-            }
-
-            var getCountMethod = getCountProperty.GetGetMethod();
-
-            return Expression.Assign( context.TargetMember, Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceMember, getCountMethod ) ) );
-        }
-
-        protected override Expression GetMemberNewInstance( MemberMappingContext context )
-        {
-            if( context.Options.CustomTargetConstructor != null )
-                return Expression.Invoke( context.Options.CustomTargetConstructor );
-
+            //DEALING WITH INTERFACES
             Type sourceType = context.SourceMember.Type.IsGenericType ?
                  context.SourceMember.Type.GetGenericTypeDefinition() : context.SourceMember.Type;
 
@@ -320,8 +272,6 @@ namespace UltraMapper.MappingExpressionBuilders
                 targetType.IsAssignableFrom( sourceType ) || sourceType.ImplementsInterface( targetType )) )
             {
                 //TODO: this need to be coded much more clearly!
-                var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
-                    context.TargetMember.Type, context.Options );
 
                 var createInstanceMethodInfo = typeof( Activator )
                     .GetMethods( BindingFlags.Static | BindingFlags.Public )
@@ -374,6 +324,45 @@ namespace UltraMapper.MappingExpressionBuilders
             }
 
             return Expression.New( context.TargetMember.Type );
+        }
+
+        /// <summary>
+        /// Returns an expression calling Expression.New.
+        /// Expression.New will call a constructor taking as input a collection
+        /// </summary>
+        protected virtual Expression GetNewInstanceFromSourceCollection( MemberMappingContext context, CollectionMapperContext collectionContext )
+        {
+            var targetConstructor = context.TargetMember.Type.GetConstructor(
+               new[] { typeof( IEnumerable<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) } );
+
+            if( targetConstructor == null ) return null;
+            return Expression.New( targetConstructor, context.SourceMember );
+        }
+
+        /// <summary>
+        /// Returns an expression calling Expression.New.
+        /// Expression.New will call a constructor intializing the capacity of the collection
+        /// </summary>
+        protected virtual Expression GetNewInstanceWithReservedCapacity( MemberMappingContext context )
+        {
+            var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
+            if( constructorWithCapacity == null ) return null;
+
+            //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
+            var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
+                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
+
+            if( getCountProperty == null )
+            {
+                //ICollection<T> interface implementation is injected in the Array class at runtime.
+                //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
+                getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
+            }
+
+            var getCountMethod = getCountProperty.GetGetMethod();
+
+            return Expression.New( constructorWithCapacity,
+                Expression.Call( context.SourceMember, getCountMethod ) );
         }
     }
 }
