@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,6 +15,11 @@ namespace UltraMapper.Tests
         public class GenericArray<T>
         {
             public T[] Array { get; set; }
+        }
+
+        public class GenericCollection<T>
+        {
+            public ICollection<T> Collection { get; set; }
         }
 
         [TestMethod]
@@ -109,6 +115,38 @@ namespace UltraMapper.Tests
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.List, b => b.Array );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void ComplexArrayBehindInterface()
+        {
+            Expression<Func<int, int>> d = i => 1;
+
+            var source = new GenericCollection<InnerType>()
+            {
+                Collection = new InnerType[ 2 ]
+                {
+                    new InnerType() { String = "A" },
+                    new InnerType() { String = "B" }
+                }
+            };
+
+            var target = new GenericCollection<InnerType>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                //cfg.MapTypes( source, target )
+                //   .MapMember( s => s.Collection, t => t.Collection, memberMappingConfig: config =>
+                //   {
+                //       Expression<Func<ICollection<InnerType>>> temp = () => new List<InnerType>();
+                //       config.CustomTargetConstructor = temp;
+                //   } );
             } );
 
             ultraMapper.Map( source, target );

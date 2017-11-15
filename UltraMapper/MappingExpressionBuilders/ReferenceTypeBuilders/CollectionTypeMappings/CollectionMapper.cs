@@ -252,7 +252,6 @@ namespace UltraMapper.MappingExpressionBuilders
             //OPTIMIZATION: if we need to create a new instance of a collection
             //we can try to reserve just the right capacity thus avoiding reallocations.
             //If the source collection implements ICollection we can read 'Count' property without any iteration.
-
             if( context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE
                 && context.SourceMember.Type.ImplementsInterface( typeof( ICollection<> ) ) )
             {
@@ -271,6 +270,11 @@ namespace UltraMapper.MappingExpressionBuilders
             if( context.TargetMember.Type.IsInterface && (context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) ||
                 targetType.IsAssignableFrom( sourceType ) || sourceType.ImplementsInterface( targetType )) )
             {
+                //Runtime inspection did not work well between array and collection backed by ICollection or IEnumerable;
+                //just provide a list if the target is backed by an interface...
+                return Expression.New( typeof( List<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) );
+
+                //RUNTIME INSPECTION
                 //TODO: this need to be coded much more clearly!
 
                 var createInstanceMethodInfo = typeof( Activator )
@@ -289,6 +293,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 MethodInfo getType = typeof( object ).GetMethod( nameof( object.GetType ) );
                 MethodInfo getGenericTypeDefinition = typeof( Type ).GetMethod( nameof( Type.GetGenericTypeDefinition ) );
 
+                //TODO: check if type isGeneric before getting its genericTypeDefinition.               
                 var getSourceTypeGenericDefinition = Expression.Call( Expression.Call( context.SourceMemberValueGetter, getType ), getGenericTypeDefinition );
                 var makeGenericMethod = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
                 var makeGenericType = typeof( Type ).GetMethod( nameof( Type.MakeGenericType ) );

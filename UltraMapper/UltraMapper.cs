@@ -35,6 +35,8 @@ namespace UltraMapper
         /// <returns>A deep copy of the source instance.</returns>
         public TTarget Map<TSource, TTarget>( TSource source ) where TTarget : class, new()
         {
+            if( source == null ) return null;
+
             var target = new TTarget();
             this.Map( source, target );
             return target;
@@ -48,6 +50,8 @@ namespace UltraMapper
         /// <returns>A deep copy of the source instance.</returns>
         public TSource Map<TSource>( TSource source ) where TSource : class, new()
         {
+            if( source == null ) return null;
+
             var target = new TSource();
             this.Map( source, target );
             return target;
@@ -61,6 +65,8 @@ namespace UltraMapper
         /// <returns>A deep copy of the source instance.</returns>
         public TTarget Map<TTarget>( object source ) where TTarget : class, new()
         {
+            if( source == null ) return null;
+
             var target = new TTarget();
             this.Map( source, target );
             return target;
@@ -70,7 +76,6 @@ namespace UltraMapper
             ReferenceTracking referenceTracking = null ) where TTarget : struct
         {
             /*TEMPORARY IMPLEMENTATION*/
-
             if( referenceTracking == null )
                 referenceTracking = new ReferenceTracking();
 
@@ -104,6 +109,12 @@ namespace UltraMapper
         public void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracking referenceTracking = null ) where TTarget : class
         {
+            if( source == null )
+            {
+                target = null;
+                return;
+            }
+
             if( referenceTracking == null )
                 referenceTracking = new ReferenceTracking();
 
