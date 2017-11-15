@@ -35,7 +35,7 @@ clone.LastName = person.LastName
 clone.EmailAddress = person.EmailAddress
 ````
 
-What if you had hundreds of simple objects like the one above to copy? What if the object was more complex, contained references to other complex objects or collections of other complex object? Would you still map it manually!?
+What if you had hundreds of simple objects like the one above to copy? What if the object was more complex, contained references to other complex objects or collections of other complex objects? Would you still map it manually!?
 
 With UltraMapper you can solve this problem efficiently like this:
 
