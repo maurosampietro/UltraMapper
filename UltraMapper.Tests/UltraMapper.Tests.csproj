@@ -36,10 +36,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AutoMapper, Version=6.0.2.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
-      <HintPath>..\packages\AutoMapper.6.0.2\lib\net45\AutoMapper.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -75,16 +71,13 @@
     <Compile Include="TypeMapperTestExtensions.cs" />
     <Compile Include="TypeMapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnwirtableTargetMembers.cs" />
+    <Compile Include="UnwritableTargetMembers.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UltraMapper\UltraMapper.csproj">
       <Project>{34e9592b-27f8-45bc-be54-f90bd125b4e2}</Project>
       <Name>UltraMapper</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
