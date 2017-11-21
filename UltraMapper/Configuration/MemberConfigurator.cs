@@ -63,7 +63,7 @@ namespace UltraMapper
             var sourceMember = sourceMemberGetter.ExtractMember().Last();
             var targetMember = targetMemberGetter.ExtractMember().Last();
 
-            var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
+            var targetMemberSetterExpression = targetMemberGetter.ExtractMember().GetSetterLambdaExpression();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetter,
                 targetMemberGetter, targetMemberSetterExpression );

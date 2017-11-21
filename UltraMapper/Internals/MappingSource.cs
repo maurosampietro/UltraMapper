@@ -17,7 +17,8 @@ namespace UltraMapper.Internals
         internal MappingSource( LambdaExpression memberGetter )
             : base( memberGetter.ExtractMember() )
         {
-            this.ValueGetter = memberGetter;
+            this.ValueGetter = this.MemberAccessPath.Count == 1 ? memberGetter :
+                this.MemberAccessPath.GetGetterLambdaExpressionWithNullChecks();
         }
     }
 }

@@ -38,8 +38,11 @@ namespace UltraMapper.Internals
         internal MappingTarget( LambdaExpression memberSetter, LambdaExpression memberGetter = null )
             : base( memberSetter.ExtractMember() )
         {
-            this.ValueGetter = memberGetter;
-            this.ValueSetter = memberSetter;
+            this.ValueGetter =  memberGetter.ExtractMember()
+                .GetGetterLambdaExpressionWithNullChecks();
+         
+            this.ValueSetter = this.MemberAccessPath.Count == 1 ? memberSetter :
+                this.MemberAccessPath.GetSetterLambdaExpressionWithNullChecks();
         }
     }
 }

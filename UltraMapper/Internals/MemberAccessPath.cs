@@ -19,6 +19,12 @@ namespace UltraMapper.Internals
         public void Add( MemberInfo memberInfo )
             => _memberAccess.Add( memberInfo );
 
+        public MemberAccessPath Reverse()
+        {
+            _memberAccess.Reverse();
+            return this;
+        }
+
         public IEnumerator<MemberInfo> GetEnumerator()
             => _memberAccess.GetEnumerator();
 

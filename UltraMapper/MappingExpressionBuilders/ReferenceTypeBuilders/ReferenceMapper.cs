@@ -68,7 +68,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var expression = Expression.Block
             (
                 new[] { context.Mapper },
-
+                
                 Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
 
                 memberMappings,

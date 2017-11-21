@@ -63,7 +63,8 @@ namespace UltraMapper.Tests
         /// but to the runtime used type which could be 
         /// a type inherited/derived from the declared type
         /// </summary>
-        [TestMethod]
+
+        //[TestMethod]
         public void ShouldMapToRuntimeUsedType()
         {
             var source = new Container()

@@ -48,20 +48,16 @@ KNOWN (POTENTIAL) PROBLEMS:
 
 - When manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
   all instances referred by the selector (both on source and target) must be instantiated. 
-  
+    
   At the time to avoid NullReferenceException on target side
   it is possible to instantiate the target and set 
   ReferenceMappingStrategy = USE_TARGET_INSTANCE_IF_NOT_NULL.
   
-  SOURCE SIDE: An automatic mechanism checking for null reference for each reference
-  access could solve the problem on source side but implies the splitting and the analysis of the selector.
-	
-		(a method called BuildGetterWithNullChecks is available. Its integration involves
-		managing structs and primitive types as Nullable<> and need further research.)
+  SOURCE SIDE: The problem is solved by checking for null references before accessing members.
   
   TARGET SIDE: An automatic mechanism instantiating a new instance if a null reference is found could be useful 
-  to solve the problem on target side but implies the splitting and the analysis of the selector.
-  Moreover what do we do if CustomConstructors are involved?
+  to solve the problem on target side. This mechamism should take into account types configurations
+  and CustomConstructors, if possible at all.
 
 - Collection mapping strategies: when updating order is not preserved 
   (this could be right since it is implied that we keep using the existing target collection).

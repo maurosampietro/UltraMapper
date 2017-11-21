@@ -4,60 +4,51 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using UltraMapper.Internals;
 
 namespace UltraMapper.Internals
 {
     internal static class ExpressionExtensions
     {
-        private static string invalidExpressionMsg =
-            "Invalid expression. Please select a member from your model (eg. x => x.MyProperty)";
-
-        public static MemberAccessPath ExtractMember( this Expression method )
+        public static MemberAccessPath ExtractMember( this Expression lambdaExpression )
         {
             var memberAcessPath = new MemberAccessPath();
 
-            var lambda = method as LambdaExpression;
+            var lambda = lambdaExpression as LambdaExpression;
             if( lambda == null )
                 throw new InvalidCastException( "Invalid lambda expression" );
 
-            /*
-             For value-types automatic boxing operations are inserted as Convert(x).
-             Multiple consecutive calls to Convert() are possible.            
-             */
+            var stack = new Stack<Expression>();
+            Expression exp = lambda.Body;
 
-            MemberExpression memberExpression = null;
-            Expression expBody = lambda.Body;
+            //we are always only interested in the left part of an assignment expression.
+            if( exp.NodeType == ExpressionType.Assign )
+                exp = ((BinaryExpression)exp).Left;
 
-            while( (memberExpression = expBody as MemberExpression) == null )
+            //if the expression is a constant, we just return the type of the constant
+            else if( exp.NodeType == ExpressionType.Constant )
             {
-                if( expBody.NodeType == ExpressionType.Convert )
-                    expBody = ((UnaryExpression)expBody).Operand as Expression;
-
-                else if( expBody.NodeType == ExpressionType.Call )
-                {
-                    memberAcessPath.Add( ((MethodCallExpression)expBody).Method );
-                    return memberAcessPath;
-                }
-
-                else if( expBody.NodeType == ExpressionType.Parameter )
-                {
-                    memberAcessPath.Add( ((ParameterExpression)expBody).Type );
-                    return memberAcessPath;
-                }
-
-                else if( expBody.NodeType == ExpressionType.Constant )
-                {
-                    memberAcessPath.Add( ((ConstantExpression)expBody).Type );
-                    return memberAcessPath;
-                }
-
-                else if( expBody.NodeType == ExpressionType.Assign )
-                    expBody = ((BinaryExpression)expBody).Left;
+                memberAcessPath.Add( ((ConstantExpression)exp).Type );
+                return memberAcessPath;
             }
 
-            if( memberExpression == null )
-                throw new ArgumentException( invalidExpressionMsg );
+            //break the expression down member by member
+            while( !(exp is ParameterExpression) )
+            {
+                stack.Push( exp );
+
+                if( exp.NodeType == ExpressionType.Convert )
+                    exp = ((UnaryExpression)exp).Operand as Expression;
+
+                else if( exp.NodeType == ExpressionType.MemberAccess )
+                    exp = ((MemberExpression)exp).Expression;
+
+                else if( exp.NodeType == ExpressionType.Call )
+                    exp = ((MethodCallExpression)exp).Object;
+            }
+
+            //instance parameter
+            stack.Push( exp );
+
 
             //If the instance on which we call is a derived class and the property
             //we select is defined in the base class, we will notice that
@@ -69,8 +60,7 @@ namespace UltraMapper.Internals
             //Since we support deep member accessing, things get a little more complex here
             //but we basically just follow each member access starting from the passed lambda parameter.
 
-            //Reverse the expression accessing order to make it easy to work with it
-            Stack<Expression> stack = GetNaturalExpressionAccessOrder( memberExpression );
+            memberAcessPath = new MemberAccessPath();
 
             //Follow member accesses starting from the lambda input parameter.
             var lambdaMember = (stack.Pop() as ParameterExpression);
@@ -95,24 +85,6 @@ namespace UltraMapper.Internals
             return memberAcessPath;
         }
 
-        private static Stack<Expression> GetNaturalExpressionAccessOrder( Expression expression )
-        {
-            Stack<Expression> stack = new Stack<Expression>();
-
-            while( !(expression is ParameterExpression) )
-            {
-                stack.Push( expression );
-
-                if( expression is MemberExpression )
-                    expression = ((MemberExpression)expression).Expression;
-                else if( expression is MethodCallExpression )
-                    expression = ((MethodCallExpression)expression).Object;
-            }
-
-            stack.Push( expression );
-            return stack;
-        }
-
         public static Expression ReplaceParameter( this Expression expression, Expression newExpression, string name )
         {
             return new ExpressionParameterReplacer( newExpression, name ).Visit( expression );
@@ -131,7 +103,7 @@ namespace UltraMapper.Internals
             var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( "GetEnumerator" ) );
             var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
 
-            // The MoveNext method's actually on IEnumerator, not IEnumerator<T>
+            //The MoveNext method's actually on IEnumerator, not IEnumerator<T>
             var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator )
                 .GetMethod( nameof( IEnumerator.MoveNext ) ) );
 
@@ -189,6 +161,10 @@ namespace UltraMapper.Internals
         //}
     }
 
+    //Generating getter/setter expression from MemberInfo does not preserve the entry instance type
+    //if the member is extracted from a complex expression chain 
+    //(for example in the expression 'a => a.PropertyA.PropertyB.PropertyC'
+    //the ReflectedType info (that should be of type 'a') is lost in PropertyC (will be type of 'PropertyC'))
     internal static class GetterSetterExpressionBuilder
     {
         public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
@@ -216,7 +192,6 @@ namespace UltraMapper.Internals
                 var value = Expression.Parameter( type, "value" );
 
                 var body = Expression.Assign( targetInstance, value );
-
                 var delegateType = typeof( Action<,> ).MakeGenericType( type, type );
 
                 return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
@@ -328,6 +303,7 @@ namespace UltraMapper.Internals
         }
     }
 
+    //Generating getter/setter expression from MemberAccessPath guarantees that the entry instance type is preserved
     internal static class MemberAccessPathExpressionBuilder
     {
         internal static LambdaExpression GetGetterLambdaExpression( this MemberAccessPath memberAccessPath )
@@ -362,7 +338,14 @@ namespace UltraMapper.Internals
             foreach( var memberAccess in memberAccessPath )
             {
                 if( memberAccess is MethodInfo )
-                    accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
+                {
+                    var methodInfo = (MethodInfo)memberAccess;
+
+                    if( methodInfo.IsGetterMethod() )
+                        accessPath = Expression.Call( accessPath, methodInfo );
+                    else
+                        accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
+                }
                 else
                     accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
             }
@@ -374,7 +357,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, accessPath, accessInstance, value );
         }
 
-        internal static LambdaExpression GetGetterLambdaExpressionCheckNulls( this MemberAccessPath memberAccessPath )
+        internal static LambdaExpression GetGetterLambdaExpressionWithNullChecks( this MemberAccessPath memberAccessPath )
         {
             var instanceType = memberAccessPath.First().ReflectedType;
             var returnType = memberAccessPath.Last().GetMemberType();
@@ -407,7 +390,7 @@ namespace UltraMapper.Internals
 
             var exp = Expression.Block
             (
-                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() ) 
+                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
                     : (Expression)Expression.Empty(),
 
                 Expression.Label( labelTarget, memberAccesses.Last() )
@@ -415,6 +398,61 @@ namespace UltraMapper.Internals
 
             var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
             return LambdaExpression.Lambda( delegateType, exp, entryInstance );
+        }
+
+        internal static LambdaExpression GetSetterLambdaExpressionWithNullChecks( this MemberAccessPath memberAccessPath )
+        {
+            var instanceType = memberAccessPath.First().ReflectedType;
+            var valueType = memberAccessPath.Last().GetMemberType();
+            var value = Expression.Parameter( valueType, "value" );
+
+            var entryInstance = Expression.Parameter( instanceType, "instance" );
+            var labelTarget = Expression.Label( typeof( void ), "label" );
+
+            Expression accessPath = entryInstance;
+            var memberAccesses = new List<Expression>();
+
+            foreach( var memberAccess in memberAccessPath )
+            {
+                if( memberAccess is MethodInfo )
+                {
+                    var methodInfo = (MethodInfo)memberAccess;
+
+                    if( methodInfo.IsGetterMethod() )
+                        accessPath = Expression.Call( accessPath, methodInfo );
+                    else
+                        accessPath = Expression.Call( accessPath, methodInfo, value );
+                }
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+
+                memberAccesses.Add( accessPath );
+            }
+
+            if( !(accessPath is MethodCallExpression) )
+                accessPath = Expression.Assign( accessPath, value );
+
+            var nullConstant = Expression.Constant( null );
+            var returnVoid = Expression.Return( labelTarget, typeof( void ) );
+
+            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( memberAccess =>
+            {
+                var equalsNull = Expression.Equal( memberAccess, nullConstant );
+                return (Expression)Expression.IfThen( equalsNull, returnVoid );
+
+            } ).ToList();
+
+            var exp = Expression.Block
+            (
+                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
+                    : (Expression)Expression.Empty(),
+
+                accessPath,               
+                Expression.Label( labelTarget )
+            );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
+            return LambdaExpression.Lambda( delegateType, exp, entryInstance, value );
         }
     }
 }

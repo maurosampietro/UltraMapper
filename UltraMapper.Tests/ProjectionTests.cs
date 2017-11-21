@@ -118,11 +118,6 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
-                {
-                    typeConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
-                } );
-
                 cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => typeConfig.IgnoreMemberMappingResolvedByConvention = true )
                     .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
@@ -139,7 +134,7 @@ namespace UltraMapper.Tests
 
         [TestMethod]
         public void ManualFlatteningNullTargetMembers()
-        {
+        {            
             var source = new FirstLevel()
             {
                 A = "first",
@@ -155,21 +150,10 @@ namespace UltraMapper.Tests
                 }
             };
 
-            var target = new FirstLevel()
-            {
-                //A = "first",
+            var target = new FirstLevel();
 
-                //SecondLevel = new SecondLevel()
-                //{
-                //    A = "suka",
-
-                //    ThirdLevel = new ThirdLevel()
-                //    {
-                //        A = "suka"
-                //    }
-                //}
-            };
-
+            //When target properties are null and you project by setting a target's inner property,
+            //you MUST set IgnoreMemberMappingResolvedByConvention = false
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
@@ -177,11 +161,11 @@ namespace UltraMapper.Tests
                     typeConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                 } );
 
-                cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => typeConfig.IgnoreMemberMappingResolvedByConvention = true )
+                cfg.MapTypes<FirstLevel, FirstLevel>( typeConfig => typeConfig.IgnoreMemberMappingResolvedByConvention = false )
                     .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
                     .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
-                    .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
+                    .MapMember( a => a.A, b => b.SecondLevel.GetThird().A,
                         ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
             } );
 
@@ -197,7 +181,7 @@ namespace UltraMapper.Tests
             Expression<Func<FirstLevel, string>> selector = t => t.SecondLevel.ThirdLevel.A;
 
             var accessPath = selector.ExtractMember();
-            var expression = accessPath.GetGetterLambdaExpressionCheckNulls();
+            var expression = accessPath.GetGetterLambdaExpressionWithNullChecks();
             var functor = (Func<FirstLevel, string>)expression.Compile();
 
             // LEVEL 1
