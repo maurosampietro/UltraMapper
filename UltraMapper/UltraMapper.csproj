@@ -62,6 +62,7 @@
     <Compile Include="Internals\ExpressionParameterReplacer.cs" />
     <Compile Include="Internals\ExtensionMethods\MethodInfoExtensions.cs" />
     <Compile Include="Internals\IMemberMapping.cs" />
+    <Compile Include="Internals\InstanceFactory.cs" />
     <Compile Include="Internals\MappingResolution.cs" />
     <Compile Include="Internals\MemberAccessPath.cs" />
     <Compile Include="Internals\MemberPair.cs" />

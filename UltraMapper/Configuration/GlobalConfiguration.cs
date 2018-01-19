@@ -241,6 +241,12 @@ namespace UltraMapper
             get { return GetTypeMapping( source, target ); }
         }
 
+        public bool Contains( Type source, Type target )
+        {
+            var typePair = new TypePair( source, target );
+            return _typeMappings.ContainsKey( typePair );
+        }
+
         private void MapByConvention( TypeMapping typeMapping )
         { 
             foreach( var convention in Conventions )

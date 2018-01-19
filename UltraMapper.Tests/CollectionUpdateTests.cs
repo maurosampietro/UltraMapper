@@ -73,7 +73,7 @@ namespace UltraMapper.Tests
                         {
                             new Drawing() { Id=11, Data="bo" }
                         }
-                    }
+                    },
                 }
             };
 

@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -58,8 +59,8 @@
     <Compile Include="EnumTests.cs" />
     <Compile Include="InheritTypeMappingTests.cs" />
     <Compile Include="InterfacesTests.cs" />
+    <Compile Include="OtherTests.cs" />
     <Compile Include="StringSplitterTests.cs" />
-    <Compile Include="Utils\InstanceFactory.cs" />
     <Compile Include="MappingConventionTests.cs" />
     <Compile Include="MemberExtractionTests.cs" />
     <Compile Include="ProjectionTests.cs" />

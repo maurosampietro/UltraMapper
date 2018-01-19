@@ -149,17 +149,17 @@ namespace UltraMapper.MappingExpressionBuilders
                 );
             }
 
-            ////If we are mapping on the same type we prefer to use exactly the 
-            ////same runtime type used in the source. SHOULD WE?! (By the way not enough. The mapping
-            ////still inspects a class declaration) 
-            //if( context.SourceMember.Type == context.TargetMember.Type )
-            //{
-            //    MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
-            //    var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
+            //If we are mapping on the same type we prefer to use exactly the 
+            //same runtime type used in the source in order, for example, to manage inheritance or abstract classes. 
+            //(By the way not enough. The mapping still inspects a class declaration) 
+            if( context.SourceMember.Type == context.TargetMember.Type )
+            {
+                MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
+                var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
 
-            //    return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
-            //        getSourceType, Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type );
-            //}
+                return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
+                    getSourceType, Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type );
+            }
 
             return Expression.New( context.TargetMember.Type );
         }

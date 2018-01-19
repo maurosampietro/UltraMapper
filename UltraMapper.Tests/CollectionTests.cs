@@ -548,6 +548,6 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 49 ), tempItemB ) );
-        }
+        }    
     }
 }

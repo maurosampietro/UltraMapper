@@ -130,6 +130,59 @@ namespace UltraMapper
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracking referenceTracking, IMapping mapping )
         {
+            //---runtime checks for abstract class/interface.
+
+            //in order to manage inheritance at runtime here
+            //we check if a mapping has been defined and if it has not
+            //we create a specific mapping at runtime.
+            //A new mapping is created only if no compatible mapping is already available
+            //for concrete classes. If a mapping for the interfaces is found, it is used.
+
+            //INTERFACES/ABSTRACT CLASSES AND THEIR CONFIG INHERITANCE HAVE TO BE CODED MORE CLEARLY
+
+            var sourceType = source.GetType();
+            var targetType = target.GetType();
+
+            Type mappingSourceType;
+            Type mappingTargetType;
+            TypeMapping typeMapping = null;
+
+            if( mapping is TypeMapping )
+            {
+                typeMapping = ((TypeMapping)mapping);
+            }
+            else if( mapping is MemberMapping )
+            {
+                typeMapping = ((MemberMapping)mapping).MemberTypeMapping;
+            }
+
+            mappingSourceType = typeMapping.TypePair.SourceType;
+            mappingTargetType = typeMapping.TypePair.TargetType;
+
+            if( mappingSourceType.IsInterface || mappingSourceType.IsAbstract )
+            {
+                IMappingOptions options = (IMappingOptions)mapping;
+
+                if( !this.MappingConfiguration.Contains( source.GetType(), target.GetType() ) )
+                {
+                    //if mapped at runtime, copy options 
+                    var newTypeMapping = this.MappingConfiguration[ source.GetType(), target.GetType() ];
+                    newTypeMapping.CollectionBehavior = options.CollectionBehavior;
+                    newTypeMapping.CollectionItemEqualityComparer = options.CollectionItemEqualityComparer;
+                    newTypeMapping.ReferenceBehavior = options.ReferenceBehavior;
+                    //not sure about copying this option
+                    newTypeMapping.CustomTargetConstructor = options.CustomTargetConstructor;
+
+                    mapping = newTypeMapping;
+                }
+                else
+                {
+                    //user defined or already mapped at runtime
+                    mapping = this.MappingConfiguration[ source.GetType(), target.GetType() ];
+                }
+            }
+            //-----ends of runtime checks for abstract class/interface
+
             mapping.MappingFunc.Invoke( referenceTracking, source, target );
         }
     }
