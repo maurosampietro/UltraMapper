@@ -1,10 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
@@ -40,7 +35,7 @@ namespace UltraMapper.Tests
             }
 
             //same value type: just compare their values
-            if( sourceType == targetType && (sourceType.IsValueType || sourceType.IsBuiltInType( false )) )
+            if( sourceType == targetType && sourceType.IsBuiltInType( false ) )
                 return source.Equals( target );
 
             if( sourceType.IsEnumerable() && targetType.IsEnumerable() )

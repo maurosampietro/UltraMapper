@@ -16,6 +16,9 @@ namespace UltraMapper.MappingExpressionBuilders
         public bool IsSourceElementTypeBuiltIn { get; set; }
         public bool IsTargetElementTypeBuiltIn { get; set; }
 
+        public bool IsSourceElementTypeStruct { get; set; }
+        public bool IsTargetElementTypeStruct { get; set; }
+
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
         public Expression UpdateCollection { get; internal set; }
 
@@ -27,6 +30,9 @@ namespace UltraMapper.MappingExpressionBuilders
 
             IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltInType( true );
             IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( true );
+
+            IsSourceElementTypeStruct = !SourceCollectionElementType.IsClass;
+            IsTargetElementTypeStruct = !TargetCollectionElementType.IsClass;
 
             SourceCollectionLoopingVar = Expression.Parameter( SourceCollectionElementType, "loopVar" );
 

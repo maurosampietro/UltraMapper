@@ -1,8 +1,6 @@
 ﻿
 TODO:
 
-- !!!Collections of structs
-
 - ArrayMapper does not handle CollectionBehaviors.
 
 - Automatic reverse mapping (at the time a reverse mapping is a normal mapping
@@ -43,7 +41,7 @@ OPTIMIZATIONS:
 - Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
   but here we do a lot of additional work that should be also cached and could even be shared among various configuration instances. 
 
-PROBELMS:
+PROBLEMS:
 
 - MemberMapping's converters for complex types are not working
 

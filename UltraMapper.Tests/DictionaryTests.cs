@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace UltraMapper.Tests
 {
@@ -134,6 +135,23 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
 
             Assert.IsTrue( !Object.ReferenceEquals( source, target ) );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void DictionaryStruct()
+        {
+            var source = new Dictionary<Point, List<Point>>()
+            {
+                { new Point(1,1), new List<Point>() { new Point(10,10), new Point( 11, 11 ), new Point( 12, 12 ) } },
+                { new Point(2,2), new List<Point>() { new Point(20,20), new Point( 21, 21 ), new Point( 22, 22 ) } },
+                { new Point(3,3), new List<Point>() { new Point(30,30), new Point( 31, 31 ), new Point( 32, 32 ) } }
+            };
+
+            var ultraMapper = new Mapper();
+            var target = ultraMapper.Map( source );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
     }

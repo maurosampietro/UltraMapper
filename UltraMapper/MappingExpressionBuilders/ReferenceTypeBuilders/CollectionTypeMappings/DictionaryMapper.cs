@@ -65,8 +65,8 @@ namespace UltraMapper.MappingExpressionBuilders
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             ParameterExpression sourceParam, ParameterExpression targetParam )
         {
-            if( sourceParam.Type.IsBuiltInType( false ) &&
-                targetParam.Type.IsBuiltInType( false ) )
+            if( (sourceParam.Type.IsBuiltInType( false ) && targetParam.Type.IsBuiltInType( false )) ||
+                (!sourceParam.Type.IsClass || !targetParam.Type.IsClass) )
             {
                 var itemMapping = MapperConfiguration[ sourceParam.Type,
                     targetParam.Type ].MappingExpression;
@@ -77,7 +77,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 return Expression.Assign( targetParam, itemMappingExp );
             }
 
-            return base.LookUpBlock( sourceParam, targetParam, 
+            return base.LookUpBlock( sourceParam, targetParam,
                 context.ReferenceTracker, context.Mapper );
         }
     }

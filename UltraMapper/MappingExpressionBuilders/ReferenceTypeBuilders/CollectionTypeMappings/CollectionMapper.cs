@@ -164,7 +164,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
 
-            if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
+            if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn
+                || context.IsSourceElementTypeStruct || context.IsTargetElementTypeStruct )
             {
                 return Expression.Block
                 (

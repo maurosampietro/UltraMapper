@@ -62,14 +62,14 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-                cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
-
                 cfg.MapTypes<Container, Container>()
-                   .MapMember( a => a.Data, b => b.Item );
+                   .MapMember( a => a.Data, b => b.Item, a => new DerivedItem() { A = a } );
             } );
 
             mapper.Map( source, target );
-            throw new Exception( "implement converter" );
+
+            bool isResultOk = mapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -104,11 +104,11 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-                //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
+            //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
 
-                //cfg.MapTypes<Container, Container>()
-                //   .MapMember( a => a.Data, b => b.Item );
-            } );
+            //cfg.MapTypes<Container, Container>()
+            //   .MapMember( a => a.Data, b => b.Item );
+        } );
 
             var target = mapper.Map( source );
 
@@ -129,11 +129,11 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-                //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
+            //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
 
-                //cfg.MapTypes<Container, Container>()
-                //   .MapMember( a => a.Data, b => b.Item );
-            } );
+            //cfg.MapTypes<Container, Container>()
+            //   .MapMember( a => a.Data, b => b.Item );
+        } );
 
             var target = mapper.Map( source );
 

@@ -152,7 +152,7 @@ namespace UltraMapper.MappingExpressionBuilders
             //If we are mapping on the same type we prefer to use exactly the 
             //same runtime type used in the source in order, for example, to manage inheritance or abstract classes. 
             //(By the way not enough. The mapping still inspects a class declaration) 
-            if( context.SourceMember.Type == context.TargetMember.Type )
+            if( context.TargetMember.Type.IsAbstract || context.TargetMember.Type.IsInterface )
             {
                 MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
                 var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
