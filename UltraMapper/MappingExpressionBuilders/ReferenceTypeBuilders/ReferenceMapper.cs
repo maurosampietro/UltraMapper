@@ -68,7 +68,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var expression = Expression.Block
             (
                 new[] { context.Mapper },
-                
+
                 Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
 
                 memberMappings,
@@ -220,6 +220,19 @@ namespace UltraMapper.MappingExpressionBuilders
              */
 
             var memberContext = new MemberMappingContext( mapping );
+
+            if( mapping.CustomConverter != null )
+            {
+                var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+                var targetSetterValueParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+
+                var valueReaderExp = Expression.Invoke( mapping.CustomConverter, memberContext.SourceMemberValueGetter );
+
+                return mapping.TargetMember.ValueSetter.Body
+                    .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
+                    .ReplaceParameter( valueReaderExp, targetSetterValueParamName )
+                    .ReplaceParameter( valueReaderExp, mapping.CustomConverter.Parameters[ 0 ].Name );
+            }
 
             var mapMethod = MemberMappingContext.RecursiveMapMethodInfo.MakeGenericMethod(
                 memberContext.SourceMember.Type, memberContext.TargetMember.Type );

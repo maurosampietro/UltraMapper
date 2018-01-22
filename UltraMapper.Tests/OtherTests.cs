@@ -50,7 +50,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void AbstractAndConverter()
+        public void ComplexConverter()
         {
             var source = new Container()
             {

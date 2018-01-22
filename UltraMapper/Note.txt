@@ -43,7 +43,7 @@ OPTIMIZATIONS:
 
 PROBLEMS:
 
-- MemberMapping's converters for complex types are not working
+
 
 KNOWN (POTENTIAL) PROBLEMS:
 
