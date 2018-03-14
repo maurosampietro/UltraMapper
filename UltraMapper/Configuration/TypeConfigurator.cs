@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using UltraMapper.Internals;
-using UltraMapper.MappingExpressionBuilders;
-using UltraMapper.Conventions;
-using System.Collections;
-
-namespace UltraMapper
+﻿namespace UltraMapper
 {
     //public class TypeConfigurator
     //{

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Linq.Expressions;
-using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {

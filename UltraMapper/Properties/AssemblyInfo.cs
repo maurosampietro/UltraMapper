@@ -36,4 +36,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion( "1.0.0.0" )]
 [assembly: AssemblyInformationalVersion( "1.0.0.0" )]
 
-[ assembly: InternalsVisibleTo( "UltraMapper.Tests" )]
+[assembly: InternalsVisibleTo( "UltraMapper.Tests" )]

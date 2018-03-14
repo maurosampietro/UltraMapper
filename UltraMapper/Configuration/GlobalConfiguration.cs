@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using UltraMapper.Conventions;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
-using UltraMapper.Conventions;
-using System.Collections;
-using System.Linq;
 
 namespace UltraMapper
 {

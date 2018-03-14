@@ -5,7 +5,7 @@ using System.Reflection;
 namespace UltraMapper.Conventions
 {
     /// <summary>
-    /// Two members match if targetName = sourceName + suffix.
+    /// Two members match if (sourceName == targetName + suffix) or (targetName == sourceName + suffix).
     /// </summary>
     public class SuffixMatching : INameMatchingRule
     {
@@ -27,6 +27,7 @@ namespace UltraMapper.Conventions
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
             return this.Suffixes.Any( suffix =>
+                source.Name.Equals( target.Name + suffix, comparisonType ) ||
                 target.Name.Equals( source.Name + suffix, comparisonType ) );
         }
     }

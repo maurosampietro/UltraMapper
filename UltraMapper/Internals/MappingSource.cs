@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
-using UltraMapper.Internals;
+﻿using System.Linq.Expressions;
 
 namespace UltraMapper.Internals
 {

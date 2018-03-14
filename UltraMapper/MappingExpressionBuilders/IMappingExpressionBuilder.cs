@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders

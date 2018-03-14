@@ -13,8 +13,11 @@ TODO:
   [This is somehow solved, as we faced a similar issue with interfaces]
 
 - Configuration inheritance (ie. IgnoreConvention)
+
 - Abstract and base classes map with derived types inheriting the configuration
+
 - Simple members inherits type mapping configuration BUT complex types do not.
+
 - Member configuration should work regardless the type of the members involved.
   This would solve EntityFramework problems with DynamicProxies not reading the 
   configuration (stored by type and not taken into account because concrete object type != dynamic proxied type).
@@ -25,21 +28,18 @@ TODO:
 
 - When working with interfaces if the source has a member instantiated, we use the same type on the target (by convention)
   but i'm not checking if the source is null.
-
-- Should map using the runtime-used type which could be a type inherited/derived from the declared type.  
-  At the moment: 
-	If a member is backed by an interface, only interface's member are mapped.
-	If a member is backed by a super class, only superclass' members are mapped
-  
+ 
 - Configurators need extra overloads to cover target member mapping via methods Get/Set
   (both untyped (MemberInfo), and strongly types (Lambdas) helpers are missing).
 
 - Multidimensional/jagged arrays; 
 
+
 OPTIMIZATIONS:
 
 - Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
   but here we do a lot of additional work that should be also cached and could even be shared among various configuration instances. 
+
 
 PROBLEMS:
 
@@ -50,24 +50,11 @@ KNOWN (POTENTIAL) PROBLEMS:
 - Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
   Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
 
-- When manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
-  all instances referred by the selector (both on source and target) must be instantiated. 
-    
-  At the time to avoid NullReferenceException on target side
-  it is possible to instantiate the target and set 
-  ReferenceMappingStrategy = USE_TARGET_INSTANCE_IF_NOT_NULL.
-  
-  SOURCE SIDE: The problem is solved by checking for null references before accessing members.
-  
-  TARGET SIDE: An automatic mechanism instantiating a new instance if a null reference is found could be useful 
-  to solve the problem on target side. This mechamism should take into account types configurations
-  and CustomConstructors, if possible at all.
-
 - Collection mapping strategies: when updating order is not preserved 
   (this could be right since it is implied that we keep using the existing target collection).
 
 - a. Reference type's CustomConverters do not recurse on inner references.
-     (this might be correct since the entire mapping is delegated to the user).   
+	 (this might be correct since the entire mapping is delegated to the user).   
   b. CustomConverters do not add references to the ReferenceTracker.
 
 - Mapping types not providing a parameterless constructor directly is probably feasible but would need a big refactor.

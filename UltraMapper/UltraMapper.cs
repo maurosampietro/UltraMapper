@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using UltraMapper.Internals;
-using UltraMapper.Conventions;
 
 namespace UltraMapper
 {

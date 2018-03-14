@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace UltraMapper.Conventions
 {
@@ -16,8 +12,8 @@ namespace UltraMapper.Conventions
 
         public RelayStringSplittingRule( Func<char, bool> splittingRule, bool removeSplitChar )
         {
-            this.RemoveSplitChar = removeSplitChar;
             _splittingRule = splittingRule;
+            this.RemoveSplitChar = removeSplitChar;
         }
     }
 }

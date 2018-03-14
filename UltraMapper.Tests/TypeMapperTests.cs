@@ -1,11 +1,5 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UltraMapper.Conventions;
-using UltraMapper.MappingExpressionBuilders;
-using System.Linq;
 
 namespace UltraMapper.Tests
 {
