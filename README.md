@@ -77,6 +77,7 @@ Implemented features:
 - Powerful type/member configuration override mechanism, with configuration inheritance
 - Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
+- Supports abstract classes
 - Supports interfaces 
 - Supports mapping by convention
 - Supports flattening/projections by convention
@@ -91,3 +92,4 @@ Moreover UltraMapper is:
 - developer-friendly (should be easy to contribute, extend and maintain)
 
 **ANY FEEDBACK IS WELCOME**
+
