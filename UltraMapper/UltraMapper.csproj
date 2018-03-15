@@ -41,8 +41,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CollectionBehaviors.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
+    <Compile Include="Configuration\IMappingOptions.cs" />
+    <Compile Include="Configuration\ITypeOptions.cs" />
+    <Compile Include="Configuration\IMemberOptions.cs" />
     <Compile Include="Configuration\MemberConfigurator.cs" />
+    <Compile Include="Configuration\ReferenceBehaviors.cs" />
     <Compile Include="Conventions\MappingConventions.cs" />
     <Compile Include="Conventions\MatchingRules\MethodMatching.cs" />
     <Compile Include="Conventions\DefaultConvention.cs" />
@@ -93,7 +98,7 @@
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\ReferenceMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\LinkedListMapper.cs" />
     <Compile Include="MappingExpressionBuilders\PrimitiveTypeBuilders\StructMapper.cs" />
-    <Compile Include="Conventions\MatchingRuleEvaluators\IMatchingRuleEvaluator.cs" />
+    <Compile Include="Conventions\MatchingRuleEvaluators\IMatchingRulesEvaluator.cs" />
     <Compile Include="Conventions\MatchingRuleEvaluators\DefaultMatchingRuleEvaluator.cs" />
     <Compile Include="Conventions\MatchingRules\MatchingRules.cs" />
     <Compile Include="Conventions\MatchingRules\IMatchingRule.cs" />

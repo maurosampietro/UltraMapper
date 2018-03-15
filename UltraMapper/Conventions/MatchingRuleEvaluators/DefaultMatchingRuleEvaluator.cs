@@ -11,7 +11,7 @@ namespace UltraMapper.Conventions
     /// Rules are grouped by interface type and evaluated.
     /// Each group must have at least one compliant rule to validate a mapping.
     /// </summary>
-    public class DefaultMatchingRuleEvaluator : IMatchingRuleEvaluator
+    public class DefaultMatchingRuleEvaluator : IMatchingRulesEvaluator
     {
         private IEnumerable<IGrouping<Type, IMatchingRule>> _ruleGroups;
 

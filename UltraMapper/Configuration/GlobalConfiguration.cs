@@ -9,71 +9,6 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper
 {
-    public enum ReferenceBehaviors
-    {
-        /// <summary>
-        /// Creates a new instance, but only if the reference has not been mapped and tracked yet.
-        /// If the reference has been mapped and tracked, the tracked object is assigned.
-        /// This is the default.
-        /// </summary>
-        CREATE_NEW_INSTANCE,
-
-        /// <summary>
-        /// The instance of the target is used in one particular case, following this table:
-        /// SOURCE (NULL) -> TARGET = NULL
-        /// 
-        /// SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
-        /// SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
-        /// 
-        /// SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NULL) = ASSIGN NEW OBJECT 
-        /// SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
-        /// </summary>
-        USE_TARGET_INSTANCE_IF_NOT_NULL
-    }
-
-    public enum CollectionBehaviors
-    {
-        /// <summary>
-        /// Keeps using the input collection (same reference). 
-        /// The collection is cleared and then elements are added. 
-        /// </summary>
-        RESET,
-
-        /// <summary>
-        /// Keep using the input collection (same reference).
-        /// The collection is untouched and elements are added.
-        /// </summary>
-        MERGE,
-
-        /// <summary>
-        /// Keeps using the input collection (same reference).
-        /// Each source item matching a target item is updated.
-        /// Each source item non existing in the target collection is added.
-        /// Each target item non existing in the source collection is removed.
-        /// A way to compare two items must also be provided.
-        /// </summary>
-        UPDATE
-    }
-
-    public interface IMappingOptions
-    {
-        CollectionBehaviors CollectionBehavior { get; set; }
-        ReferenceBehaviors ReferenceBehavior { get; set; }
-
-        LambdaExpression CollectionItemEqualityComparer { get; set; }
-        LambdaExpression CustomTargetConstructor { get; set; }
-    }
-
-    public interface IMemberOptions : IMappingOptions
-    {
-        bool Ignore { get; set; }
-    }
-
-    public interface ITypeOptions : IMappingOptions
-    {
-        bool IgnoreMemberMappingResolvedByConvention { get; set; }
-    }
-
     public class Configuration
     {
         private readonly Dictionary<TypePair, TypeMapping> _typeMappings =
@@ -101,7 +36,20 @@ namespace UltraMapper
 
             this.Conventions = new MappingConventions( cfg =>
             {
-                cfg.GetOrAdd<DefaultConvention>();
+                cfg.GetOrAdd<DefaultConvention>( conv =>
+                {
+                    conv.SourceMemberProvider.IgnoreProperties = false;
+                    conv.SourceMemberProvider.IgnoreFields = true;
+                    conv.SourceMemberProvider.IgnoreNonPublicMembers = true;
+                    conv.SourceMemberProvider.IgnoreMethods = true;
+
+                    conv.TargetMemberProvider.IgnoreProperties = false;
+                    conv.TargetMemberProvider.IgnoreFields = true;
+                    conv.TargetMemberProvider.IgnoreNonPublicMembers = true;
+                    conv.TargetMemberProvider.IgnoreMethods = true;
+
+                    conv.MatchingRules.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true );
+                } );
             } );
 
             this.Mappers = new List<IMappingExpressionBuilder>()
@@ -248,7 +196,7 @@ namespace UltraMapper
         }
 
         private void MapByConvention( TypeMapping typeMapping )
-        { 
+        {
             foreach( var convention in Conventions )
             {
                 var memberPairings = convention.MapByConvention(

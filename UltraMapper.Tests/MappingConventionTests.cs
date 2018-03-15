@@ -223,21 +223,16 @@ namespace UltraMapper.Tests
     [TestClass]
     public class FlatteningConventionTest
     {
+        private class OrderDto
+        {
+            public string CustomerName { get; set; }
+            public string ProductName { get; set; }
+        }
+
         private class Order
         {
-            private readonly IList<OrderLineItem> _orderLineItems = new List<OrderLineItem>();
-
             public Customer Customer { get; set; }
-
-            public void AddOrderLineItem( Product product, int quantity )
-            {
-                _orderLineItems.Add( new OrderLineItem( product, quantity ) );
-            }
-
-            public decimal GetTotal()
-            {
-                return _orderLineItems.Sum( li => li.GetTotal() );
-            }
+            public Product Product { get; set; }
         }
 
         private class Product
@@ -246,32 +241,9 @@ namespace UltraMapper.Tests
             public string Name { get; set; }
         }
 
-        private class OrderLineItem
-        {
-            public OrderLineItem( Product product, int quantity )
-            {
-                Product = product;
-                Quantity = quantity;
-            }
-
-            public Product Product { get; private set; }
-            public int Quantity { get; private set; }
-
-            public decimal GetTotal()
-            {
-                return Quantity * Product.Price;
-            }
-        }
-
         private class Customer
         {
             public string Name { get; set; }
-        }
-
-        private class OrderDto
-        {
-            public string CustomerName { get; set; }
-            public decimal Total { get; set; }
         }
 
         [TestMethod]
@@ -282,34 +254,48 @@ namespace UltraMapper.Tests
                 Name = "George Costanza"
             };
 
-            var order = new Order
-            {
-                Customer = customer
-            };
-
-            var bosco = new Product
+            var product = new Product
             {
                 Name = "Bosco",
                 Price = 4.99m
             };
 
-            order.AddOrderLineItem( bosco, 15 );
+            var order = new Order
+            {
+                Customer = customer,
+                Product = product
+            };
 
             var mapper = new Mapper( cfg =>
             {
-                cfg.Conventions
-                    .GetOrAdd<ProjectionConvention>()
-                    .GetOrAdd<DefaultConvention>( convention =>
-                    {
-                        convention.SourceMemberProvider.IgnoreMethods = false;
-                        convention.MatchingRules.GetOrAdd<MethodMatching>();
-                    } );
+                cfg.Conventions.GetOrAdd<ProjectionConvention>();
             } );
 
-            OrderDto dto = mapper.Map<Order, OrderDto>( order );
+            var dto = mapper.Map<OrderDto>( order );
 
-            Assert.IsTrue( dto.CustomerName == "George Costanza" );
-            Assert.IsTrue( dto.Total == 74.85m );
+            Assert.IsTrue( dto.CustomerName == customer.Name );
+            Assert.IsTrue( dto.ProductName == product.Name );
+        }
+
+        [TestMethod]
+        public void Unflattening()
+        {
+            var dto = new OrderDto()
+            {
+                CustomerName = "Johnny",
+                ProductName = "Mobile phone"
+            };
+
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<ProjectionConvention>();
+            } );
+
+            //TODO: we need to create instances for nested objects!!!
+            var order = mapper.Map<Order>( dto );
+
+            Assert.IsTrue( dto.CustomerName == order.Customer.Name );
+            Assert.IsTrue( dto.ProductName == order.Product.Name );
         }
     }
 

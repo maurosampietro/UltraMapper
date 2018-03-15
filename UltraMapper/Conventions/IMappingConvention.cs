@@ -7,7 +7,7 @@ namespace UltraMapper.Conventions
     public interface IMappingConvention
     {
         MatchingRules MatchingRules { get; set; }
-        IMatchingRuleEvaluator MatchingRuleEvaluator { get; set; }
+        IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
 
         IMemberProvider SourceMemberProvider { get; set; }
         IMemberProvider TargetMemberProvider { get; set; }

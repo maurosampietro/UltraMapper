@@ -10,7 +10,7 @@ namespace UltraMapper.Conventions
         public IMemberProvider SourceMemberProvider { get; set; }
         public IMemberProvider TargetMemberProvider { get; set; }
 
-        public IMatchingRuleEvaluator MatchingRuleEvaluator { get; set; }
+        public IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
         public MatchingRules MatchingRules { get; set; }
 
         public DefaultConvention()
@@ -26,8 +26,8 @@ namespace UltraMapper.Conventions
 
         public IEnumerable<MemberPair> MapByConvention( Type source, Type target )
         {
-            if( MatchingRuleEvaluator == null )
-                MatchingRuleEvaluator = new DefaultMatchingRuleEvaluator( this.MatchingRules );
+            if( MatchingRulesEvaluator == null )
+                MatchingRulesEvaluator = new DefaultMatchingRuleEvaluator( this.MatchingRules );
 
             var sourceMembers = this.SourceMemberProvider.GetMembers( source );
             var targetMembers = this.TargetMemberProvider.GetMembers( target ).ToList();
@@ -36,7 +36,7 @@ namespace UltraMapper.Conventions
             {
                 foreach( var targetMember in targetMembers )
                 {
-                    if( this.MatchingRuleEvaluator.IsMatch( sourceMember, targetMember ) )
+                    if( this.MatchingRulesEvaluator.IsMatch( sourceMember, targetMember ) )
                     {
                         yield return new MemberPair( sourceMember, targetMember );
                         break; //sourceMember is now mapped, jump directly to the next sourceMember
