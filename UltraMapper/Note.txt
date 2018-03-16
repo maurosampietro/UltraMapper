@@ -4,7 +4,7 @@ TODO:
 - ArrayMapper does not handle CollectionBehaviors.
 
 - Automatic reverse mapping (at the time a reverse mapping is a normal mapping
-  encountered at execution time and resolved by convention nad thus does not take into account manual overrides.)
+  encountered at execution time and resolved by convention and thus does not take into account manual overrides.
 
 - Dynamic mapping
 
@@ -26,36 +26,28 @@ TODO:
 - VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
 
-- When working with interfaces if the source has a member instantiated, we use the same type on the target (by convention)
-  but i'm not checking if the source is null.
- 
 - Configurators need extra overloads to cover target member mapping via methods Get/Set
   (both untyped (MemberInfo), and strongly types (Lambdas) helpers are missing).
 
 - Multidimensional/jagged arrays; 
 
-
-OPTIMIZATIONS:
-
-- Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
-  but here we do a lot of additional work that should be also cached and could even be shared among various configuration instances. 
+- Projection convention does look for exact member names and thus cannot map something like "CustomerName -> GetCustomer().SetName()"
+  
 
 
 PROBLEMS:
+			 
+
+
+KNOWN (POTENTIAL) PROBLEMS:
 
 - When unflattening by convention OR manually mapping using deep nested selectors (ie: projections, ie: x=>x.PropertyA.GetMethodB().GetFieldC() ), 
   all instances referred by the selector (both on source and target) must be instantiated or you can incur in NullReferenceException. 
-    
-  ON SOURCE SIDE: The problem has been solved by checking for null references before accessing members. OK!
+	
+  ON SOURCE SIDE: The problem has been solved by checking for null references before accessing members. OK! 
   
-  ON TARGET SIDE: An automatic mechanism instantiating a new instance if a null reference is found will solve the problem.
-                  This mechamism should take into account types configurations and CustomConstructors, if possible.
-
-				  GetSetterLambdaExpressionWithNullChecks() is not enough as it avoids NullReferenceException but 
-				  does not solve the problem to actually map the value (that will end up always being null).
-  
-
-KNOWN (POTENTIAL) PROBLEMS:
+  ON TARGET SIDE: The problem has been solved by instantiating a new instance of every null object in the expression.
+				  MINOR PROBLEM: Custom constructors are not taken into account and the type must a parameterless public constructor.
 
 - Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
   Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
@@ -69,3 +61,10 @@ KNOWN (POTENTIAL) PROBLEMS:
 
 - Mapping types not providing a parameterless constructor directly is probably feasible but would need a big refactor.
   One example is ReadOnlyCollection support: it is supported only if we find it as a target's member.
+
+
+
+OPTIMIZATIONS:
+
+- Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
+  but here we do a lot of additional work that should be also cached and could even be shared among various configuration instances. 

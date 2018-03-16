@@ -13,7 +13,9 @@ namespace UltraMapper.Internals
         internal MappingTarget( MemberAccessPath memberSetter, MemberAccessPath memberGetter = null )
             : base( memberSetter )
         {
-            this.ValueSetter = memberSetter.GetSetterLambdaExpression();
+            this.ValueSetter = memberSetter.Count > 1 ?
+                memberSetter.GetSetterLambdaExpressionWithNullInstancesInstantiation() :
+                memberSetter.GetSetterLambdaExpression();
 
             try
             {
