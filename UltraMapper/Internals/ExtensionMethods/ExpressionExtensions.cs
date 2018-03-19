@@ -164,7 +164,7 @@ namespace UltraMapper.Internals
     //Generating getter/setter expression from MemberInfo does not preserve the entry instance type
     //if the member is extracted from a complex expression chain 
     //(for example in the expression 'a => a.PropertyA.PropertyB.PropertyC'
-    //the ReflectedType info (that should be of type 'a') is lost in PropertyC (will be type of 'PropertyC'))
+    //the ReflectedType info (that should be of type 'a') is lost in PropertyC (will be of the type of 'PropertyC'))
     internal static class GetterSetterExpressionBuilder
     {
         public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )

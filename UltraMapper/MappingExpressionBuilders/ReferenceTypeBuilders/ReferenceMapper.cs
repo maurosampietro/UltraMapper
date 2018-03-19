@@ -115,44 +115,9 @@ namespace UltraMapper.MappingExpressionBuilders
             if( context.Options.CustomTargetConstructor != null )
                 return Expression.Invoke( context.Options.CustomTargetConstructor );
 
-            if( context.TargetMember.Type.IsInterface && context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) )
-            {
-                var createInstanceMethodInfo = typeof( Activator )
-                    .GetMethods( BindingFlags.Static | BindingFlags.Public )
-                    .Where( method => method.Name == nameof( Activator.CreateInstance ) )
-                    .Select( method => new
-                    {
-                        Method = method,
-                        Params = method.GetParameters(),
-                        Args = method.GetGenericArguments()
-                    } )
-                    .Where( x => x.Params.Length == 0 && x.Args.Length == 1 )
-                    .Select( x => x.Method )
-                    .First();
-
-                MethodInfo getType = typeof( object ).GetMethod( nameof( object.GetType ) );
-
-                var getSourceType = Expression.Call( context.SourceMemberValueGetter, getType );
-                var makeGenericMethodInfo = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
-                var arrayParameter = Expression.Parameter( typeof( List<Type> ), "pararray" );
-                var parArray = Expression.Call( null, typeof( Enumerable ).GetMethod( nameof( Enumerable.ToArray ) ).MakeGenericMethod( new[] { typeof( Type ) } ), arrayParameter );
-                var createInstance = Expression.Call( Expression.Constant( createInstanceMethodInfo ), makeGenericMethodInfo, parArray );
-
-                return Expression.Block
-                (
-                    new[] { arrayParameter },
-                    Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
-                    Expression.Call( arrayParameter, typeof( List<Type> ).GetMethod( nameof( List<Type>.Add ) ), getSourceType ),
-                    Expression.Convert(
-                       Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( nameof( MethodInfo.Invoke ), new[] { typeof( object ), typeof( object[] ) } ),
-                       Expression.Constant( null ), Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type )
-                );
-            }
-
-            //If we are mapping on the same type we prefer to use exactly the 
-            //same runtime type used in the source in order, for example, to manage inheritance or abstract classes. 
-            //(By the way not enough. The mapping still inspects a class declaration) 
-            if( context.TargetMember.Type.IsAbstract || context.TargetMember.Type.IsInterface )
+            //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
+            //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
+            if( context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) )
             {
                 MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
                 var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );

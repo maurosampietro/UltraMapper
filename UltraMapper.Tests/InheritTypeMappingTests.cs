@@ -56,52 +56,53 @@ namespace UltraMapper.Tests
 
         /// <summary>
         /// Should not map to the declared type,
-        /// but to the runtime used type which could be 
-        /// a type inherited/derived from the declared type
+        /// but to the runtimetype which could be 
+        /// a type inherited/derived from the declared type.
+        /// This already works if the declared type is abstract
         /// </summary>
 
-        //[TestMethod]
-        //public void ShouldMapToRuntimeUsedType()
-        //{
-        //    var source = new Container()
-        //    {
-        //        TestClass = new SubTestClass()
-        //        {
-        //            Boolean = true,
-        //            String = "ciao",
-        //            //Integer = 11
-        //        }
-        //    };
+        [TestMethod]
+        public void ShouldMapToRuntimeUsedType()
+        {
+            var source = new Container()
+            {
+                TestClass = new SubTestClass()
+                {
+                    Boolean = true,
+                    String = "ciao",
+                    //Integer = 11
+                }
+            };
 
-        //    //scrivere di questo su github: automapper non mappa niente che non sia 
-        //    //esplicitamente dichiarato con CreateMap.
-        //    //CreateMissingTypeMaps non so a cosa serve visto che settarlo a true non cambia le cose.
-        //    //Automapper copia solo il riferimento di ogni cosa non venga esplicitamente mappato.
-        //    //Se viene mappato un oggetto contenitore, il senso comune dice che tutto
-        //    //ciò che vi è all'interno dovrebbe essere mappato automaticamente.
-        //    //Buona fortuna a mappare oggetti complessi che coinvolgono molti tipi.
-        //    AutoMapper.Mapper.Initialize(cfg =>
-        //    {
-        //        cfg.CreateMissingTypeMaps = true;
-        //        cfg.CreateMap<TestClass, TestClass>();
-        //        cfg.CreateMap<Container, Container>();
-        //    } );
+            ////scrivere di questo su github: automapper non mappa niente che non sia 
+            ////esplicitamente dichiarato con CreateMap.
+            ////CreateMissingTypeMaps non so a cosa serve visto che settarlo a true non cambia le cose.
+            ////Automapper copia solo il riferimento di ogni cosa non venga esplicitamente mappato.
+            ////Se viene mappato un oggetto contenitore, il senso comune dice che tutto
+            ////ciò che vi è all'interno dovrebbe essere mappato automaticamente.
+            ////Buona fortuna a mappare oggetti complessi che coinvolgono molti tipi.
+            //AutoMapper.Mapper.Initialize( cfg =>
+            // {
+            //     cfg.CreateMissingTypeMaps = true;
+            //     cfg.CreateMap<TestClass, TestClass>();
+            //     cfg.CreateMap<Container, Container>();
+            // } );
 
-        //    //var configuration = new AutoMapper.MapperConfiguration( 
-        //    //var executionPlan = configuration.BuildExecutionPlan( typeof( Container ), typeof( Container ) );
+            ////var configuration = new AutoMapper.MapperConfiguration( 
+            ////var executionPlan = configuration.BuildExecutionPlan( typeof( Container ), typeof( Container ) );
 
-        //    var target2 = AutoMapper.Mapper.Map<Container>( source );
-        //    Assert.IsTrue( !Object.ReferenceEquals( source.TestClass, target2.TestClass ) );
+            //var target2 = AutoMapper.Mapper.Map<Container>( source );
+            //Assert.IsTrue( !Object.ReferenceEquals( source.TestClass, target2.TestClass ) );
 
-        //    var target = new Container();
+            var target = new Container();
 
-        //    var ultraMapper = new Mapper();
-        //    ultraMapper.Map( source, target );
+            var ultraMapper = new Mapper();
+            ultraMapper.Map( source, target );
 
-        //    Assert.IsTrue( target.TestClass.GetType() == source.TestClass.GetType() );
+            Assert.IsTrue( target.TestClass.GetType() == source.TestClass.GetType() );
 
-        //    var isResultOk = ultraMapper.VerifyMapperResult( source, target );
-        //    Assert.IsTrue( isResultOk );
-        //}
+            var isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
     }
 }

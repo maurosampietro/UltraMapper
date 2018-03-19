@@ -21,7 +21,7 @@ namespace UltraMapper.Internals
             {
                 //build the getter from the getter member path if provided;
                 //try to figure out the getter from the setter member path otherwise
-                //(this will work for if the member being accessed is a field or property
+                //(this will work if the member being accessed is a field or property
                 //but won't necessarily work for methods)
                 this.ValueGetter = memberGetter == null
                     ? memberSetter.GetGetterLambdaExpression()

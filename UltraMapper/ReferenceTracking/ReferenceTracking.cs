@@ -28,7 +28,6 @@ namespace UltraMapper
             public override bool Equals( object obj )
             {
                 var otherKey = (Key)obj;
-
                 return Object.ReferenceEquals( this.Instance, otherKey.Instance )
                     && this.TargetType == otherKey.TargetType;
             }

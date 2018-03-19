@@ -60,6 +60,7 @@
     <Compile Include="InheritTypeMappingTests.cs" />
     <Compile Include="InterfacesTests.cs" />
     <Compile Include="OtherTests.cs" />
+    <Compile Include="RealworldProblemTests.cs" />
     <Compile Include="StringSplitterTests.cs" />
     <Compile Include="MappingConventionTests.cs" />
     <Compile Include="MemberExtractionTests.cs" />
