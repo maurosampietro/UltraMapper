@@ -40,7 +40,8 @@ What if you had hundreds of simple objects like the one above to copy? What if t
 With UltraMapper you can solve this problem efficiently like this:
 
 ````c#
-Person clone = ultraMpper.Map<Person>( person );
+UltraMapper ultraMapper = new UltraMapper();
+Person clone = ultraMapper.Map<Person>( person );
 ````
 
 Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
