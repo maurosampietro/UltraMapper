@@ -11,7 +11,7 @@ What is UltraMapper?
 
 UltraMapper is a .NET mapper, that is, a tool that avoids you the need to write the code needed to copy values from a source object to a target object. It avoids you the need to manually write the (boring) code that reads the value from the source and instantiate/assign the relative member on the target object.
 
-It can be used to get deep copies of an object.
+It can be used to get deep copies of an object or map and object to another type.
 
 Consider this simple class:
 
@@ -35,14 +35,20 @@ clone.LastName = person.LastName
 clone.EmailAddress = person.EmailAddress
 ````
 
-What if you had hundreds of simple objects like the one above to copy? What if the object was more complex, contained references to other complex objects or collections of other complex objects? Would you still map it manually!?
+What if you had hundreds of simple objects like the one above to copy? What if the object was more complex, contained references to other complex objects or collections of other complex objects? 
 
+Would you still map it manually!?
 With UltraMapper you can solve this problem efficiently like this:
 
 ````c#
 UltraMapper ultraMapper = new UltraMapper();
 Person clone = ultraMapper.Map<Person>( person );
 ````
+
+Getting started
+--------------------------------
+
+Check out the [wiki](https://github.com/maurosampietro/UltraMapper/wiki/Getting-started) for more information and advanced scenarios
 
 Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
 --------------------------------
@@ -61,12 +67,6 @@ ReferenceTracking mechanism is so important that cannot be disabled and offers a
 
 UltraMapper is just ~1100 lines of code and generates and compiles minimal mapping expressions.
 MappingExpressionBuilders are very well structured in a simple object-oriented way.
-
-
-Getting started
---------------------------------
-
-Check out the [wiki](https://github.com/maurosampietro/UltraMapper/wiki/Getting-started)
 
 
 Key features
