@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UltraMapper.Internals;
 
 namespace UltraMapper
@@ -35,9 +36,18 @@ namespace UltraMapper
         {
             if( source == null ) return null;
 
-            var target = new TTarget();
-            this.Map( source, target );
-            return target;
+            if( typeof( TTarget ) == typeof( object ) )
+            {
+                object target = InstanceFactory.CreateObject( source.GetType() );
+                this.Map( source, target );
+                return (TTarget)target;
+            }
+            else
+            {
+                var target = new TTarget();
+                this.Map( source, target );
+                return target;
+            }
         }
 
         /// <summary>
@@ -50,9 +60,18 @@ namespace UltraMapper
         {
             if( source == null ) return null;
 
-            var target = new TSource();
-            this.Map( source, target );
-            return target;
+            if( typeof( TSource ) == typeof( object ) )
+            {
+                object target = InstanceFactory.CreateObject( source.GetType() );
+                this.Map( source, target );
+                return (TSource)target;
+            }
+            else
+            {
+                var target = new TSource();
+                this.Map( source, target );
+                return target;
+            }
         }
 
         /// <summary>
@@ -65,9 +84,18 @@ namespace UltraMapper
         {
             if( source == null ) return null;
 
-            var target = new TTarget();
-            this.Map( source, target );
-            return target;
+            if( typeof( TTarget ) == typeof( object ) )
+            {
+                object target = InstanceFactory.CreateObject( source.GetType() );
+                this.Map( source, target );
+                return (TTarget)target;
+            }
+            else
+            {
+                var target = new TTarget();
+                this.Map( source, target );
+                return target;
+            }
         }
 
         public void Map<TSource, TTarget>( TSource source, out TTarget target,
@@ -128,15 +156,12 @@ namespace UltraMapper
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracking referenceTracking, IMapping mapping )
         {
-            //---runtime checks for abstract class/interface.
 
             //in order to manage inheritance at runtime here
             //we check if a mapping has been defined and if it has not
             //we create a specific mapping at runtime.
             //A new mapping is created only if no compatible mapping is already available
             //for concrete classes. If a mapping for the interfaces is found, it is used.
-
-            //INTERFACES/ABSTRACT CLASSES AND THEIR CONFIG INHERITANCE HAVE TO BE CODED MORE CLEARLY
 
             var sourceType = source.GetType();
             var targetType = target.GetType();
@@ -145,6 +170,7 @@ namespace UltraMapper
             Type mappingTargetType;
             TypeMapping typeMapping = null;
 
+            //---runtime checks for abstract classes and interfaces.
             if( mapping is TypeMapping )
             {
                 typeMapping = ((TypeMapping)mapping);
@@ -179,7 +205,7 @@ namespace UltraMapper
                     mapping = this.MappingConfiguration[ source.GetType(), target.GetType() ];
                 }
             }
-            //-----ends of runtime checks for abstract class/interface
+            //-----ends of runtime checks for abstract classes and interfaces
 
             mapping.MappingFunc.Invoke( referenceTracking, source, target );
         }

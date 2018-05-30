@@ -28,6 +28,9 @@ namespace UltraMapper.Internals
 
         public override bool Equals( object obj )
         {
+            if( obj.GetType() != typeof( TypePair ) )
+                return false;
+
             var typePair = (TypePair)obj;
 
             return this.SourceType.Equals( typePair.SourceType ) &&
@@ -43,6 +46,16 @@ namespace UltraMapper.Internals
             }
 
             return _hashcode.Value;
+        }
+
+        public static bool operator !=( TypePair obj1, TypePair obj2 )
+        {
+            return !(obj1 == obj2);
+        }
+
+        public static bool operator ==( TypePair obj1, TypePair obj2 )
+        {
+            return obj1.Equals( obj2 );
         }
 
         public override string ToString()

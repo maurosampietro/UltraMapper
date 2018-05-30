@@ -11,8 +11,7 @@ namespace UltraMapper
 {
     public class Configuration
     {
-        private readonly Dictionary<TypePair, TypeMapping> _typeMappings =
-            new Dictionary<TypePair, TypeMapping>();
+        private readonly TypeMappingInheritanceTree _typeMappings;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -31,6 +30,15 @@ namespace UltraMapper
 
         public Configuration( Action<Configuration> config = null )
         {
+            var baseTypePair = new TypePair( typeof( object ), typeof( object ) );
+            var baseMapping = new TypeMapping( this, baseTypePair )
+            {
+                ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE,
+                CollectionBehavior = CollectionBehaviors.RESET
+            };
+
+            _typeMappings = new TypeMappingInheritanceTree( baseMapping );
+
             this.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
             this.CollectionBehavior = CollectionBehaviors.RESET;
 
@@ -48,14 +56,17 @@ namespace UltraMapper
                     conv.TargetMemberProvider.IgnoreNonPublicMembers = true;
                     conv.TargetMemberProvider.IgnoreMethods = true;
 
-                    conv.MatchingRules.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true );
+                    conv.MatchingRules
+                        .GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true )
+                        .GetOrAdd<PrefixMatching>( rule => rule.IgnoreCase = true )
+                        .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true );
                 } );
             } );
 
+            //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
+            //Make sure to use a collection which preserve insertion order!
             this.Mappers = new List<IMappingExpressionBuilder>()
             {
-                //Order is important: it is used the first MapperExpressionBuilder able to handle a mapping.
-                //Make sure to use a collection which preserve insertion order!
                 new StringToEnumMapper( this ),
                 new EnumMapper( this ),
                 new BuiltInTypeMapper( this ),
@@ -77,7 +88,6 @@ namespace UltraMapper
         }
 
         #region Type-to-Type Mapping
-
         public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget, TSourceElement, TTargetElement>(
             Expression<Func<TSourceElement, TTargetElement, bool>> elementEqualityComparison )
             where TSource : IEnumerable
@@ -91,19 +101,6 @@ namespace UltraMapper
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
         }
-
-        //public MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>> MapTypes<TSource, TTarget>(
-        //    IEnumerable<TSource> source, IEnumerable<TTarget> target,
-        //    Expression<Func<TSource, TTarget, bool>> elementEqualityComparison )
-        //{
-        //    var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
-        //    typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-        //    typeMapping.ReferenceMappingStrategy = ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL;
-        //    typeMapping.CollectionMappingStrategy = CollectionMappingStrategies.UPDATE;
-        //    typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
-
-        //    return new MemberConfigurator<IEnumerable<TSource>, IEnumerable<TTarget>>( typeMapping );
-        //}
 
         public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
         {
@@ -175,18 +172,30 @@ namespace UltraMapper
         private TypeMapping GetTypeMapping( Type source, Type target )
         {
             var typePair = new TypePair( source, target );
+            return this.GetTypeMapping( typePair );
+        }
 
-            return _typeMappings.GetOrAdd( typePair, () =>
+        private TypeMapping GetTypeMapping( TypePair typePair )
+        {
+            var typeMappingNode = _typeMappings.GetOrAdd( typePair, () =>
             {
                 var typeMapping = new TypeMapping( this, typePair );
                 this.MapByConvention( typeMapping );
+
                 return typeMapping;
             } );
+
+            return typeMappingNode.Item;
+        }
+
+        public TypeMapping this[ TypePair typePair ]
+        {
+            get { return this.GetTypeMapping( typePair ); }
         }
 
         public TypeMapping this[ Type source, Type target ]
         {
-            get { return GetTypeMapping( source, target ); }
+            get { return this.GetTypeMapping( source, target ); }
         }
 
         public bool Contains( Type source, Type target )

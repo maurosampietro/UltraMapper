@@ -13,9 +13,6 @@ KNOWN (POTENTIAL) PROBLEMS:
   ON TARGET SIDE: The problem has been solved by instantiating a new instance of every null object in the expression.
 				  MINOR PROBLEM: Custom constructors are not taken into account and the type must a parameterless public constructor.
 
-- Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
-  Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
-
 - Collection mapping strategies: when updating order is not preserved 
   (this could be right since it is implied that we keep using the existing target collection).
 
@@ -24,10 +21,11 @@ KNOWN (POTENTIAL) PROBLEMS:
 
 - CustomConverters do not add references to the ReferenceTracker.
 
+- Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
+  Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
+
 - Mapping types not providing a parameterless constructor is probably feasible but would need a big refactor.
   One example is ReadOnlyCollection support: it is supported only if we find it as a target's member.
-
-
 
 TODO:
 
@@ -37,10 +35,6 @@ TODO:
   encountered at execution time and resolved by convention and thus does not take into account manual overrides.
 
 - Dynamic mapping
-
-- Object to Object mapping should inspect object types and use ReferenceMapper.
-  At this time it copies the reference value (no mapping at all).
-  [This is somehow solved, as we faced a similar issue with interfaces]
 
 - Configuration inheritance (ie. IgnoreConvention)
 
@@ -67,4 +61,4 @@ TODO:
 OPTIMIZATIONS:
 
 - Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
-  but here we do a lot of additional work that should be also cached and could even be shared among various configuration instances. 
+  but here we do a lot of additional work that should be also cached.

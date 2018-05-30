@@ -100,11 +100,11 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-            //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
+                //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
 
-            //cfg.MapTypes<Container, Container>()
-            //   .MapMember( a => a.Data, b => b.Item );
-        } );
+                //cfg.MapTypes<Container, Container>()
+                //   .MapMember( a => a.Data, b => b.Item );
+            } );
 
             var target = mapper.Map( source );
 
@@ -125,11 +125,11 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-            //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
+                //cfg.MapTypes<string, BaseItem>( a => (BaseItem)new DerivedItem() );
 
-            //cfg.MapTypes<Container, Container>()
-            //   .MapMember( a => a.Data, b => b.Item );
-        } );
+                //cfg.MapTypes<Container, Container>()
+                //   .MapMember( a => a.Data, b => b.Item );
+            } );
 
             var target = mapper.Map( source );
 

@@ -55,11 +55,13 @@
     <Compile Include="ArrayTest.cs" />
     <Compile Include="CollectionTests.cs" />
     <Compile Include="CollectionUpdateTests.cs" />
+    <Compile Include="ConfigurationInheritance\ConfigurationInheritanceTests.cs" />
     <Compile Include="DictionaryTests.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="InheritTypeMappingTests.cs" />
     <Compile Include="InterfacesTests.cs" />
     <Compile Include="OtherTests.cs" />
+    <Compile Include="ReadOnlyCollectionTests.cs" />
     <Compile Include="RealworldProblemTests.cs" />
     <Compile Include="StringSplitterTests.cs" />
     <Compile Include="MappingConventionTests.cs" />

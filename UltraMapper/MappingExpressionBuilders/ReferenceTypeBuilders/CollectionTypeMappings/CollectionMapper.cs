@@ -267,65 +267,21 @@ namespace UltraMapper.MappingExpressionBuilders
             Type targetType = context.TargetMember.Type.IsGenericType ?
                     context.TargetMember.Type.GetGenericTypeDefinition() : context.TargetMember.Type;
 
+            //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
+            //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
             if( context.TargetMember.Type.IsInterface && (context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) ||
                 targetType.IsAssignableFrom( sourceType ) || sourceType.ImplementsInterface( targetType )) )
             {
+                ////RUNTIME INSPECTION (in order to use on the target the same type of the source, if possible)
+                ////MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
+                ////var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
+
+                ////return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
+                ////    getSourceType, Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type );
+
                 //Runtime inspection did not work well between array and collection backed by ICollection or IEnumerable;
                 //just provide a list if the target is backed by an interface...
                 return Expression.New( typeof( List<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) );
-
-                //RUNTIME INSPECTION (in order to use on the target the same type of the source, if possible)
-                //TODO: this need to be coded much more clearly!
-
-                //var createInstanceMethodInfo = typeof( Activator )
-                //    .GetMethods( BindingFlags.Static | BindingFlags.Public )
-                //    .Where( method => method.Name == nameof( Activator.CreateInstance ) )
-                //    .Select( method => new
-                //    {
-                //        Method = method,
-                //        Params = method.GetParameters(),
-                //        Args = method.GetGenericArguments()
-                //    } )
-                //    .Where( x => x.Params.Length == 0 && x.Args.Length == 1 )
-                //    .Select( x => x.Method )
-                //    .First();
-
-                //MethodInfo getType = typeof( object ).GetMethod( nameof( object.GetType ) );
-                //MethodInfo getGenericTypeDefinition = typeof( Type ).GetMethod( nameof( Type.GetGenericTypeDefinition ) );
-
-                ////TODO: check if type isGeneric before getting its genericTypeDefinition.               
-                //var getSourceTypeGenericDefinition = Expression.Call( Expression.Call( context.SourceMemberValueGetter, getType ), getGenericTypeDefinition );
-                //var makeGenericMethod = typeof( MethodInfo ).GetMethod( nameof( MethodInfo.MakeGenericMethod ) );
-                //var makeGenericType = typeof( Type ).GetMethod( nameof( Type.MakeGenericType ) );
-
-                //var arrayParameter = Expression.Parameter( typeof( List<Type> ), "array" );
-                //var arrayParameter2 = Expression.Parameter( typeof( List<Type> ), "array2" );
-
-                //var toArray = typeof( Enumerable )
-                //    .GetMethod( nameof( Enumerable.ToArray ) )
-                //    .MakeGenericMethod( new[] { typeof( Type ) } );
-
-                //var addType = typeof( List<Type> ).GetMethod( nameof( List<Type>.Add ) );
-
-                //var parArray = Expression.Call( null, toArray, arrayParameter );
-                //var parArray2 = Expression.Call( null, toArray, arrayParameter2 );
-
-                //var createInstance = Expression.Call( Expression.Constant( createInstanceMethodInfo ), makeGenericMethod, parArray );
-
-                //return Expression.Block
-                //(
-                //    new[] { arrayParameter, arrayParameter2 },
-
-                //    Expression.Assign( arrayParameter, Expression.New( typeof( List<Type> ) ) ),
-                //    Expression.Assign( arrayParameter2, Expression.New( typeof( List<Type> ) ) ),
-
-                //    Expression.Call( arrayParameter2, addType, Expression.Constant( collectionContext.TargetCollectionElementType ) ),
-                //    Expression.Call( arrayParameter, addType, Expression.Call( getSourceTypeGenericDefinition, makeGenericType, parArray2 ) ),
-
-                //    Expression.Convert(
-                //       Expression.Call( createInstance, typeof( MethodInfo ).GetMethod( nameof( MethodInfo.Invoke ), new[] { typeof( object ), typeof( object[] ) } ),
-                //       Expression.Constant( null ), Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type )
-                //);
             }
 
             return Expression.New( context.TargetMember.Type );

@@ -315,17 +315,6 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-        //[TestMethod]
-        //public void DirectCollectionToReadOnlyCollection()
-        //{
-        //    var source = new List<int>() { 1, 2, 3 };
-
-        //    var ultraMapper = new UltraMapper();
-        //    var target = ultraMapper.Map<ReadOnlyCollection<int>>( source );
-
-        //    Assert.IsTrue( source.SequenceEqual( target ) );
-        //}
-
         [TestMethod]
         public void ComplexCollection()
         {
@@ -544,6 +533,6 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 49 ), tempItemB ) );
-        }    
+        }
     }
 }

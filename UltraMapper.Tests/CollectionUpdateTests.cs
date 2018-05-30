@@ -154,10 +154,149 @@ namespace UltraMapper.Tests
 
             ultraMapper.Map( source, target );
 
+            Assert.IsTrue( source.Count == target.Count );
             Assert.IsTrue( target.First().Id == 13 );
             Assert.IsTrue( target.First().Drawings.First().Id == 11 );
             Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.First() ) );
             Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.First().Drawings.First() ) );
+        }
+
+        [TestMethod]
+        public void ParentTypeConfigurationDirectMultipleNestedCollectionsUpdate()
+        {
+            var source = new Collection<Media>
+            {
+                new Media()
+                {
+                    HashCode = "a",
+                    Id = 13,
+                    Drawings = new Collection<Drawing>()
+                    {
+                        new Drawing() { Id=11, Data="bo" }
+                    }
+                }
+            };
+
+            var target = new Collection<Media>
+            {
+                new Media()
+                {
+                    HashCode ="a",
+                    Id =17,
+                    Drawings = new Collection<Drawing>()
+                    {
+                        new Drawing() { Id=19, Data="bo" }
+                    }
+                }
+            };
+
+            var targetMedia = target.First();
+            var targetDrawing = target.First().Drawings.First();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<ICollection<Media>, ICollection<Media>, Media, Media>(
+                    ( itemA, itemB ) => itemA.HashCode == itemB.HashCode );
+
+                cfg.MapTypes<ICollection<Drawing>, ICollection<Drawing>, Drawing, Drawing>(
+                    ( itemA, itemB ) => itemA.Data == itemB.Data );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.Count == target.Count );
+            Assert.IsTrue( target.First().Id == 13 );
+            Assert.IsTrue( target.First().Drawings.First().Id == 11 );
+            Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.First() ) );
+            Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.First().Drawings.First() ) );
+        }
+
+        [TestMethod]
+        public void UpdateCapacityRemovingItems()
+        {
+            var source = new List<Media>
+            {
+                new Media()
+                {
+                    HashCode = "a",
+                    Id = 13
+                }
+            };
+
+            var target = new List<Media>
+            {
+                new Media() { HashCode = "a", Id = 17 },
+                new Media() { HashCode = "b", Id = 18 },
+                new Media() { HashCode = "c", Id = 19 },
+                new Media() { HashCode = "d", Id = 20 },
+                new Media() { HashCode = "e", Id = 21 },
+                new Media() { HashCode = "f", Id = 22 },
+            };
+
+            var targetMedia = target.First();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<List<Media>, List<Media>, Media, Media>(
+                        ( itemA, itemB ) => itemA.HashCode == itemB.HashCode )
+                   .IgnoreSourceMember( s => s.Capacity );
+
+                cfg.MapTypes<Media, Media>()
+                    .MapMember( s => s.Drawings, t => t.Drawings,
+                        ( itemA, itemB ) => itemA.Id == itemB.Id );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.Count == target.Count );
+            Assert.IsTrue( target.First().Id == 13 );
+            Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.First() ) );
+        }
+
+        [TestMethod]
+        public void UpdateCapacityRemovingItems2()
+        {
+            //In this test the collection update removes elements from the target.
+            //This works if the capacity of the target list is updated AFTER adding elements.
+
+            var source = new Media()
+            {
+                HashCode = "a",
+                Id = 13,
+                Drawings = new List<Drawing>()
+                {
+                    new Drawing() { Id=18, Data="18" }
+                }
+            };
+
+            var target = new Media()
+            {
+                HashCode = "a",
+                Id = 17,
+                Drawings = new List<Drawing>()
+                {
+                    new Drawing() { Id=1, Data="1" },
+                    new Drawing() { Id=2, Data="2" },
+                    new Drawing() { Id=3, Data="3" },
+                    new Drawing() { Id=4, Data="4" },
+                    new Drawing() { Id=5, Data="5" },
+                    new Drawing() { Id=6, Data="6" },
+                    new Drawing() { Id=7, Data="7" },
+                    new Drawing() { Id=8, Data="8" }
+                }
+            };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<Media, Media>()
+                    .MapMember( s => s.Drawings, t => t.Drawings, ( itemA, itemB ) => itemA.Id == itemB.Id );
+            } );
+
+            ultraMapper.Map( source, target );
+            var result = ultraMapper.VerifyMapperResult( source, target );
+
+            Assert.IsTrue( result );
+            Assert.IsTrue( source.Drawings.Count == target.Drawings.Count );
         }
 
         [TestMethod]
@@ -213,6 +352,6 @@ namespace UltraMapper.Tests
             Assert.IsTrue( target.Media.First().Drawings.First().Id == 11 );
             Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.Media.First() ) );
             Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.Media.First().Drawings.First() ) );
-        }   
+        }
     }
 }

@@ -44,6 +44,11 @@
     <Compile Include="Configuration\CollectionBehaviors.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
     <Compile Include="Configuration\IMappingOptions.cs" />
+    <Compile Include="Configuration\Inheritance\IInheritanceOptions.cs" />
+    <Compile Include="Configuration\Inheritance\LeafToRootTraversal.cs" />
+    <Compile Include="Configuration\Inheritance\TreeNode.cs" />
+    <Compile Include="Configuration\Inheritance\TypeMappingInheritanceTree.cs" />
+    <Compile Include="Configuration\Inheritance\Tree.cs" />
     <Compile Include="Configuration\ITypeOptions.cs" />
     <Compile Include="Configuration\IMemberOptions.cs" />
     <Compile Include="Configuration\MemberConfigurator.cs" />

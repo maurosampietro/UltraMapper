@@ -21,12 +21,11 @@ namespace UltraMapper.Internals
             this.SourceMember = sourceMember;
             this.TargetMember = targetMember;
 
-            _toString = new Lazy<string>( () => 
+            _toString = new Lazy<string>( () =>
                 $"{this.SourceMember} -> {this.TargetMember}" );
         }
 
         public MappingResolution MappingResolution { get; internal set; }
-
         public bool Ignore { get; set; }
 
         private LambdaExpression _collectionItemEqualityComparer = null;

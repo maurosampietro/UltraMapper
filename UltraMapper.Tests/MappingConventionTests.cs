@@ -66,6 +66,9 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void ConfigurationOptionOverride()
         {
+            //In this test the collection update adds elements to the target.
+            //This works id the capacity of the target list is updated BEFORE adding elements.
+
             var source = new TestType()
             {
                 List1 = Enumerable.Range( 1, 10 ).ToList(),
@@ -302,10 +305,8 @@ namespace UltraMapper.Tests
         }
     }
 
-    ///// <summary>
-    ///// Test simple scenarios, only public properties involved
-    ///// </summary>
     //[TestClass]
+    /////Flattening taking methods and other member into account
     //public class ComplexProjectionConventionTests
     //{
     //    private class OrderDto
@@ -394,7 +395,6 @@ namespace UltraMapper.Tests
     //        Assert.IsTrue( dto.GetProductName() == order.Product.Name );
     //    }
     //}
-
 
     [TestClass]
     public class MatchingRuleTests

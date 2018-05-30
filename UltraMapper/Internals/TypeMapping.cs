@@ -7,7 +7,7 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public sealed class TypeMapping : ITypeOptions, IMapping
+    public sealed class TypeMapping : ITypeOptions, IMapping, IInheritanceOptions
     {
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
@@ -27,7 +27,7 @@ namespace UltraMapper.Internals
          */
         public readonly Dictionary<MappingTarget, MemberMapping> MemberMappings;
         public readonly Configuration GlobalConfiguration;
-        public readonly TypePair TypePair;
+        public TypePair TypePair { get; private set; }
 
         public MappingResolution MappingResolution { get; internal set; }
 

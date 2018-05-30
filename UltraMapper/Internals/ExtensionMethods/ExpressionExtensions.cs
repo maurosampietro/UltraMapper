@@ -67,6 +67,7 @@ namespace UltraMapper.Internals
             var member = lambda.Parameters.First(
                 p => p.Name == lambdaMember.Name ).Type as MemberInfo;
 
+            var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             foreach( var item in stack )
             {
                 string memberName = null;
@@ -76,9 +77,7 @@ namespace UltraMapper.Internals
                 else if( item is MethodCallExpression )
                     memberName = ((MethodCallExpression)item).Method.Name;
 
-                member = member.GetMemberType().GetMember( memberName,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic )[ 0 ];
-
+                member = member.GetMemberType().GetMember( memberName, bindingFlags )[ 0 ];
                 memberAcessPath.Add( member );
             }
 
@@ -164,7 +163,7 @@ namespace UltraMapper.Internals
     //Generating getter/setter expression from MemberInfo does not preserve the entry instance type
     //if the member is extracted from a complex expression chain 
     //(for example in the expression 'a => a.PropertyA.PropertyB.PropertyC'
-    //the ReflectedType info (that should be of type 'a') is lost in PropertyC (will be of the type of 'PropertyC'))
+    //the ReflectedType info of PropertyC (that should be of type 'a') is lost (and will be of the type of 'PropertyC'))
     internal static class GetterSetterExpressionBuilder
     {
         public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
@@ -379,7 +378,7 @@ namespace UltraMapper.Internals
             }
 
             var nullConstant = Expression.Constant( null );
-            var returnNull = Expression.Return( labelTarget, Expression.Constant( null, returnType ) );
+            var returnNull = Expression.Return( labelTarget, Expression.Default( returnType ) );
 
             var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( memberAccess =>
             {
