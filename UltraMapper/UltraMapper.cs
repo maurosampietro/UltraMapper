@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UltraMapper.Internals;
 
 namespace UltraMapper

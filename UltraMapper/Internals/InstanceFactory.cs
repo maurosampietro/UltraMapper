@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace UltraMapper
 {
-    public class InstanceFactory
+    internal class InstanceFactory
     {
         public static T CreateObject<T>( params object[] constructorValues )
         {
@@ -29,7 +29,7 @@ namespace UltraMapper
         }
     }
 
-    public class ConstructorFactory
+    internal class ConstructorFactory
     {
         public static Func<object> CreateConstructor( Type type )
         {

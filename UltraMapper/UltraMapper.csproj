@@ -65,9 +65,12 @@
     <Compile Include="Conventions\StringSplitting\SplittingRules\IStringSplittingRule.cs" />
     <Compile Include="Conventions\StringSplitting\SplittingRules\StringSplittingRules.cs" />
     <Compile Include="Conventions\StringSplitting\StringSplitter.cs" />
+    <Compile Include="Internals\ExpressionLoops.cs" />
     <Compile Include="Internals\ExtensionMethods\DictionaryExtensions.cs" />
     <Compile Include="Internals\ExtensionMethods\ExpressionExtensions.cs" />
+    <Compile Include="Internals\ExtensionMethods\GetterSetterLambdaExpressionBuilders.cs" />
     <Compile Include="Internals\ExtensionMethods\LinqExtensions.cs" />
+    <Compile Include="Internals\ExtensionMethods\MemberAccessPathExtensions.cs" />
     <Compile Include="Internals\ExtensionMethods\MemberInfoExtensions.cs" />
     <Compile Include="Internals\ExpressionParameterReplacer.cs" />
     <Compile Include="Internals\ExtensionMethods\MethodInfoExtensions.cs" />
