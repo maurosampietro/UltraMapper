@@ -74,8 +74,18 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper ),
-                    Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
+                    Expression.IfThenElse
+                    (
+                        Expression.Equal( sourceCollectionLoopingVar, Expression.Constant( null, sourceCollectionElementType ) ),
+
+                        Expression.Call( targetCollection, targetCollectionInsertionMethod, Expression.Default( targetCollectionElementType ) ),
+
+                        Expression.Block
+                        (
+                            LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper ),
+                            Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
+                        )
+                    )
                 )
             ) );
         }

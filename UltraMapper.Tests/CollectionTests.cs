@@ -12,6 +12,16 @@ namespace UltraMapper.Tests
     {
         private static Random _random = new Random();
 
+        public class User
+        {
+            public int Id { get; set; }
+        }
+
+        public class Test
+        {
+            public List<User> Users { get; set; }
+        }
+
         //IComparable is required to test sorted collections
         protected class ComplexType : IComparable<ComplexType>
         {
@@ -533,6 +543,24 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 49 ), tempItemB ) );
+        }
+
+        [TestMethod]
+        public void NullItemsInCollection()
+        {
+            var _mapper = new UltraMapper.Mapper();
+
+            var users = new Test()
+            {
+                Users = new List<User>()
+            };
+
+            var newUsers = new Test()
+            {
+                Users = new List<User>() { null, null, null }
+            };
+
+            _mapper.Map( newUsers, users );
         }
     }
 }

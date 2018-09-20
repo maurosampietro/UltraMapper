@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace UltraMapper.Tests
 {
     [TestClass]
-    public class RealworldBugTests
+    public class RealworldBug1
     {
         public class Test
         {

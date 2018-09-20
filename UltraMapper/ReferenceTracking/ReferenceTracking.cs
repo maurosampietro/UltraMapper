@@ -22,7 +22,8 @@ namespace UltraMapper
 
             public override int GetHashCode()
             {
-                return this.Instance.GetHashCode() ^ this.TargetType.GetHashCode();
+                int instanceHashCode = this.Instance?.GetHashCode() ?? 0;
+                return instanceHashCode ^ this.TargetType.GetHashCode();
             }
 
             public override bool Equals( object obj )
