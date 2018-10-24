@@ -105,6 +105,8 @@ namespace UltraMapper.Tests
 
             ultraMapper.Map( source, target );
 
+            var isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
             Assert.IsTrue( target.Media.First().Id == 13 );
             Assert.IsTrue( target.Media.First().Drawings.First().Id == 11 );
             Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.Media.First() ) );

@@ -29,6 +29,8 @@ namespace UltraMapper.Internals.ExtensionMethods
             foreach( var item in itemsToRemove )
                 target.Remove( item );
 
+            var itemsToAdd = new List<TTargetElement>();
+
             //search items to add, map and add them
             foreach( var sourceItem in source )
             {
@@ -47,9 +49,15 @@ namespace UltraMapper.Internals.ExtensionMethods
                 {
                     var targetItem = new TTargetElement();
                     mapper.Map( sourceItem, targetItem, referenceTracker );
-                    target.Add( targetItem );
+                    itemsToAdd.Add( targetItem );
                 }
             }
+
+            //it is important to add the items after the target collection
+            //has been updated (or it can happen that we update items that only needed 
+            //to be added acting more or less like a hashset).
+            foreach( var item in itemsToAdd )
+                target.Add( item );
         }
     }
 }

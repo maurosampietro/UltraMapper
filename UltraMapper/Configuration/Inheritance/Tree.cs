@@ -14,27 +14,21 @@ namespace UltraMapper
             this.Root = new TreeNode<T>( root );
         }
 
-        public virtual void Add( T element )
+        public virtual TreeNode<T> Add( T element )
         {
-            this.AddInternal( this.Root, element );
+            return this.AddInternal( this.Root, element );
         }
 
-        private void AddInternal( TreeNode<T> initialNode, T newElement )
+        private TreeNode<T> AddInternal( TreeNode<T> initialNode, T newElement )
         {
             //if( initialNode.Item.TypePair == newElement.TypePair )
             //    return;
 
-            bool isSubNodeFound = false;
             foreach( var node in initialNode.Children )
             {
                 if( _nodeSelection.Invoke( node.Item, newElement ) )
-                {
-                    isSubNodeFound = true;
-                    this.AddInternal( node, newElement );
-                }
+                    return this.AddInternal( node, newElement );
             }
-
-            if( isSubNodeFound ) return;
 
             var toRemove = new List<TreeNode<T>>();
             foreach( var node in initialNode.Children )
@@ -56,6 +50,7 @@ namespace UltraMapper
             }
 
             initialNode.Children.Add( newNode );
+            return newNode;
         }
     }
 }

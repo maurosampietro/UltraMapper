@@ -458,6 +458,79 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void AssignToNullCollection()
+        {
+            var source = new GenericCollections<ComplexType>( false );
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
+
+            var target = new GenericCollections<ComplexType>( true )
+            {
+                List = null,
+                HashSet = null,
+                SortedSet = null,
+                Stack = null,
+                Queue = null,
+                LinkedList = null,
+                ObservableCollection = null
+            };
+
+            var ultraMapper = new Mapper();
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void UpdateAssignToNullCollection()
+        {
+            var source = new GenericCollections<ComplexType>( false );
+            //initialize source
+            for( int i = 0; i < 50; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
+
+            var target = new GenericCollections<ComplexType>( true )
+            {
+                List = null,
+                HashSet = null,
+                SortedSet = null,
+                Stack = null,
+                Queue = null,
+                LinkedList = null,
+                ObservableCollection = null
+            };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>, ComplexType, ComplexType>(
+                    ( itemA, itemB ) => itemA.A == itemB.A );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
         public void KeepAndClearCollection()
         {
             var source = new GenericCollections<ComplexType>( false );

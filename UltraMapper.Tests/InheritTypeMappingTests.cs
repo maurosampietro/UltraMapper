@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace UltraMapper.Tests
 {
@@ -79,6 +81,38 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( target.TestClass.GetType() == source.TestClass.GetType() );
+
+            var isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void CollectionUpdateInheritance()
+        {
+            var source = new ReadOnlyCollection<TestClass>( new TestClass[]
+            {
+                new TestClass() { String = "A" },
+                new TestClass() { String = "B" } }
+            );
+
+            var target = new ObservableCollection<TestClass>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<IEnumerable<TestClass>, IEnumerable<TestClass>, TestClass, TestClass>( ( s, t ) => s.String == t.String );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            var userDefinedTypePair = new Internals.TypePair( typeof( IEnumerable<TestClass> ), typeof( IEnumerable<TestClass> ) );
+            var userDefinedMap = ultraMapper.MappingConfiguration[ userDefinedTypePair ];
+
+            var inheritedTypePair = new Internals.TypePair( typeof( ReadOnlyCollection<TestClass> ), typeof( ObservableCollection<TestClass> ) );
+            var conventionDefinedMap = ultraMapper.MappingConfiguration[ inheritedTypePair ];
+
+            Assert.IsTrue( userDefinedMap.CollectionBehavior == conventionDefinedMap.CollectionBehavior );
+            Assert.IsTrue( userDefinedMap.CollectionItemEqualityComparer == conventionDefinedMap.CollectionItemEqualityComparer );
+            Assert.IsTrue( userDefinedMap.ReferenceBehavior == conventionDefinedMap.ReferenceBehavior );
 
             var isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );

@@ -22,8 +22,17 @@ namespace UltraMapper
         /// </summary>
         public bool IgnoreMemberMappingResolvedByConvention { get; set; }
 
-        public CollectionBehaviors CollectionBehavior { get; set; }
-        public ReferenceBehaviors ReferenceBehavior { get; set; }
+        public CollectionBehaviors CollectionBehavior
+        {
+            get { return _typeMappings.Root.Item.CollectionBehavior; }
+            set { _typeMappings.Root.Item.CollectionBehavior = value; }
+        }
+
+        public ReferenceBehaviors ReferenceBehavior
+        {
+            get { return _typeMappings.Root.Item.ReferenceBehavior; }
+            set { _typeMappings.Root.Item.ReferenceBehavior = value; }
+        }
 
         public List<IMappingExpressionBuilder> Mappers { get; set; }
         public MappingConventions Conventions { get; set; }
@@ -38,9 +47,6 @@ namespace UltraMapper
             };
 
             _typeMappings = new TypeMappingInheritanceTree( baseMapping );
-
-            this.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
-            this.CollectionBehavior = CollectionBehaviors.RESET;
 
             this.Conventions = new MappingConventions( cfg =>
             {
@@ -179,13 +185,25 @@ namespace UltraMapper
         {
             var typeMappingNode = _typeMappings.GetOrAdd( typePair, () =>
             {
-                var typeMapping = new TypeMapping( this, typePair );
-                this.MapByConvention( typeMapping );
+                var newTypeMapping = new TypeMapping( this, typePair );
+                this.MapByConvention( newTypeMapping );
 
-                return typeMapping;
+                return newTypeMapping;
             } );
 
-            return typeMappingNode.Item;
+            var typeMapping = typeMappingNode.Item;
+            if( typeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+            {
+                var parentMapping = typeMappingNode.Parent?.Item;
+                if( parentMapping != null )
+                {
+                    typeMapping.CollectionBehavior = parentMapping.CollectionBehavior;
+                    typeMapping.CollectionItemEqualityComparer = parentMapping.CollectionItemEqualityComparer;
+                    typeMappingNode.Item.ReferenceBehavior = parentMapping.ReferenceBehavior;
+                }
+            }
+
+            return typeMapping;
         }
 
         public TypeMapping this[ TypePair typePair ]
@@ -206,7 +224,7 @@ namespace UltraMapper
 
         private void MapByConvention( TypeMapping typeMapping )
         {
-            foreach( var convention in Conventions )
+            foreach( var convention in this.Conventions )
             {
                 var memberPairings = convention.MapByConvention(
                     typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );

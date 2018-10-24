@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
@@ -41,7 +42,8 @@ namespace UltraMapper.MappingExpressionBuilders
                     .MakeGenericMethod( SourceCollectionElementType, TargetCollectionElementType );
 
                 UpdateCollection = Expression.Call( null, updateCollectionMethodInfo, Mapper, ReferenceTracker, SourceInstance,
-                    TargetInstance, Expression.Convert( Expression.Constant( options.CollectionItemEqualityComparer.Compile() ),
+                   Expression.Convert( TargetInstance, typeof( ICollection<> ).MakeGenericType( TargetCollectionElementType ) ),
+                   Expression.Convert( Expression.Constant( options.CollectionItemEqualityComparer.Compile() ),
                         typeof( Func<,,> ).MakeGenericType( SourceCollectionElementType, TargetCollectionElementType, typeof( bool ) ) ) );
             }
         }

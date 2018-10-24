@@ -22,14 +22,17 @@ namespace UltraMapper
             get { return _nodeDictionary[ key ]; }
         }
 
-        public override void Add( TypeMapping element )
+        public override TreeNode<TypeMapping> Add( TypeMapping element )
         {
             var key = element.TypePair;
-            if( !_nodeDictionary.ContainsKey( key ) )
+            TreeNode<TypeMapping> value;
+            if( !_nodeDictionary.TryGetValue( key, out value ) )
             {
-                _nodeDictionary.Add( key, new TreeNode<TypeMapping>( element ) );
-                base.Add( element );
+                value = base.Add( element );
+                _nodeDictionary.Add( key, value );
             }
+
+            return value;
         }
 
         public TreeNode<TypeMapping> GetOrAdd( TypePair typePair, Func<TypeMapping> valueFactory )
