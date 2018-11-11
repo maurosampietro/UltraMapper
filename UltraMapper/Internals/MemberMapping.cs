@@ -31,14 +31,7 @@ namespace UltraMapper.Internals
         private LambdaExpression _collectionItemEqualityComparer = null;
         public LambdaExpression CollectionItemEqualityComparer
         {
-            get
-            {
-                if( _collectionItemEqualityComparer == null )
-                    return MemberTypeMapping.CollectionItemEqualityComparer;
-
-                return _collectionItemEqualityComparer;
-            }
-
+            get { return _collectionItemEqualityComparer ?? MemberTypeMapping.CollectionItemEqualityComparer; }
             set { _collectionItemEqualityComparer = value; }
         }
 
@@ -50,7 +43,7 @@ namespace UltraMapper.Internals
                 if( _memberTypeMapping == null )
                 {
                     _memberTypeMapping = InstanceTypeMapping.GlobalConfiguration[
-                        SourceMember.MemberType, TargetMember.MemberType ];
+                           SourceMember.MemberType, TargetMember.MemberType ];
                 }
 
                 return _memberTypeMapping;
@@ -60,28 +53,14 @@ namespace UltraMapper.Internals
         private LambdaExpression _customConverter;
         public LambdaExpression CustomConverter
         {
-            get
-            {
-                if( _customConverter == null )
-                    return MemberTypeMapping.CustomConverter;
-
-                return _customConverter;
-            }
-
+            get { return _customConverter ?? MemberTypeMapping.CustomConverter; }
             set { _customConverter = value; }
         }
 
         private LambdaExpression _customTargetConstructor;
         public LambdaExpression CustomTargetConstructor
         {
-            get
-            {
-                if( _customTargetConstructor == null )
-                    return MemberTypeMapping.CustomTargetConstructor;
-
-                return _customTargetConstructor;
-            }
-
+            get { return _customTargetConstructor ?? MemberTypeMapping.CustomTargetConstructor; }
             set { _customTargetConstructor = value; }
         }
 

@@ -13,7 +13,7 @@ namespace UltraMapper.Conventions
         public bool IgnoreMethods { get; set; } = true;
         public bool IgnoreNonPublicMembers { get; set; } = true;
 
-        IEnumerable<MemberInfo> IMemberProvider.GetMembers( Type type )
+        public IEnumerable<MemberInfo> GetMembers( Type type )
         {
             var bindingAttributes = BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy;
             if( !this.IgnoreNonPublicMembers ) bindingAttributes |= BindingFlags.NonPublic;
