@@ -14,7 +14,7 @@ KNOWN (POTENTIAL) PROBLEMS:
   ON SOURCE SIDE: The problem has been solved by checking for null references before accessing members. OK! 
   
   ON TARGET SIDE: The problem has been solved by instantiating a new instance of every null object in the expression.
-				  MINOR PROBLEM: Custom constructors are not taken into account and the type must a parameterless public constructor.
+				  MINOR PROBLEM: Custom constructors are not taken into account and the type must have a parameterless public constructor.
 
 - Collection mapping strategies: when updating order is not preserved 
   (this could be right since it is implied that we keep using the existing target collection).
