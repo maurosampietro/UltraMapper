@@ -290,11 +290,15 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
+                cfg.MapTypes<List<Drawing>, List<Drawing>>()
+                    .IgnoreSourceMember( a => a.Capacity );
+
                 cfg.MapTypes<Media, Media>()
                     .MapMember( s => s.Drawings, t => t.Drawings, ( itemA, itemB ) => itemA.Id == itemB.Id );
             } );
 
             ultraMapper.Map( source, target );
+
             var result = ultraMapper.VerifyMapperResult( source, target );
 
             Assert.IsTrue( result );

@@ -1,9 +1,12 @@
 ﻿
 PROBLEMS:
-			 
-
-
+	
 KNOWN (POTENTIAL) PROBLEMS:
+
+- Configuration can be done against interfaces and base classes but at
+  runtime we should always work with the actual concrete type.
+  While performing the mapping step we should always get the configuration 
+  of the concrete type via 'GetType()' (avoid typeof(T))
 
 - When unflattening by convention OR manually mapping using deep nested member selectors (ie: projections, ie: x => x.PropertyA.GetMethodB().GetFieldC() ), 
   all instances referred by the selector (both on source and target) must be instantiated or you can incur in NullReferenceException. 

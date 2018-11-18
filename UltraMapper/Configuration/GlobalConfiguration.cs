@@ -244,5 +244,10 @@ namespace UltraMapper
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return _typeMappings.ToString();
+        }
     }
 }
