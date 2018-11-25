@@ -10,9 +10,12 @@ namespace UltraMapper
         private readonly Dictionary<TypePair, TreeNode<TypeMapping>> _nodeDictionary
             = new Dictionary<TypePair, TreeNode<TypeMapping>>();
 
+        private static readonly Func<TypeMapping, TypeMapping, bool> _parentChildRelation = ( s, t ) =>
+            s.TypePair.SourceType.IsAssignableFrom( t.TypePair.SourceType ) &&
+            s.TypePair.TargetType.IsAssignableFrom( t.TypePair.TargetType );
+
         public TypeMappingInheritanceTree( TypeMapping root )
-                 : base( root, ( s, t ) => s.TypePair.SourceType.IsAssignableFrom( t.TypePair.SourceType ) &&
-                    s.TypePair.TargetType.IsAssignableFrom( t.TypePair.TargetType ) )
+                 : base( root, _parentChildRelation )
         {
             _nodeDictionary.Add( root.TypePair, new TreeNode<TypeMapping>( root ) );
         }
@@ -25,8 +28,7 @@ namespace UltraMapper
         public override TreeNode<TypeMapping> Add( TypeMapping element )
         {
             var key = element.TypePair;
-            TreeNode<TypeMapping> value;
-            if( !_nodeDictionary.TryGetValue( key, out value ) )
+            if( !_nodeDictionary.TryGetValue( key, out TreeNode<TypeMapping> value ) )
             {
                 value = base.Add( element );
                 _nodeDictionary.Add( key, value );
@@ -37,8 +39,7 @@ namespace UltraMapper
 
         public TreeNode<TypeMapping> GetOrAdd( TypePair typePair, Func<TypeMapping> valueFactory )
         {
-            TreeNode<TypeMapping> value;
-            if( !_nodeDictionary.TryGetValue( typePair, out value ) )
+            if( !_nodeDictionary.TryGetValue( typePair, out TreeNode<TypeMapping> value ) )
             {
                 var element = valueFactory.Invoke();
                 this.Add( element );
@@ -64,18 +65,18 @@ namespace UltraMapper
             if( this.Root == null ) return "{}";
 
             var stringBuilder = new StringBuilder();
-            ToStringInternal( stringBuilder, 0, this.Root );
+            this.ToStringInternal( stringBuilder, 0, this.Root );
 
             return stringBuilder.ToString();
         }
 
-        private void ToStringInternal( StringBuilder stringBuilder, int tabs, TreeNode<TypeMapping> initialNode )
+        private void ToStringInternal( StringBuilder stringBuilder, int indentationLevel, TreeNode<TypeMapping> initialNode )
         {
-            stringBuilder.Append( new String( '\t', tabs++ ) );
+            stringBuilder.Append( new String( '\t', indentationLevel++ ) );
             stringBuilder.AppendLine( initialNode.Item.TypePair.ToString() );
 
             foreach( var node in initialNode.Children )
-                ToStringInternal( stringBuilder, tabs, node );
+                this.ToStringInternal( stringBuilder, indentationLevel, node );
         }
     }
 }
