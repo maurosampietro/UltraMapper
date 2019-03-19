@@ -1,6 +1,7 @@
 version: 0.2.{build}
 pull_requests:
   do_not_increment_build_number: true
+image: Visual Studio 2017
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
@@ -10,10 +11,14 @@ assembly_info:
 build:
   publish_nuget: true
   verbosity: minimal
-only_commits:
-  message: /build/
 deploy:
 - provider: NuGet
   api_key:
     secure: u+KuVfwNaVSx3MHSnyjvIAn25rTxUF9HxQs6F7VOG1OlLYtDT7+19f4zskbiXCP2
   skip_symbols: true
+- provider: GitHub
+  tag: UltraMapper v$(appveyor_build_version)
+  release: UltraMapper v$(appveyor_build_version)
+  auth_token:
+    secure: xdVPCgGLq4ImYFV39Kc4CSd2+bR+HtfN1Iu+NFMYirkeYz4rCboJV+uxiraKjzsO1E7UZelFAmHNXoKRA9IAFEpErerm+/nTjVMtD8AWMyE=
+  artifact: /.*\.nupkg/
