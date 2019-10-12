@@ -201,4 +201,34 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
     }
+
+    [TestClass]
+    public class RealworldBug2
+    {
+        public class SourceClass
+        {
+            public string Id { get; set; }
+        }
+
+        public class TargetClass
+        {
+            public Guid Id { get; set; }
+        }
+
+        [TestMethod]
+        public void StringToGuid()
+        {
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<string, Guid>( str => Guid.Parse( str ) );
+            } );
+
+
+            var source = new SourceClass() { Id = Guid.NewGuid().ToString() };
+            var result = mapper.Map<TargetClass>( source );
+
+            bool isResultOk = mapper.VerifyMapperResult( source, result );
+            Assert.IsTrue( isResultOk );
+        }
+    }
 }

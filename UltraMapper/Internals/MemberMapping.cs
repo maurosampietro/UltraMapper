@@ -114,7 +114,7 @@ namespace UltraMapper.Internals
                             this.MemberTypeMapping.TypePair.SourceType,
                             this.MemberTypeMapping.TypePair.TargetType ) );
 
-                    if( _mapper == null )
+                    if( this.CustomConverter == null && _mapper == null )
                         throw new Exception( $"No object mapper can handle {this}" );
                 }
 
