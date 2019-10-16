@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UltraMapper.Conventions;
@@ -305,96 +306,154 @@ namespace UltraMapper.Tests
         }
     }
 
-    //[TestClass]
-    /////Flattening taking methods and other member into account
-    //public class ComplexProjectionConventionTests
-    //{
-    //    private class OrderDto
-    //    {
-    //        public string CustomerName { get; set; }
+    [TestClass]
+    ///Flattening taking methods and other member into account
+    public class ComplexProjectionConventionTests
+    {
+        private class OrderDto
+        {
+            public string CustomerName { get; set; }
 
-    //        public string _productName;
-    //        public void SetProductName( string productName )
-    //        {
-    //            _productName = productName;
-    //        }
+            public string _productName;
+            public void SetProductName( string productName )
+            {
+                _productName = productName;
+            }
 
-    //        public string GetProductName()
-    //        {
-    //            return _productName;
-    //        }
-    //    }
+            public string GetProductName()
+            {
+                return _productName;
+            }
+        }
 
-    //    private class Order
-    //    {
-    //        public Customer Customer { get; set; }
-    //        public Product Product { get; set; }
-    //    }
+        private class Order
+        {
+            public Customer Customer { get; set; }
+            public Product Product { get; set; }
+        }
 
-    //    private class Product
-    //    {
-    //        public decimal Price { get; set; }
-    //        public string Name { get; set; }
-    //    }
+        private class Product
+        {
+            public decimal Price { get; set; }
+            public string Name { get; set; }
+        }
 
-    //    private class Customer
-    //    {
-    //        public string Name { get; set; }
-    //    }
+        private class Customer
+        {
+            public string Name { get; set; }
+        }
 
-    //    [TestMethod]
-    //    public void Flattening()
-    //    {
-    //        var customer = new Customer
-    //        {
-    //            Name = "George Costanza"
-    //        };
+        [TestMethod]
+        public void Flattening()
+        {
+            var customer = new Customer
+            {
+                Name = "George Costanza"
+            };
 
-    //        var product = new Product
-    //        {
-    //            Name = "Bosco",
-    //            Price = 4.99m
-    //        };
+            var product = new Product
+            {
+                Name = "Bosco",
+                Price = 4.99m
+            };
 
-    //        var order = new Order
-    //        {
-    //            Customer = customer,
-    //            Product = product
-    //        };
+            var order = new Order
+            {
+                Customer = customer,
+                Product = product
+            };
 
-    //        var mapper = new Mapper( cfg =>
-    //        {
-    //            cfg.Conventions.GetOrAdd<ProjectionConvention>();
-    //        } );
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<ProjectionConvention>();
+            } );
 
-    //        var dto = mapper.Map<OrderDto>( order );
+            var dto = mapper.Map<OrderDto>( order );
 
-    //        Assert.IsTrue( dto.CustomerName == customer.Name );
-    //        Assert.IsTrue( dto.GetProductName() == product.Name );
-    //    }
+            Assert.IsTrue( dto.CustomerName == customer.Name );
+            Assert.IsTrue( dto.GetProductName() == product.Name );
+        }
 
-    //    [TestMethod]
-    //    public void Unflattening()
-    //    {
-    //        var dto = new OrderDto()
-    //        {
-    //            CustomerName = "Johnny",
-    //        };
+        [TestMethod]
+        public void Unflattening()
+        {
+            var dto = new OrderDto()
+            {
+                CustomerName = "Johnny",
+            };
 
-    //        dto.SetProductName( "Mobile phone" );
+            dto.SetProductName( "Mobile phone" );
 
-    //        var mapper = new Mapper( cfg =>
-    //        {
-    //            cfg.Conventions.GetOrAdd<ProjectionConvention>();
-    //        } );
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<ProjectionConvention>();
+            } );
 
-    //        //TODO: we need to create instances for nested objects!!!
-    //        var order = mapper.Map<Order>( dto );
+            //TODO: we need to create instances for nested objects!!!
+            var order = mapper.Map<Order>( dto );
 
-    //        Assert.IsTrue( dto.CustomerName == order.Customer.Name );
-    //        Assert.IsTrue( dto.GetProductName() == order.Product.Name );
-    //    }
-    //}
+            Assert.IsTrue( dto.CustomerName == order.Customer.Name );
+            Assert.IsTrue( dto.GetProductName() == order.Product.Name );
+        }
+    }
+
+    [TestClass]
+    public class ProjectionNestedMethodCalls
+    {
+        private class OrderDto
+        {
+            private string _customerName;
+            public string GetCustomerName() => _customerName;
+            public void SetCustomerName( string name ) => _customerName = name;
+        }
+
+        private class Order
+        {
+            private Customer _customer;
+            public Customer GetCustomer() => _customer;
+            public void SetCustomer( Customer customer ) => _customer = customer;
+        }
+
+        private class Customer
+        {
+            private string _name;
+            public void SetName( string name ) => _name = name;
+            public string GetName() => _name;
+        }
+
+        [TestMethod]
+        public void FlatteningNestedMethodCalls()
+        {
+            var customer = new Customer();
+            customer.SetName( "George Costanza" );
+
+            var order = new Order();
+            order.SetCustomer( customer );
+
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<ProjectionConvention>();
+            } );
+
+            var dto = mapper.Map<OrderDto>( order );
+            Assert.IsTrue( dto.GetCustomerName() == order.GetCustomer().GetName() );
+        }
+
+        [TestMethod]
+        public void UnflatteningNestedMethodCalls()
+        {
+            var dto = new OrderDto();
+            dto.SetCustomerName( "Johnny" );
+
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.Conventions.GetOrAdd<ProjectionConvention>();
+            } );
+
+            var order = mapper.Map<Order>( dto );
+            Assert.IsTrue( dto.GetCustomerName() == order.GetCustomer().GetName() );
+        }
+    }
 
     [TestClass]
     public class MatchingRuleTests

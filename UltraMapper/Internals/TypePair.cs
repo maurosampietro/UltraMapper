@@ -7,7 +7,7 @@ namespace UltraMapper.Internals
         public readonly Type SourceType;
         public readonly Type TargetType;
 
-        private readonly Lazy<string> _toString;
+        private string _toString;
         private int? _hashcode;
 
         public TypePair( Type source, Type target )
@@ -15,14 +15,7 @@ namespace UltraMapper.Internals
             this.SourceType = source;
             this.TargetType = target;
 
-            _toString = new Lazy<string>( () =>
-            {
-                string sourceTypeName = source.GetPrettifiedName();
-                string targetTypeName = target.GetPrettifiedName();
-
-                return $"[{sourceTypeName}, {targetTypeName}]";
-            } );
-
+            _toString = null;
             _hashcode = null;
         }
 
@@ -60,7 +53,15 @@ namespace UltraMapper.Internals
 
         public override string ToString()
         {
-            return _toString.Value;
+            if( _toString == null )
+            {
+                string sourceTypeName = this.SourceType.GetPrettifiedName();
+                string targetTypeName = this.TargetType.GetPrettifiedName();
+
+                _toString = $"[{sourceTypeName}, {targetTypeName}]";
+            }
+
+            return _toString;
         }
     }
 }

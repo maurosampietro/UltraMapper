@@ -48,8 +48,7 @@ namespace UltraMapper.Internals
         /// <returns>The underlying type if <paramref name="type"/> is Nullable; <paramref name="type"/> itself otherwise.</returns>
         public static Type GetUnderlyingTypeIfNullable( this Type type )
         {
-            var nullableType = Nullable.GetUnderlyingType( type );
-            return nullableType == null ? type : nullableType;
+            return Nullable.GetUnderlyingType( type ) ?? type;
         }
 
         public static bool IsNullable( this Type type )
@@ -168,15 +167,13 @@ namespace UltraMapper.Internals
         public static bool IsImplicitlyConvertibleTo( this Type sourceType, Type targetType )
         {
             //check implicit conversion between built-in types
-            HashSet<Type> implicitConversions;
-            if( _implicitNumericConversionTable.TryGetValue( sourceType, out implicitConversions ) )
+            if( _implicitNumericConversionTable.TryGetValue( sourceType, out HashSet<Type> implicitConversions ) )
                 return implicitConversions.Contains( targetType );
 
             //check implicit conversion from any type to any type
-            bool conversionExists = false;
             var typePairKey = new TypePair( sourceType, targetType );
 
-            if( !_implicitConversionTable.TryGetValue( typePairKey, out conversionExists ) )
+            if( !_implicitConversionTable.TryGetValue( typePairKey, out bool conversionExists ) )
             {
                 conversionExists = sourceType.GetMethods( BindingFlags.Public | BindingFlags.Static )
                       .Where( methodInfo => methodInfo.Name == "op_Implicit" && methodInfo.ReturnType == targetType )
@@ -224,15 +221,13 @@ namespace UltraMapper.Internals
         public static bool IsExplicitlyConvertibleTo( this Type sourceType, Type targetType )
         {
             //check explicit conversion between built-in types
-            HashSet<Type> explicitConversions;
-            if( _explicitNumericConversionTable.TryGetValue( sourceType, out explicitConversions ) )
+            if( _explicitNumericConversionTable.TryGetValue( sourceType, out HashSet<Type> explicitConversions ) )
                 return explicitConversions.Contains( targetType );
 
             //check explicit conversion from any type to any type
-            bool conversionExists = false;
             var typePairKey = new TypePair( sourceType, targetType );
 
-            if( !_explicitConversionTable.TryGetValue( typePairKey, out conversionExists ) )
+            if( !_explicitConversionTable.TryGetValue( typePairKey, out bool conversionExists ) )
             {
                 conversionExists = sourceType.GetMethods( BindingFlags.Public | BindingFlags.Static )
                       .Where( methodInfo => methodInfo.Name == "op_Explicit" && methodInfo.ReturnType == targetType )

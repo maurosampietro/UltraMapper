@@ -48,7 +48,12 @@ namespace UltraMapper.Internals
             get
             {
                 if( _ignoreMappingResolvedByConvention == null )
+                {
+                    var parent = GlobalConfiguration.GetParentConfiguration( this );
+                    if( parent != null ) return parent.IgnoreMemberMappingResolvedByConvention;
+
                     return GlobalConfiguration.IgnoreMemberMappingResolvedByConvention;
+                }
 
                 return _ignoreMappingResolvedByConvention.Value;
             }
@@ -62,7 +67,12 @@ namespace UltraMapper.Internals
             get
             {
                 if( _referenceMappingStrategy == null )
+                {
+                    var parent = GlobalConfiguration.GetParentConfiguration( this );
+                    if( parent != null ) return parent.ReferenceBehavior;
+
                     return GlobalConfiguration.ReferenceBehavior;
+                }
 
                 return _referenceMappingStrategy.Value;
             }
@@ -76,7 +86,12 @@ namespace UltraMapper.Internals
             get
             {
                 if( _collectionMappingStrategy == null )
+                {
+                    var parent = GlobalConfiguration.GetParentConfiguration( this );
+                    if( parent != null ) return parent.CollectionBehavior;
+
                     return GlobalConfiguration.CollectionBehavior;
+                }
 
                 return _collectionMappingStrategy.Value;
             }

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UltraMapper</RootNamespace>
     <AssemblyName>UltraMapper</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <SccProjectName>SAK</SccProjectName>
@@ -53,8 +53,6 @@
     <Compile Include="Configuration\Inheritance\TreeNode.cs" />
     <Compile Include="Configuration\Inheritance\TypeMappingInheritanceTree.cs" />
     <Compile Include="Configuration\Inheritance\Tree.cs" />
-    <Compile Include="Configuration\ITypeOptions.cs" />
-    <Compile Include="Configuration\IMemberOptions.cs" />
     <Compile Include="Configuration\MemberConfigurator.cs" />
     <Compile Include="Configuration\ReferenceBehaviors.cs" />
     <Compile Include="Conventions\MappingConventions.cs" />
@@ -96,6 +94,7 @@
     <Compile Include="MappingExpressionBuilders\Contexts\MemberMappingContext.cs" />
     <Compile Include="MappingExpressionBuilders\Contexts\ReferenceMapperContext.cs" />
     <Compile Include="MappingExpressionBuilders\Contexts\CollectionMapperContext.cs" />
+    <Compile Include="MappingExpressionBuilders\PrimitiveTypeBuilders\StringToEnumMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\ArrayMapper.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMappingViaTemporaryCollection.cs" />
     <Compile Include="MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\QueueMapper.cs" />

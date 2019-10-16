@@ -40,10 +40,8 @@ namespace UltraMapper.Internals
 
             foreach( var memberAccess in memberAccessPath )
             {
-                if( memberAccess is MethodInfo )
+                if( memberAccess is MethodInfo methodInfo )
                 {
-                    var methodInfo = (MethodInfo)memberAccess;
-
                     if( methodInfo.IsGetterMethod() )
                         accessPath = Expression.Call( accessPath, methodInfo );
                     else
@@ -117,10 +115,8 @@ namespace UltraMapper.Internals
 
             foreach( var memberAccess in memberAccessPath )
             {
-                if( memberAccess is MethodInfo )
+                if( memberAccess is MethodInfo methodInfo )
                 {
-                    var methodInfo = (MethodInfo)memberAccess;
-
                     if( methodInfo.IsGetterMethod() )
                         accessPath = Expression.Call( accessPath, methodInfo );
                     else
@@ -172,10 +168,8 @@ namespace UltraMapper.Internals
 
             foreach( var memberAccess in memberAccessPath )
             {
-                if( memberAccess is MethodInfo )
+                if( memberAccess is MethodInfo methodInfo )
                 {
-                    var methodInfo = (MethodInfo)memberAccess;
-
                     if( methodInfo.IsGetterMethod() )
                         accessPath = Expression.Call( accessPath, methodInfo );
                     else
@@ -191,13 +185,58 @@ namespace UltraMapper.Internals
                 accessPath = Expression.Assign( accessPath, value );
 
             var nullConstant = Expression.Constant( null );
-            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( memberAccess =>
+            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( ( memberAccess, i ) =>
             {
-                var createInstance = Expression.Assign( memberAccess, Expression.New( memberAccess.Type ) );
-                var equalsNull = Expression.Equal( memberAccess, nullConstant );
-                return (Expression)Expression.IfThen( equalsNull, createInstance );
+                if( memberAccessPath[ i ] is MethodInfo methodInfo )
+                {
+                    //nested method calls like GetCustomer().SetName() include non-writable member (GetCustomer).
+                    //Assigning a new instance in that case is more difficult.
+                    //In that case 'by convention' we should look for:
+                    // - A property named Customer
+                    // - A method named SetCustomer(argument type = getter return type) 
+                    //      (also take into account Set, Set_, set, set_) as for convention.
 
-            } ).ToList();
+                    var bindingAttributes = BindingFlags.Instance | BindingFlags.Public
+                        | BindingFlags.FlattenHierarchy | BindingFlags.NonPublic;
+
+                    string setterMethodName = null;
+                    if( methodInfo.Name.StartsWith( "Get" ) )
+                        setterMethodName = methodInfo.Name.Replace( "Get", "Set" );
+                    else if( methodInfo.Name.StartsWith( "get" ) )
+                        setterMethodName = methodInfo.Name.Replace( "get", "set" );
+                    else if( methodInfo.Name.StartsWith( "Get_" ) )
+                        setterMethodName = methodInfo.Name.Replace( "Get_", "Set_" );
+                    else if( methodInfo.Name.StartsWith( "get_" ) )
+                        setterMethodName = methodInfo.Name.Replace( "get_", "set_" );
+
+                    var setterMethod = methodInfo.ReflectedType.GetMethod( setterMethodName, bindingAttributes );
+
+                    Expression setterAccessPath = entryInstance;
+                    for( int j = 0; j < i; j++ )
+                    {
+                        if( memberAccessPath[ j ] is MethodInfo mi )
+                        {
+                            if( mi.IsGetterMethod() )
+                                setterAccessPath = Expression.Call( accessPath, mi );
+                            else
+                                setterAccessPath = Expression.Call( accessPath, mi, value );
+                        }
+                        else
+                            setterAccessPath = Expression.MakeMemberAccess( setterAccessPath, memberAccessPath[ j ] );
+                    }
+
+                    setterAccessPath = Expression.Call( setterAccessPath, setterMethod, Expression.New( memberAccess.Type ) );
+                    var equalsNull = Expression.Equal( memberAccess, nullConstant );
+                    return (Expression)Expression.IfThen( equalsNull, setterAccessPath );
+                }
+                else
+                {
+                    var createInstance = Expression.Assign( memberAccess, Expression.New( memberAccess.Type ) );
+                    var equalsNull = Expression.Equal( memberAccess, nullConstant );
+                    return (Expression)Expression.IfThen( equalsNull, createInstance );
+                }
+
+            } ).Where( nc => nc != null ).ToList();
 
             var exp = Expression.Block
             (

@@ -237,12 +237,19 @@ namespace UltraMapper
                     var targetMember = memberPair.TargetMemberAccess.Last();
                     var mappingTarget = typeMapping.GetMappingTarget( targetMember, memberPair.TargetMemberAccess );
 
-                    var mapping = new MemberMapping( typeMapping, mappingSource, mappingTarget );
-                    mapping.MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION;
+                    var mapping = new MemberMapping( typeMapping, mappingSource, mappingTarget )
+                    {
+                        MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION
+                    };
 
                     typeMapping.MemberMappings[ mappingTarget ] = mapping;
                 }
             }
+        }
+
+        public TypeMapping GetParentConfiguration( TypeMapping typeMapping )
+        {
+            return _typeMappings[ typeMapping.TypePair ].Parent?.Item;
         }
 
         public override string ToString()

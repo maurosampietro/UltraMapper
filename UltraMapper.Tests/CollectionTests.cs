@@ -10,7 +10,7 @@ namespace UltraMapper.Tests
     [TestClass]
     public class CollectionTests
     {
-        private static Random _random = new Random();
+        private static readonly Random _random = new Random();
 
         public class User
         {

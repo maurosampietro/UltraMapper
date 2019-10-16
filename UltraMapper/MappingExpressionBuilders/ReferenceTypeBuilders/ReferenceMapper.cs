@@ -29,9 +29,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
          ( referenceTracker, sourceInstance, targetType ) =>
          {
-             object targetInstance;
-             referenceTracker.TryGetValue( sourceInstance, targetType, out targetInstance );
-
+             referenceTracker.TryGetValue( sourceInstance, targetType, out object targetInstance );
              return targetInstance;
          };
 
@@ -130,7 +128,7 @@ namespace UltraMapper.MappingExpressionBuilders
         }
 
         #region MemberMapping
-        private static MemberMappingComparer _memberComparer = new MemberMappingComparer();
+        private static readonly MemberMappingComparer _memberComparer = new MemberMappingComparer();
 
         private class MemberMappingComparer : IComparer<MemberMapping>
         {

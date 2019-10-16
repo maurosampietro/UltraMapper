@@ -1,5 +1,4 @@
-﻿
-PROBLEMS:
+﻿PROBLEMS:
 	
 KNOWN (POTENTIAL) PROBLEMS:
 
@@ -13,16 +12,17 @@ KNOWN (POTENTIAL) PROBLEMS:
 	
   ON SOURCE SIDE: The problem has been solved by checking for null references before accessing members. OK! 
   
-  ON TARGET SIDE: The problem has been solved by instantiating a new instance of every null object in the expression.
+  ON TARGET SIDE: The problem has been solved by instantiating a new instance of every null object in the expression. OK!
 				  MINOR PROBLEM: Custom constructors are not taken into account and the type must have a parameterless public constructor.
 
 - Collection mapping strategies: when updating order is not preserved 
-  (this could be right since it is implied that we keep using the existing target collection).
+	(this could be right since it is implied that we keep using the existing target collection).
 
 - Reference type's CustomConverters do not recurse on inner references.
-	 (this might be correct since the entire mapping is delegated to the user).   
+	(this might be correct since the entire mapping is delegated to the user).   
 
 - CustomConverters do not add references to the ReferenceTracker.
+	(this is obvious and might be correct. Maybe just pass a reference to the ReferenceTracker to delegate this to the user).   
 
 - Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
   Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
@@ -35,13 +35,9 @@ TODO:
 - ArrayMapper does not handle CollectionBehaviors.
 
 - Automatic reverse mapping (at the time a reverse mapping is a normal mapping
-  encountered at execution time and resolved by convention and thus does not take into account manual overrides.
+  encountered at execution time and resolved by convention and thus does not take into account manual overrides).
 
 - Dynamic mapping
-
-- Configuration inheritance (ie. IgnoreConvention)
-
-- Abstract and base classes map with derived types inheriting the configuration
 
 - Simple members inherits type mapping configuration BUT complex types do not.
 
@@ -50,18 +46,13 @@ TODO:
   configuration (stored by type and not taken into account because concrete object type != dynamic proxied type).
   Type configuration, instead, obviously should work only exactly for the specified types
 
-- VERIFY_MAPPING: Search for objects sharing the same reference in the source and check 
-  that on the target those objects are mapped to a single object sharing the same reference
-
 - Configurators need extra overloads to cover target member mapping via methods Get/Set
   (both untyped (MemberInfo), and strongly types (Lambdas) helpers are missing).
 
 - Multidimensional/jagged arrays; 
 
-- Projection convention does look for exact member names and thus cannot map something like "CustomerName -> GetCustomer().SetName()"
+- UNIT TEST: VERIFY MAPPING method should search for objects sharing the same reference in the source and check 
+  that on the target those objects are mapped to a single object sharing the same reference
 
 
 OPTIMIZATIONS:
-
-- Performance are not an issue but a lot of reflection work is not being cached. Reflection already caches internally
-  but here we do a lot of additional work that should be also cached.

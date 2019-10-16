@@ -20,7 +20,7 @@ namespace UltraMapper.Tests
         private class IB3 : I3 { public int MyProperty { get; set; } }
         private class MyType3 { public I3 Interface { get; set; } }
 
-        //[TestMethod]
+        [TestMethod]
         public void DeepCopyWithInterface()
         {
             var source = new MyType() { Interface = new IB() { MyProperty = 1, MyProperty2 = 2 } };
@@ -63,8 +63,8 @@ namespace UltraMapper.Tests
             {
                 cfg.MapTypes<I, I2>( () => new IA2() );
             } );
-            var target = ultraMapper.Map<MyType2>( source );
 
+            var target = ultraMapper.Map<MyType2>( source );
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
 
             Assert.IsTrue( isResultOk );

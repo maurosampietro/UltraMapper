@@ -12,13 +12,11 @@
     <Compile Include="..\UltraMapper\Configuration\ConventionMappigResolver.cs" Link="ConventionMappigResolver.cs" />
     <Compile Include="..\UltraMapper\Configuration\GlobalConfiguration.cs" Link="GlobalConfiguration.cs" />
     <Compile Include="..\UltraMapper\Configuration\IMappingOptions.cs" Link="IMappingOptions.cs" />
-    <Compile Include="..\UltraMapper\Configuration\IMemberOptions.cs" Link="IMemberOptions.cs" />
     <Compile Include="..\UltraMapper\Configuration\Inheritance\IInheritanceOptions.cs" Link="IInheritanceOptions.cs" />
     <Compile Include="..\UltraMapper\Configuration\Inheritance\LeafToRootTraversal.cs" Link="LeafToRootTraversal.cs" />
     <Compile Include="..\UltraMapper\Configuration\Inheritance\Tree.cs" Link="Tree.cs" />
     <Compile Include="..\UltraMapper\Configuration\Inheritance\TreeNode.cs" Link="TreeNode.cs" />
     <Compile Include="..\UltraMapper\Configuration\Inheritance\TypeMappingInheritanceTree.cs" Link="TypeMappingInheritanceTree.cs" />
-    <Compile Include="..\UltraMapper\Configuration\ITypeOptions.cs" Link="ITypeOptions.cs" />
     <Compile Include="..\UltraMapper\Configuration\MemberConfigurator.cs" Link="MemberConfigurator.cs" />
     <Compile Include="..\UltraMapper\Configuration\ReferenceBehaviors.cs" Link="ReferenceBehaviors.cs" />
     <Compile Include="..\UltraMapper\Configuration\TypeConfigurator.cs" Link="TypeConfigurator.cs" />
@@ -75,6 +73,7 @@
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\PrimitiveTypeBuilders\EnumMapper.cs" Link="EnumMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\PrimitiveTypeBuilders\NullableMapper.cs" Link="NullableMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\PrimitiveTypeBuilders\PrimitiveMapperBase.cs" Link="PrimitiveMapperBase.cs" />
+    <Compile Include="..\UltraMapper\MappingExpressionBuilders\PrimitiveTypeBuilders\StringToEnumMapper.cs" Link="StringToEnumMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\PrimitiveTypeBuilders\StructMapper.cs" Link="StructMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\ArrayMapper.cs" Link="ArrayMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMapper.cs" Link="CollectionMapper.cs" />

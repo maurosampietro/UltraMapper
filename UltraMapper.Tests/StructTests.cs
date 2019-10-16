@@ -21,10 +21,9 @@ namespace UltraMapper.Tests
         public void DateTimeDirectTypeMapping()
         {
             DateTime dateTime = new DateTime( 2017, 03, 13 );
-            DateTime clone;
 
             var mapper = new Mapper();
-            mapper.Map( dateTime, out clone );
+            mapper.Map( dateTime, out DateTime clone );
 
             Assert.IsTrue( dateTime == clone );
             Assert.IsTrue( !Object.ReferenceEquals( dateTime, clone ) );

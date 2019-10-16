@@ -163,7 +163,6 @@ namespace UltraMapper
 
             Type mappingSourceType;
             Type mappingTargetType;
-            TypeMapping typeMapping = null;
 
             //---runtime checks for abstract classes and interfaces.
 
@@ -174,10 +173,8 @@ namespace UltraMapper
             //UP THE TYPEMAPPING IN THE MEMBER MAPPPING CLASS AND 
             //SIMPLIFIES THE CODE IN A LOT OF PLACES (HERE INCLUDED)
 
-            if( mapping is TypeMapping )
+            if( mapping is TypeMapping typeMapping)
             {
-                typeMapping = ((TypeMapping)mapping);
-
                 mappingSourceType = typeMapping.TypePair.SourceType;
                 mappingTargetType = typeMapping.TypePair.TargetType;
 
@@ -195,14 +192,13 @@ namespace UltraMapper
                     mapping = this.MappingConfiguration[ mappingSourceType, target.GetType() ];
                 }
             }
-            else if( mapping is MemberMapping )
+            else if( mapping is MemberMapping memberMapping )
             {
-                var m = (MemberMapping)mapping;
-                if( m.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
                 {
-                    typeMapping = m.MemberTypeMapping;
-                    mappingSourceType = typeMapping.TypePair.SourceType;
-                    mappingTargetType = typeMapping.TypePair.TargetType;
+                    var memberTypeMapping = memberMapping.MemberTypeMapping;
+                    mappingSourceType = memberTypeMapping.TypePair.SourceType;
+                    mappingTargetType = memberTypeMapping.TypePair.TargetType;
 
                     if( (mappingSourceType.IsInterface || mappingSourceType.IsAbstract) &&
                         (mappingTargetType.IsInterface || mappingTargetType.IsAbstract) )

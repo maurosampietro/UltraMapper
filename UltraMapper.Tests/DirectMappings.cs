@@ -7,7 +7,7 @@ namespace UltraMapper.Tests
     [TestClass]
     public class DirectMappings
     {
-        private static ComplexTypeComparer comparer = new ComplexTypeComparer();
+        private static readonly ComplexTypeComparer comparer = new ComplexTypeComparer();
         private class ComplexTypeComparer : IEqualityComparer<ComplexType>
         {
             public bool Equals( ComplexType x, ComplexType y )

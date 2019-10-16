@@ -6,7 +6,7 @@ namespace UltraMapper
     internal class Tree<T>
     {
         private readonly Func<T, T, bool> _nodeSelection;
-        public readonly TreeNode<T> Root;
+        public TreeNode<T> Root { get; private set; }
 
         public Tree( T root, Func<T, T, bool> nodeSelection )
         {
@@ -24,16 +24,30 @@ namespace UltraMapper
             //if( initialNode.Item.TypePair == newElement.TypePair )
             //    return;
 
+            //root swap
+            if( initialNode == this.Root && _nodeSelection( newElement, initialNode.Item ) )
+            {
+                this.Root = new TreeNode<T>( newElement )
+                {
+                    Parent = initialNode.Parent,
+                };
+
+                this.Root.Children.Add( initialNode );
+                initialNode.Parent = this.Root;
+
+                return this.Root;
+            }
+
             foreach( var node in initialNode.Children )
             {
-                if( _nodeSelection.Invoke( node.Item, newElement ) )
+                if( _nodeSelection( node.Item, newElement ) )
                     return this.AddInternal( node, newElement );
             }
 
             var toRemove = new List<TreeNode<T>>();
             foreach( var node in initialNode.Children )
             {
-                if( _nodeSelection.Invoke( newElement, node.Item ) )
+                if( _nodeSelection( newElement, node.Item ) )
                     toRemove.Add( node );
             }
 

@@ -4,7 +4,7 @@ namespace UltraMapper
 {
     public static class UltraMapperExtensionMethods
     {
-        private static Configuration _configuration = new Configuration();
+        private static readonly Configuration _configuration = new Configuration();
         private static Mapper _mapper = new Mapper( _configuration );
 
         public static void MapTo<TSource, TTarget>( this TSource source,

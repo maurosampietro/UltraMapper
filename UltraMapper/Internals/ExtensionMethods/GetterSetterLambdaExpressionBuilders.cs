@@ -26,9 +26,8 @@ namespace UltraMapper.Internals
 
         public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
         {
-            if( memberInfo is Type )
+            if( memberInfo is Type type )
             {
-                var type = (Type)memberInfo;
                 // (target, value) => target.field;
 
                 var targetInstance = Expression.Parameter( type, "target" );
@@ -40,14 +39,14 @@ namespace UltraMapper.Internals
                 return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
             }
 
-            if( memberInfo is FieldInfo )
-                return GetSetterLambdaExpression( (FieldInfo)memberInfo );
+            if( memberInfo is FieldInfo fieldInfo )
+                return GetSetterLambdaExpression( fieldInfo );
 
-            if( memberInfo is PropertyInfo )
-                return GetSetterLambdaExpression( (PropertyInfo)memberInfo );
+            if( memberInfo is PropertyInfo propertyInfo )
+                return GetSetterLambdaExpression( propertyInfo );
 
-            if( memberInfo is MethodInfo )
-                return GetSetterLambdaExpression( (MethodInfo)memberInfo );
+            if( memberInfo is MethodInfo methodInfo )
+                return GetSetterLambdaExpression( methodInfo );
 
             throw new ArgumentException( $"'{memberInfo}' is not supported." );
         }

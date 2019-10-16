@@ -9,8 +9,7 @@ namespace UltraMapper.Internals
         public readonly MemberAccessPath MemberAccessPath;
         public readonly MemberInfo MemberInfo;
         public readonly Type MemberType;
-
-        private readonly Lazy<string> _toString;
+        private string _toString;
 
         public bool Ignore { get; set; }
 
@@ -19,12 +18,6 @@ namespace UltraMapper.Internals
             this.MemberAccessPath = memberAccessPath;
             this.MemberInfo = memberAccessPath.Last();
             this.MemberType = this.MemberInfo.GetMemberType();
-
-            _toString = new Lazy<string>( () =>
-            {
-                string typeName = this.MemberType.GetPrettifiedName();
-                return $"{typeName} {this.MemberInfo.Name}";
-            } );
         }
 
         public override bool Equals( object obj )
@@ -42,7 +35,13 @@ namespace UltraMapper.Internals
 
         public override string ToString()
         {
-            return _toString.Value;
+            if( _toString == null )
+            {
+                string typeName = this.MemberType.GetPrettifiedName();
+                _toString = $"{typeName} {this.MemberInfo.Name}";
+            }
+
+            return _toString;
         }
     }
 }

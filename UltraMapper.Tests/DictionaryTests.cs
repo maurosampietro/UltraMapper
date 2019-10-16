@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows;
 
 namespace UltraMapper.Tests
@@ -8,7 +9,7 @@ namespace UltraMapper.Tests
     [TestClass]
     public class DictionaryTests
     {
-        private static Random _random = new Random();
+        private static readonly Random _random = new Random();
 
         //IComparable is required to test sorted collections
         private class ComplexType : IComparable<ComplexType>

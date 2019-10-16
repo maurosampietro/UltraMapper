@@ -10,7 +10,7 @@ namespace UltraMapper.Conventions
     {
         public bool IgnoreFields { get; set; } = true;
         public bool IgnoreProperties { get; set; } = false;
-        public bool IgnoreMethods { get; set; } = true;
+        public bool IgnoreMethods { get; set; } = false;
         public bool IgnoreNonPublicMembers { get; set; } = true;
 
         public IEnumerable<MemberInfo> GetMembers( Type type )

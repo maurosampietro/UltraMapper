@@ -7,11 +7,10 @@ namespace UltraMapper.Internals
 {
     public class MemberMapping : IMemberOptions, IMapping
     {
-        private readonly Lazy<string> _toString;
-
         public readonly TypeMapping InstanceTypeMapping;
         public readonly MappingSource SourceMember;
         public readonly MappingTarget TargetMember;
+        private string _toString;
 
         public MemberMapping( TypeMapping typeMapping,
             MappingSource sourceMember, MappingTarget targetMember )
@@ -20,9 +19,6 @@ namespace UltraMapper.Internals
 
             this.SourceMember = sourceMember;
             this.TargetMember = targetMember;
-
-            _toString = new Lazy<string>( () =>
-                $"{this.SourceMember} -> {this.TargetMember}" );
         }
 
         public MappingResolution MappingResolution { get; internal set; }
@@ -165,7 +161,10 @@ namespace UltraMapper.Internals
 
         public override string ToString()
         {
-            return _toString.Value;
+            if( _toString == null )
+                _toString = $"{this.SourceMember} -> {this.TargetMember}";
+
+            return _toString;
         }
     }
 }

@@ -14,6 +14,8 @@ namespace UltraMapper.Internals
         public void Add( MemberInfo memberInfo )
             => _memberAccess.Add( memberInfo );
 
+        public MemberInfo this[ int index ] => _memberAccess[index];
+
         public MemberAccessPath Reverse()
         {
             _memberAccess.Reverse();
