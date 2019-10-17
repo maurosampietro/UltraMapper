@@ -60,43 +60,26 @@ namespace UltraMapper.Internals
             set { _customTargetConstructor = value; }
         }
 
-        private ReferenceBehaviors? _referenceMappingStrategy;
+        private ReferenceBehaviors? _referenceBehavior;
         public ReferenceBehaviors ReferenceBehavior
         {
             get
             {
-                if( _referenceMappingStrategy == null )
+                if( _referenceBehavior == null )
                 {
-                    if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
-                        return MemberTypeMapping.ReferenceBehavior;
+                    //if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
+                    return MemberTypeMapping.ReferenceBehavior;
 
                     return InstanceTypeMapping.ReferenceBehavior;
                 }
 
-                return _referenceMappingStrategy.Value;
+                return _referenceBehavior.Value;
             }
 
-            set { _referenceMappingStrategy = value; }
+            set { _referenceBehavior = value; }
         }
 
-        private CollectionBehaviors? _collectionMappingStrategy;
-        public CollectionBehaviors CollectionBehavior
-        {
-            get
-            {
-                if( _referenceMappingStrategy == null )
-                {
-                    if( MemberTypeMapping.MappingResolution == MappingResolution.USER_DEFINED )
-                        return MemberTypeMapping.CollectionBehavior;
-
-                    return InstanceTypeMapping.CollectionBehavior;
-                }
-
-                return _collectionMappingStrategy.Value;
-            }
-
-            set { _collectionMappingStrategy = value; }
-        }
+        public CollectionBehaviors CollectionBehavior { get; set; }
 
         private IMappingExpressionBuilder _mapper;
         public IMappingExpressionBuilder Mapper
@@ -126,7 +109,7 @@ namespace UltraMapper.Internals
                 if( this.CustomConverter != null )
                     return this.CustomConverter;
 
-                if( _mappingExpression != null ) return _mappingExpression;
+                //if( _mappingExpression != null ) return _mappingExpression;
 
                 return _mappingExpression = this.Mapper.GetMappingExpression(
                     this.MemberTypeMapping.TypePair.SourceType,

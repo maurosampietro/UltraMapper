@@ -68,7 +68,7 @@ namespace UltraMapper.Tests
         public void ConfigurationOptionOverride()
         {
             //In this test the collection update adds elements to the target.
-            //This works id the capacity of the target list is updated BEFORE adding elements.
+            //This works if the capacity of the target list is updated BEFORE adding elements.
 
             var source = new TestType()
             {

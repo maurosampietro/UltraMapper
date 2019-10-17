@@ -158,10 +158,10 @@ namespace UltraMapper.MappingExpressionBuilders
              *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).             
              */
 
-            bool isResetCollection = /*context.Options.ReferenceMappingStrategy == ReferenceMappingStrategies.USE_TARGET_INSTANCE_IF_NOT_NULL && */
+            bool isResetCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL && */
                 context.Options.CollectionBehavior == CollectionBehaviors.RESET;
 
-            bool isUpdateCollection = context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&
+            bool isUpdateCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
                 context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
 
             var clearMethod = GetTargetCollectionClearMethod( context );

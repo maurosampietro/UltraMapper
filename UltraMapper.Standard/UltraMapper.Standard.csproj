@@ -59,6 +59,7 @@
     <Compile Include="..\UltraMapper\Internals\MemberAccessPath.cs" Link="MemberAccessPath.cs" />
     <Compile Include="..\UltraMapper\Internals\MemberMapping.cs" Link="MemberMapping.cs" />
     <Compile Include="..\UltraMapper\Internals\MemberPair.cs" Link="MemberPair.cs" />
+    <Compile Include="..\UltraMapper\Internals\OptionCrawlers.cs" Link="OptionCrawlers.cs" />
     <Compile Include="..\UltraMapper\Internals\SingletonList.cs" Link="SingletonList.cs" />
     <Compile Include="..\UltraMapper\Internals\TypeMapping.cs" Link="TypeMapping.cs" />
     <Compile Include="..\UltraMapper\Internals\TypePair.cs" Link="TypePair.cs" />

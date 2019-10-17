@@ -32,7 +32,8 @@ KNOWN (POTENTIAL) PROBLEMS:
 
 TODO:
 
-- ArrayMapper does not handle CollectionBehaviors.
+- ArrayMapper should check if the array is capable of holding all of the elements in the source collection;
+  if the array is not of the right size, a new array should be instantiated.
 
 - Automatic reverse mapping (at the time a reverse mapping is a normal mapping
   encountered at execution time and resolved by convention and thus does not take into account manual overrides).

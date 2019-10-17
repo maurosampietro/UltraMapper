@@ -191,19 +191,17 @@ namespace UltraMapper
                 return newTypeMapping;
             } );
 
-            var typeMapping = typeMappingNode.Item;
-            if( typeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-            {
-                var parentMapping = typeMappingNode.Parent?.Item;
-                if( parentMapping != null )
-                {
-                    typeMapping.CollectionBehavior = parentMapping.CollectionBehavior;
-                    typeMapping.CollectionItemEqualityComparer = parentMapping.CollectionItemEqualityComparer;
-                    typeMappingNode.Item.ReferenceBehavior = parentMapping.ReferenceBehavior;
-                }
-            }
-
-            return typeMapping;
+            return typeMappingNode.Item;
+            //if( typeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+            //{
+            //    var parentMapping = typeMappingNode.Parent?.Item;
+            //    if( parentMapping != null )
+            //    {
+            //        typeMapping.CollectionBehavior = parentMapping.CollectionBehavior;
+            //        typeMapping.CollectionItemEqualityComparer = parentMapping.CollectionItemEqualityComparer;
+            //        typeMappingNode.Item.ReferenceBehavior = parentMapping.ReferenceBehavior;
+            //    }
+            //}
         }
 
         public TypeMapping this[ TypePair typePair ]

@@ -3,7 +3,12 @@
     public enum CollectionBehaviors
     {
         /// <summary>
-        /// Keeps using the input collection (same reference). 
+        /// Inherit this option
+        /// </summary>
+        INHERIT,
+
+        /// <summary>
+        /// Keep using the input collection (same reference). 
         /// The collection is cleared and then elements are added. 
         /// </summary>
         RESET,
@@ -15,11 +20,11 @@
         MERGE,
 
         /// <summary>
-        /// Keeps using the input collection (same reference).
+        /// Keep using the input collection (same reference).
         /// Each source item matching a target item is updated.
         /// Each source item non existing in the target collection is added.
         /// Each target item non existing in the source collection is removed.
-        /// A way to compare two items must also be provided.
+        /// A way to compare two items must be provided.
         /// </summary>
         UPDATE
     }

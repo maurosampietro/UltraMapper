@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
 {
@@ -110,9 +111,11 @@ namespace UltraMapper.Tests
             var inheritedTypePair = new Internals.TypePair( typeof( ReadOnlyCollection<TestClass> ), typeof( ObservableCollection<TestClass> ) );
             var conventionDefinedMap = ultraMapper.MappingConfiguration[ inheritedTypePair ];
 
-            Assert.IsTrue( userDefinedMap.CollectionBehavior == conventionDefinedMap.CollectionBehavior );
-            Assert.IsTrue( userDefinedMap.CollectionItemEqualityComparer == conventionDefinedMap.CollectionItemEqualityComparer );
-            Assert.IsTrue( userDefinedMap.ReferenceBehavior == conventionDefinedMap.ReferenceBehavior );
+            var conventionDefinedMapOptionCrawler = new TypeMappingCrawler( conventionDefinedMap );
+
+            Assert.IsTrue( userDefinedMap.CollectionBehavior == conventionDefinedMapOptionCrawler.CollectionBehavior );
+            Assert.IsTrue( userDefinedMap.CollectionItemEqualityComparer == conventionDefinedMapOptionCrawler.CollectionItemEqualityComparer );
+            Assert.IsTrue( userDefinedMap.ReferenceBehavior == conventionDefinedMapOptionCrawler.ReferenceBehavior );
 
             var isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );

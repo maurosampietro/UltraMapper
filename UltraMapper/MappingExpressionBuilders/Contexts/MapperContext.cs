@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -14,7 +15,13 @@ namespace UltraMapper.MappingExpressionBuilders
             SourceInstance = Expression.Parameter( source, "sourceInstance" );
             TargetInstance = Expression.Parameter( target, "targetInstance" );
 
-            Options = options;
+            switch( options )
+            {
+                case MemberMappingCrawler mmc: this.Options = mmc; break;
+                case TypeMappingCrawler tmc: this.Options = tmc; break;
+                case IMemberOptions imo: this.Options = new MemberMappingCrawler( (MemberMapping)options ); break;
+                case ITypeOptions imo: this.Options = new TypeMappingCrawler( (TypeMapping)options ); break;
+            }
         }
     }
 }

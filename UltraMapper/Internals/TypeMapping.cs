@@ -40,7 +40,6 @@ namespace UltraMapper.Internals
 
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression CustomTargetConstructor { get; set; }
-        public LambdaExpression CollectionItemEqualityComparer { get; set; }
 
         private bool? _ignoreMappingResolvedByConvention;
         public bool IgnoreMemberMappingResolvedByConvention
@@ -61,7 +60,7 @@ namespace UltraMapper.Internals
             set { _ignoreMappingResolvedByConvention = value; }
         }
 
-        private ReferenceBehaviors? _referenceMappingStrategy;
+        private ReferenceBehaviors? _referenceMappingStrategy = null;
         public ReferenceBehaviors ReferenceBehavior
         {
             get
@@ -80,23 +79,23 @@ namespace UltraMapper.Internals
             set { _referenceMappingStrategy = value; }
         }
 
-        private CollectionBehaviors? _collectionMappingStrategy;
-        public CollectionBehaviors CollectionBehavior
+        public CollectionBehaviors CollectionBehavior { get; set; }
+
+        private LambdaExpression _collectionItemEqualityComparer = null;
+        public LambdaExpression CollectionItemEqualityComparer
         {
             get
             {
-                if( _collectionMappingStrategy == null )
+                if( _collectionItemEqualityComparer == null )
                 {
                     var parent = GlobalConfiguration.GetParentConfiguration( this );
-                    if( parent != null ) return parent.CollectionBehavior;
-
-                    return GlobalConfiguration.CollectionBehavior;
+                    if( parent != null ) return parent.CollectionItemEqualityComparer;
                 }
 
-                return _collectionMappingStrategy.Value;
+                return _collectionItemEqualityComparer;
             }
 
-            set { _collectionMappingStrategy = value; }
+            set { _collectionItemEqualityComparer = value; }
         }
 
         private IMappingExpressionBuilder _mapper;
@@ -125,7 +124,7 @@ namespace UltraMapper.Internals
                 if( this.CustomConverter != null )
                     return this.CustomConverter;
 
-                if( _mappingExpression != null ) return _mappingExpression;
+                //if( _mappingExpression != null ) return _mappingExpression;
 
                 return _mappingExpression = this.Mapper.GetMappingExpression(
                     this.TypePair.SourceType, this.TypePair.TargetType, this );

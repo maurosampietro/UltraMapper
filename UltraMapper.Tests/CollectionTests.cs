@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
@@ -57,6 +58,7 @@ namespace UltraMapper.Tests
 
         protected class GenericCollections<T>
         {
+            public T[] Array { get; set; }
             public HashSet<T> HashSet { get; set; }
             public SortedSet<T> SortedSet { get; set; }
             public List<T> List { get; set; }
@@ -67,6 +69,7 @@ namespace UltraMapper.Tests
 
             public GenericCollections( bool initializeRandomlyIfPrimitiveGenericArg )
             {
+                this.Array = new T[ 10 ];
                 this.List = new List<T>();
                 this.HashSet = new HashSet<T>();
                 this.SortedSet = new SortedSet<T>();
@@ -89,6 +92,7 @@ namespace UltraMapper.Tests
                         T value = (T)Convert.ChangeType( i,
                             elementType.GetUnderlyingTypeIfNullable() );
 
+                        this.Array[ i ] = value;
                         this.List.Add( value );
                         this.HashSet.Add( value );
                         this.SortedSet.Add( value );
@@ -103,6 +107,7 @@ namespace UltraMapper.Tests
 
         private class ReadOnlyGeneric<T>
         {
+            public ReadOnlyCollection<T> Array { get; set; }
             public ReadOnlyCollection<T> HashSet { get; set; }
             public ReadOnlyCollection<T> SortedSet { get; set; }
             public ReadOnlyCollection<T> List { get; set; }
@@ -115,9 +120,9 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void CollectionItemsAndMembersMapping()
         {
-            List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            var source = Enumerable.Range( 0, 10 ).ToList();
             source.Capacity = 100;
-            List<double> target = new List<double>() { 1, 2, 3 };
+            var target = new List<double>() { 1, 2, 3 };
 
             Assert.IsTrue( !source.SequenceEqual(
                     target.Select( item => (int)item ) ) );
@@ -135,9 +140,9 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void MergeCollections()
         {
-            List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            var source = Enumerable.Range( 0, 10 ).ToList();
             source.Capacity = 100;
-            List<double> target = new List<double>() { 1, 2, 3 };
+            var target = new List<double>() { 1, 2, 3 };
 
             Assert.IsTrue( !source.SequenceEqual(
                     target.Select( item => (int)item ) ) );
@@ -305,8 +310,9 @@ namespace UltraMapper.Tests
             var innerType = new InnerType() { String = "test" };
 
             var source = new GenericCollections<ComplexType>( false );
-            for( int i = 0; i < 3; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
                 source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
                 source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
                 source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
@@ -331,8 +337,9 @@ namespace UltraMapper.Tests
             var innerType = new InnerType() { String = "test" };
 
             var source = new GenericCollections<ComplexType>( false );
-            for( int i = 0; i < 3; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
                 source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
                 source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
                 source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
@@ -367,8 +374,9 @@ namespace UltraMapper.Tests
             var source = new GenericCollections<int>( false );
 
             //initialize source
-            for( int i = 0; i < 50; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = i;
                 source.List.Add( i );
                 source.HashSet.Add( i );
                 source.SortedSet.Add( i );
@@ -403,8 +411,9 @@ namespace UltraMapper.Tests
             var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
-            for( int i = 0; i < 50; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i };
                 source.List.Add( new ComplexType() { A = i } );
                 source.HashSet.Add( new ComplexType() { A = i } );
                 source.SortedSet.Add( new ComplexType() { A = i } );
@@ -439,6 +448,7 @@ namespace UltraMapper.Tests
         {
             var source = new GenericCollections<int>( false )
             {
+                Array = null,
                 List = null,
                 HashSet = null,
                 SortedSet = null,
@@ -462,8 +472,9 @@ namespace UltraMapper.Tests
         {
             var source = new GenericCollections<ComplexType>( false );
             //initialize source
-            for( int i = 0; i < 50; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i };
                 source.List.Add( new ComplexType() { A = i } );
                 source.HashSet.Add( new ComplexType() { A = i } );
                 source.SortedSet.Add( new ComplexType() { A = i } );
@@ -475,6 +486,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<ComplexType>( true )
             {
+                Array = null,
                 List = null,
                 HashSet = null,
                 SortedSet = null,
@@ -496,8 +508,9 @@ namespace UltraMapper.Tests
         {
             var source = new GenericCollections<ComplexType>( false );
             //initialize source
-            for( int i = 0; i < 50; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i };
                 source.List.Add( new ComplexType() { A = i } );
                 source.HashSet.Add( new ComplexType() { A = i } );
                 source.SortedSet.Add( new ComplexType() { A = i } );
@@ -509,6 +522,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<ComplexType>( true )
             {
+                Array = null,
                 List = null,
                 HashSet = null,
                 SortedSet = null,
@@ -536,8 +550,9 @@ namespace UltraMapper.Tests
             var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
-            for( int i = 0; i < 50; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i };
                 source.List.Add( new ComplexType() { A = i } );
                 source.HashSet.Add( new ComplexType() { A = i } );
                 source.SortedSet.Add( new ComplexType() { A = i } );
@@ -549,7 +564,7 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<ComplexType>( false )
             {
-                List = new List<Tests.CollectionTests.ComplexType>() { new ComplexType() { A = 100 } }
+                List = new List<ComplexType>() { new ComplexType() { A = 100 } }
             };
 
             var ultraMapper = new Mapper( cfg =>
@@ -583,8 +598,9 @@ namespace UltraMapper.Tests
             var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
-            for( int i = 0; i < 50; i++ )
+            for( int i = 0; i < 10; i++ )
             {
+                source.Array[ i ] = new ComplexType() { A = i };
                 source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
                 source.HashSet.Add( new ComplexType() { A = i } );
                 source.SortedSet.Add( new ComplexType() { A = i } );
@@ -595,27 +611,48 @@ namespace UltraMapper.Tests
             }
 
             var tempItemA = new ComplexType() { A = 1 };
-            var tempItemB = new ComplexType() { A = 49 };
+            var tempItemB = new ComplexType() { A = 9 };
 
             var target = new GenericCollections<ComplexType>( false )
             {
-                List = new List<ComplexType>()
-                {
-                    tempItemA,
-                    tempItemB,
-                    new ComplexType() { A = 50 }
-                }
+                Array = new ComplexType[ 10 ] { tempItemA, tempItemB, new ComplexType() { A = 10 }, null, null, null, null, null, null,null },
+                List = new List<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                HashSet = new HashSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                SortedSet = new SortedSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                //Stack = new Stack<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                //Queue = new Queue<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                //LinkedList = new LinkedList<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } }
             };
+
+            Expression<Func<ComplexType, ComplexType, bool>> exp = ( itemA, itemB ) => itemA.A == itemB.A;
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.MapTypes( source, target )
-                    .MapMember( a => a.List, b => b.List, ( itemA, itemB ) => itemA.A == itemB.A );
+                cfg.MapTypes<GenericCollections<ComplexType>, GenericCollections<ComplexType>>()
+                    //.IgnoreSourceMember( s => s.Array )
+                    .IgnoreSourceMember( s => s.HashSet )
+                    .IgnoreSourceMember( s => s.SortedSet )
+                    .IgnoreSourceMember( s => s.Stack )
+                    .IgnoreSourceMember( s => s.Queue )
+                    .IgnoreSourceMember( s => s.LinkedList )
+                    .IgnoreSourceMember( s => s.ObservableCollection );
+
+                cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>>( cfg2 =>
+                {
+                    cfg2.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                    cfg2.CollectionBehavior = CollectionBehaviors.UPDATE;
+                    cfg2.CollectionItemEqualityComparer = exp;
+                } );
             } );
 
             ultraMapper.Map( source, target );
+            Assert.IsTrue( target.List.Count == source.List.Count );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
-            Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 49 ), tempItemB ) );
+            Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.List )
+                Assert.IsTrue( item.InnerType != null );
         }
 
         [TestMethod]
