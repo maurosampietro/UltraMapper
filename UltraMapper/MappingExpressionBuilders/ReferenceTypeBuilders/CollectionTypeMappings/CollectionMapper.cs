@@ -158,18 +158,8 @@ namespace UltraMapper.MappingExpressionBuilders
              *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).             
              */
 
-            bool isResetCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL && */
-                context.Options.CollectionBehavior == CollectionBehaviors.RESET;
-
             bool isUpdateCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
                 context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
-
-            var clearMethod = GetTargetCollectionClearMethod( context );
-            if( clearMethod == null && isResetCollection )
-            {
-                string msg = $@"Cannot reset the collection. Type '{nameof( context.TargetInstance.Type )}' does not provide a Clear method";
-                throw new Exception( msg );
-            }
 
             var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
 
@@ -178,8 +168,7 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 return Expression.Block
                 (
-                    isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
-                        : (Expression)Expression.Empty(),
+                    GetTargetCollectionClearExpression( context ),
 
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
@@ -189,8 +178,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             return Expression.Block
             (
-                isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
-                    : (Expression)Expression.Empty(),
+                GetTargetCollectionClearExpression( context ),
 
                 isUpdateCollection ? context.UpdateCollection
                     : ComplexCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
@@ -204,8 +192,33 @@ namespace UltraMapper.MappingExpressionBuilders
         /// </summary>
         protected virtual MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
+            if( context.TargetInstance.Type.IsArray )
+            {
+                return typeof( Array ).GetMethod( nameof( Array.Clear ),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy );
+            }
+
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Clear ) );
+        }
+
+        /// <summary>
+        /// Returns the expression that clears the collection
+        /// </summary>
+        protected virtual Expression GetTargetCollectionClearExpression( CollectionMapperContext context )
+        {
+            bool isResetCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL && */
+                context.Options.CollectionBehavior == CollectionBehaviors.RESET;
+
+            var clearMethod = GetTargetCollectionClearMethod( context );
+            if( clearMethod == null && isResetCollection )
+            {
+                string msg = $@"Cannot reset the collection. Type '{context.TargetInstance.Type}' does not provide a Clear method";
+                throw new Exception( msg );
+            }
+
+            return isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
+                : (Expression)Expression.Empty();
         }
 
         /// <summary>

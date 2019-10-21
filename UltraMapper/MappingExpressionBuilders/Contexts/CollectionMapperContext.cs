@@ -40,7 +40,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 var updateCollectionMethodInfo = typeof( LinqExtensions ).GetMethod(
                     nameof( LinqExtensions.Update ), BindingFlags.Static | BindingFlags.NonPublic )
                     .MakeGenericMethod( SourceCollectionElementType, TargetCollectionElementType );
-
+                
                 UpdateCollection = Expression.Call( null, updateCollectionMethodInfo, Mapper, ReferenceTracker, SourceInstance,
                    Expression.Convert( TargetInstance, typeof( ICollection<> ).MakeGenericType( TargetCollectionElementType ) ),
                    Expression.Convert( Expression.Constant( options.CollectionItemEqualityComparer.Compile() ),

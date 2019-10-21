@@ -535,7 +535,7 @@ namespace UltraMapper.Tests
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>, ComplexType, ComplexType>(
-                    ( itemA, itemB ) => itemA.A == itemB.A );
+                    ( itemA, itemB ) => comparison( itemA, itemB ) );
             } );
 
             ultraMapper.Map( source, target );
@@ -590,6 +590,8 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
+        bool comparison( ComplexType itemA, ComplexType itemB ) { return itemA?.A == itemB?.A; }
+
         [TestMethod]
         public void CollectionUpdate()
         {
@@ -600,14 +602,14 @@ namespace UltraMapper.Tests
             //initialize source
             for( int i = 0; i < 10; i++ )
             {
-                source.Array[ i ] = new ComplexType() { A = i };
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
                 source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
-                source.HashSet.Add( new ComplexType() { A = i } );
-                source.SortedSet.Add( new ComplexType() { A = i } );
-                source.Stack.Push( new ComplexType() { A = i } );
-                source.Queue.Enqueue( new ComplexType() { A = i } );
-                source.LinkedList.AddLast( new ComplexType() { A = i } );
-                source.ObservableCollection.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
             }
 
             var tempItemA = new ComplexType() { A = 1 };
@@ -615,43 +617,92 @@ namespace UltraMapper.Tests
 
             var target = new GenericCollections<ComplexType>( false )
             {
-                Array = new ComplexType[ 10 ] { tempItemA, tempItemB, new ComplexType() { A = 10 }, null, null, null, null, null, null,null },
+                Array = new ComplexType[ 10 ] { tempItemA, tempItemB, new ComplexType() { A = 10 }, null, null, null, null, null, null, null },
                 List = new List<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
                 HashSet = new HashSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
                 SortedSet = new SortedSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-                //Stack = new Stack<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-                //Queue = new Queue<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-                //LinkedList = new LinkedList<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
                 ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } }
             };
 
-            Expression<Func<ComplexType, ComplexType, bool>> exp = ( itemA, itemB ) => itemA.A == itemB.A;
+            target.Stack = new Stack<ComplexType>();
+            target.Stack.Push( tempItemA );
+            target.Stack.Push( tempItemB );
+            target.Stack.Push( new ComplexType() { A = 10 } );
+
+            target.Queue = new Queue<ComplexType>();
+            target.Queue.Enqueue( tempItemA );
+            target.Queue.Enqueue( tempItemB );
+            target.Queue.Enqueue( new ComplexType() { A = 10 } );
+
+            target.LinkedList = new LinkedList<ComplexType>();
+            target.LinkedList.AddLast( tempItemA );
+            target.LinkedList.AddLast( tempItemB );
+            target.LinkedList.AddLast( new ComplexType() { A = 10 } );
+
+            //item comparer should also check for nulls ALWAYS
+            Expression<Func<ComplexType, ComplexType, bool>> itemComparer =
+                ( itemA, itemB ) => comparison( itemA, itemB );
 
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<GenericCollections<ComplexType>, GenericCollections<ComplexType>>()
                     //.IgnoreSourceMember( s => s.Array )
-                    .IgnoreSourceMember( s => s.HashSet )
-                    .IgnoreSourceMember( s => s.SortedSet )
+                    //.IgnoreSourceMember( s => s.List )
+                    //.IgnoreSourceMember( s => s.HashSet )
+                    //.IgnoreSourceMember( s => s.SortedSet )
+                    //.IgnoreSourceMember( s => s.ObservableCollection )
+                    //
                     .IgnoreSourceMember( s => s.Stack )
                     .IgnoreSourceMember( s => s.Queue )
-                    .IgnoreSourceMember( s => s.LinkedList )
-                    .IgnoreSourceMember( s => s.ObservableCollection );
+                    .IgnoreSourceMember( s => s.LinkedList );
 
                 cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>>( cfg2 =>
                 {
                     cfg2.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                     cfg2.CollectionBehavior = CollectionBehaviors.UPDATE;
-                    cfg2.CollectionItemEqualityComparer = exp;
+                    cfg2.CollectionItemEqualityComparer = itemComparer;
                 } );
             } );
 
             ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.Array.Length == source.Array.Length );
+            Assert.IsTrue( object.ReferenceEquals( target.Array.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.Array.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.Array )
+                Assert.IsTrue( item.InnerType != null );
+
+
             Assert.IsTrue( target.List.Count == source.List.Count );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 1 ), tempItemA ) );
             Assert.IsTrue( object.ReferenceEquals( target.List.First( item => item.A == 9 ), tempItemB ) );
 
             foreach( var item in target.List )
+                Assert.IsTrue( item.InnerType != null );
+
+
+            Assert.IsTrue( target.HashSet.Count == source.HashSet.Count );
+            Assert.IsTrue( object.ReferenceEquals( target.HashSet.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.HashSet.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.HashSet )
+                Assert.IsTrue( item.InnerType != null );
+
+
+            Assert.IsTrue( target.SortedSet.Count == source.SortedSet.Count );
+            Assert.IsTrue( object.ReferenceEquals( target.SortedSet.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.SortedSet.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.SortedSet )
+                Assert.IsTrue( item.InnerType != null );
+
+
+            Assert.IsTrue( target.ObservableCollection.Count == source.ObservableCollection.Count );
+            Assert.IsTrue( object.ReferenceEquals( target.ObservableCollection.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.ObservableCollection.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.ObservableCollection )
                 Assert.IsTrue( item.InnerType != null );
         }
 

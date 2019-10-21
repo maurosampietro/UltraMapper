@@ -16,31 +16,23 @@ namespace UltraMapper.MappingExpressionBuilders
             return base.CanHandle( source, target ) && target.IsArray;
         }
 
-        protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
+        protected override MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
-            var context = contextObj as CollectionMapperContext;
-            var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
+            return typeof( Array ).GetMethod( nameof( Array.Clear ),
+                BindingFlags.Public | BindingFlags.Static);
+        }
 
-            if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn )
-            {
-                return Expression.Block( SimpleCollectionLoop
-                (
-                    context.SourceInstance, context.SourceCollectionElementType,
-                    context.TargetInstance, context.TargetCollectionElementType,
-                    targetCollectionInsertionMethod,
-                    context.SourceCollectionLoopingVar
-                ) );
-            }
+        protected override Expression GetTargetCollectionClearExpression( CollectionMapperContext context )
+        {
+            bool isResetCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL && */
+                context.Options.CollectionBehavior == CollectionBehaviors.RESET;
 
-            return Expression.Block( ComplexCollectionLoop
-            (
-                context.SourceInstance, context.SourceCollectionElementType,
-                context.TargetInstance, context.TargetCollectionElementType,
-                targetCollectionInsertionMethod,
-                context.SourceCollectionLoopingVar,
-                context.ReferenceTracker,
-                context.Mapper
-            ) );
+            var clearMethod = GetTargetCollectionClearMethod( context );
+            //var lengthProperty = context.TargetInstance.Type.GetProperty( nameof( Array.Length ) );
+
+            return isResetCollection ? Expression.Call( null, clearMethod, context.TargetInstance,
+                Expression.Constant( 0, typeof( int ) ), Expression.ArrayLength( context.TargetInstance ) )
+                    : (Expression)Expression.Empty();
         }
 
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
