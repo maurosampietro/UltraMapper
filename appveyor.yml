@@ -22,5 +22,5 @@ deploy:
   tag: UltraMapper v$(appveyor_build_version)
   release: UltraMapper v$(appveyor_build_version)
   auth_token:
-    secure: xdVPCgGLq4ImYFV39Kc4CSd2+bR+HtfN1Iu+NFMYirkeYz4rCboJV+uxiraKjzsO1E7UZelFAmHNXoKRA9IAFEpErerm+/nTjVMtD8AWMyE=
+    secure: mCdfTt2M2W/zNeRMTEuINe7mLJKW3MjB69S3VZS5e1VW0UOPLr1MvAY1Ep6feU3b
   artifact: /.*\.nupkg/
