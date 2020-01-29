@@ -30,7 +30,15 @@ KNOWN (POTENTIAL) PROBLEMS:
 - Mapping types not providing a parameterless constructor is probably feasible but would need a big refactor.
   One example is ReadOnlyCollection support: it is supported only if we find it as a target's member.
 
+- When mapping to an array: if the capacity of the target array is more than enough to hold all of the items of the source collection
+  and ReferenceBehavior = USE_TARGET_INSTANCE_IF_NOT_NULL, then target array will contain null elements.
+  It can be ok. Force to ReferenceBehavior = CREATE_NEW_INSTANCE to have a same-sized array.
+
 TODO:
+
+- Tuple support
+
+- Support CollectionBehaviors.UPDATE on Stack and Queue. (maybe updating only matching elements?) 
 
 - ArrayMapper should check if the array is capable of holding all of the elements in the source collection;
   if the array is not of the right size, a new array should be instantiated.
@@ -54,6 +62,3 @@ TODO:
 
 - UNIT TEST: VERIFY MAPPING method should search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
-
-
-OPTIMIZATIONS:

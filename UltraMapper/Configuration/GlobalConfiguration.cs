@@ -20,7 +20,7 @@ namespace UltraMapper
         /// If set to False members-mappings that have been resolved by convention 
         /// are taken into account in the mapping process.
         /// </summary>
-        public bool IgnoreMemberMappingResolvedByConvention { get; set; }
+        public bool IgnoreMemberMappingResolvedByConvention { get; set; } = false;
 
         public CollectionBehaviors CollectionBehavior
         {
@@ -39,14 +39,15 @@ namespace UltraMapper
 
         public Configuration( Action<Configuration> config = null )
         {
-            var baseTypePair = new TypePair( typeof( object ), typeof( object ) );
-            var baseMapping = new TypeMapping( this, baseTypePair )
+            var rootTypePair = new TypePair( typeof( object ), typeof( object ) );
+            var rootMapping = new TypeMapping( this, rootTypePair )
             {
+                //for the root mapping set values aside from INHERIT for each option
                 ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE,
                 CollectionBehavior = CollectionBehaviors.RESET
             };
 
-            _typeMappings = new TypeMappingInheritanceTree( baseMapping );
+            _typeMappings = new TypeMappingInheritanceTree( rootMapping );
 
             this.Conventions = new MappingConventions( cfg =>
             {
@@ -204,7 +205,7 @@ namespace UltraMapper
             //}
         }
 
-        public TypeMapping this[ TypePair typePair ]
+        internal TypeMapping this[ TypePair typePair ]
         {
             get { return this.GetTypeMapping( typePair ); }
         }

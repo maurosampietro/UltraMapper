@@ -17,10 +17,10 @@ namespace UltraMapper.MappingExpressionBuilders
 
             switch( options )
             {
-                case MemberMappingCrawler mmc: this.Options = mmc; break;
-                case TypeMappingCrawler tmc: this.Options = tmc; break;
-                case IMemberOptions imo: this.Options = new MemberMappingCrawler( (MemberMapping)options ); break;
-                case ITypeOptions imo: this.Options = new TypeMappingCrawler( (TypeMapping)options ); break;
+                case MemberMappingOptionsInheritanceTraversal mmc: this.Options = mmc; break;
+                case TypeMappingOptionsInheritanceTraversal tmc: this.Options = tmc; break;
+                case IMemberOptions imo: this.Options = new MemberMappingOptionsInheritanceTraversal( (MemberMapping)options ); break;
+                case ITypeOptions imo: this.Options = new TypeMappingOptionsInheritanceTraversal( (TypeMapping)options ); break;
             }
         }
     }

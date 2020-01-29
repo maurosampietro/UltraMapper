@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UltraMapper.Conventions;
@@ -99,7 +98,6 @@ namespace UltraMapper.Tests
                     memberConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                     memberConfig.CollectionBehavior = CollectionBehaviors.MERGE;
                 } );
-
             } );
 
             mapper.Map( source, target );

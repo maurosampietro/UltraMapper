@@ -13,7 +13,7 @@ namespace UltraMapper
 
     public interface ITypeOptions : IMappingOptions
     {
-        bool IgnoreMemberMappingResolvedByConvention { get; set; }
+        bool? IgnoreMemberMappingResolvedByConvention { get; set; }
     }
 
     public interface IMemberOptions : IMappingOptions

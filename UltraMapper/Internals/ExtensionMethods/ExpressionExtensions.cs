@@ -12,8 +12,7 @@ namespace UltraMapper.Internals
         {
             var memberAcessPath = new MemberAccessPath();
 
-            var lambda = lambdaExpression as LambdaExpression;
-            if( lambda == null )
+            if( !(lambdaExpression is LambdaExpression lambda) )
                 throw new InvalidCastException( "Invalid lambda expression" );
 
             var stack = new Stack<Expression>();

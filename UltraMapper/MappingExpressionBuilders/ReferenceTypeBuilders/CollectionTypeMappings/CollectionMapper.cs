@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
+using UltraMapper.Internals.ExtensionMethods;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
@@ -29,7 +30,7 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             if( targetCollectionInsertionMethod == null )
             {
-                string msg = $@"'{nameof( targetCollection.Type )}' does not provide an insertion method. " +
+                string msg = $@"'{targetCollection.Type}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
 
                 throw new Exception( msg );
@@ -57,7 +58,7 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             if( targetCollectionInsertionMethod == null )
             {
-                string msg = $@"'{nameof( targetCollection.Type )}' does not provide an insertion method. " +
+                string msg = $@"'{targetCollection.Type}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
 
                 throw new Exception( msg );
@@ -161,6 +162,9 @@ namespace UltraMapper.MappingExpressionBuilders
             bool isUpdateCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
                 context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
 
+            bool isMerge = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
+                context.Options.CollectionBehavior == CollectionBehaviors.MERGE;
+
             var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
 
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn
@@ -168,7 +172,7 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 return Expression.Block
                 (
-                    GetTargetCollectionClearExpression( context ),
+                    isMerge ? Expression.Empty() : GetTargetCollectionClearExpression( context ),
 
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
@@ -180,7 +184,7 @@ namespace UltraMapper.MappingExpressionBuilders
             (
                 GetTargetCollectionClearExpression( context ),
 
-                isUpdateCollection ? context.UpdateCollection
+                isUpdateCollection ? GetUpdateCollectionExpression( context )
                     : ComplexCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
                         targetCollectionInsertionMethod, context.SourceCollectionLoopingVar, context.ReferenceTracker, context.Mapper )
@@ -207,18 +211,22 @@ namespace UltraMapper.MappingExpressionBuilders
         /// </summary>
         protected virtual Expression GetTargetCollectionClearExpression( CollectionMapperContext context )
         {
-            bool isResetCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL && */
+            bool isResetCollection = context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&
                 context.Options.CollectionBehavior == CollectionBehaviors.RESET;
 
-            var clearMethod = GetTargetCollectionClearMethod( context );
-            if( clearMethod == null && isResetCollection )
+            if( isResetCollection )
             {
-                string msg = $@"Cannot reset the collection. Type '{context.TargetInstance.Type}' does not provide a Clear method";
-                throw new Exception( msg );
+                var clearMethod = GetTargetCollectionClearMethod( context );
+                if( clearMethod == null && isResetCollection )
+                {
+                    string msg = $@"Cannot reset the collection. Type '{context.TargetInstance.Type}' does not provide a Clear method";
+                    throw new Exception( msg );
+                }
+
+                return Expression.Call( context.TargetInstance, clearMethod );
             }
 
-            return isResetCollection ? Expression.Call( context.TargetInstance, clearMethod )
-                : (Expression)Expression.Empty();
+            return Expression.Empty();
         }
 
         /// <summary>
@@ -332,21 +340,53 @@ namespace UltraMapper.MappingExpressionBuilders
             var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
             if( constructorWithCapacity == null ) return null;
 
+            var getCountMethod = this.GetCountMethod( context.SourceMember.Type );
+
+            return Expression.New( constructorWithCapacity,
+                Expression.Call( context.SourceMember, getCountMethod ) );
+        }
+
+        protected virtual MethodInfo GetUpdateCollectionMethod( CollectionMapperContext context )
+        {
+            return typeof( LinqExtensions ).GetMethod
+            (
+                nameof( LinqExtensions.Update ),
+                BindingFlags.Static | BindingFlags.Public
+            )
+            .MakeGenericMethod
+            (
+                context.SourceCollectionElementType,
+                context.TargetCollectionElementType
+            );
+        }
+
+        protected virtual Expression GetUpdateCollectionExpression( CollectionMapperContext context )
+        {
+            if( context.Options.CollectionItemEqualityComparer == null )
+                return Expression.Empty();
+
+            var updateCollectionMethodInfo = GetUpdateCollectionMethod( context );
+
+            return Expression.Call( null, updateCollectionMethodInfo, context.Mapper,
+               context.ReferenceTracker, context.SourceInstance, context.TargetInstance,
+               Expression.Convert( Expression.Constant( context.Options.CollectionItemEqualityComparer.Compile() ),
+                    typeof( Func<,,> ).MakeGenericType( context.SourceCollectionElementType, context.TargetCollectionElementType, typeof( bool ) ) ) );
+        }
+
+        protected MethodInfo GetCountMethod( Type type )
+        {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-            var getCountProperty = context.SourceMember.Type.GetProperty( nameof( ICollection<int>.Count ),
+            var getCountProperty = type.GetProperty( nameof( ICollection<int>.Count ),
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
 
             if( getCountProperty == null )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
                 //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
-                getCountProperty = context.SourceMember.Type.GetProperty( nameof( Array.Length ) );
+                getCountProperty = type.GetProperty( nameof( Array.Length ) );
             }
 
-            var getCountMethod = getCountProperty.GetGetMethod();
-
-            return Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceMember, getCountMethod ) );
+            return getCountProperty.GetGetMethod();
         }
     }
 }

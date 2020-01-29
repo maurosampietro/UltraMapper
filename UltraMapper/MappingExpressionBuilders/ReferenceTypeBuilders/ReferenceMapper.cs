@@ -86,12 +86,16 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.Empty();
         }
 
-        public Expression GetMemberAssignment( MemberMappingContext context )
+        protected virtual bool GetIsCreateNewInstance( MapperContext context )
+        {
+            return context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE;
+        }
+
+        public virtual Expression GetMemberAssignment( MemberMappingContext context )
         {
             Expression newInstance = this.GetMemberNewInstance( context );
 
-            bool isCreateNewInstance = context.Options.ReferenceBehavior ==
-                ReferenceBehaviors.CREATE_NEW_INSTANCE;
+            bool isCreateNewInstance = GetIsCreateNewInstance( context );
 
             if( isCreateNewInstance || context.TargetMemberValueGetter == null )
                 return Expression.Assign( context.TargetMember, newInstance );
@@ -149,7 +153,7 @@ namespace UltraMapper.MappingExpressionBuilders
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
             var memberMappings = typeMapping.MemberMappings.Values.ToList();
-            if( typeMapping.IgnoreMemberMappingResolvedByConvention )
+            if( typeMapping.IgnoreMemberMappingResolvedByConvention == true )
             {
                 memberMappings = memberMappings.Where( mapping =>
                     mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
@@ -197,7 +201,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     .ReplaceParameter( valueReaderExp, mapping.CustomConverter.Parameters[ 0 ].Name );
             }
 
-            var mapMethod = MemberMappingContext.RecursiveMapMethodInfo.MakeGenericMethod(
+            var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo.MakeGenericMethod(
                 memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 
             Expression itemLookupCall = Expression.Call

@@ -64,6 +64,7 @@
     <Compile Include="..\UltraMapper\Internals\TypeMapping.cs" Link="TypeMapping.cs" />
     <Compile Include="..\UltraMapper\Internals\TypePair.cs" Link="TypePair.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\Contexts\CollectionMapperContext.cs" Link="CollectionMapperContext.cs" />
+    <Compile Include="..\UltraMapper\MappingExpressionBuilders\Contexts\CollectionMapperViaTempCollectionContext.cs" Link="CollectionMapperViaTempCollectionContext.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\Contexts\DictionaryMapperContext.cs" Link="DictionaryMapperContext.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\Contexts\MapperContext.cs" Link="MapperContext.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\Contexts\MemberMappingContext.cs" Link="MemberMappingContext.cs" />
@@ -78,7 +79,6 @@
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\PrimitiveTypeBuilders\StructMapper.cs" Link="StructMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\ArrayMapper.cs" Link="ArrayMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMapper.cs" Link="CollectionMapper.cs" />
-    <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\CollectionMappingViaTemporaryCollection.cs" Link="CollectionMappingViaTemporaryCollection.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\DictionaryMapper.cs" Link="DictionaryMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\LinkedListMapper.cs" Link="LinkedListMapper.cs" />
     <Compile Include="..\UltraMapper\MappingExpressionBuilders\ReferenceTypeBuilders\CollectionTypeMappings\QueueMapper.cs" Link="QueueMapper.cs" />

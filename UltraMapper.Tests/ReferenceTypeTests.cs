@@ -142,7 +142,7 @@ namespace UltraMapper.Tests
                     ReferenceBehaviors.CREATE_NEW_INSTANCE;
             } );
 
-            ultraMapper.Map( source, target );
+            ultraMapper.Map( source, target, null, ReferenceBehaviors.CREATE_NEW_INSTANCE );
             Assert.IsFalse( Object.ReferenceEquals( target.InnerType, innerType ) );
             Assert.IsFalse( Object.ReferenceEquals( target.PrimitiveList, primitiveList ) );
         }

@@ -37,7 +37,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         private static MethodInfo GetUltraMapperMapGenericMethodMemberMapping()
         {
-            return typeof( Mapper ).GetMethods( BindingFlags.Instance | BindingFlags.NonPublic )
+            return typeof( Mapper )
+                .GetMethods( BindingFlags.Instance | BindingFlags.NonPublic )
                 .Where( m => m.Name == nameof( UltraMapper.Mapper.Map ) )
                 .Select( m => new
                 {
@@ -45,12 +46,15 @@ namespace UltraMapper.MappingExpressionBuilders
                     Params = m.GetParameters(),
                     GenericArgs = m.GetGenericArguments()
                 } )
-                .Where( x => x.Params.Length == 4
-                            && x.GenericArgs.Length == 2
-                            && x.Params[ 0 ].ParameterType == x.GenericArgs[ 0 ] &&
-                             x.Params[ 1 ].ParameterType == x.GenericArgs[ 1 ] &&
-                             x.Params[ 2 ].ParameterType == typeof( ReferenceTracking ) &&
-                             x.Params[ 3 ].ParameterType == typeof( IMapping ) )
+                .Where
+                (   
+                    x => 
+                    x.Params.Length == 4 && x.GenericArgs.Length == 2 && 
+                    x.Params[ 0 ].ParameterType == x.GenericArgs[ 0 ] &&
+                    x.Params[ 1 ].ParameterType == x.GenericArgs[ 1 ] &&
+                    x.Params[ 2 ].ParameterType == typeof( ReferenceTracking ) &&
+                    x.Params[ 3 ].ParameterType == typeof( IMapping ) 
+                 )
                 .Select( x => x.Method )
                 .First();
         }

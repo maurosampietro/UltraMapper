@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
+using UltraMapper.Internals.ExtensionMethods;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
     /*Stack<T> and other LIFO collections require the list to be read in reverse  
     * to preserve order and have a specular clone */
-    public class StackMapper : CollectionMappingViaTemporaryCollection
+    public class StackMapper : CollectionMappingViaTempCollection
     {
+        //protected override bool IsCopySourceToTempCollection => true;
+        //protected override bool IsCopyTargetToTempCollection => true;
+
         public StackMapper( Configuration configuration )
             : base( configuration ) { }
 
@@ -31,6 +35,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override Type GetTemporaryCollectionType( CollectionMapperContext context )
         {
+            //by copying data in a temp stack and then in the target collection 
+            //the correct order of the items is preserved
             return typeof( Stack<> ).MakeGenericType( context.SourceCollectionElementType );
         }
 
@@ -41,6 +47,20 @@ namespace UltraMapper.MappingExpressionBuilders
 
             return Expression.New( targetConstructor, 
                 Expression.New( targetConstructor, context.SourceMember ) );
+        }
+
+        protected override MethodInfo GetUpdateCollectionMethod( CollectionMapperContext context )
+        {
+            return typeof( LinqExtensions ).GetMethod
+            (
+                nameof( LinqExtensions.UpdateStack ),
+                BindingFlags.Static | BindingFlags.Public
+            )
+            .MakeGenericMethod
+            (
+                context.SourceCollectionElementType,
+                context.TargetCollectionElementType
+            );
         }
     }
 }

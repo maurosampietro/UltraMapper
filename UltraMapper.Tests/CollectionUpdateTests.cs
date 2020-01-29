@@ -358,6 +358,6 @@ namespace UltraMapper.Tests
             Assert.IsTrue( target.Media.First().Drawings.First().Id == 11 );
             Assert.IsTrue( Object.ReferenceEquals( targetMedia, target.Media.First() ) );
             Assert.IsTrue( Object.ReferenceEquals( targetDrawing, target.Media.First().Drawings.First() ) );
-        }
+        }       
     }
 }

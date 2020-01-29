@@ -67,9 +67,12 @@ namespace UltraMapper.Tests
             public LinkedList<T> LinkedList { get; set; }
             public ObservableCollection<T> ObservableCollection { get; set; }
 
-            public GenericCollections( bool initializeRandomlyIfPrimitiveGenericArg )
+            public GenericCollections( bool initializeIfPrimitiveGenericArg, uint minVal = 0, uint maxVal = 10 )
             {
-                this.Array = new T[ 10 ];
+                if( minVal > maxVal )
+                    throw new ArgumentException( $"{nameof( maxVal )} must be a value greater or equal to {nameof( minVal )}" );
+
+                this.Array = new T[ maxVal - minVal ];
                 this.List = new List<T>();
                 this.HashSet = new HashSet<T>();
                 this.SortedSet = new SortedSet<T>();
@@ -78,18 +81,18 @@ namespace UltraMapper.Tests
                 this.LinkedList = new LinkedList<T>();
                 this.ObservableCollection = new ObservableCollection<T>();
 
-                if( initializeRandomlyIfPrimitiveGenericArg )
-                    InitializeRandomly();
+                if( initializeIfPrimitiveGenericArg )
+                    Initialize( minVal, maxVal );
             }
 
-            private void InitializeRandomly()
+            private void Initialize( uint minval, uint maxval )
             {
                 var elementType = typeof( T );
                 if( elementType.IsBuiltInType( true ) )
                 {
-                    for( int i = 0; i < 10; i++ )
+                    for( uint i = 0, v = minval; v < maxval; i++, v++ )
                     {
-                        T value = (T)Convert.ChangeType( i,
+                        T value = (T)Convert.ChangeType( v,
                             elementType.GetUnderlyingTypeIfNullable() );
 
                         this.Array[ i ] = value;
@@ -202,11 +205,11 @@ namespace UltraMapper.Tests
                     var targetType = typeof( GenericCollections<> )
                         .MakeGenericType( targetElementType );
 
-                    var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool>( sourceType );
-                    var targetTypeCtor = ConstructorFactory.CreateConstructor<bool>( targetType );
+                    var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( sourceType );
+                    var targetTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( targetType );
 
-                    var source = sourceTypeCtor( true );
-                    var target = targetTypeCtor( false );
+                    var source = sourceTypeCtor( true, 0, 10 );
+                    var target = targetTypeCtor( false, 0, 10 );
 
                     var ultraMapper = new Mapper();
                     ultraMapper.Map( source, target );
@@ -264,11 +267,11 @@ namespace UltraMapper.Tests
                     var targetType = typeof( GenericCollections<> )
                         .MakeGenericType( targetElementType );
 
-                    var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool>( sourceType );
-                    var targetTypeCtor = ConstructorFactory.CreateConstructor<bool>( targetType );
+                    var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( sourceType );
+                    var targetTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( targetType );
 
-                    var source = sourceTypeCtor( true );
-                    var target = targetTypeCtor( true );
+                    var source = sourceTypeCtor( true, 0, 10 );
+                    var target = targetTypeCtor( true, 0, 10 );
 
                     var ultraMapper = new Mapper();
                     ultraMapper.Map( source, target );
@@ -535,7 +538,7 @@ namespace UltraMapper.Tests
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>, ComplexType, ComplexType>(
-                    ( itemA, itemB ) => comparison( itemA, itemB ) );
+                    ( itemA, itemB ) => Comparison( itemA, itemB ) );
             } );
 
             ultraMapper.Map( source, target );
@@ -590,13 +593,12 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-        bool comparison( ComplexType itemA, ComplexType itemB ) { return itemA?.A == itemB?.A; }
+        bool Comparison( ComplexType itemA, ComplexType itemB ) { return itemA?.A == itemB?.A; }
 
         [TestMethod]
         public void CollectionUpdate()
         {
             var innerType = new InnerType() { String = "test" };
-
             var source = new GenericCollections<ComplexType>( false );
 
             //initialize source
@@ -641,21 +643,10 @@ namespace UltraMapper.Tests
 
             //item comparer should also check for nulls ALWAYS
             Expression<Func<ComplexType, ComplexType, bool>> itemComparer =
-                ( itemA, itemB ) => comparison( itemA, itemB );
+                ( itemA, itemB ) => Comparison( itemA, itemB );
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.MapTypes<GenericCollections<ComplexType>, GenericCollections<ComplexType>>()
-                    //.IgnoreSourceMember( s => s.Array )
-                    //.IgnoreSourceMember( s => s.List )
-                    //.IgnoreSourceMember( s => s.HashSet )
-                    //.IgnoreSourceMember( s => s.SortedSet )
-                    //.IgnoreSourceMember( s => s.ObservableCollection )
-                    //
-                    .IgnoreSourceMember( s => s.Stack )
-                    .IgnoreSourceMember( s => s.Queue )
-                    .IgnoreSourceMember( s => s.LinkedList );
-
                 cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>>( cfg2 =>
                 {
                     cfg2.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
@@ -704,6 +695,33 @@ namespace UltraMapper.Tests
 
             foreach( var item in target.ObservableCollection )
                 Assert.IsTrue( item.InnerType != null );
+
+
+            Assert.IsTrue( target.LinkedList.Count == source.LinkedList.Count );
+            Assert.IsTrue( object.ReferenceEquals( target.LinkedList.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.LinkedList.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.LinkedList )
+                Assert.IsTrue( item.InnerType != null );
+
+
+            Assert.IsTrue( target.Stack.Count == source.Stack.Count );
+            Assert.IsTrue( object.ReferenceEquals( target.Stack.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.Stack.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.Stack )
+                Assert.IsTrue( item.InnerType != null );
+
+
+            Assert.IsTrue( target.Queue.Count == source.Queue.Count );
+            Assert.IsTrue( object.ReferenceEquals( target.Queue.First( item => item.A == 1 ), tempItemA ) );
+            Assert.IsTrue( object.ReferenceEquals( target.Queue.First( item => item.A == 9 ), tempItemB ) );
+
+            foreach( var item in target.Queue )
+                Assert.IsTrue( item.InnerType != null );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -722,6 +740,120 @@ namespace UltraMapper.Tests
             };
 
             _mapper.Map( newUsers, users );
+        }
+
+        //[TestMethod]
+        //public void MergeCollectionKeepingTargetInstance()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //[TestMethod]
+        //public void MergeCollectionCreatingNewTargetInstance()
+        //{
+        //    var innerType = new InnerType() { String = "test" };
+        //    var source = new GenericCollections<ComplexType>( false );
+
+        //    //initialize source
+        //    for( int i = 0; i < 10; i++ )
+        //    {
+        //        source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
+        //        source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+        //        source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+        //    }
+
+        //    var tempItemA = new ComplexType() { A = 1 };
+        //    var tempItemB = new ComplexType() { A = 9 };
+
+        //    var target = new GenericCollections<ComplexType>( false )
+        //    {
+        //        Array = new ComplexType[ 10 ] { tempItemA, tempItemB, new ComplexType() { A = 10 }, null, null, null, null, null, null, null },
+        //        List = new List<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+        //        HashSet = new HashSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+        //        SortedSet = new SortedSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+        //        ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } }
+        //    };
+
+        //    var tempStack = target.Stack = new Stack<ComplexType>();
+        //    target.Stack.Push( tempItemA );
+        //    target.Stack.Push( tempItemB );
+        //    target.Stack.Push( new ComplexType() { A = 10 } );
+
+        //    var tempQueue = target.Queue = new Queue<ComplexType>();
+        //    target.Queue.Enqueue( tempItemA );
+        //    target.Queue.Enqueue( tempItemB );
+        //    target.Queue.Enqueue( new ComplexType() { A = 10 } );
+
+        //    var tempLinkedList = target.LinkedList = new LinkedList<ComplexType>();
+        //    target.LinkedList.AddLast( tempItemA );
+        //    target.LinkedList.AddLast( tempItemB );
+        //    target.LinkedList.AddLast( new ComplexType() { A = 10 } );
+
+        //    //item comparer should also check for nulls ALWAYS
+        //    Expression<Func<ComplexType, ComplexType, bool>> itemComparer =
+        //        ( itemA, itemB ) => Comparison( itemA, itemB );
+
+        //    var ultraMapper = new Mapper( cfg =>
+        //    {
+        //        cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>>( cfg2 =>
+        //        {
+        //            cfg2.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+        //            cfg2.CollectionBehavior = CollectionBehaviors.MERGE;
+        //            cfg2.CollectionItemEqualityComparer = itemComparer;
+        //        } );
+        //    } );
+
+        //    //!!! questo overload di default imposta internamente ReferenceBehaviors = USE_TARGET_INSTANCE_IF_NOT_NULL
+        //    // per gestire alcuni casi limite
+        //    ultraMapper.Map( source, target );
+
+        //    Assert.IsTrue( !Object.ReferenceEquals( target.LinkedList, tempLinkedList ) );
+        //    Assert.IsTrue( !Object.ReferenceEquals( target.Stack, tempStack ) );
+        //    Assert.IsTrue( !Object.ReferenceEquals( target.Queue, tempQueue ) );
+        //}
+
+        [TestMethod]
+        public void SimpleCollectionUpdate()
+        {
+            var source = new GenericCollections<int>( true, 0, 10 );
+            var target = new GenericCollections<int>( true, 5, 15 );
+            var check = new GenericCollections<int>( true, 5, 15 );
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.CollectionBehavior = CollectionBehaviors.MERGE;
+
+                cfg.MapTypes<IEnumerable<int>, IEnumerable<int>>( ( ITypeOptions op ) =>
+                    op.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.List.SequenceEqual(
+                check.List.Concat( source.List ) ) );
+
+            Assert.IsTrue( target.LinkedList.SequenceEqual(
+                check.LinkedList.Concat( source.LinkedList ) ) );
+
+            Assert.IsTrue( target.ObservableCollection.SequenceEqual(
+                check.ObservableCollection.Concat( source.ObservableCollection ) ) );
+
+            Assert.IsTrue( check.SortedSet.Concat( source.SortedSet )
+                .All( item => target.SortedSet.Contains( item ) ) );
+
+            Assert.IsTrue( check.HashSet.Concat( source.HashSet )
+                .All( item => target.HashSet.Contains( item ) ) );
+
+            Assert.IsTrue( target.Queue.SequenceEqual(
+              check.Queue.Concat( source.Queue ) ) );
+
+            Assert.IsTrue( target.Stack.SequenceEqual(
+                source.Stack.Concat( check.Stack ) ) );
         }
     }
 }

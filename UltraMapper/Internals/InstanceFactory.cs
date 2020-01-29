@@ -19,7 +19,8 @@ namespace UltraMapper
                 var instanceCreator = ConstructorFactory.CreateConstructor( intanceType );
                 return instanceCreator();
             }
-            else // with parameters
+
+            //else //with parameters
             {
                 var paramTypes = constructorValues.Select( value => value.GetType() ).ToArray();
                 var instanceCreator = ConstructorFactory.CreateConstructor( intanceType, paramTypes );
@@ -53,65 +54,65 @@ namespace UltraMapper
             return instanceCreatorExp.Compile();
         }
 
-        //public static Func<TArg1, TArg2, object> CreateConstructor<TArg1, TArg2>( Type instanceType )
-        //{
-        //    var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
-        //    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+        public static Func<TArg1, TArg2, object> CreateConstructor<TArg1, TArg2>( Type instanceType )
+        {
+            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-        //    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-        //        Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-        //    var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, object>>(
-        //        Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, object>>(
+                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-        //    return instanceCreatorExp.Compile();
-        //}
+            return instanceCreatorExp.Compile();
+        }
 
-        //public static Func<TArg1, TArg2, TArg3, object> CreateConstructor<TArg1, TArg2, TArg3>( Type instanceType )
-        //{
-        //    var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
-        //    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+        public static Func<TArg1, TArg2, TArg3, object> CreateConstructor<TArg1, TArg2, TArg3>( Type instanceType )
+        {
+            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-        //    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-        //        Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-        //    var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, object>>(
-        //       Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, object>>(
+               Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-        //    return instanceCreatorExp.Compile();
-        //}
+            return instanceCreatorExp.Compile();
+        }
 
-        //public static Func<TArg1, TArg2, TArg3, TArg4, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4>( Type instanceType )
-        //{
-        //    var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
-        //        typeof( TArg3 ), typeof(TArg4)};
+        public static Func<TArg1, TArg2, TArg3, TArg4, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4>( Type instanceType )
+        {
+            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
+                typeof( TArg3 ), typeof(TArg4)};
 
-        //    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-        //    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-        //        Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-        //    var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, object>>(
-        //       Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, object>>(
+               Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-        //    return instanceCreatorExp.Compile();
-        //}
+            return instanceCreatorExp.Compile();
+        }
 
-        //public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5>( Type instanceType )
-        //{
-        //    var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
-        //        typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
+        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5>( Type instanceType )
+        {
+            var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
+                typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-        //    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+            var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-        //    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-        //        Expression.Parameter( type, $"p{index}" ) ).ToArray();
+            var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-        //    var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>>(
-        //       Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+            var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>>(
+               Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-        //    return instanceCreatorExp.Compile();
-        //}
+            return instanceCreatorExp.Compile();
+        }
 
         public static Func<object[], object> CreateConstructor( Type type, params Type[] ctorArgTypes )
         {

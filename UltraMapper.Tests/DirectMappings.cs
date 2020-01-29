@@ -75,8 +75,8 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void DictionaryToDictionarySameElementSimpleType()
         {
-            Dictionary<int, int> source = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 }, { 3, 3 } };
-            Dictionary<int, int> target = new Dictionary<int, int>();
+            var source = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 }, { 3, 3 } };
+            var target = new Dictionary<int, int>();
 
             Assert.IsTrue( !source.SequenceEqual( target ) );
 
@@ -89,13 +89,12 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
-
         [TestMethod]
         public void ListToListSameElementSimpleType()
         {
-            List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            var source = Enumerable.Range( 0, 10 ).ToList();
             source.Capacity = 1000;
-            List<int> target = Enumerable.Range( 10, 10 ).ToList();
+            var target = Enumerable.Range( 10, 10 ).ToList();
 
             Assert.IsTrue( !source.SequenceEqual( target ) );
 
@@ -134,9 +133,9 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void ListToListDifferentElementType()
         {
-            List<int> source = Enumerable.Range( 0, 10 ).ToList();
+            var source = Enumerable.Range( 0, 10 ).ToList();
             source.Capacity = 100;
-            List<double> target = new List<double>() { 1, 2, 3 };
+            var target = new List<double>() { 1, 2, 3 };
 
             Assert.IsTrue( !source.SequenceEqual(
                 target.Select( item => (int)item ) ) );

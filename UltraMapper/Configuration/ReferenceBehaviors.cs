@@ -3,6 +3,11 @@
     public enum ReferenceBehaviors
     {
         /// <summary>
+        /// Inherits this option
+        /// </summary>
+        INHERIT,
+
+        /// <summary>
         /// Creates a new instance, but only if the reference has not been mapped and tracked yet.
         /// If the reference has been mapped and tracked, the tracked object is assigned.
         /// This is the default.

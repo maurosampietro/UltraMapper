@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
@@ -111,7 +110,7 @@ namespace UltraMapper.Tests
             var inheritedTypePair = new Internals.TypePair( typeof( ReadOnlyCollection<TestClass> ), typeof( ObservableCollection<TestClass> ) );
             var conventionDefinedMap = ultraMapper.MappingConfiguration[ inheritedTypePair ];
 
-            var conventionDefinedMapOptionCrawler = new TypeMappingCrawler( conventionDefinedMap );
+            var conventionDefinedMapOptionCrawler = new TypeMappingOptionsInheritanceTraversal( conventionDefinedMap );
 
             Assert.IsTrue( userDefinedMap.CollectionBehavior == conventionDefinedMapOptionCrawler.CollectionBehavior );
             Assert.IsTrue( userDefinedMap.CollectionItemEqualityComparer == conventionDefinedMapOptionCrawler.CollectionItemEqualityComparer );

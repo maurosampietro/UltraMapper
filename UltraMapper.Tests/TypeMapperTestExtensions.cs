@@ -65,7 +65,7 @@ namespace UltraMapper.Tests
             foreach( var mapping in typeMapping.MemberMappings.Values )
             {
                 if( mapping.MappingResolution == Internals.MappingResolution.RESOLVED_BY_CONVENTION
-                    && typeMapping.IgnoreMemberMappingResolvedByConvention ) continue;
+                    && typeMapping.IgnoreMemberMappingResolvedByConvention == true ) continue;
 
                 var sourceValue = mapping.SourceMember
                     .ValueGetter.Compile().DynamicInvoke( source );

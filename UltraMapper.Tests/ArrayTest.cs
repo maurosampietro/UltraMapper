@@ -80,6 +80,7 @@ namespace UltraMapper.Tests
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
+                    .MapMember( a => a.Array, b => b.Array, memCfg => memCfg.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE )
                     .MapMember( a => a.Array, b => b.List );
             } );
 

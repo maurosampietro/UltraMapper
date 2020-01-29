@@ -132,7 +132,9 @@ namespace UltraMapper
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target,
-            ReferenceTracking referenceTracking = null ) where TTarget : class
+            ReferenceTracking referenceTracking = null, 
+            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL ) 
+            where TTarget : class
         {
             if( source == null )
             {
@@ -149,8 +151,46 @@ namespace UltraMapper
             referenceTracking.Add( source, targetType, target );
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
+            //since we pass an existing target instance to map onto;
+            //by default we use all of the existing instances we found on the target
+            mapping.ReferenceBehavior = refBehavior;
+
             this.Map( source, target, referenceTracking, mapping );
         }
+
+        //public class AbstractTypeMappingCrawler
+        //{
+        //    public IMapping GetMapping<TSource, TTarget>( TSource source, TTarget target, IMapping mapping )
+        //    {
+        //        Type mappingSourceType = null;
+        //        Type mappingTargetType = null;
+
+        //        if( mapping is TypeMapping typeMapping )
+        //        {
+        //            mappingSourceType = typeMapping.TypePair.SourceType;
+        //            mappingTargetType = typeMapping.TypePair.TargetType;
+        //        }
+        //        else if( mapping is MemberMapping memberMapping &&
+        //            memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+        //        {
+        //            var memberTypeMapping = memberMapping.MemberTypeMapping;
+        //            mappingSourceType = memberTypeMapping.TypePair.SourceType;
+        //            mappingTargetType = memberTypeMapping.TypePair.TargetType;
+        //        }
+
+        //        if( (mappingSourceType.IsInterface || mappingSourceType.IsAbstract) &&
+        //            (mappingTargetType.IsInterface || mappingTargetType.IsAbstract) )
+        //        {
+        //            return this.MappingConfiguration[ source.GetType(), target.GetType() ];
+        //        }
+
+        //        if( mappingSourceType.IsInterface || mappingSourceType.IsAbstract )
+        //            return this.MappingConfiguration[ source.GetType(), mappingTargetType ];
+
+        //        if( mappingTargetType.IsInterface || mappingTargetType.IsAbstract )
+        //            return this.MappingConfiguration[ mappingSourceType, target.GetType() ];
+        //    }
+        //}
 
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracking referenceTracking, IMapping mapping )
@@ -161,63 +201,54 @@ namespace UltraMapper
             //A new mapping is created only if no compatible mapping is already available
             //for concrete classes. If a mapping for the interfaces is found, it is used.
 
-            Type mappingSourceType;
-            Type mappingTargetType;
-
             //---runtime checks for abstract classes and interfaces.
 
-            //TODO: CREATE A CENTRALIZED CRAWLER/SELECTOR THAT IS ABLE 
-            //TO CHOOSE IF TO USE A MEMBER MAPPING OR A TYPE MAPPING
-            //AND IS ABLE TO DEAL WITH INTERFACES AND ABSTRACT CLASSES:
-            //THIS CRAWLER WOULD AVOID US THE NEED TO MANUALLY CRAWL
-            //UP THE TYPEMAPPING IN THE MEMBER MAPPPING CLASS AND 
-            //SIMPLIFIES THE CODE IN A LOT OF PLACES (HERE INCLUDED)
-
-            if( mapping is TypeMapping typeMapping)
+            IMapping CheckResolveAbstractMapping( Type sourceType, Type targetType )
             {
-                mappingSourceType = typeMapping.TypePair.SourceType;
-                mappingTargetType = typeMapping.TypePair.TargetType;
+                if( (sourceType.IsInterface || sourceType.IsAbstract) &&
+                    (targetType.IsInterface || targetType.IsAbstract) )
+                {
+                    return this.MappingConfiguration[ source.GetType(), target.GetType() ];
+                }
 
-                if( (mappingSourceType.IsInterface || mappingSourceType.IsAbstract) &&
-                    (mappingTargetType.IsInterface || mappingTargetType.IsAbstract) )
-                {
-                    mapping = this.MappingConfiguration[ source.GetType(), target.GetType() ];
-                }
-                else if( mappingSourceType.IsInterface || mappingSourceType.IsAbstract )
-                {
-                    mapping = this.MappingConfiguration[ source.GetType(), mappingTargetType ];
-                }
-                else if( mappingTargetType.IsInterface || mappingTargetType.IsAbstract )
-                {
-                    mapping = this.MappingConfiguration[ mappingSourceType, target.GetType() ];
-                }
+                if( sourceType.IsInterface || sourceType.IsAbstract )
+                    return this.MappingConfiguration[ source.GetType(), targetType ];
+
+                if( targetType.IsInterface || targetType.IsAbstract )
+                    return this.MappingConfiguration[ sourceType, target.GetType() ];
+
+                return mapping;
+            };
+
+            if( mapping is TypeMapping typeMapping )
+            {
+                var mappingSourceType = typeMapping.TypePair.SourceType;
+                var mappingTargetType = typeMapping.TypePair.TargetType;
+
+                mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
             }
             else if( mapping is MemberMapping memberMapping )
             {
                 if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
                 {
                     var memberTypeMapping = memberMapping.MemberTypeMapping;
-                    mappingSourceType = memberTypeMapping.TypePair.SourceType;
-                    mappingTargetType = memberTypeMapping.TypePair.TargetType;
+                    var mappingSourceType = memberTypeMapping.TypePair.SourceType;
+                    var mappingTargetType = memberTypeMapping.TypePair.TargetType;
 
-                    if( (mappingSourceType.IsInterface || mappingSourceType.IsAbstract) &&
-                        (mappingTargetType.IsInterface || mappingTargetType.IsAbstract) )
-                    {
-                        mapping = this.MappingConfiguration[ source.GetType(), target.GetType() ];
-                    }
-                    else if( mappingSourceType.IsInterface || mappingSourceType.IsAbstract )
-                    {
-                        mapping = this.MappingConfiguration[ source.GetType(), mappingTargetType ];
-                    }
-                    else if( mappingTargetType.IsInterface || mappingTargetType.IsAbstract )
-                    {
-                        mapping = this.MappingConfiguration[ mappingSourceType, target.GetType() ];
-                    }
+                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                 }
             }
             //---ends of runtime checks for abstract classes and interfaces
 
-            mapping.MappingFunc.Invoke( referenceTracking, source, target );
+            try
+            {
+                mapping.MappingFunc.Invoke( referenceTracking, source, target );
+            }
+            catch( Exception ex)
+            {
+
+                
+            }
         }
     }
 }

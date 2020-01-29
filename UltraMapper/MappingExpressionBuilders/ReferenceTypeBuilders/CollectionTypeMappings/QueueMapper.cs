@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using UltraMapper.Internals;
+using UltraMapper.Internals.ExtensionMethods;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -23,6 +24,20 @@ namespace UltraMapper.MappingExpressionBuilders
             var methodParams = new[] { context.TargetCollectionElementType };
 
             return context.TargetInstance.Type.GetMethod( methodName, methodParams );
+        }
+
+        protected override MethodInfo GetUpdateCollectionMethod( CollectionMapperContext context )
+        {
+            return typeof( LinqExtensions ).GetMethod
+               (
+                   nameof( LinqExtensions.UpdateQueue ),
+                   BindingFlags.Static | BindingFlags.Public
+               )
+               .MakeGenericMethod
+               (
+                   context.SourceCollectionElementType,
+                   context.TargetCollectionElementType
+               );
         }
     }
 }

@@ -7,7 +7,7 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public sealed class TypeMapping : ITypeOptions, IMapping, IInheritanceOptions
+    public sealed class TypeMapping : ITypeOptions, IMapping
     {
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
@@ -27,11 +27,11 @@ namespace UltraMapper.Internals
          */
         public readonly Dictionary<MappingTarget, MemberMapping> MemberMappings;
         public readonly Configuration GlobalConfiguration;
-        public TypePair TypePair { get; private set; }
+        internal TypePair TypePair { get; private set; }
 
         public MappingResolution MappingResolution { get; internal set; }
 
-        public TypeMapping( Configuration globalConfig, TypePair typePair )
+        internal TypeMapping( Configuration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
             this.TypePair = typePair;
@@ -41,62 +41,10 @@ namespace UltraMapper.Internals
         public LambdaExpression CustomConverter { get; set; }
         public LambdaExpression CustomTargetConstructor { get; set; }
 
-        private bool? _ignoreMappingResolvedByConvention;
-        public bool IgnoreMemberMappingResolvedByConvention
-        {
-            get
-            {
-                if( _ignoreMappingResolvedByConvention == null )
-                {
-                    var parent = GlobalConfiguration.GetParentConfiguration( this );
-                    if( parent != null ) return parent.IgnoreMemberMappingResolvedByConvention;
-
-                    return GlobalConfiguration.IgnoreMemberMappingResolvedByConvention;
-                }
-
-                return _ignoreMappingResolvedByConvention.Value;
-            }
-
-            set { _ignoreMappingResolvedByConvention = value; }
-        }
-
-        private ReferenceBehaviors? _referenceMappingStrategy = null;
-        public ReferenceBehaviors ReferenceBehavior
-        {
-            get
-            {
-                if( _referenceMappingStrategy == null )
-                {
-                    var parent = GlobalConfiguration.GetParentConfiguration( this );
-                    if( parent != null ) return parent.ReferenceBehavior;
-
-                    return GlobalConfiguration.ReferenceBehavior;
-                }
-
-                return _referenceMappingStrategy.Value;
-            }
-
-            set { _referenceMappingStrategy = value; }
-        }
-
-        public CollectionBehaviors CollectionBehavior { get; set; }
-
-        private LambdaExpression _collectionItemEqualityComparer = null;
-        public LambdaExpression CollectionItemEqualityComparer
-        {
-            get
-            {
-                if( _collectionItemEqualityComparer == null )
-                {
-                    var parent = GlobalConfiguration.GetParentConfiguration( this );
-                    if( parent != null ) return parent.CollectionItemEqualityComparer;
-                }
-
-                return _collectionItemEqualityComparer;
-            }
-
-            set { _collectionItemEqualityComparer = value; }
-        }
+        public bool? IgnoreMemberMappingResolvedByConvention { get; set; }
+        public ReferenceBehaviors ReferenceBehavior { get; set; } = ReferenceBehaviors.INHERIT;
+        public CollectionBehaviors CollectionBehavior { get; set; } = CollectionBehaviors.INHERIT;
+        public LambdaExpression CollectionItemEqualityComparer { get; set; }
 
         private IMappingExpressionBuilder _mapper;
         public IMappingExpressionBuilder Mapper

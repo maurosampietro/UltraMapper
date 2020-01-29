@@ -1,57 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace UltraMapper.Internals.ExtensionMethods
 {
-    internal static class LinqExtensions
+    public static class LinqExtensions
     {
-        internal static void Update<TSourceElement, TTargetElement>(
+        public static void Update<TSourceElement, TTargetElement>(
             Mapper mapper, ReferenceTracking referenceTracker,
             IEnumerable<TSourceElement> source, ICollection<TTargetElement> target,
             Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
             where TTargetElement : class, new()
         {
-            if( target is TTargetElement[] array )
+            switch( target )
             {
-                ArrayUpdate( mapper, referenceTracker, source, array, comparer );
-            }
-            else
-            {
-                CollectionUpdate( mapper, referenceTracker, source, target, comparer );
+                case TTargetElement[] array:
+                    ArrayUpdate( mapper, referenceTracker, source, array, comparer );
+                    break;
+
+                case Queue<TTargetElement> queue:
+                    UpdateQueue( mapper, referenceTracker, source, queue, comparer );
+                    break;
+
+                case Stack<TTargetElement> stack:
+                    UpdateStack( mapper, referenceTracker, source, stack, comparer );
+                    break;
+
+                default:
+                    CollectionUpdate( mapper, referenceTracker, source, target, comparer );
+                    break;
             }
         }
 
-        private static void CollectionUpdate<TSourceElement, TTargetElement>(
-            Mapper mapper, ReferenceTracking referenceTracker,
-            IEnumerable<TSourceElement> source, ICollection<TTargetElement> target,
-            Func<TSourceElement, TTargetElement, bool> comparer )
+        private static void MapItems<TSourceElement, TTargetElement>( Mapper mapper, 
+            ReferenceTracking referenceTracker, IEnumerable<TSourceElement> source, 
+            IEnumerable<TTargetElement> target, Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
             where TTargetElement : class, new()
         {
-            //search items to remove...
-            var itemsToRemove = new List<TTargetElement>();
-            foreach( var targetItem in target )
-            {
-                bool remove = true;
-                foreach( var sourceItem in source )
-                {
-                    if( comparer( sourceItem, targetItem ) )
-                        remove = false;
-                }
-
-                if( remove )
-                    itemsToRemove.Add( targetItem );
-            }
-
-            //..and remove them
-            foreach( var item in itemsToRemove )
-                target.Remove( item );
-
             //search items to add, map and add them
-            var itemsToAdd = new List<TTargetElement>();
             foreach( var sourceItem in source )
             {
                 bool addToList = true;
@@ -69,92 +57,86 @@ namespace UltraMapper.Internals.ExtensionMethods
                 {
                     var targetItem = new TTargetElement();
                     mapper.Map( sourceItem, targetItem, referenceTracker );
-                    itemsToAdd.Add( targetItem );
                 }
             }
-
-            //it is important to add the items after the target collection
-            //has been updated (or it can happen that we update items that only needed 
-            //to be added acting more or less like a hashset).
-            foreach( var item in itemsToAdd )
-                target.Add( item );
         }
 
-        private static void ArrayUpdate<TSourceElement, TTargetElement>(
+        public static void CollectionUpdate<TSourceElement, TTargetElement>(
+            Mapper mapper, ReferenceTracking referenceTracker,
+            IEnumerable<TSourceElement> source, ICollection<TTargetElement> target,
+            Func<TSourceElement, TTargetElement, bool> comparer )
+            where TSourceElement : class
+            where TTargetElement : class, new()
+        {
+            MapItems( mapper, referenceTracker, source, target, comparer );
+
+            target.Clear();
+            foreach( var item in source )
+            {
+                var targetItem = (TTargetElement)referenceTracker[ item, typeof( TTargetElement ) ];
+                target.Add( targetItem );
+            }
+        }
+
+        public static void ArrayUpdate<TSourceElement, TTargetElement>(
             Mapper mapper, ReferenceTracking referenceTracker,
             IEnumerable<TSourceElement> source, TTargetElement[] target,
             Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
             where TTargetElement : class, new()
         {
-            //Search for items to remove and set the array element to null.
-            //Save the index of the removed element.
+            MapItems( mapper, referenceTracker, source, target, comparer );
 
-            var removedItemIndexes = new List<int>();
+            var arrayTarget = target as TTargetElement[];
+            var sourceCount = source.Count();
+            if( sourceCount > arrayTarget.Length )
+                arrayTarget = target = new TTargetElement[ sourceCount ];
 
-            for( int i = 0; i < target.Length; i++ )
+            int index = 0;
+            foreach( var item in source )
             {
-                var targetItem = target[ i ];
-                bool remove = true;
-                foreach( var sourceItem in source )
-                {
-                    if( sourceItem == null )
-                        continue;
+                var targetItem = (TTargetElement)referenceTracker[ item, typeof( TTargetElement ) ];
+                target[ index++ ] = targetItem;
+            }
+        }
 
-                    if( comparer( sourceItem, targetItem ) )
-                        remove = false;
-                }
+        public static void UpdateQueue<TSourceElement, TTargetElement>(
+            Mapper mapper, ReferenceTracking referenceTracker,
+            IEnumerable<TSourceElement> source, Queue<TTargetElement> target,
+            Func<TSourceElement, TTargetElement, bool> comparer )
+            where TSourceElement : class
+            where TTargetElement : class, new()
+        {
+            MapItems( mapper, referenceTracker, source, target, comparer );
 
-                if( remove )
-                {
-                    removedItemIndexes.Add( i );
-                    target[ i ] = null;
-                }
+            target.Clear();
+            foreach( var item in source )
+            {
+                var targetItem = (TTargetElement)referenceTracker[ item, typeof( TTargetElement ) ];
+                target.Enqueue( targetItem );
+            }
+        }
+
+        public static void UpdateStack<TSourceElement, TTargetElement>(
+           Mapper mapper, ReferenceTracking referenceTracker,
+           IEnumerable<TSourceElement> source, Stack<TTargetElement> target,
+           Func<TSourceElement, TTargetElement, bool> comparer )
+           where TSourceElement : class
+           where TTargetElement : class, new()
+        {
+            MapItems( mapper, referenceTracker, source, target, comparer );
+
+            var tempStack = new Stack<TTargetElement>();
+            foreach( var item in source )
+            {
+                var targetItem = (TTargetElement)referenceTracker[ item, typeof( TTargetElement ) ];
+                tempStack.Push( targetItem );
             }
 
-            //search items to add, map and add them
-            var itemsToAdd = new List<TTargetElement>();
-            foreach( var sourceItem in source )
-            {
-                bool addToList = true;
-                foreach( var targetItem in target )
-                {
-                    if( comparer( sourceItem, targetItem ) )
-                    {
-                        mapper.Map( sourceItem, targetItem, referenceTracker );
-                        addToList = false; //we already updated
-                        break; //next source item
-                    }
-                }
+            target.Clear();
 
-                if( addToList )
-                {
-                    var targetItem = new TTargetElement();
-                    mapper.Map( sourceItem, targetItem, referenceTracker );
-                    itemsToAdd.Add( targetItem );
-                }
-            }
-
-            //it is important to add the items after the target collection
-            //has been updated (or it can happen that we update items that only needed 
-            //to be added acting more or less like a hashset).
-            //Elements are inserted in the first empty spot in the array
-            foreach( var item in itemsToAdd )
-            {
-                bool elementInserted = false;
-                for( int i = 0; i < target.Length; i++ )
-                {
-                    if( target[ i ] == null )
-                    {
-                        target[ i ] = item;
-                        elementInserted = true;
-                        break;
-                    }
-                }
-
-                if( !elementInserted )
-                    throw new Exception( "Could not find an empty spot. Array size is not the correct." );
-            }
+            foreach( var item in tempStack )
+                target.Push( item );
         }
     }
 }
