@@ -742,80 +742,80 @@ namespace UltraMapper.Tests
             _mapper.Map( newUsers, users );
         }
 
-        //[TestMethod]
-        //public void MergeCollectionKeepingTargetInstance()
-        //{
-        //    throw new NotImplementedException();
-        //}
+        [TestMethod]
+        public void MergeCollectionKeepingTargetInstance()
+        {
+            throw new NotImplementedException();
+        }
 
-        //[TestMethod]
-        //public void MergeCollectionCreatingNewTargetInstance()
-        //{
-        //    var innerType = new InnerType() { String = "test" };
-        //    var source = new GenericCollections<ComplexType>( false );
+        [TestMethod]
+        public void MergeCollectionCreatingNewTargetInstance()
+        {
+            var innerType = new InnerType() { String = "test" };
+            var source = new GenericCollections<ComplexType>( false );
 
-        //    //initialize source
-        //    for( int i = 0; i < 10; i++ )
-        //    {
-        //        source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
-        //        source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
-        //        source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
-        //        source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
-        //        source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
-        //        source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
-        //        source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
-        //        source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
-        //    }
+            //initialize source
+            for( int i = 0; i < 10; i++ )
+            {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+            }
 
-        //    var tempItemA = new ComplexType() { A = 1 };
-        //    var tempItemB = new ComplexType() { A = 9 };
+            var tempItemA = new ComplexType() { A = 1 };
+            var tempItemB = new ComplexType() { A = 9 };
 
-        //    var target = new GenericCollections<ComplexType>( false )
-        //    {
-        //        Array = new ComplexType[ 10 ] { tempItemA, tempItemB, new ComplexType() { A = 10 }, null, null, null, null, null, null, null },
-        //        List = new List<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-        //        HashSet = new HashSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-        //        SortedSet = new SortedSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-        //        ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } }
-        //    };
+            var target = new GenericCollections<ComplexType>( false )
+            {
+                Array = new ComplexType[ 10 ] { tempItemA, tempItemB, new ComplexType() { A = 10 }, null, null, null, null, null, null, null },
+                List = new List<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                HashSet = new HashSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                SortedSet = new SortedSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } }
+            };
 
-        //    var tempStack = target.Stack = new Stack<ComplexType>();
-        //    target.Stack.Push( tempItemA );
-        //    target.Stack.Push( tempItemB );
-        //    target.Stack.Push( new ComplexType() { A = 10 } );
+            var tempStack = target.Stack = new Stack<ComplexType>();
+            target.Stack.Push( tempItemA );
+            target.Stack.Push( tempItemB );
+            target.Stack.Push( new ComplexType() { A = 10 } );
 
-        //    var tempQueue = target.Queue = new Queue<ComplexType>();
-        //    target.Queue.Enqueue( tempItemA );
-        //    target.Queue.Enqueue( tempItemB );
-        //    target.Queue.Enqueue( new ComplexType() { A = 10 } );
+            var tempQueue = target.Queue = new Queue<ComplexType>();
+            target.Queue.Enqueue( tempItemA );
+            target.Queue.Enqueue( tempItemB );
+            target.Queue.Enqueue( new ComplexType() { A = 10 } );
 
-        //    var tempLinkedList = target.LinkedList = new LinkedList<ComplexType>();
-        //    target.LinkedList.AddLast( tempItemA );
-        //    target.LinkedList.AddLast( tempItemB );
-        //    target.LinkedList.AddLast( new ComplexType() { A = 10 } );
+            var tempLinkedList = target.LinkedList = new LinkedList<ComplexType>();
+            target.LinkedList.AddLast( tempItemA );
+            target.LinkedList.AddLast( tempItemB );
+            target.LinkedList.AddLast( new ComplexType() { A = 10 } );
 
-        //    //item comparer should also check for nulls ALWAYS
-        //    Expression<Func<ComplexType, ComplexType, bool>> itemComparer =
-        //        ( itemA, itemB ) => Comparison( itemA, itemB );
+            //item comparer should also check for nulls ALWAYS
+            Expression<Func<ComplexType, ComplexType, bool>> itemComparer =
+                ( itemA, itemB ) => Comparison( itemA, itemB );
 
-        //    var ultraMapper = new Mapper( cfg =>
-        //    {
-        //        cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>>( cfg2 =>
-        //        {
-        //            cfg2.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
-        //            cfg2.CollectionBehavior = CollectionBehaviors.MERGE;
-        //            cfg2.CollectionItemEqualityComparer = itemComparer;
-        //        } );
-        //    } );
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<IEnumerable<ComplexType>, IEnumerable<ComplexType>>( cfg2 =>
+                {
+                    cfg2.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                    cfg2.CollectionBehavior = CollectionBehaviors.MERGE;
+                    cfg2.CollectionItemEqualityComparer = itemComparer;
+                } );
+            } );
 
-        //    //!!! questo overload di default imposta internamente ReferenceBehaviors = USE_TARGET_INSTANCE_IF_NOT_NULL
-        //    // per gestire alcuni casi limite
-        //    ultraMapper.Map( source, target );
+            //!!! questo overload di default imposta internamente ReferenceBehaviors = USE_TARGET_INSTANCE_IF_NOT_NULL
+            // per gestire alcuni casi limite
+            ultraMapper.Map( source, target );
 
-        //    Assert.IsTrue( !Object.ReferenceEquals( target.LinkedList, tempLinkedList ) );
-        //    Assert.IsTrue( !Object.ReferenceEquals( target.Stack, tempStack ) );
-        //    Assert.IsTrue( !Object.ReferenceEquals( target.Queue, tempQueue ) );
-        //}
+            Assert.IsTrue( !Object.ReferenceEquals( target.LinkedList, tempLinkedList ) );
+            Assert.IsTrue( !Object.ReferenceEquals( target.Stack, tempStack ) );
+            Assert.IsTrue( !Object.ReferenceEquals( target.Queue, tempQueue ) );
+        }
 
         [TestMethod]
         public void SimpleCollectionUpdate()
