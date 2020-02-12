@@ -9,18 +9,12 @@
         {
             var m = new UltraMapper.Mapper( cfg =>
             {
-                //cfg.MapValues<Dictionary<string, string>, T>();
-
-                //var target = new T();
-                //if( key == "a" )
-                //    target.A = value;
+                cfg.MapTypes<Dictionary<string, string>, T>();
             } );
 
-            m.MappingConfiguration.Mappers.Insert( 0, new StringParse( m.MappingConfiguration ) );
             m.MappingConfiguration.Mappers.Insert( 0, new DictMap( m.MappingConfiguration ) );
             var result = m.Map<T>( _map );
 
-            var result2 = m.Map<MoveFile>( command );
             Console.ReadLine();
         }
     }
@@ -73,39 +67,19 @@
 
         public override void Runtime<TSourceInstance, TTargetInstance>( TSourceInstance source, TTargetInstance target )
         {
-            var mapper = new UltraMapper.Mapper();
+            var mapper = new Mapper();
 
-            var members = new UltraMapper.Conventions.TargetMemberProvider().GetMembers( typeof( TTargetInstance ) );
+            var members = new TargetMemberProvider().GetMembers( typeof( TTargetInstance ) )
+                .ToDictionary( m => m.Name.ToLower(), m => m );
+
             var sourceDict = source as Dictionary<string, string>;
 
             foreach( var item in sourceDict )
             {
-                foreach( var member in members )
-                {
-                    if( String.Equals( member.Name, item.Key, StringComparison.InvariantCultureIgnoreCase ) )
-                    {
-                        if( member is PropertyInfo pi )
-                            pi.SetValue( target, Convert.ChangeType( item.Value, pi.PropertyType ) );
-                        break;
-                    }
-                }
+                var member = members[ item.Key.ToLower() ];
+
+                if( member is PropertyInfo pi )
+                    pi.SetValue( target, Convert.ChangeType( item.Value, pi.PropertyType ) );
             }
-        }
-    }
-
-    public class StringParse : Rt
-    {
-        public StringParse( Configuration conf )
-            : base( conf ) { }
-
-        public override bool CanHandle( Type source, Type target )
-        {
-            return source == typeof( string ) && 
-                (target != typeof( string ) && !target.IsPrimitive);
-        }
-
-        public override void Runtime<TSourceInstance, TTargetInstance>( TSourceInstance source, TTargetInstance target )
-        {
-
         }
     }
