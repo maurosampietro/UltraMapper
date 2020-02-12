@@ -1,0 +1,111 @@
+    internal class Program
+    {
+        private static readonly Dictionary<string, string> _map = new Dictionary<string, string>()
+        {
+            { "a","126"}, {"b","vb"}, {"c","false"}
+        };
+
+        private static void Main( string[] args )
+        {
+            var m = new UltraMapper.Mapper( cfg =>
+            {
+                //cfg.MapValues<Dictionary<string, string>, T>();
+
+                //var target = new T();
+                //if( key == "a" )
+                //    target.A = value;
+            } );
+
+            m.MappingConfiguration.Mappers.Insert( 0, new StringParse( m.MappingConfiguration ) );
+            m.MappingConfiguration.Mappers.Insert( 0, new DictMap( m.MappingConfiguration ) );
+            var result = m.Map<T>( _map );
+
+            var result2 = m.Map<MoveFile>( command );
+            Console.ReadLine();
+        }
+    }
+
+    internal class MoveFile
+    {
+        public string FromHere { get; set; }
+        public string ToHere { get; set; }
+    }
+
+    public class T
+    {
+        public int A { get; set; }
+        public string B { get; set; }
+        public bool C { get; set; }
+    }
+
+    public abstract class Rt : ReferenceMapper
+    {
+        public Rt( Configuration conf )
+            : base( conf ) { }
+
+        public override bool CanHandle( Type source, Type target )
+        {
+            return true;
+        }
+
+        protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
+        {
+            var rtMethod = typeof( Rt ).GetMethod( nameof( Runtime ) )
+                .MakeGenericMethod( contextObj.SourceInstance.Type, contextObj.TargetInstance.Type );
+
+            return Expression.Call( Expression.Constant( this ), rtMethod,
+                contextObj.SourceInstance, contextObj.TargetInstance );
+        }
+
+        public abstract void Runtime<TSourceInstance, TTargetInstance>( TSourceInstance source, TTargetInstance target );
+    }
+
+    public class DictMap : Rt
+    {
+        public DictMap( Configuration conf )
+            : base( conf ) { }
+
+        public override bool CanHandle( Type source, Type target )
+        {
+            return source == typeof( Dictionary<string, string> ) &&
+                target != typeof( Dictionary<,> );
+        }
+
+        public override void Runtime<TSourceInstance, TTargetInstance>( TSourceInstance source, TTargetInstance target )
+        {
+            var mapper = new UltraMapper.Mapper();
+
+            var members = new UltraMapper.Conventions.TargetMemberProvider().GetMembers( typeof( TTargetInstance ) );
+            var sourceDict = source as Dictionary<string, string>;
+
+            foreach( var item in sourceDict )
+            {
+                foreach( var member in members )
+                {
+                    if( String.Equals( member.Name, item.Key, StringComparison.InvariantCultureIgnoreCase ) )
+                    {
+                        if( member is PropertyInfo pi )
+                            pi.SetValue( target, Convert.ChangeType( item.Value, pi.PropertyType ) );
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public class StringParse : Rt
+    {
+        public StringParse( Configuration conf )
+            : base( conf ) { }
+
+        public override bool CanHandle( Type source, Type target )
+        {
+            return source == typeof( string ) && 
+                (target != typeof( string ) && !target.IsPrimitive);
+        }
+
+        public override void Runtime<TSourceInstance, TTargetInstance>( TSourceInstance source, TTargetInstance target )
+        {
+
+        }
+    }
