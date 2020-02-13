@@ -156,41 +156,7 @@ namespace UltraMapper
             mapping.ReferenceBehavior = refBehavior;
 
             this.Map( source, target, referenceTracking, mapping );
-        }
-
-        //public class AbstractTypeMappingCrawler
-        //{
-        //    public IMapping GetMapping<TSource, TTarget>( TSource source, TTarget target, IMapping mapping )
-        //    {
-        //        Type mappingSourceType = null;
-        //        Type mappingTargetType = null;
-
-        //        if( mapping is TypeMapping typeMapping )
-        //        {
-        //            mappingSourceType = typeMapping.TypePair.SourceType;
-        //            mappingTargetType = typeMapping.TypePair.TargetType;
-        //        }
-        //        else if( mapping is MemberMapping memberMapping &&
-        //            memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-        //        {
-        //            var memberTypeMapping = memberMapping.MemberTypeMapping;
-        //            mappingSourceType = memberTypeMapping.TypePair.SourceType;
-        //            mappingTargetType = memberTypeMapping.TypePair.TargetType;
-        //        }
-
-        //        if( (mappingSourceType.IsInterface || mappingSourceType.IsAbstract) &&
-        //            (mappingTargetType.IsInterface || mappingTargetType.IsAbstract) )
-        //        {
-        //            return this.MappingConfiguration[ source.GetType(), target.GetType() ];
-        //        }
-
-        //        if( mappingSourceType.IsInterface || mappingSourceType.IsAbstract )
-        //            return this.MappingConfiguration[ source.GetType(), mappingTargetType ];
-
-        //        if( mappingTargetType.IsInterface || mappingTargetType.IsAbstract )
-        //            return this.MappingConfiguration[ mappingSourceType, target.GetType() ];
-        //    }
-        //}
+        }   
 
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracking referenceTracking, IMapping mapping )
@@ -240,15 +206,7 @@ namespace UltraMapper
             }
             //---ends of runtime checks for abstract classes and interfaces
 
-            try
-            {
-                mapping.MappingFunc.Invoke( referenceTracking, source, target );
-            }
-            catch( Exception ex)
-            {
-
-                
-            }
+            mapping.MappingFunc.Invoke( referenceTracking, source, target );
         }
     }
 }
