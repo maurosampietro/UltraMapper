@@ -169,8 +169,11 @@ namespace UltraMapper
 
             //---runtime checks for abstract classes and interfaces.
 
-            IMapping CheckResolveAbstractMapping( Type sourceType, Type targetType )
+            IMapping CheckResolveAbstractMapping( TypePair typePair )
             {
+                Type sourceType = typePair.SourceType;
+                Type targetType = typePair.TargetType;
+
                 if( (sourceType.IsInterface || sourceType.IsAbstract) &&
                     (targetType.IsInterface || targetType.IsAbstract) )
                 {
@@ -188,21 +191,12 @@ namespace UltraMapper
 
             if( mapping is TypeMapping typeMapping )
             {
-                var mappingSourceType = typeMapping.TypePair.SourceType;
-                var mappingTargetType = typeMapping.TypePair.TargetType;
-
-                mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                mapping = CheckResolveAbstractMapping( typeMapping.TypePair );
             }
             else if( mapping is MemberMapping memberMapping )
             {
                 if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-                {
-                    var memberTypeMapping = memberMapping.MemberTypeMapping;
-                    var mappingSourceType = memberTypeMapping.TypePair.SourceType;
-                    var mappingTargetType = memberTypeMapping.TypePair.TargetType;
-
-                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                }
+                    mapping = CheckResolveAbstractMapping( memberMapping.MemberTypeMapping.TypePair );
             }
             //---ends of runtime checks for abstract classes and interfaces
 
