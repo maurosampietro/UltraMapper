@@ -203,7 +203,7 @@ namespace UltraMapper
             mapping.MappingFunc.Invoke( referenceTracking, source, target );
         }
         
-           /// <summary>
+        /// <summary>
         /// Primitive thingy mapping arrays of values to a strong typed object.
         /// Useful for csv readers, parsers and stuff like that.
         /// </summary>
@@ -212,6 +212,11 @@ namespace UltraMapper
         /// <returns>An instance of <typeparamref name="T"/> populated with values</returns>
         public T MapValues<T>( string[] values ) where T : new()
         {
+            //error handling: (ideas)
+            // - no array bounds check: out of range exception
+            // - array bounds check: set what's possible
+
+
             var t = new T();
             var members = new TargetMemberProvider()
             {
@@ -228,14 +233,19 @@ namespace UltraMapper
                 var getter = member.GetSetterLambdaExpression();
 
                 var memberMap = this.MappingConfiguration[ typeof( string ), member.GetMemberType() ];
-                var arrayItemAccess = Expression.ArrayIndex( sourceLambdaArg, Expression.Constant( i, typeof( int ) ) );
+
+                var arrayIndex = Expression.Constant( i, typeof( int ) );
+                var arrayItemAccess = Expression.ArrayIndex( sourceLambdaArg, arrayIndex );
                 var conversion = memberMap.MappingExpression.Body.ReplaceParameter( arrayItemAccess, "sourceInstance" );
 
-                var exp = member.GetSetterLambdaExpression().Body
+                var setValue = member.GetSetterLambdaExpression().Body
                     .ReplaceParameter( targetLambdaArg, "target" )
                     .ReplaceParameter( conversion, "value" );
 
-                expressions.Add( exp );
+                var condition = Expression.LessThan( arrayIndex, Expression.ArrayLength( sourceLambdaArg ) );
+                var checkArrayBounds = Expression.IfThen( condition, setValue );
+
+                expressions.Add( checkArrayBounds );
             }
 
             var lambda = Expression.Lambda<Action<string[], T>>( Expression.Block( expressions ), new[] { sourceLambdaArg, targetLambdaArg } );
