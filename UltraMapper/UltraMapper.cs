@@ -216,29 +216,26 @@ namespace UltraMapper
             var members = new TargetMemberProvider()
             {
                 IgnoreMethods = true
-            }.GetMembers( typeof( T ) );
+            }.GetMembers( typeof( T ) ).ToArray();
 
             var sourceLambdaArg = Expression.Parameter( typeof( string[] ), "sourceInstance" );
             var targetLambdaArg = Expression.Parameter( typeof( T ), "targetInstance" );
 
             var expressions = new List<Expression>();
-            int i = 0;
-            foreach( var member in members )
+            for( int i = 0; i < members.Length; i++ )
             {
+                var member = members[ i ];
                 var getter = member.GetSetterLambdaExpression();
-                var memberAccessPath = new MemberAccessPath();
-                memberAccessPath.Add( member );
 
                 var memberMap = this.MappingConfiguration[ typeof( string ), member.GetMemberType() ];
                 var arrayItemAccess = Expression.ArrayIndex( sourceLambdaArg, Expression.Constant( i, typeof( int ) ) );
                 var conversion = memberMap.MappingExpression.Body.ReplaceParameter( arrayItemAccess, "sourceInstance" );
 
-                var exp = memberAccessPath.GetSetterLambdaExpression().Body
-                    .ReplaceParameter( targetLambdaArg, "instance" )
+                var exp = member.GetSetterLambdaExpression().Body
+                    .ReplaceParameter( targetLambdaArg, "target" )
                     .ReplaceParameter( conversion, "value" );
 
                 expressions.Add( exp );
-                i++;
             }
 
             var lambda = Expression.Lambda<Action<string[], T>>( Expression.Block( expressions ), new[] { sourceLambdaArg, targetLambdaArg } );
