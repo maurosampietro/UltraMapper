@@ -15,6 +15,12 @@
             m.MappingConfiguration.Mappers.Insert( 0, new DictMap( m.MappingConfiguration ) );
             var result = m.Map<T>( _map );
 
+            MapValues<string, Commands>( IParser parser );
+                MapValues<IEnumerable<string>, Commands>( /*index to property noheader csv or fixedfield format style*/)
+                    .IndexToField(0,c=>c.A) //override default ordering
+                    .ThrowIfMissingValue();
+                MapValues<Dictionary<string, string>, Commands>( /*string name to property*/ );
+                
             Console.ReadLine();
         }
     }
