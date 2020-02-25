@@ -202,5 +202,49 @@ namespace UltraMapper
 
             mapping.MappingFunc.Invoke( referenceTracking, source, target );
         }
+        
+           /// <summary>
+        /// Primitive thingy mapping arrays of values to a strong typed object.
+        /// Useful for csv readers, parsers and stuff like that.
+        /// </summary>
+        /// <typeparam name="T">Target type</typeparam>
+        /// <param name="values">arrays of values</param>
+        /// <returns>An instance of <typeparamref name="T"/> populated with values</returns>
+        public T MapValues<T>( string[] values ) where T : new()
+        {
+            var t = new T();
+            var members = new TargetMemberProvider()
+            {
+                IgnoreMethods = true
+            }.GetMembers( typeof( T ) );
+
+            var sourceLambdaArg = Expression.Parameter( typeof( string[] ), "sourceInstance" );
+            var targetLambdaArg = Expression.Parameter( typeof( T ), "targetInstance" );
+
+            var expressions = new List<Expression>();
+            int i = 0;
+            foreach( var member in members )
+            {
+                var getter = member.GetSetterLambdaExpression();
+                var memberAccessPath = new MemberAccessPath();
+                memberAccessPath.Add( member );
+
+                var memberMap = this.MappingConfiguration[ typeof( string ), member.GetMemberType() ];
+                var arrayItemAccess = Expression.ArrayIndex( sourceLambdaArg, Expression.Constant( i, typeof( int ) ) );
+                var conversion = memberMap.MappingExpression.Body.ReplaceParameter( arrayItemAccess, "sourceInstance" );
+
+                var exp = memberAccessPath.GetSetterLambdaExpression().Body
+                    .ReplaceParameter( targetLambdaArg, "instance" )
+                    .ReplaceParameter( conversion, "value" );
+
+                expressions.Add( exp );
+                i++;
+            }
+
+            var lambda = Expression.Lambda<Action<string[], T>>( Expression.Block( expressions ), new[] { sourceLambdaArg, targetLambdaArg } );
+            lambda.Compile()( values, t );
+
+            return t;
+        }
     }
 }
