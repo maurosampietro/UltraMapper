@@ -1,8 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using UltraMapper.Conventions;
 using UltraMapper.Internals;
 
+[assembly: InternalsVisibleTo("UltraMapper.Tests")]
+
 namespace UltraMapper
-{
+{   
     public class Mapper
     {
         public Configuration MappingConfiguration { get; protected set; }
