@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using UltraMapper.Internals;
+[assembly: InternalsVisibleTo( "UltraMapper.Tests" )]
 
 namespace UltraMapper
 {
@@ -132,8 +134,8 @@ namespace UltraMapper
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target,
-            ReferenceTracking referenceTracking = null, 
-            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL ) 
+            ReferenceTracking referenceTracking = null,
+            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
             where TTarget : class
         {
             if( source == null )
@@ -244,10 +246,10 @@ namespace UltraMapper
             {
                 mapping.MappingFunc.Invoke( referenceTracking, source, target );
             }
-            catch( Exception ex)
+            catch( Exception ex )
             {
 
-                
+
             }
         }
     }
