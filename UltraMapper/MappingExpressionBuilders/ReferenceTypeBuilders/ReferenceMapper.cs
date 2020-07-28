@@ -41,8 +41,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public virtual bool CanHandle( Type source, Type target )
         {
-            bool builtInTypes = source.IsBuiltInType( false )
-                && target.IsBuiltInType( false );
+            bool builtInTypes = source.IsBuiltIn( false )
+                && target.IsBuiltIn( false );
 
             return !target.IsValueType && !builtInTypes;
         }

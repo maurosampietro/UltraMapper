@@ -63,7 +63,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected virtual Expression GetKeyOrValueExpression( DictionaryMapperContext context,
             ParameterExpression sourceParam, ParameterExpression targetParam )
         {
-            if( (sourceParam.Type.IsBuiltInType( false ) && targetParam.Type.IsBuiltInType( false )) ||
+            if( (sourceParam.Type.IsBuiltIn( false ) && targetParam.Type.IsBuiltIn( false )) ||
                 (!sourceParam.Type.IsClass || !targetParam.Type.IsClass) )
             {
                 var itemMapping = MapperConfiguration[ sourceParam.Type,

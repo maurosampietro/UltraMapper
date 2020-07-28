@@ -88,7 +88,7 @@ namespace UltraMapper.Tests
             private void Initialize( uint minval, uint maxval )
             {
                 var elementType = typeof( T );
-                if( elementType.IsBuiltInType( true ) )
+                if( elementType.IsBuiltIn( true ) )
                 {
                     for( uint i = 0, v = minval; v < maxval; i++, v++ )
                     {

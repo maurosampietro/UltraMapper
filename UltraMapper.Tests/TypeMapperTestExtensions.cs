@@ -35,7 +35,7 @@ namespace UltraMapper.Tests
             }
 
             //same value type: just compare their values
-            if( sourceType == targetType && sourceType.IsBuiltInType( false ) )
+            if( sourceType == targetType && sourceType.IsBuiltIn( false ) )
                 return source.Equals( target );
 
             if( sourceType.IsEnumerable() && targetType.IsEnumerable() )

@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace UltraMapper.Internals
 {
-    internal static class TypeExtensions
+    public static class TypeExtensions
     {
         /// <summary>
         /// Check if a type is a base type, optionally unwrapping 
@@ -17,7 +17,7 @@ namespace UltraMapper.Internals
         /// <param name="type">The type to check</param>
         /// <param name="unwrapNullableTypes">If true, checks the underlying type of a Nullable.</param>
         /// <returns>True if the type is a base type, false otherwise.</returns>
-        public static bool IsBuiltInType( this Type type, bool unwrapNullableTypes )
+        public static bool IsBuiltIn( this Type type, bool unwrapNullableTypes )
         {
             var checkType = type;
             if( unwrapNullableTypes )

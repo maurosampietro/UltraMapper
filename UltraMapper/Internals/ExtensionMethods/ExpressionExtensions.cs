@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace UltraMapper.Internals
 {
-    internal static class ExpressionExtensions
+    public static class ExpressionExtensions
     {
         public static MemberAccessPath ExtractMember( this Expression lambdaExpression )
         {

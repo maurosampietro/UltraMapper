@@ -2,7 +2,7 @@
 
 namespace UltraMapper.Internals
 {
-    internal class ExpressionParameterReplacer : ExpressionVisitor
+    public class ExpressionParameterReplacer : ExpressionVisitor
     {
         private readonly Expression _expression;
         private readonly string _name;

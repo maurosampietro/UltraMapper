@@ -4,9 +4,19 @@ using System.Linq.Expressions;
 
 namespace UltraMapper.Internals
 {
-    internal static class ExpressionLoops
+    public static class ExpressionLoops
     {
-        public static Expression ForEach( Expression collection, ParameterExpression loopVar, Expression loopContent )
+        public static Expression ForEach( Expression collection,
+            ParameterExpression loopVar, Expression loopContent )
+        {
+            var breakLabel = Expression.Label( "LoopBreak" );
+            var continueLabel = Expression.Label( "LoopContinue" );
+
+            return ForEach( collection, loopVar, loopContent, breakLabel, continueLabel );
+        }
+
+        public static Expression ForEach( Expression collection, ParameterExpression loopVar,
+            Expression loopContent, LabelTarget @break, LabelTarget @continue )
         {
             var elementType = loopVar.Type;
             var enumerableType = typeof( IEnumerable<> ).MakeGenericType( elementType );
@@ -19,8 +29,6 @@ namespace UltraMapper.Internals
             //The MoveNext method's actually on IEnumerator, not IEnumerator<T>
             var moveNextCall = Expression.Call( enumeratorVar, typeof( IEnumerator )
                 .GetMethod( nameof( IEnumerator.MoveNext ) ) );
-
-            var breakLabel = Expression.Label( "LoopBreak" );
 
             return Expression.Block
             (
@@ -41,10 +49,11 @@ namespace UltraMapper.Internals
                             loopContent
                         ),
 
-                        Expression.Break( breakLabel )
+                        Expression.Break( @break )
                     ),
 
-                    breakLabel
+                    @break,
+                    @continue
                ) );
         }
 

@@ -11,8 +11,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override bool CanHandle( Type source, Type target )
         {
-            bool areTypesBuiltIn = source.IsBuiltInType( false )
-                && target.IsBuiltInType( false );
+            bool areTypesBuiltIn = source.IsBuiltIn( false )
+                && target.IsBuiltIn( false );
 
             return (areTypesBuiltIn ) && (source == target ||
                 source.IsImplicitlyConvertibleTo( target ) ||

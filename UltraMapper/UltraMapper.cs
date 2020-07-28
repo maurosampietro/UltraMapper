@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UltraMapper.Internals;
 [assembly: InternalsVisibleTo( "UltraMapper.Tests" )]
@@ -242,15 +243,18 @@ namespace UltraMapper
             }
             //---ends of runtime checks for abstract classes and interfaces
 
+#if DEBUG
             try
-            {
+            {                
                 mapping.MappingFunc.Invoke( referenceTracking, source, target );
             }
             catch( Exception ex )
             {
-
-
+                Debugger.Break();
             }
+#else
+            mapping.MappingFunc.Invoke( referenceTracking, source, target );
+#endif
         }
     }
 }

@@ -16,7 +16,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public override bool CanHandle( Type source, Type target )
         {
             return source.IsEnumerable() && target.IsEnumerable() &&
-                !source.IsBuiltInType( false ) && !target.IsBuiltInType( false ); //avoid strings
+                !source.IsBuiltIn( false ) && !target.IsBuiltIn( false ); //avoid strings
         }
 
         protected override ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
@@ -63,9 +63,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 throw new Exception( msg );
             }
-
-            var itemMapping = MapperConfiguration[ sourceCollectionLoopingVar.Type,
-                targetCollectionElementType ].MappingExpression;
 
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 

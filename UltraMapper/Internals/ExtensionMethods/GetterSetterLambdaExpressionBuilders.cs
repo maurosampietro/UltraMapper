@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -8,7 +10,7 @@ namespace UltraMapper.Internals
     //if the member is extracted from a complex expression chain 
     //(for example in the expression 'a => a.PropertyA.PropertyB.PropertyC'
     //the ReflectedType info of PropertyC (that should be of type 'a') is lost (and will be of the type of 'PropertyC'))
-    internal static class GetterSetterLambdaExpressionBuilders
+    public static class GetterSetterLambdaExpressionBuilders
     {
         public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
         {
@@ -142,6 +144,103 @@ namespace UltraMapper.Internals
                 methodInfo.ReflectedType, methodInfo.GetParameters()[ 0 ].ParameterType );
 
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+        }
+
+        public static LambdaExpression GetSetterLambdaExpressionInstantiateNullInstances( this MemberAccessPath memberAccessPath )
+        {
+            var instanceType = memberAccessPath.First().ReflectedType;
+            var valueType = memberAccessPath.Last().GetMemberType();
+            var value = Expression.Parameter( valueType, "value" );
+
+            var entryInstance = Expression.Parameter( instanceType, "instance" );
+            var labelTarget = Expression.Label( typeof( void ), "label" );
+
+            Expression accessPath = entryInstance;
+            var memberAccesses = new List<Expression>();
+
+            foreach( var memberAccess in memberAccessPath )
+            {
+                if( memberAccess is MethodInfo methodInfo )
+                {
+                    if( methodInfo.IsGetterMethod() )
+                        accessPath = Expression.Call( accessPath, methodInfo );
+                    else
+                        accessPath = Expression.Call( accessPath, methodInfo, value );
+                }
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+
+                memberAccesses.Add( accessPath );
+            }
+
+            if( !(accessPath is MethodCallExpression) )
+                accessPath = Expression.Assign( accessPath, value );
+
+            var nullConstant = Expression.Constant( null );
+            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( ( memberAccess, i ) =>
+            {
+                if( memberAccessPath[ i ] is MethodInfo methodInfo )
+                {
+                    //nested method calls like GetCustomer().SetName() include non-writable member (GetCustomer).
+                    //Assigning a new instance in that case is more difficult.
+                    //In that case 'by convention' we should look for:
+                    // - A property named Customer
+                    // - A method named SetCustomer(argument type = getter return type) 
+                    //      (also take into account Set, Set_, set, set_) as for convention.
+
+                    var bindingAttributes = BindingFlags.Instance | BindingFlags.Public
+                        | BindingFlags.FlattenHierarchy | BindingFlags.NonPublic;
+
+                    string setterMethodName = null;
+                    if( methodInfo.Name.StartsWith( "Get" ) )
+                        setterMethodName = methodInfo.Name.Replace( "Get", "Set" );
+                    else if( methodInfo.Name.StartsWith( "get" ) )
+                        setterMethodName = methodInfo.Name.Replace( "get", "set" );
+                    else if( methodInfo.Name.StartsWith( "Get_" ) )
+                        setterMethodName = methodInfo.Name.Replace( "Get_", "Set_" );
+                    else if( methodInfo.Name.StartsWith( "get_" ) )
+                        setterMethodName = methodInfo.Name.Replace( "get_", "set_" );
+
+                    var setterMethod = methodInfo.ReflectedType.GetMethod( setterMethodName, bindingAttributes );
+
+                    Expression setterAccessPath = entryInstance;
+                    for( int j = 0; j < i; j++ )
+                    {
+                        if( memberAccessPath[ j ] is MethodInfo mi )
+                        {
+                            if( mi.IsGetterMethod() )
+                                setterAccessPath = Expression.Call( accessPath, mi );
+                            else
+                                setterAccessPath = Expression.Call( accessPath, mi, value );
+                        }
+                        else
+                            setterAccessPath = Expression.MakeMemberAccess( setterAccessPath, memberAccessPath[ j ] );
+                    }
+
+                    setterAccessPath = Expression.Call( setterAccessPath, setterMethod, Expression.New( memberAccess.Type ) );
+                    var equalsNull = Expression.Equal( memberAccess, nullConstant );
+                    return (Expression)Expression.IfThen( equalsNull, setterAccessPath );
+                }
+                else
+                {
+                    var createInstance = Expression.Assign( memberAccess, Expression.New( memberAccess.Type ) );
+                    var equalsNull = Expression.Equal( memberAccess, nullConstant );
+                    return (Expression)Expression.IfThen( equalsNull, createInstance );
+                }
+
+            } ).Where( nc => nc != null ).ToList();
+
+            var exp = Expression.Block
+            (
+                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
+                    : (Expression)Expression.Empty(),
+
+                accessPath,
+                Expression.Label( labelTarget )
+            );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
+            return LambdaExpression.Lambda( delegateType, exp, entryInstance, value );
         }
     }
 }

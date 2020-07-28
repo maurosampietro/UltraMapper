@@ -10,7 +10,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override bool CanHandle( Type source, Type target )
         {
-            return !source.IsBuiltInType( false ) && !target.IsBuiltInType( false );
+            return !source.IsBuiltIn( false ) && !target.IsBuiltIn( false );
         }
 
         public override LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )

@@ -23,8 +23,8 @@ namespace UltraMapper.MappingExpressionBuilders
             SourceCollectionElementType = SourceInstance.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetInstance.Type.GetCollectionGenericType();
 
-            IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltInType( true );
-            IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltInType( true );
+            IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltIn( true );
+            IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltIn( true );
 
             IsSourceElementTypeStruct = !SourceCollectionElementType.IsClass;
             IsTargetElementTypeStruct = !TargetCollectionElementType.IsClass;

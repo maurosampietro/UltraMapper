@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace UltraMapper.Internals
 {
-    internal static class MemberInfoExtensions
+    public static class MemberInfoExtensions
     {
         /// <summary>
         /// Gets the type of the accessed member (last member) of the expression.
