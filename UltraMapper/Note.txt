@@ -1,4 +1,16 @@
 ﻿PROBLEMS:
+
+- CustomConverters do not add references to the ReferenceTracker.
+
+    When invoking the recursion map (especially with non concrete types)
+    a reference to the referencetracker is expected as first argument.
+
+    Solution: 
+        - Wrap the call to the converter inside a block calling the referencetracker
+          (we can therefore take care of the source and target instances)
+        
+        - Map overload for converter that takes as first argument the reference tracker
+          so that inner references can be managed (added to the referencetracker) by the user
 	
 KNOWN (POTENTIAL) PROBLEMS:
 
@@ -19,10 +31,7 @@ KNOWN (POTENTIAL) PROBLEMS:
 	(this could be right since it is implied that we keep using the existing target collection).
 
 - Reference type's CustomConverters do not recurse on inner references.
-	(this might be correct since the entire mapping is delegated to the user).   
-
-- CustomConverters do not add references to the ReferenceTracker.
-	(this is obvious and might be correct. Maybe just pass a reference to the ReferenceTracker to delegate this to the user).   
+	(this might be correct since the entire mapping is delegated to the user).     
 
 - Configurations can be shared, but not subsequently edited because conventions and expression builders are not run again.
   Introduce a seal mechanism to inform the user about this; or a configuration refresh mechanism. 
@@ -38,17 +47,10 @@ TODO:
 
 - Tuple support
 
-- Support CollectionBehaviors.UPDATE on Stack and Queue. (maybe updating only matching elements?) 
-
-- ArrayMapper should check if the array is capable of holding all of the elements in the source collection;
-  if the array is not of the right size, a new array should be instantiated.
-
 - Automatic reverse mapping (at the time a reverse mapping is a normal mapping
   encountered at execution time and resolved by convention and thus does not take into account manual overrides).
 
 - Dynamic mapping
-
-- Simple members inherits type mapping configuration BUT complex types do not.
 
 - Member configuration should work regardless the type of the members involved.
   This would solve EntityFramework problems with DynamicProxies not reading the 
@@ -62,3 +64,10 @@ TODO:
 
 - UNIT TEST: VERIFY MAPPING method should search for objects sharing the same reference in the source and check 
   that on the target those objects are mapped to a single object sharing the same reference
+
+NOTES:
+
+ - Interface-to-interface mapping is not possible (eg List<InterfaceA> -> List<InterfaceB>)
+   because i dont't know what concrete target type the user wants.
+   The user can specify a custom converter or custom constructor can be provided to solve the problem
+   or map directly to the concrete type they want (eg List<InterfaceA> -> List<TypeB>)

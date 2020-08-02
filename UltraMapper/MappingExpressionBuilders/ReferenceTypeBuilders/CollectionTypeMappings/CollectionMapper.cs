@@ -164,8 +164,14 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
 
+            //if( context.SourceCollectionElementType.IsInterface )
+            //{
+            //    throw new NotImplementedException( "collections of interface element type not fully supported yet" );
+            //    //especially interface -> simple type
+            //}
+
             if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn
-                || context.IsSourceElementTypeStruct || context.IsTargetElementTypeStruct )
+                || context.SourceCollectionElementType.IsValueType || context.TargetCollectionElementType.IsValueType )
             {
                 return Expression.Block
                 (

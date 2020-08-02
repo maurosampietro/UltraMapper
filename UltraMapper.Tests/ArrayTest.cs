@@ -152,5 +152,52 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
+
+        [TestMethod]
+        public void ComplexToSimpleElement()
+        {
+            var source = new GenericArray<InnerType>()
+            {
+                Array = Enumerable.Range( 0, 100 ).Select( i =>
+                    new InnerType() { String = i.ToString() } ).ToArray()
+            };
+
+            var target = new GenericCollections<int>( false );
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.Array, b => b.Array );
+
+                cfg.MapTypes<InnerType, int>( inner => Int32.Parse( inner.String ) );
+            } );
+
+            ultraMapper.Map( source, target );
+            Assert.IsTrue( source.Array.Select( inner => inner.String ).SequenceEqual(
+                target.Array.Select( item => item.ToString() ) ) );
+        }
+
+        [TestMethod]
+        public void SimpleToComplexElement()
+        {
+            var source = new GenericCollections<int>( false )
+            {
+                List = Enumerable.Range( 0, 100 ).ToList()
+            };
+
+            var target = new GenericArray<InnerType>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapMember( a => a.List, b => b.Array );
+
+                cfg.MapTypes<int, InnerType>( i => new InnerType() { String = i.ToString() } );
+            } );
+
+            ultraMapper.Map( source, target );
+            Assert.IsTrue( source.List.Select( inner => inner.ToString() ).SequenceEqual(
+                target.Array.Select( item => item.String ) ) );
+        }
     }
 }

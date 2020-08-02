@@ -245,12 +245,13 @@ namespace UltraMapper
 
 #if DEBUG
             try
-            {                
+            {
                 mapping.MappingFunc.Invoke( referenceTracking, source, target );
             }
             catch( Exception ex )
             {
                 Debugger.Break();
+                throw;
             }
 #else
             mapping.MappingFunc.Invoke( referenceTracking, source, target );

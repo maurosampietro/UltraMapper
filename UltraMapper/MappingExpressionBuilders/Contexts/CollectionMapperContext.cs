@@ -12,9 +12,6 @@ namespace UltraMapper.MappingExpressionBuilders
         public bool IsSourceElementTypeBuiltIn { get; }
         public bool IsTargetElementTypeBuiltIn { get; }
 
-        public bool IsSourceElementTypeStruct { get; }
-        public bool IsTargetElementTypeStruct { get; }
-
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
 
         public CollectionMapperContext( Type source, Type target, IMappingOptions options )
@@ -25,9 +22,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
             IsSourceElementTypeBuiltIn = SourceCollectionElementType.IsBuiltIn( true );
             IsTargetElementTypeBuiltIn = TargetCollectionElementType.IsBuiltIn( true );
-
-            IsSourceElementTypeStruct = !SourceCollectionElementType.IsClass;
-            IsTargetElementTypeStruct = !TargetCollectionElementType.IsClass;
 
             SourceCollectionLoopingVar = Expression.Parameter( SourceCollectionElementType, "loopVar" );
         }
