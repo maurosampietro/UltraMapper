@@ -292,7 +292,9 @@ namespace UltraMapper.MappingExpressionBuilders
                         context.TargetInstance,
                         context.TargetCollectionElementType,
                         temporaryCollectionInsertionMethod,
-                        context.SourceCollectionLoopingVar
+                        context.SourceCollectionLoopingVar,
+                        context.Mapper,
+                        context.ReferenceTracker
                     )
                 );
             }
@@ -303,18 +305,18 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 Expression.Assign( tempCollection, newTempCollectionExp ),
 
-                isUpdate ? GetUpdateCollectionExpression(context) :
-                ComplexCollectionLoop
-                (
-                    tempCollection,
-                    context.SourceCollectionElementType,
-                    context.TargetInstance,
-                    context.TargetCollectionElementType,
-                    temporaryCollectionInsertionMethod,
-                    context.SourceCollectionLoopingVar,
-                    context.ReferenceTracker,
-                    context.Mapper
-                )
+                isUpdate ? GetUpdateCollectionExpression( context ) :
+                    ComplexCollectionLoop
+                    (
+                        tempCollection,
+                        context.SourceCollectionElementType,
+                        context.TargetInstance,
+                        context.TargetCollectionElementType,
+                        temporaryCollectionInsertionMethod,
+                        context.SourceCollectionLoopingVar,
+                        context.ReferenceTracker,
+                        context.Mapper
+                    )
             );
         }
 

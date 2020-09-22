@@ -86,7 +86,9 @@ namespace UltraMapper.MappingExpressionBuilders
                         tempCollection,
                         collectionContext.TargetCollectionElementType,
                         temporaryCollectionInsertionMethod,
-                        collectionContext.SourceCollectionLoopingVar
+                        collectionContext.SourceCollectionLoopingVar,
+                        collectionContext.Mapper,
+                        collectionContext.ReferenceTracker
                     ),
 
                     Expression.New( newTargetCtor, tempCollection )

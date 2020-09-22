@@ -26,14 +26,14 @@ namespace UltraMapper.MappingExpressionBuilders
             ( o ) => debug( o );
 #endif
 
-        public static Func<ReferenceTracking, object, Type, object> refTrackingLookup =
+        public static Func<ReferenceTracker, object, Type, object> refTrackingLookup =
          ( referenceTracker, sourceInstance, targetType ) =>
          {
              referenceTracker.TryGetValue( sourceInstance, targetType, out object targetInstance );
              return targetInstance;
          };
 
-        public static Action<ReferenceTracking, object, Type, object> addToTracker =
+        public static Action<ReferenceTracker, object, Type, object> addToTracker =
             ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
         {
             referenceTracker.Add( sourceInstance, targetType, targetInstance );
@@ -86,16 +86,12 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.Empty();
         }
 
-        protected virtual bool GetIsCreateNewInstance( MapperContext context )
-        {
-            return context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE;
-        }
-
         public virtual Expression GetMemberAssignment( MemberMappingContext context )
         {
             Expression newInstance = this.GetMemberNewInstance( context );
 
-            bool isCreateNewInstance = GetIsCreateNewInstance( context );
+            bool isCreateNewInstance = context.Options.ReferenceBehavior ==
+                ReferenceBehaviors.CREATE_NEW_INSTANCE;
 
             if( isCreateNewInstance || context.TargetMemberValueGetter == null )
                 return Expression.Assign( context.TargetMember, newInstance );
@@ -128,7 +124,39 @@ namespace UltraMapper.MappingExpressionBuilders
                     getSourceType, Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type );
             }
 
-            return Expression.New( context.TargetMember.Type );
+            var defaultCtor = context.TargetMember.Type.GetConstructor( Type.EmptyTypes );
+            if( defaultCtor != null )
+                return Expression.New( context.TargetMember.Type );
+
+            if( context.TargetMember.Type.IsInterface )
+            {
+                throw new Exception( $"Type {context.TargetMember.Type} is an interface but what type to use cannot be inferred. " +
+                    $"Please configure what type to use like this: cfg.MapTypes<IA, IB>( () => new ConcreteTypeBImplementingIB() ) " );
+            }
+            else
+            {
+                throw new Exception( $"Type {context.TargetMember.Type} does not have a default constructor. " +
+                    $"Please provide a way to construct the type like this: cfg.MapTypes<A, B>( () => new B(param1,param2,...) ) " );
+            }
+        }
+
+        protected virtual Expression GetMemberNewInstanceInternal( Expression sourceValue, Type sourceType, Type targetType, IMappingOptions options )
+        {
+            if( options.CustomTargetConstructor != null )
+                return Expression.Invoke( options.CustomTargetConstructor );
+
+            //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
+            //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
+            if( targetType.IsAssignableFrom( sourceType ) )
+            {
+                MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
+                var getSourceType = Expression.Call( sourceValue, getTypeMethodInfo );
+
+                return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
+                    getSourceType, Expression.Constant( null, typeof( object[] ) ) ), targetType );
+            }
+
+            return Expression.New( targetType );
         }
 
         #region MemberMapping
@@ -274,6 +302,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
                 memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 0 ].Name );
+
+            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
+            {
+                valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
+                    memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 1 ].Name );
+            }
 
             return mapping.TargetMember.ValueSetter.Body
                 .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )

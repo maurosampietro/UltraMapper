@@ -22,10 +22,10 @@ namespace UltraMapper.Internals
 
         public override bool Equals( object obj )
         {
-            var propertyBase = obj as MappingMemberBase;
-            if( propertyBase == null ) return false;
+            if( obj is MappingMemberBase propertyBase )
+                return this.MemberInfo.Equals( propertyBase.MemberInfo );
 
-            return this.MemberInfo.Equals( propertyBase.MemberInfo );
+            return false;
         }
 
         public override int GetHashCode()

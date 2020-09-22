@@ -11,8 +11,6 @@ namespace UltraMapper.Tests
     [TestClass]
     public class CollectionTests
     {
-        private static readonly Random _random = new Random();
-
         public class User
         {
             public int Id { get; set; }
@@ -41,8 +39,7 @@ namespace UltraMapper.Tests
 
             public override bool Equals( object obj )
             {
-                var otherObj = obj as ComplexType;
-                if( otherObj == null ) return false;
+                if( !(obj is ComplexType otherObj) ) return false;
 
                 return this.A.Equals( otherObj?.A ) &&
                     (this.InnerType == null && otherObj.InnerType == null) ||

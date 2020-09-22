@@ -38,7 +38,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar )
+            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar, ParameterExpression mapper, ParameterExpression referenceTracker )
         {
             var itemMapping = MapperConfiguration[ sourceCollectionElementType,
                 targetCollectionElementType ].MappingExpression;
@@ -50,9 +50,9 @@ namespace UltraMapper.MappingExpressionBuilders
                 new[] { itemIndex },
 
                 ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
-                (
+                (                   
                     Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ),
-                        itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, itemMapping.Parameters[ 0 ].Name ) ),
+                        itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, "sourceInstance" ) ), 
 
                     Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
                 ) )

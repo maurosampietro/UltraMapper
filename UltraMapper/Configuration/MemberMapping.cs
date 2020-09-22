@@ -70,7 +70,7 @@ namespace UltraMapper.Internals
                             this.MemberTypeMapping.TypePair.SourceType,
                             this.MemberTypeMapping.TypePair.TargetType ) );
 
-                    if( this.CustomConverter == null && _mapper == null )
+                    if( _mapper == null && this.CustomConverter == null )
                         throw new Exception( $"No object mapper can handle {this}" );
                 }
 
@@ -88,34 +88,26 @@ namespace UltraMapper.Internals
 
                 if( _mappingExpression != null ) return _mappingExpression;
 
+                var sourceType = this.MemberTypeMapping.TypePair.SourceType;
+                var targetType = this.MemberTypeMapping.TypePair.TargetType;
+
                 return _mappingExpression = this.Mapper.GetMappingExpression(
-                    this.MemberTypeMapping.TypePair.SourceType,
-                    this.MemberTypeMapping.TypePair.TargetType, this );
+                    sourceType, targetType, this );
             }
         }
 
-        private Action<ReferenceTracking, object, object> _mapperFunc;
-        public Action<ReferenceTracking, object, object> MappingFunc
+        private Action<ReferenceTracker, object, object> _mappingFunc;
+        public Action<ReferenceTracker, object, object> MappingFunc
         {
             get
             {
-                if( _mapperFunc != null ) return _mapperFunc;
-
-                var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
-                var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
-                var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
+                if( _mappingFunc != null ) return _mappingFunc;
 
                 var sourceType = this.MemberTypeMapping.TypePair.SourceType;
                 var targetType = this.MemberTypeMapping.TypePair.TargetType;
 
-                var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
-                var targetInstance = Expression.Convert( targetLambdaArg, targetType );
-
-                var bodyExp = Expression.Invoke( this.MappingExpression,
-                    referenceTrack, sourceInstance, targetInstance );
-
-                return _mapperFunc = Expression.Lambda<Action<ReferenceTracking, object, object>>(
-                    bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
+                return _mappingFunc = MappingExpressionBuilder.GetMappingFunc(
+                   sourceType, targetType, this.MappingExpression );
             }
         }
 

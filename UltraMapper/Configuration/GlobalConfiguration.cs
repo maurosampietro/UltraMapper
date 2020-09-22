@@ -34,7 +34,10 @@ namespace UltraMapper
             set { _typeMappings.Root.Item.ReferenceBehavior = value; }
         }
 
+        //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
+        //Make sure to use a collection which preserve insertion order!
         public List<IMappingExpressionBuilder> Mappers { get; set; }
+
         public MappingConventions Conventions { get; set; }
 
         public Configuration( Action<Configuration> config = null )
@@ -48,6 +51,25 @@ namespace UltraMapper
             };
 
             _typeMappings = new TypeMappingInheritanceTree( rootMapping );
+
+            this.Mappers = new List<IMappingExpressionBuilder>()
+            {
+                new StringToEnumMapper( this ),
+                new EnumMapper( this ),
+                new BuiltInTypeMapper( this ),
+                new NullableMapper( this ),
+                new ConvertMapper( this ),
+                new StructMapper( this ),
+                new ArrayMapper( this ),
+                new DictionaryMapper( this ),
+                new ReadOnlyCollectionMapper( this ),
+                new StackMapper( this ),
+                new QueueMapper( this ),
+                new LinkedListMapper( this ),
+                new CollectionMapper( this ),
+                new ReferenceMapper( this ),
+                new ReferenceToStructMapper( this ),
+            };
 
             this.Conventions = new MappingConventions( cfg =>
             {
@@ -69,27 +91,6 @@ namespace UltraMapper
                         .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true );
                 } );
             } );
-
-            //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
-            //Make sure to use a collection which preserve insertion order!
-            this.Mappers = new List<IMappingExpressionBuilder>()
-            {
-                new StringToEnumMapper( this ),
-                new EnumMapper( this ),
-                new BuiltInTypeMapper( this ),
-                new NullableMapper( this ),
-                new ConvertMapper( this ),
-                new StructMapper( this ),
-                new ArrayMapper( this ),
-                new DictionaryMapper( this ),
-                new ReadOnlyCollectionMapper( this ),
-                new StackMapper( this ),
-                new QueueMapper( this ),
-                new LinkedListMapper( this ),
-                new CollectionMapper( this ),
-                new ReferenceMapper( this ),
-                new ReferenceToStructMapper( this ),
-            };
 
             config?.Invoke( this );
         }
@@ -213,12 +214,6 @@ namespace UltraMapper
         public TypeMapping this[ Type source, Type target ]
         {
             get { return this.GetTypeMapping( source, target ); }
-        }
-
-        public bool Contains( Type source, Type target )
-        {
-            var typePair = new TypePair( source, target );
-            return _typeMappings.ContainsKey( typePair );
         }
 
         private void MapByConvention( TypeMapping typeMapping )

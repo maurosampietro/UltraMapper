@@ -8,11 +8,11 @@ namespace UltraMapper.Tests
     {
         public static bool VerifyMapperResult( this Mapper ultraMapper, object source, object target )
         {
-            return VerifyMapperResultHelper( ultraMapper, source, target, new ReferenceTracking() );
+            return VerifyMapperResultHelper( ultraMapper, source, target, new ReferenceTracker() );
         }
 
         private static bool VerifyMapperResultHelper( this Mapper ultraMapper,
-            object source, object target, ReferenceTracking referenceTracking )
+            object source, object target, ReferenceTracker referenceTracking )
         {
             //sharing the same reference or both null
             if( Object.ReferenceEquals( source, target ) )
@@ -70,12 +70,21 @@ namespace UltraMapper.Tests
                 var sourceValue = mapping.SourceMember
                     .ValueGetter.Compile().DynamicInvoke( source );
 
-                var converter = mapping.CustomConverter;
-                if( converter != null )
-                    sourceValue = converter.Compile().DynamicInvoke( sourceValue );
-
                 var targetValue = mapping.TargetMember
                     .ValueGetter.Compile().DynamicInvoke( target );
+
+                var converter = mapping.CustomConverter;
+                if( converter != null )
+                {
+                    if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
+                    {
+                        //sourceValue = converter.Compile().DynamicInvoke( referenceTracking, sourceValue, targetValue );
+                    }
+                    else
+                    {
+                        sourceValue = converter.Compile().DynamicInvoke( sourceValue );
+                    }
+                }
 
                 if( !mapping.SourceMember.MemberType.IsValueType && sourceValue != null )
                 {

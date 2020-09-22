@@ -56,6 +56,12 @@ namespace UltraMapper.Internals
             return Nullable.GetUnderlyingType( type ) != null;
         }
 
+        /// <summary>
+        /// Returns true if IEnumerable is implemented on the type.
+        /// Returns true if <paramref name="type"/> in an array since they implement IEnumerable at runtime
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static bool IsEnumerable( this Type type )
         {
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
@@ -71,6 +77,12 @@ namespace UltraMapper.Internals
 
         public static Type GetCollectionGenericType( this Type type )
         {
+            if( type.IsGenericType &&
+                  type.GetGenericTypeDefinition() == typeof( IEnumerable<> ) )
+            {
+                return type.GetGenericArguments()[ 0 ];
+            }
+
             foreach( Type interfaceType in type.GetInterfaces() )
             {
                 if( interfaceType.IsGenericType &&

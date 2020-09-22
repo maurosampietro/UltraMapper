@@ -24,7 +24,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public ReferenceMapperContext( Type source, Type target, IMappingOptions options )
              : base( source, target, options )
         {
-            ReferenceTracker = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
+            ReferenceTracker = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
 
             if( !SourceInstance.Type.IsValueType )
                 SourceNullValue = Expression.Constant( null, SourceInstance.Type );
@@ -52,7 +52,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     x.Params.Length == 4 && x.GenericArgs.Length == 2 && 
                     x.Params[ 0 ].ParameterType == x.GenericArgs[ 0 ] &&
                     x.Params[ 1 ].ParameterType == x.GenericArgs[ 1 ] &&
-                    x.Params[ 2 ].ParameterType == typeof( ReferenceTracking ) &&
+                    x.Params[ 2 ].ParameterType == typeof( ReferenceTracker ) &&
                     x.Params[ 3 ].ParameterType == typeof( IMapping ) 
                  )
                 .Select( x => x.Method )

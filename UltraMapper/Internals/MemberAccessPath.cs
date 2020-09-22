@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -36,6 +37,20 @@ namespace UltraMapper.Internals
 
         IEnumerator IEnumerable.GetEnumerator()
             => this.GetEnumerator();
+
+        public override bool Equals( object obj )
+        {
+            if( obj is MemberAccessPath accessPath )
+                return this.GetHashCode() == accessPath.GetHashCode();
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Select( i => i.GetHashCode() )
+                .Aggregate( 0, ( aggregate, next ) => aggregate ^ next );
+        }
 
         public override string ToString()
         {

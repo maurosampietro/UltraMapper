@@ -70,7 +70,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     targetParam.Type ].MappingExpression;
 
                 var itemMappingExp = itemMapping.Body.ReplaceParameter(
-                    sourceParam, itemMapping.Parameters[ 0 ].Name );
+                    sourceParam, "sourceInstance" );
 
                 return Expression.Assign( targetParam, itemMappingExp );
             }

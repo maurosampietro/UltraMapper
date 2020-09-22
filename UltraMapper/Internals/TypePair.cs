@@ -21,13 +21,13 @@ namespace UltraMapper.Internals
 
         public override bool Equals( object obj )
         {
-            if( obj.GetType() != typeof( TypePair ) )
-                return false;
+            if( obj is TypePair typePair )
+            {
+                return this.SourceType.Equals( typePair.SourceType ) &&
+                    this.TargetType.Equals( typePair.TargetType );
+            }
 
-            var typePair = (TypePair)obj;
-
-            return this.SourceType.Equals( typePair.SourceType ) &&
-                this.TargetType.Equals( typePair.TargetType );
+            return false;
         }
 
         public override int GetHashCode()

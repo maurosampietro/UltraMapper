@@ -26,7 +26,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar )
+            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
+            ParameterExpression mapper, ParameterExpression referenceTracker )
         {
             if( targetCollectionInsertionMethod == null )
             {
@@ -36,19 +37,41 @@ namespace UltraMapper.MappingExpressionBuilders
                 throw new Exception( msg );
             }
 
-            var itemMapping = MapperConfiguration[ sourceCollectionElementType,
-                targetCollectionElementType ].MappingExpression;
+            if( sourceCollectionElementType.IsInterface )
+            {
+                Expression<Func<object, Type, object>> getRuntimeMapping =
+                    ( loopingvar, targetType ) => this.MapperConfiguration[ loopingvar.GetType(), targetType ].MappingFuncPrimitives( null, loopingvar );
 
-            Expression loopBody = Expression.Call
-            (
-                targetCollection, targetCollectionInsertionMethod,
+                var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
-                itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar,
-                    itemMapping.Parameters[ 0 ].Name )
-            );
+                Expression loopBody = Expression.Block
+                (
+                    new[] { newElement },
 
-            return ExpressionLoops.ForEach( sourceCollection,
-                sourceCollectionLoopingVar, loopBody );
+                    Expression.Assign( newElement, Expression.Convert(
+                            Expression.Invoke( getRuntimeMapping, sourceCollectionLoopingVar,
+                            Expression.Constant( targetCollectionElementType ) ), targetCollectionElementType ) ),
+
+                    Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
+                );
+
+                return ExpressionLoops.ForEach( sourceCollection,
+                    sourceCollectionLoopingVar, loopBody );
+            }
+            else
+            {
+                var itemMapping = MapperConfiguration[ sourceCollectionElementType,
+                    targetCollectionElementType ].MappingExpression;
+
+                Expression loopBody = Expression.Call
+                (
+                    targetCollection, targetCollectionInsertionMethod,
+                    itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, "sourceInstance" )
+                );
+
+                return ExpressionLoops.ForEach( sourceCollection,
+                    sourceCollectionLoopingVar, loopBody );
+            }
         }
 
         protected virtual Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
@@ -114,6 +137,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
             var itemMapping = MapperConfiguration[ sourceParam.Type, targetParam.Type ];
+            var constructorExp = base.GetMemberNewInstanceInternal( sourceParam, 
+                sourceParam.Type, targetParam.Type, itemMapping );
 
             return Expression.Block
             (
@@ -125,7 +150,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     Expression.Block
                     (
-                        Expression.Assign( targetParam, Expression.New( targetParam.Type ) ),
+                        Expression.Assign( targetParam, constructorExp ),
 
                         itemCacheCall,
 
@@ -170,8 +195,8 @@ namespace UltraMapper.MappingExpressionBuilders
             //    //especially interface -> simple type
             //}
 
-            if( context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn
-                || context.SourceCollectionElementType.IsValueType || context.TargetCollectionElementType.IsValueType )
+            if( (context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn
+                || context.SourceCollectionElementType.IsValueType || context.TargetCollectionElementType.IsValueType) )
             {
                 return Expression.Block
                 (
@@ -179,7 +204,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
-                        targetCollectionInsertionMethod, context.SourceCollectionLoopingVar )
+                        targetCollectionInsertionMethod, context.SourceCollectionLoopingVar,
+                        context.Mapper, context.ReferenceTracker )
                 );
             }
 
@@ -188,9 +214,17 @@ namespace UltraMapper.MappingExpressionBuilders
                 GetTargetCollectionClearExpression( context ),
 
                 isUpdateCollection ? GetUpdateCollectionExpression( context )
-                    : ComplexCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
-                        context.TargetInstance, context.TargetCollectionElementType,
-                        targetCollectionInsertionMethod, context.SourceCollectionLoopingVar, context.ReferenceTracker, context.Mapper )
+                    : ComplexCollectionLoop
+                      (
+                        context.SourceInstance,
+                        context.SourceCollectionElementType,
+                        context.TargetInstance,
+                        context.TargetCollectionElementType,
+                        targetCollectionInsertionMethod,
+                        context.SourceCollectionLoopingVar,
+                        context.ReferenceTracker,
+                        context.Mapper
+                      )
             );
         }
 

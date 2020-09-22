@@ -153,7 +153,6 @@ namespace UltraMapper.Internals
             var value = Expression.Parameter( valueType, "value" );
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );
-            var labelTarget = Expression.Label( typeof( void ), "label" );
 
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
@@ -235,8 +234,7 @@ namespace UltraMapper.Internals
                 nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
                     : (Expression)Expression.Empty(),
 
-                accessPath,
-                Expression.Label( labelTarget )
+                accessPath
             );
 
             var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );

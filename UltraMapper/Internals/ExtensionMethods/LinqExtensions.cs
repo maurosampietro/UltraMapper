@@ -7,7 +7,7 @@ namespace UltraMapper.Internals.ExtensionMethods
     public static class LinqExtensions
     {
         public static void Update<TSourceElement, TTargetElement>(
-            Mapper mapper, ReferenceTracking referenceTracker,
+            Mapper mapper, ReferenceTracker referenceTracker,
             IEnumerable<TSourceElement> source, ICollection<TTargetElement> target,
             Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
@@ -34,7 +34,7 @@ namespace UltraMapper.Internals.ExtensionMethods
         }
 
         private static void MapItems<TSourceElement, TTargetElement>( Mapper mapper, 
-            ReferenceTracking referenceTracker, IEnumerable<TSourceElement> source, 
+            ReferenceTracker referenceTracker, IEnumerable<TSourceElement> source, 
             IEnumerable<TTargetElement> target, Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
             where TTargetElement : class, new()
@@ -62,7 +62,7 @@ namespace UltraMapper.Internals.ExtensionMethods
         }
 
         public static void CollectionUpdate<TSourceElement, TTargetElement>(
-            Mapper mapper, ReferenceTracking referenceTracker,
+            Mapper mapper, ReferenceTracker referenceTracker,
             IEnumerable<TSourceElement> source, ICollection<TTargetElement> target,
             Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
@@ -79,7 +79,7 @@ namespace UltraMapper.Internals.ExtensionMethods
         }
 
         public static void ArrayUpdate<TSourceElement, TTargetElement>(
-            Mapper mapper, ReferenceTracking referenceTracker,
+            Mapper mapper, ReferenceTracker referenceTracker,
             IEnumerable<TSourceElement> source, TTargetElement[] target,
             Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
@@ -101,7 +101,7 @@ namespace UltraMapper.Internals.ExtensionMethods
         }
 
         public static void UpdateQueue<TSourceElement, TTargetElement>(
-            Mapper mapper, ReferenceTracking referenceTracker,
+            Mapper mapper, ReferenceTracker referenceTracker,
             IEnumerable<TSourceElement> source, Queue<TTargetElement> target,
             Func<TSourceElement, TTargetElement, bool> comparer )
             where TSourceElement : class
@@ -118,7 +118,7 @@ namespace UltraMapper.Internals.ExtensionMethods
         }
 
         public static void UpdateStack<TSourceElement, TTargetElement>(
-           Mapper mapper, ReferenceTracking referenceTracker,
+           Mapper mapper, ReferenceTracker referenceTracker,
            IEnumerable<TSourceElement> source, Stack<TTargetElement> target,
            Func<TSourceElement, TTargetElement, bool> comparer )
            where TSourceElement : class

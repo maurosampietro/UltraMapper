@@ -14,7 +14,7 @@ namespace UltraMapper.Internals
             this.MemberMappingTypeCrawler = new TypeMappingOptionsInheritanceTraversal( this.MemberMapping.MemberTypeMapping );
         }
 
-        public Action<ReferenceTracking, object, object> MappingFunc => this.MemberMapping.MappingFunc;
+        public Action<ReferenceTracker, object, object> MappingFunc => this.MemberMapping.MappingFunc;
         public LambdaExpression MappingExpression => this.MemberMapping.MappingExpression;
 
         public bool Ignore
@@ -94,7 +94,7 @@ namespace UltraMapper.Internals
             this.TypeMapping = typeMapping;
         }
 
-        public Action<ReferenceTracking, object, object> MappingFunc => this.TypeMapping.MappingFunc;
+        public Action<ReferenceTracker, object, object> MappingFunc => this.TypeMapping.MappingFunc;
         public LambdaExpression MappingExpression => this.TypeMapping.MappingExpression;
 
         public bool? IgnoreMemberMappingResolvedByConvention

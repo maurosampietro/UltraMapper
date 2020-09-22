@@ -38,7 +38,16 @@ namespace UltraMapper.Internals
             this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
         }
 
-        public LambdaExpression CustomConverter { get; set; }
+        private LambdaExpression _customConverter = null;
+        public LambdaExpression CustomConverter
+        {
+            get { return _customConverter; }
+            set
+            {
+                _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
+            }
+        }
+
         public LambdaExpression CustomTargetConstructor { get; set; }
 
         public bool? IgnoreMemberMappingResolvedByConvention { get; set; }
@@ -72,35 +81,52 @@ namespace UltraMapper.Internals
                 if( this.CustomConverter != null )
                     return this.CustomConverter;
 
-                //if( _mappingExpression != null ) return _mappingExpression;
+                if( _mappingExpression != null ) return _mappingExpression;
 
                 return _mappingExpression = this.Mapper.GetMappingExpression(
                     this.TypePair.SourceType, this.TypePair.TargetType, this );
             }
         }
 
-        private Action<ReferenceTracking, object, object> _mappingFunc;
-        public Action<ReferenceTracking, object, object> MappingFunc
+        private Func<ReferenceTracker,object, object> _mappingFuncPrimitives;
+        public Func<ReferenceTracker, object, object> MappingFuncPrimitives
+        {
+            get
+            {
+                if( _mappingFuncPrimitives != null )
+                    return _mappingFuncPrimitives;
+
+                var sourceType = this.TypePair.SourceType;
+                var targetType = this.TypePair.TargetType;
+
+                var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
+                var sourceParam = Expression.Parameter( typeof( object ), "sourceInstance" );
+                var targetParam = Expression.Parameter( typeof( object ), "targetInstance" );
+
+                var sourceInstance = Expression.Convert( sourceParam, sourceType );
+
+                var bodyExp = Expression.Block
+                (
+                    Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance )
+                );
+
+                return _mappingFuncPrimitives = Expression.Lambda<Func<ReferenceTracker,object, object>>(
+                    bodyExp, referenceTrackerParam,sourceParam ).Compile();
+            }
+        }
+
+        private Action<ReferenceTracker, object, object> _mappingFunc;
+        public Action<ReferenceTracker, object, object> MappingFunc
         {
             get
             {
                 if( _mappingFunc != null ) return _mappingFunc;
 
-                var referenceTrack = Expression.Parameter( typeof( ReferenceTracking ), "referenceTracker" );
-                var sourceLambdaArg = Expression.Parameter( typeof( object ), "sourceInstance" );
-                var targetLambdaArg = Expression.Parameter( typeof( object ), "targetInstance" );
+                var sourceType = this.TypePair.SourceType;
+                var targetType = this.TypePair.TargetType;
 
-                var sourceType = TypePair.SourceType;
-                var targetType = TypePair.TargetType;
-
-                var sourceInstance = Expression.Convert( sourceLambdaArg, sourceType );
-                var targetInstance = Expression.Convert( targetLambdaArg, targetType );
-
-                var bodyExp = Expression.Invoke( this.MappingExpression,
-                    referenceTrack, sourceInstance, targetInstance );
-
-                return _mappingFunc = Expression.Lambda<Action<ReferenceTracking, object, object>>(
-                    bodyExp, referenceTrack, sourceLambdaArg, targetLambdaArg ).Compile();
+                return _mappingFunc = MappingExpressionBuilder.GetMappingFunc(
+                   sourceType, targetType, this.MappingExpression );
             }
         }
 

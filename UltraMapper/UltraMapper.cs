@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UltraMapper.Internals;
 [assembly: InternalsVisibleTo( "UltraMapper.Tests" )]
@@ -76,6 +75,11 @@ namespace UltraMapper
             }
         }
 
+        //public TTarget MapNoCazzi<TSource, TTarget>( TSource source )
+        //{
+          
+        //}
+
         /// <summary>
         /// Maps <param name="source"> on a new instance of type <typeparam name="TTarget">.
         /// </summary>
@@ -101,11 +105,11 @@ namespace UltraMapper
         }
 
         public void Map<TSource, TTarget>( TSource source, out TTarget target,
-            ReferenceTracking referenceTracking = null ) where TTarget : struct
+            ReferenceTracker referenceTracking = null ) where TTarget : struct
         {
             /*TEMPORARY IMPLEMENTATION*/
             if( referenceTracking == null )
-                referenceTracking = new ReferenceTracking();
+                referenceTracking = new ReferenceTracker();
 
             //Non è il massimo: salta la funzione di map principale
             // e non tiene in cache le espressioni generate.
@@ -114,9 +118,9 @@ namespace UltraMapper
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
 
-            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracking ) )
+            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
             {
-                var method = (Func<ReferenceTracking, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
+                var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
                 target = method.Invoke( referenceTracking, source, new TTarget() );
             }
             else
@@ -128,14 +132,14 @@ namespace UltraMapper
 
         /// <summary>
         /// Maps from <param name="source"/> to the existing instance <paramref name="target"/>
-        /// Let's you reuse an existing <see cref="ReferenceTracking"/> cache.
+        /// Let's you reuse an existing <see cref="ReferenceTracker"/> cache.
         /// /// </summary>
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
         /// <typeparam name="TTarget">Type of the target instance.</typeparam>
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target,
-            ReferenceTracking referenceTracking = null,
+            ReferenceTracker referenceTracking = null,
             ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
             where TTarget : class
         {
@@ -146,7 +150,7 @@ namespace UltraMapper
             }
 
             if( referenceTracking == null )
-                referenceTracking = new ReferenceTracking();
+                referenceTracking = new ReferenceTracker();
 
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
@@ -196,7 +200,7 @@ namespace UltraMapper
         //}
 
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
-            ReferenceTracking referenceTracking, IMapping mapping )
+            ReferenceTracker referenceTracking, IMapping mapping )
         {
             //in order to manage inheritance at runtime here
             //we check if a mapping has been defined and if it has not
@@ -205,7 +209,6 @@ namespace UltraMapper
             //for concrete classes. If a mapping for the interfaces is found, it is used.
 
             //---runtime checks for abstract classes and interfaces.
-
             IMapping CheckResolveAbstractMapping( Type sourceType, Type targetType )
             {
                 if( (sourceType.IsInterface || sourceType.IsAbstract) &&
@@ -241,16 +244,19 @@ namespace UltraMapper
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                 }
             }
+            else if( mapping == null )
+            {
+                mapping = CheckResolveAbstractMapping( typeof( TSource ), typeof( TTarget ) );
+            }
             //---ends of runtime checks for abstract classes and interfaces
 
 #if DEBUG
             try
             {
-                mapping.MappingFunc.Invoke( referenceTracking, source, target );
+               mapping.MappingFunc.Invoke( referenceTracking, source, target );
             }
             catch( Exception ex )
             {
-                Debugger.Break();
                 throw;
             }
 #else
