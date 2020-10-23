@@ -6,6 +6,7 @@
     <Authors>Mauro Sampietro</Authors>
     <Copyright>2020</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageVersion>1.0.0.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
