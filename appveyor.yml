@@ -18,10 +18,9 @@ deploy:
   api_key:
     secure: F/AkZSLJHX8tWvRwFal7sgeOrkS9g0v2RtxxZd/Aqi6mRc9xq7xBEM9EOdlV86ni
   skip_symbols: false
-  artifact: /.*(\.|\.s)nupkg/
 - provider: GitHub
   tag: UltraMapper v$(appveyor_build_version)
   release: UltraMapper v$(appveyor_build_version)
   auth_token:
-    secure: LKiVjOB59Iiuz3a9YpRFgucyLD4dXWGRIQLpicJr2dYmQvrsgDGj3FhLgjmbUNi1oc0TtnydB3PdP3iYnxjRtBljjVrjI+mHHTg5oUQxjRQ=
+    secure: b2GoAL6pr/RqqkcF3my0RLOSEA7uV7+DlA9gWGu/d6jmj9fCkkTeLIViFBEgE1+/
   artifact: /.*\.nupkg/
