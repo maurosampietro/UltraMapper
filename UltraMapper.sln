@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		appveyor.yml = appveyor.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraMapper.Tests", "UltraMapper.Tests\UltraMapper.Tests.csproj", "{D7703A65-FB14-4FF0-A2C2-C1F592A1499E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraMapper.Tests", "UltraMapper.Tests\UltraMapper.Tests.csproj", "{015B5673-7B32-48E3-A1A9-831ED754E9CF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +22,10 @@ Global
 		{34E9592B-27F8-45BC-BE54-F90BD125B4E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34E9592B-27F8-45BC-BE54-F90BD125B4E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34E9592B-27F8-45BC-BE54-F90BD125B4E2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D7703A65-FB14-4FF0-A2C2-C1F592A1499E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D7703A65-FB14-4FF0-A2C2-C1F592A1499E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D7703A65-FB14-4FF0-A2C2-C1F592A1499E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D7703A65-FB14-4FF0-A2C2-C1F592A1499E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{015B5673-7B32-48E3-A1A9-831ED754E9CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{015B5673-7B32-48E3-A1A9-831ED754E9CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{015B5673-7B32-48E3-A1A9-831ED754E9CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{015B5673-7B32-48E3-A1A9-831ED754E9CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
