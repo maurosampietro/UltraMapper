@@ -198,6 +198,18 @@ namespace UltraMapper.Tests
             Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
         }
 
+        [TestMethod]
+        public void CollectionBehindInterface2()
+        {
+            var source = new List<string>() { "a", "b", "c" };
+
+            var mapper = new Mapper();
+            //maybe temp colllection + cast?
+            var target = mapper.Map<List<string>, IEnumerable<string>>( source );
+
+            Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
+        }
+
         //public void Cases()
         //{
         //    var mapper = new Mapper();
@@ -205,8 +217,6 @@ namespace UltraMapper.Tests
         //    mapper.Map<I, I2>(source);
         //    mapper.Map<IEnumerable<I>, IEnumerable<I2>>();
         //    mapper.Map<IEnumerable<I>, List<I2>>();
-
-
         //}
     }
 }
