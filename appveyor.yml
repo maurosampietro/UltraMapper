@@ -12,15 +12,15 @@ before_build:
 - cmd: nuget restore
 build:
   publish_nuget: true
-  verbosity: minimal
+  verbosity: detailed
 deploy:
 - provider: NuGet
   api_key:
-    secure: oy2j6myyrev2ndqd4mdq2o5vhtgid2huznvidzs4hbejey
+    secure: u+KuVfwNaVSx3MHSnyjvIAn25rTxUF9HxQs6F7VOG1OlLYtDT7+19f4zskbiXCP2
   skip_symbols: true
 - provider: GitHub
   tag: UltraMapper v$(appveyor_build_version)
   release: UltraMapper v$(appveyor_build_version)
   auth_token:
-    secure: mCdfTt2M2W/zNeRMTEuINe7mLJKW3MjB69S3VZS5e1VW0UOPLr1MvAY1Ep6feU3b
+    secure: LKiVjOB59Iiuz3a9YpRFgucyLD4dXWGRIQLpicJr2dYmQvrsgDGj3FhLgjmbUNi1oc0TtnydB3PdP3iYnxjRtBljjVrjI+mHHTg5oUQxjRQ=
   artifact: /.*\.nupkg/
