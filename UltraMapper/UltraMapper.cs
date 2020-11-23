@@ -244,6 +244,24 @@ namespace UltraMapper
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                 }
             }
+            else if( mapping is TypeMappingOptionsInheritanceTraversal ttrav )
+            {
+                var mappingSourceType = ttrav.TypeMapping.TypePair.SourceType;
+                var mappingTargetType = ttrav.TypeMapping.TypePair.TargetType;
+
+                mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+            }
+            else if( mapping is MemberMappingOptionsInheritanceTraversal mtrav )
+            {
+                if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                {
+                    var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
+                    var mappingSourceType = memberTypeMapping.TypePair.SourceType;
+                    var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+
+                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                }
+            }
             else if( mapping == null )
             {
                 mapping = CheckResolveAbstractMapping( typeof( TSource ), typeof( TTarget ) );

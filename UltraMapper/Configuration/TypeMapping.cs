@@ -88,7 +88,7 @@ namespace UltraMapper.Internals
             }
         }
 
-        private Func<ReferenceTracker,object, object> _mappingFuncPrimitives;
+        private Func<ReferenceTracker, object, object> _mappingFuncPrimitives;
         public Func<ReferenceTracker, object, object> MappingFuncPrimitives
         {
             get
@@ -96,22 +96,23 @@ namespace UltraMapper.Internals
                 if( _mappingFuncPrimitives != null )
                     return _mappingFuncPrimitives;
 
-                var sourceType = this.TypePair.SourceType;
-                var targetType = this.TypePair.TargetType;
-
                 var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
-                var sourceParam = Expression.Parameter( typeof( object ), "sourceInstance" );
-                var targetParam = Expression.Parameter( typeof( object ), "targetInstance" );
 
+                var sourceType = this.TypePair.SourceType;
+                var sourceParam = Expression.Parameter( typeof( object ), "sourceInstance" );
                 var sourceInstance = Expression.Convert( sourceParam, sourceType );
 
-                var bodyExp = Expression.Block
-                (
-                    Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance )
-                );
+                var bodyExp = (Expression)Expression.Empty();
+                if( this.MappingExpression.Parameters.Count == 1 )
+                    bodyExp = Expression.Convert( Expression.Invoke( this.MappingExpression, sourceInstance ), typeof( object ) );
 
-                return _mappingFuncPrimitives = Expression.Lambda<Func<ReferenceTracker,object, object>>(
-                    bodyExp, referenceTrackerParam,sourceParam ).Compile();
+                else if( this.MappingExpression.Parameters.Count == 2 )
+                    bodyExp = Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance );
+
+                else throw new NotSupportedException( "Unsupported number of arguments" );
+
+                return _mappingFuncPrimitives = Expression.Lambda<Func<ReferenceTracker, object, object>>(
+                    bodyExp, referenceTrackerParam, sourceParam ).Compile();
             }
         }
 

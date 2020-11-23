@@ -20,7 +20,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected override MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
             return typeof( Array ).GetMethod( nameof( Array.Clear ),
-                BindingFlags.Public | BindingFlags.Static);
+                BindingFlags.Public | BindingFlags.Static );
         }
 
         protected override Expression GetTargetCollectionClearExpression( CollectionMapperContext context )
@@ -36,27 +36,65 @@ namespace UltraMapper.MappingExpressionBuilders
                     : (Expression)Expression.Empty();
         }
 
+        object runtimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        {
+            var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
+            return map.MappingFuncPrimitives( null, loopingvar );
+        }
+
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar, ParameterExpression mapper, ParameterExpression referenceTracker )
         {
-            var itemMapping = MapperConfiguration[ sourceCollectionElementType,
+            if( sourceCollectionElementType.IsInterface )
+            {
+                Expression<Func<object, Type, object>> getRuntimeMapping =
+                   ( loopingvar, targetType ) => runtimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
+
+                var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
+                var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
+
+                Expression loopBody = Expression.Block
+                (
+                    new[] { newElement, itemIndex },
+                    Expression.Assign( itemIndex, Expression.Constant( 0 ) ),
+
+                    ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
+                    (
+                        Expression.Assign( newElement, Expression.Convert(
+                            Expression.Invoke( getRuntimeMapping, sourceCollectionLoopingVar,
+                            Expression.Constant( targetCollectionElementType ) ), targetCollectionElementType ) ),
+
+                        Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ), newElement ),
+                        Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
+                    ) )
+                );
+
+                return ExpressionLoops.ForEach( sourceCollection,
+                    sourceCollectionLoopingVar, loopBody );
+            }
+            else
+            {
+                var itemMapping = MapperConfiguration[ sourceCollectionElementType,
                 targetCollectionElementType ].MappingExpression;
 
-            var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
+                var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
 
-            return Expression.Block
-            (
-                new[] { itemIndex },
+                return Expression.Block
+                (
+                    new[] { itemIndex },
+                    
+                    Expression.Assign( itemIndex, Expression.Constant( 0 ) ),
+                    
+                    ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
+                    (
+                        Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ),
+                            itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, "sourceInstance" ) ),
 
-                ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
-                (                   
-                    Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ),
-                        itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, "sourceInstance" ) ), 
-
-                    Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
-                ) )
-            );
+                        Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
+                    ) )
+                );
+            }
         }
 
         protected override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
@@ -103,8 +141,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 Expression.IfThen
                 (
-                    Expression.LessThan( Expression.Call( context.TargetMember, targetCountMethod), 
-                        Expression.Call(context.SourceMember, sourceCountMethod) ),
+                    Expression.LessThan( Expression.Call( context.TargetMember, targetCountMethod ),
+                        Expression.Call( context.SourceMember, sourceCountMethod ) ),
 
                     Expression.Assign( context.TargetMember, newInstance )
                 )

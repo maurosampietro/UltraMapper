@@ -10,7 +10,7 @@ namespace UltraMapper.Internals
 
         public LambdaExpression CustomConstructor { get; set; }
 
-        internal MappingTarget( MemberAccessPath memberSetter, MemberAccessPath memberGetter = null )
+        public MappingTarget( MemberAccessPath memberSetter, MemberAccessPath memberGetter = null )
             : base( memberSetter )
         {
             this.ValueSetter = memberSetter.Count > 1 ?
@@ -35,7 +35,7 @@ namespace UltraMapper.Internals
             }
         }
 
-        internal MappingTarget( LambdaExpression memberSetter, LambdaExpression memberGetter = null )
+        public MappingTarget( LambdaExpression memberSetter, LambdaExpression memberGetter = null )
             : base( memberSetter.ExtractMember() )
         {
             this.ValueGetter = memberGetter.ExtractMember()

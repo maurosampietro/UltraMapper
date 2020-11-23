@@ -6,13 +6,13 @@ namespace UltraMapper.Internals
     {
         public LambdaExpression ValueGetter { get; set; }
 
-        internal MappingSource( MemberAccessPath memberGetter )
+        public MappingSource( MemberAccessPath memberGetter )
             : base( memberGetter )
         {
             this.ValueGetter = memberGetter.GetGetterLambdaExpression();
         }
 
-        internal MappingSource( LambdaExpression memberGetter )
+        public MappingSource( LambdaExpression memberGetter )
             : base( memberGetter.ExtractMember() )
         {
             this.ValueGetter = this.MemberAccessPath.Count == 1 ? memberGetter :

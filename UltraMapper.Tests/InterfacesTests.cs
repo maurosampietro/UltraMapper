@@ -203,11 +203,14 @@ namespace UltraMapper.Tests
         {
             var source = new List<string>() { "a", "b", "c" };
 
-            //var mapper = new Mapper();
-            ////maybe temp colllection + cast?
-            //var target = mapper.Map<List<string>, IEnumerable<string>>( source );
+            var mapper = new Mapper();
+            //mapper.MappingConfiguration.MapTypes( typeof( List<> ), typeof( IEnumerable<> ) );
 
+            //maybe temp colllection + cast ?
+            //var target = mapper.Map<List<string>, IEnumerable<string>>( source );
             //Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
+
+            throw new NotImplementedException();
         }
 
         //public void Cases()

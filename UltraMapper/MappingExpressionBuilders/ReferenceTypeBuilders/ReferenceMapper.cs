@@ -20,10 +20,10 @@ namespace UltraMapper.MappingExpressionBuilders
         }
 
 #if DEBUG
-        private static void debug( object o ) => Console.WriteLine( o );
+        private static void _debug( object o ) => Console.WriteLine( o );
 
         public static readonly Expression<Action<object>> debugExp =
-            ( o ) => debug( o );
+            ( o ) => _debug( o );
 #endif
 
         public static Func<ReferenceTracker, object, Type, object> refTrackingLookup =
@@ -203,7 +203,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return !memberMappingExps.Any() ? (Expression)Expression.Empty() : Expression.Block( memberMappingExps );
         }
 
-        private Expression GetComplexMemberExpression( MemberMapping mapping )
+        protected Expression GetComplexMemberExpression( MemberMapping mapping )
         {
             /* SOURCE (NULL) -> TARGET = NULL
              * 
@@ -293,7 +293,7 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        private Expression GetSimpleMemberExpression( MemberMapping mapping )
+        protected Expression GetSimpleMemberExpression( MemberMapping mapping )
         {
             var memberContext = new MemberMappingContext( mapping );
 

@@ -19,8 +19,8 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 case MemberMappingOptionsInheritanceTraversal mmc: this.Options = mmc; break;
                 case TypeMappingOptionsInheritanceTraversal tmc: this.Options = tmc; break;
-                case IMemberOptions imo: this.Options = new MemberMappingOptionsInheritanceTraversal( (MemberMapping)options ); break;
-                case ITypeOptions imo: this.Options = new TypeMappingOptionsInheritanceTraversal( (TypeMapping)options ); break;
+                case IMemberOptions _: this.Options = new MemberMappingOptionsInheritanceTraversal( (MemberMapping)options ); break;
+                case ITypeOptions _: this.Options = new TypeMappingOptionsInheritanceTraversal( (TypeMapping)options ); break;
             }
         }
     }

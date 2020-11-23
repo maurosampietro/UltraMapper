@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using UltraMapper.Internals;
 using UltraMapper.Internals.ExtensionMethods;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
@@ -24,6 +25,12 @@ namespace UltraMapper.MappingExpressionBuilders
             return new CollectionMapperContext( source, target, options );
         }
 
+        object runtimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        {
+            var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
+            return map.MappingFuncPrimitives( null, loopingvar );
+        }
+
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
@@ -40,7 +47,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
-                    ( loopingvar, targetType ) => this.MapperConfiguration[ loopingvar.GetType(), targetType ].MappingFuncPrimitives( null, loopingvar );
+                   ( loopingvar, targetType ) => runtimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
 
                 var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
@@ -137,7 +144,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
             var itemMapping = MapperConfiguration[ sourceParam.Type, targetParam.Type ];
-            var constructorExp = base.GetMemberNewInstanceInternal( sourceParam, 
+            var constructorExp = base.GetMemberNewInstanceInternal( sourceParam,
                 sourceParam.Type, targetParam.Type, itemMapping );
 
             return Expression.Block
