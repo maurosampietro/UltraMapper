@@ -199,6 +199,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public void CollectionBehindInterface2()
         {
             var source = new List<string>() { "a", "b", "c" };
