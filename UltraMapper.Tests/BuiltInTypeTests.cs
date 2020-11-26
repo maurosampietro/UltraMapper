@@ -86,20 +86,54 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void BuiltInToNullable()
+        public void NullablePrimitiveTypeToADifferentPrimitiveType()
         {
-            var source = new BuiltInTypes();
-            var target = new NullableBuiltInTypes();
-            
+            var source = new NullablePrimitiveTypes(); 
+            var target = new BuiltInTypes();
+
             var ultraMapper = new Mapper
             (
                 cfg =>
                 {
-                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypes>()
-                       .MapMember( s => s.Int32, s => s.Char );
+                    cfg.MapTypes<NullablePrimitiveTypes, BuiltInTypes>( tmc => tmc.IgnoreMemberMappingResolvedByConvention = true )
+                       .MapMember( s => s.Int32, t => t.Char );
                 }
             );
 
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void PrimitiveTypeToADifferentNullablePrimitiveType()
+        {
+            var source = new BuiltInTypes();
+            var target = new NullablePrimitiveTypes();
+
+            var ultraMapper = new Mapper
+            (
+                cfg =>
+                {
+                    cfg.MapTypes<BuiltInTypes, NullablePrimitiveTypes>( tmc => tmc.IgnoreMemberMappingResolvedByConvention = true )
+                       .MapMember( s => s.Int32, t => t.Char );
+                }
+            );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void BuiltInToNullable()
+        {
+            var source = new BuiltInTypes();
+            var target = new NullableBuiltInTypes();
+
+            var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );

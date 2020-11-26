@@ -10,15 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="UltraMapper.Tests.csproj.old" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
   <ItemGroup>

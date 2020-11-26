@@ -852,5 +852,36 @@ namespace UltraMapper.Tests
             Assert.IsTrue( target.Stack.SequenceEqual(
                 source.Stack.Concat( check.Stack ) ) );
         }
+
+        public class SourceClass
+        {
+            public string Id { get; set; }
+        }
+
+        public class TargetClass
+        {
+            public Guid Id { get; set; }
+        }
+
+        [TestMethod]
+        public void ListOfLists()
+        {
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<SourceClass, TargetClass>()
+                    .MapMember( s => s.Id, t => t.Id, str => Guid.Parse( str ) );
+            } );
+
+            var source = new List<List<SourceClass>>()
+            {
+                new List<SourceClass>() { new SourceClass() { Id = Guid.NewGuid().ToString() } },
+                new List<SourceClass>() { new SourceClass() { Id = Guid.NewGuid().ToString() } }
+            };
+
+            var result = mapper.Map<List<List<TargetClass>>>( source );
+
+            bool isResultOk = mapper.VerifyMapperResult( source, result );
+            Assert.IsTrue( isResultOk );
+        }
     }
 }

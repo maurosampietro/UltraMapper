@@ -48,9 +48,14 @@ namespace UltraMapper.MappingExpressionBuilders
                     .GetConstructor( new Type[] { targetNullUnwrappedType } );
 
                 Expression sourceValue = convert == null ? context.SourceInstance :
-                    (Expression)Expression.Invoke( convert, returnValue );
+                   convert.Body.ReplaceParameter( returnValue, convert.Parameters[ 0 ].Name );
 
                 returnValue = Expression.New( constructor, sourceValue );
+            }
+            else
+            {
+                returnValue = convert == null ? Expression.Convert( context.SourceInstance, targetNullUnwrappedType ) :
+                    convert.Body.ReplaceParameter( returnValue, convert.Parameters[ 0 ].Name );
             }
 
             return Expression.Block

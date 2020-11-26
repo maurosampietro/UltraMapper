@@ -40,24 +40,28 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public void EnableConventionsGlobally()
         {
 
         }
 
         [TestMethod]
+        [Ignore]
         public void EnableConventionsGloballyButDisableOnSpecificType()
         {
 
         }
 
         [TestMethod]
+        [Ignore]
         public void DisableConventionsGlobally()
         {
 
         }
 
         [TestMethod]
+        [Ignore]
         public void DisableConventionsGloballyButEnableOnSpecificType()
         {
 
