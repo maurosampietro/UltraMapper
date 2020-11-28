@@ -89,7 +89,6 @@ Implemented features:
 
 Moreover UltraMapper is:
 - very fast in any scenario (faster than any other .NET mapper i tried). See the [benchmarks](https://github.com/maurosampietro/UltraMapper/wiki/Benchmarks).
-- just ~1100 lines of code (more easily maintainable and understandable)
 - developer-friendly (should be easy to contribute, extend and maintain)
 
 **ANY FEEDBACK IS WELCOME**
