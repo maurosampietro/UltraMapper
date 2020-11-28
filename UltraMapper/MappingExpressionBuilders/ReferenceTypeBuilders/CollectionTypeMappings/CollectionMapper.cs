@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using UltraMapper.Internals;
 using UltraMapper.Internals.ExtensionMethods;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;

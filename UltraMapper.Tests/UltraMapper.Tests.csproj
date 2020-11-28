@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\Sam\.nuget\packages\mstest.testadapter\2.1.0\build\net45\..\_common\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" />
+    <Content Remove="C:\Users\Sam\.nuget\packages\mstest.testadapter\2.1.0\build\net45\..\_common\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" />
+    <Content Remove="C:\Users\Sam\.nuget\packages\mstest.testadapter\2.1.0\build\net45\..\_common\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="UltraMapper.Tests.csproj.old" />
   </ItemGroup>
 
