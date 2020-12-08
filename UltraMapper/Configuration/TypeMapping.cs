@@ -31,7 +31,7 @@ namespace UltraMapper.Internals
 
         public MappingResolution MappingResolution { get; internal set; }
 
-        internal TypeMapping( Configuration globalConfig, TypePair typePair )
+        public TypeMapping( Configuration globalConfig, TypePair typePair )
         {
             this.GlobalConfiguration = globalConfig;
             this.TypePair = typePair;

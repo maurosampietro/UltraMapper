@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UltraMapper.Internals
 {
-    internal struct TypePair
+    public struct TypePair
     {
         public readonly Type SourceType;
         public readonly Type TargetType;

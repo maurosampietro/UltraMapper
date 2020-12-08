@@ -176,7 +176,7 @@ namespace UltraMapper.Tests
         {
             Expression<Func<FirstLevel, string>> selector = t => t.SecondLevel.ThirdLevel.A;
 
-            var accessPath = selector.ExtractMember();
+            var accessPath = selector.GetMemberAccessPath();
             var expression = accessPath.GetGetterLambdaExpressionWithNullChecks();
             var functor = (Func<FirstLevel, string>)expression.Compile();
 

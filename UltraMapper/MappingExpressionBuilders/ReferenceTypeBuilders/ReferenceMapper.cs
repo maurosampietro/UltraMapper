@@ -96,6 +96,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( isCreateNewInstance || context.TargetMemberValueGetter == null )
                 return Expression.Assign( context.TargetMember, newInstance );
 
+            //ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL
             return Expression.Block
             (
                 Expression.Assign( context.TargetMember, context.TargetMemberValueGetter ),
@@ -108,41 +109,16 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        protected virtual Expression GetMemberNewInstance( MemberMappingContext context )
+        public virtual Expression GetMemberNewInstance( MemberMappingContext context )
         {
-            if( context.Options.CustomTargetConstructor != null )
-                return Expression.Invoke( context.Options.CustomTargetConstructor );
-
-            //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
-            //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
-            if( context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) )
-            {
-                MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
-                var getSourceType = Expression.Call( context.SourceMemberValueGetter, getTypeMethodInfo );
-
-                return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
-                    getSourceType, Expression.Constant( null, typeof( object[] ) ) ), context.TargetMember.Type );
-            }
-
-            var defaultCtor = context.TargetMember.Type.GetConstructor( Type.EmptyTypes );
-            if( defaultCtor != null )
-                return Expression.New( context.TargetMember.Type );
-
-            if( context.TargetMember.Type.IsInterface )
-            {
-                throw new Exception( $"Type {context.TargetMember.Type} is an interface but what type to use cannot be inferred. " +
-                    $"Please configure what type to use like this: cfg.MapTypes<IA, IB>( () => new ConcreteTypeBImplementingIB() ) " );
-            }
-            else
-            {
-                throw new Exception( $"Type {context.TargetMember.Type} does not have a default constructor. " +
-                    $"Please provide a way to construct the type like this: cfg.MapTypes<A, B>( () => new B(param1,param2,...) ) " );
-            }
+            return GetMemberNewInstanceInternal( context.SourceMemberValueGetter,
+                context.SourceMember.Type, context.TargetMember.Type, context.Options );
         }
 
-        protected virtual Expression GetMemberNewInstanceInternal( Expression sourceValue, Type sourceType, Type targetType, IMappingOptions options )
+        protected virtual Expression GetMemberNewInstanceInternal( Expression sourceValue,
+            Type sourceType, Type targetType, IMappingOptions options )
         {
-            if( options.CustomTargetConstructor != null )
+            if( options?.CustomTargetConstructor != null )
                 return Expression.Invoke( options.CustomTargetConstructor );
 
             //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
@@ -156,7 +132,18 @@ namespace UltraMapper.MappingExpressionBuilders
                     getSourceType, Expression.Constant( null, typeof( object[] ) ) ), targetType );
             }
 
-            return Expression.New( targetType );
+            var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );
+            if( defaultCtor != null )
+                return Expression.New( targetType );
+
+            if( targetType.IsInterface )
+            {
+                throw new Exception( $"Type {targetType} is an interface but what type to use cannot be inferred. " +
+                    $"Please configure what type to use like this: cfg.MapTypes<IA, IB>( () => new ConcreteTypeBImplementingIB() ) " );
+            }
+
+            throw new Exception( $"Type {targetType} does not have a default constructor. " +
+                $"Please provide a way to construct the type like this: cfg.MapTypes<A, B>( () => new B(param1,param2,...) ) " );
         }
 
         #region MemberMapping
@@ -281,9 +268,9 @@ namespace UltraMapper.MappingExpressionBuilders
                                 //cache reference
                                 itemCacheCall,
 
-                                memberContext.InitializationComplete ? (Expression)Expression.Empty() :
-                                    Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
-                                    memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )
+                                Expression.Call( memberContext.Mapper, mapMethod,
+                                    memberContext.SourceMember, memberContext.TargetMember,
+                                    memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                             )
                         )
                     )
@@ -293,26 +280,36 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
+        protected Expression GetSimpleMemberExpressionInternal(
+            LambdaExpression mappingExpression, ParameterExpression targetInstance,
+            Expression sourceMemberValueGetter, LambdaExpression targetMemberValueSetter )
+        {
+            var targetSetterInstanceParamName = targetMemberValueSetter.Parameters[ 0 ].Name;
+            var targetSetterValueParamName = targetMemberValueSetter.Parameters[ 1 ].Name;
+
+            var valueReaderExp = mappingExpression.Body.ReplaceParameter(
+                sourceMemberValueGetter, mappingExpression.Parameters[ 0 ].Name );
+
+            if( mappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
+            {
+                valueReaderExp = mappingExpression.Body.ReplaceParameter(
+                    sourceMemberValueGetter, mappingExpression.Parameters[ 1 ].Name );
+            }
+
+            return targetMemberValueSetter.Body
+                .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
+                .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
+        }
+
         protected Expression GetSimpleMemberExpression( MemberMapping mapping )
         {
             var memberContext = new MemberMappingContext( mapping );
 
-            var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
-            var targetSetterValueParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
-
-            var valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
-                memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 0 ].Name );
-
-            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
-            {
-                valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
-                    memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 1 ].Name );
-            }
-
-            return mapping.TargetMember.ValueSetter.Body
-                .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
-                .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
+            return GetSimpleMemberExpressionInternal( mapping.MappingExpression,
+                memberContext.TargetInstance, memberContext.SourceMemberValueGetter,
+                mapping.TargetMember.ValueSetter );
         }
+
         #endregion
     }
 }

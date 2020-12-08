@@ -8,7 +8,7 @@ namespace UltraMapper.Internals
 {
     public static class ExpressionExtensions
     {
-        public static MemberAccessPath ExtractMember( this Expression lambdaExpression )
+        public static MemberAccessPath GetMemberAccessPath( this Expression lambdaExpression )
         {
             var memberAcessPath = new MemberAccessPath();
 

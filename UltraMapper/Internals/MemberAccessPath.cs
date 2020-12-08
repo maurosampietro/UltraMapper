@@ -15,6 +15,9 @@ namespace UltraMapper.Internals
 
         public MemberAccessPath() { }
 
+        public MemberAccessPath( MemberInfo memberInfo )
+            : this( new[] { memberInfo } ) { }
+
         public MemberAccessPath( IEnumerable<MemberInfo> members )
         {
             foreach( var member in members )

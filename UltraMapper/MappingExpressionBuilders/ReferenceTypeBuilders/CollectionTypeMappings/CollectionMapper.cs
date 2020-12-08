@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
@@ -281,7 +282,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
-        protected override Expression GetMemberNewInstance( MemberMappingContext context )
+        public override Expression GetMemberNewInstance( MemberMappingContext context )
         {
             if( context.Options.CustomTargetConstructor != null )
                 return Expression.Invoke( context.Options.CustomTargetConstructor );
@@ -308,8 +309,6 @@ namespace UltraMapper.MappingExpressionBuilders
                         .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                         .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
                         .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
-
-                    context.InitializationComplete = true;
 
                     return Expression.Block
                     (
@@ -358,7 +357,18 @@ namespace UltraMapper.MappingExpressionBuilders
                 return Expression.New( typeof( List<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) );
             }
 
-            return Expression.New( context.TargetMember.Type );
+            var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );
+            if( defaultCtor != null )
+                return Expression.New( context.TargetMember.Type );
+
+            if( targetType.IsInterface )
+            {
+                //use List<> as default collection type
+                return Expression.New( typeof( List<> ).MakeGenericType( collectionContext.TargetCollectionElementType ) );
+            }
+
+            throw new Exception( $"Type {targetType} does not have a default constructor. " +
+                $"Please provide a way to construct the type like this: cfg.MapTypes<A, B>( () => new B(param1,param2,...) ) " );
         }
 
         /// <summary>
@@ -385,8 +395,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var getCountMethod = this.GetCountMethod( context.SourceMember.Type );
 
-            return Expression.New( constructorWithCapacity,
-                Expression.Call( context.SourceMember, getCountMethod ) );
+            Expression getCountMethodCallExp;
+            if( getCountMethod.IsStatic )
+                getCountMethodCallExp = Expression.Call( null, getCountMethod, context.SourceMember );
+            else getCountMethodCallExp = Expression.Call( context.SourceMember, getCountMethod );
+
+            return Expression.New( constructorWithCapacity, getCountMethodCallExp );
         }
 
         protected virtual MethodInfo GetUpdateCollectionMethod( CollectionMapperContext context )
@@ -420,16 +434,36 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             var getCountProperty = type.GetProperty( nameof( ICollection<int>.Count ),
-                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public );
+               BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );
 
             if( getCountProperty == null )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
                 //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
                 getCountProperty = type.GetProperty( nameof( Array.Length ) );
+
+                if( getCountProperty != null )
+                    return getCountProperty.GetGetMethod();
             }
 
-            return getCountProperty.GetGetMethod();
+            var getLinqCount = typeof( System.Linq.Enumerable ).GetMethods(
+                    BindingFlags.Static | BindingFlags.Public )
+                .First( m =>
+                {
+                    if( m.Name != nameof( System.Linq.Enumerable.Count ) )
+                        return false;
+
+                    var parameters = m.GetParameters();
+                    if( parameters.Length != 1 ) return false;
+
+                    return parameters[ 0 ].ParameterType.GetGenericTypeDefinition() == typeof( IEnumerable<> );
+                } )
+                .MakeGenericMethod( type.GetGenericArguments()[ 0 ] );
+
+            if( getLinqCount != null )
+                return getLinqCount;
+
+            throw new ArgumentException( $"Type '{type}' does not define a Count or Length property and Linq.Count could not be used" );
         }
     }
 }

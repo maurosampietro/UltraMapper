@@ -48,8 +48,8 @@ namespace UltraMapper
         protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetter,
             LambdaExpression targetMemberGetter, LambdaExpression targetMemberSetter )
         {
-            var sourceMember = sourceMemberGetter.ExtractMember().Last();
-            var targetMember = targetMemberGetter.ExtractMember().Last();
+            var sourceMember = sourceMemberGetter.GetMemberAccessPath().Last();
+            var targetMember = targetMemberGetter.GetMemberAccessPath().Last();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetter,
                 targetMemberGetter, targetMemberSetter );
@@ -58,10 +58,10 @@ namespace UltraMapper
         protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetter,
             LambdaExpression targetMemberGetter )
         {
-            var sourceMember = sourceMemberGetter.ExtractMember().Last();
-            var targetMember = targetMemberGetter.ExtractMember().Last();
+            var sourceMember = sourceMemberGetter.GetMemberAccessPath().Last();
+            var targetMember = targetMemberGetter.GetMemberAccessPath().Last();
 
-            var targetMemberSetterExpression = targetMemberGetter.ExtractMember().GetSetterLambdaExpression();
+            var targetMemberSetterExpression = targetMemberGetter.GetMemberAccessPath().GetSetterLambdaExpression();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetter,
                 targetMemberGetter, targetMemberSetterExpression );
@@ -91,7 +91,7 @@ namespace UltraMapper
         public MemberConfigurator<TSource, TTarget> IgnoreSourceMember<TSourceMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector )
         {
-            var sourceMember = sourceMemberSelector.ExtractMember().Last();
+            var sourceMember = sourceMemberSelector.GetMemberAccessPath().Last();
             var mappingSource = _typeMapping.GetMappingSource(
                 sourceMember, sourceMemberSelector );
 
@@ -102,7 +102,7 @@ namespace UltraMapper
         public MemberConfigurator<TSource, TTarget> IgnoreTargetMember<TTargetMember>(
             Expression<Func<TTarget, TTargetMember>> targetMemberSelector )
         {
-            var targetMember = targetMemberSelector.ExtractMember().Last();
+            var targetMember = targetMemberSelector.GetMemberAccessPath().Last();
             var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
             var mappingTarget = _typeMapping.GetMappingTarget( targetMember,

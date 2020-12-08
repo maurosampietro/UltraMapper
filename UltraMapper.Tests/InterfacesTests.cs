@@ -184,7 +184,7 @@ namespace UltraMapper.Tests
             var mapper = new Mapper();
 
             //Because we don't know what concrete type to create on target
-            Assert.ThrowsException<ArgumentException>( () => mapper.Map( source, target ) );
+            Assert.ThrowsException<Exception>( () => mapper.Map( source, target ) );
         }
 
         [TestMethod]

@@ -36,7 +36,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     : (Expression)Expression.Empty();
         }
 
-        object runtimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        private object runtimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
         {
             var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
             return map.MappingFuncPrimitives( null, loopingvar );
@@ -83,9 +83,9 @@ namespace UltraMapper.MappingExpressionBuilders
                 return Expression.Block
                 (
                     new[] { itemIndex },
-                    
+
                     Expression.Assign( itemIndex, Expression.Constant( 0 ) ),
-                    
+
                     ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                     (
                         Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ),
@@ -119,7 +119,7 @@ namespace UltraMapper.MappingExpressionBuilders
             ) );
         }
 
-        protected override Expression GetMemberNewInstance( MemberMappingContext context )
+        public override Expression GetMemberNewInstance( MemberMappingContext context )
         {
             return this.GetNewInstanceWithReservedCapacity( context );
         }
@@ -135,15 +135,24 @@ namespace UltraMapper.MappingExpressionBuilders
             var sourceCountMethod = this.GetCountMethod( context.SourceMember.Type );
             var targetCountMethod = this.GetCountMethod( context.TargetMember.Type );
 
+            Expression sourceCountMethodCallExp;
+            if( sourceCountMethod.IsStatic )
+                sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, context.SourceMember );
+            else sourceCountMethodCallExp = Expression.Call( context.SourceMember, sourceCountMethod );
+
+            Expression targetCountMethodCallExp;
+            if( targetCountMethod.IsStatic )
+                targetCountMethodCallExp = Expression.Call( null, targetCountMethod, context.TargetMember );
+            else
+                targetCountMethodCallExp = Expression.Call( context.TargetMember, targetCountMethod );
+
             return Expression.Block
             (
                 base.GetMemberAssignment( context ),
 
                 Expression.IfThen
                 (
-                    Expression.LessThan( Expression.Call( context.TargetMember, targetCountMethod ),
-                        Expression.Call( context.SourceMember, sourceCountMethod ) ),
-
+                    Expression.LessThan( targetCountMethodCallExp, sourceCountMethodCallExp ),
                     Expression.Assign( context.TargetMember, newInstance )
                 )
             );

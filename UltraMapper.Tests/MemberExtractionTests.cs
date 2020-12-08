@@ -49,7 +49,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.A ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -62,7 +62,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.field ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -75,7 +75,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.GetSecond ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -89,7 +89,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -103,7 +103,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -117,7 +117,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -131,7 +131,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -145,7 +145,7 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
 
-            var extractedMember = func.ExtractMember().Last();
+            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
     }

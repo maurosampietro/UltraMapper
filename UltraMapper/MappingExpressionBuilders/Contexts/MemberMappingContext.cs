@@ -18,8 +18,6 @@ namespace UltraMapper.MappingExpressionBuilders.MapperContexts
         public Expression TargetMemberNullValue { get; internal set; }
         public Expression SourceMemberNullValue { get; internal set; }
 
-        public bool InitializationComplete { get; set; } = false;
-
         public MemberMappingContext( MemberMapping mapping )
             : base( mapping.InstanceTypeMapping.TypePair.SourceType,
                     mapping.InstanceTypeMapping.TypePair.TargetType, mapping )

@@ -49,7 +49,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return typeof( List<> ).MakeGenericType( context.SourceCollectionElementType );
         }
 
-        protected override Expression GetMemberNewInstance( MemberMappingContext context )
+        public override Expression GetMemberNewInstance( MemberMappingContext context )
         {
             //1. Create a new temporary collection passing source as input
             //2. Read items from the newly created temporary collection and add items to the target

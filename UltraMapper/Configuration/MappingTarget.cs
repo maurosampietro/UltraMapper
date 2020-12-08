@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace UltraMapper.Internals
 {
@@ -9,6 +10,9 @@ namespace UltraMapper.Internals
         public LambdaExpression ValueGetter { get; set; }
 
         public LambdaExpression CustomConstructor { get; set; }
+
+        public MappingTarget( MemberInfo memberInfo )
+            : this( new MemberAccessPath( memberInfo ), null ) { }
 
         public MappingTarget( MemberAccessPath memberSetter, MemberAccessPath memberGetter = null )
             : base( memberSetter )
@@ -36,9 +40,9 @@ namespace UltraMapper.Internals
         }
 
         public MappingTarget( LambdaExpression memberSetter, LambdaExpression memberGetter = null )
-            : base( memberSetter.ExtractMember() )
+            : base( memberSetter.GetMemberAccessPath() )
         {
-            this.ValueGetter = memberGetter.ExtractMember()
+            this.ValueGetter = memberGetter?.GetMemberAccessPath()
                 .GetGetterLambdaExpressionWithNullChecks();
 
             this.ValueSetter = this.MemberAccessPath.Count == 1 ? memberSetter :
