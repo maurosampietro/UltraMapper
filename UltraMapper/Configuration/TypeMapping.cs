@@ -44,7 +44,10 @@ namespace UltraMapper.Internals
             get { return _customConverter; }
             set
             {
-                _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
+                //if( TypePair.SourceType.IsBuiltIn( true ) && TypePair.TargetType.IsBuiltIn( true ) )
+                //    _customConverter = value;
+                //else
+                    _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
             }
         }
 
@@ -66,7 +69,7 @@ namespace UltraMapper.Internals
                         mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
 
                     if( _mapper == null )
-                        throw new Exception( $"No object mapper can handle {this}" );
+                        throw new Exception( $"No object mapper can handle {this.TypePair}" );
                 }
 
                 return _mapper;

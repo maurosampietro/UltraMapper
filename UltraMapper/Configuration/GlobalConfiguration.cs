@@ -53,13 +53,14 @@ namespace UltraMapper
             _typeMappings = new TypeMappingInheritanceTree( rootMapping );
 
             this.Mappers = new List<IMappingExpressionBuilder>()
-            {
+            {   
+                //new AbstractMappingExpressionBuilder( this ),
                 new StringToEnumMapper( this ),
                 new EnumMapper( this ),
                 new BuiltInTypeMapper( this ),
                 new NullableMapper( this ),
-                new ConvertMapper( this ),
                 new StructMapper( this ),
+                new ConvertMapper( this ),
                 new ArrayMapper( this ),
                 new DictionaryMapper( this ),
                 new ReadOnlyCollectionMapper( this ),

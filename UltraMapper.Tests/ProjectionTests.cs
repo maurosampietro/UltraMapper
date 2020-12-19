@@ -39,6 +39,27 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        [Ignore]
+        public void FlatteningToInstance()
+        {
+            //var source = new FirstLevel()
+            //{
+            //    A = "first",
+            //};
+
+            //var ultraMapper = new Mapper( cfg =>
+            //{
+            //    cfg.MapTypes<FirstLevel, object>()
+            //        .MapMember( a => a.A.Length, b => b );
+            //} );
+
+            //var target = ultraMapper.MapStruct<FirstLevel, int>( source );
+
+            //bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            //Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
         public void ManualFlatteningUsingExistingInstances()
         {
             var source = new FirstLevel()
@@ -130,7 +151,7 @@ namespace UltraMapper.Tests
 
         [TestMethod]
         public void ManualFlatteningNullTargetMembers()
-        {            
+        {
             var source = new FirstLevel()
             {
                 A = "first",

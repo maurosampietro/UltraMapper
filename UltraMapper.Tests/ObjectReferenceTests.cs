@@ -215,5 +215,45 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
+
+
+
+        private class A
+        {
+            public ICollection<A> Collection { get; set; }
+        }
+
+        private class B
+        {
+           public ICollection<B> Collection { get; set; }
+        }
+
+        [TestMethod]
+        public void ObjectToObject()
+        {
+            var innerType = new InnerType() { A = "this is a test" };
+
+            var strongTypeSource = new OuterType()
+            {
+                InnerType = innerType,
+                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
+                ComplexList = new List<InnerType>() { innerType },
+                String = "ok"
+            };
+
+            strongTypeSource.InnerType.C = strongTypeSource;
+
+            object source = strongTypeSource;
+
+            var ultraMapper = new Mapper();
+            var target = ultraMapper.Map<OuterType>( source );
+
+            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
+            Assert.IsTrue( source.GetType() == target.GetType() );
+            Assert.IsTrue( target.GetType() == typeof( OuterType ) );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
     }
 }

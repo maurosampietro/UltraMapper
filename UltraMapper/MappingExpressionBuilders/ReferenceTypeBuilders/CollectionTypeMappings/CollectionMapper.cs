@@ -6,6 +6,7 @@ using System.Reflection;
 using UltraMapper.Internals;
 using UltraMapper.Internals.ExtensionMethods;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
+using UltraMapper.ReferenceTracking;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -118,54 +119,20 @@ namespace UltraMapper.MappingExpressionBuilders
             ) );
         }
 
-        protected BlockExpression LookUpBlock( ParameterExpression sourceParam, ParameterExpression targetParam,
+        protected Expression LookUpBlock( ParameterExpression sourceParam, ParameterExpression targetParam,
             ParameterExpression referenceTracker, ParameterExpression mapper )
         {
-            Expression itemLookupCall = Expression.Call
-            (
-                Expression.Constant( refTrackingLookup.Target ),
-                refTrackingLookup.Method,
-                referenceTracker,
-                sourceParam,
-                Expression.Constant( targetParam.Type )
-            );
-
-            Expression itemCacheCall = Expression.Call
-            (
-                Expression.Constant( addToTracker.Target ),
-                addToTracker.Method,
-                referenceTracker,
-                sourceParam,
-                Expression.Constant( targetParam.Type ),
-                targetParam
-            );
-
-            var mapMethod = CollectionMapperContext.RecursiveMapMethodInfo
-                .MakeGenericMethod( sourceParam.Type, targetParam.Type );
-
             var itemMapping = MapperConfiguration[ sourceParam.Type, targetParam.Type ];
+
             var constructorExp = base.GetMemberNewInstanceInternal( sourceParam,
                 sourceParam.Type, targetParam.Type, itemMapping );
 
-            return Expression.Block
-            (
-                Expression.Assign( targetParam, Expression.Convert( itemLookupCall, targetParam.Type ) ),
+            var memberAssignment = Expression.Assign( targetParam, constructorExp );
 
-                Expression.IfThen
-                (
-                    Expression.Equal( targetParam, Expression.Constant( null, targetParam.Type ) ),
+            Expression lookUpBlock = ReferenceTrackingExpression.GetMappingExpression( referenceTracker, sourceParam, targetParam,
+               memberAssignment, mapper, null, Expression.Constant( itemMapping ) );
 
-                    Expression.Block
-                    (
-                        Expression.Assign( targetParam, constructorExp ),
-
-                        itemCacheCall,
-
-                        Expression.Call( mapper, mapMethod, sourceParam, targetParam,
-                            referenceTracker, Expression.Constant( itemMapping ) )
-                    )
-                )
-            );
+            return lookUpBlock;
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )

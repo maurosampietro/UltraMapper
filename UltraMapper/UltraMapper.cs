@@ -75,11 +75,6 @@ namespace UltraMapper
             }
         }
 
-        //public TTarget MapNoCazzi<TSource, TTarget>( TSource source )
-        //{
-          
-        //}
-
         /// <summary>
         /// Maps <param name="source"> on a new instance of type <typeparam name="TTarget">.
         /// </summary>
@@ -104,29 +99,47 @@ namespace UltraMapper
             }
         }
 
-        public void Map<TSource, TTarget>( TSource source, out TTarget target,
-            ReferenceTracker referenceTracking = null ) where TTarget : struct
+        public TTarget MapStruct<TSource, TTarget>( TSource source, 
+          ReferenceTracker referenceTracking = null ) where TTarget : struct
         {
-            /*TEMPORARY IMPLEMENTATION*/
             if( referenceTracking == null )
                 referenceTracking = new ReferenceTracker();
 
-            //Non è il massimo: salta la funzione di map principale
-            // e non tiene in cache le espressioni generate.
             Type sourceType = typeof( TSource );
             Type targetType = typeof( TTarget );
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
 
-            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
+            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) )
+            {
+                var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
+                return method.Invoke( referenceTracking, source, new TTarget() );
+            }
+            else
+            {
+                return (TTarget)mapping.MappingFuncPrimitives.Invoke( referenceTracking, source );
+            }
+        }
+
+        public void Map<TSource, TTarget>( TSource source, out TTarget target,
+            ReferenceTracker referenceTracking = null ) where TTarget : struct
+        {
+            if( referenceTracking == null )
+                referenceTracking = new ReferenceTracker();
+
+            Type sourceType = typeof( TSource );
+            Type targetType = typeof( TTarget );
+
+            var mapping = this.MappingConfiguration[ sourceType, targetType ];
+
+            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) )
             {
                 var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
                 target = method.Invoke( referenceTracking, source, new TTarget() );
             }
             else
             {
-                var method = (Func<TSource, TTarget>)mapping.MappingExpression.Compile();
-                target = method.Invoke( source );
+                target = (TTarget)mapping.MappingFuncPrimitives.Invoke( referenceTracking, source );
             }
         }
 
@@ -145,7 +158,9 @@ namespace UltraMapper
         {
             if( source == null )
             {
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
                 target = null;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
                 return;
             }
 
@@ -271,7 +286,7 @@ namespace UltraMapper
 #if DEBUG
             try
             {
-               mapping.MappingFunc.Invoke( referenceTracking, source, target );
+                mapping.MappingFunc.Invoke( referenceTracking, source, target );
             }
             catch( Exception ex )
             {

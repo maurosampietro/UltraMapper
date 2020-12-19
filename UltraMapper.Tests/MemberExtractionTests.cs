@@ -41,10 +41,22 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void ExtractInstance()
+        {
+            var test = new FirstLevel();
+            Expression<Func<FirstLevel, FirstLevel>> func = fl => fl;
+
+            var expectedMember = typeof( FirstLevel );
+            var extractedMember = func.GetMemberAccessPath().Last();
+
+            Assert.IsTrue( expectedMember == extractedMember );
+        }
+
+        [TestMethod]
         public void ExtractPropertyInfo()
         {
             var test = new FirstLevel();
-            Expression<Func<FirstLevel, string>> func = ( fl ) => fl.A;
+            Expression<Func<FirstLevel, string>> func = fl => fl.A;
 
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.A ) )[ 0 ];
@@ -57,7 +69,7 @@ namespace UltraMapper.Tests
         public void ExtractFieldInfo()
         {
             var test = new FirstLevel();
-            Expression<Func<FirstLevel, string>> func = ( fl ) => fl.field;
+            Expression<Func<FirstLevel, string>> func = fl => fl.field;
 
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.field ) )[ 0 ];
@@ -70,7 +82,7 @@ namespace UltraMapper.Tests
         public void ExtractMethodInfo()
         {
             var test = new FirstLevel();
-            Expression<Func<FirstLevel, SecondLevel>> func = ( fl ) => fl.GetSecond();
+            Expression<Func<FirstLevel, SecondLevel>> func = fl => fl.GetSecond();
 
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.GetSecond ) )[ 0 ];
@@ -84,7 +96,7 @@ namespace UltraMapper.Tests
         {
             var test = new FirstLevel();
             Expression<Func<FirstLevel, ThirdLevel>> func =
-                ( fl ) => fl.secondLevel.GetThird();
+                fl => fl.secondLevel.GetThird();
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
@@ -98,7 +110,7 @@ namespace UltraMapper.Tests
         {
             var test = new FirstLevel();
             Expression<Func<FirstLevel, ThirdLevel>> func = 
-                ( fl ) => fl.SecondLevel.GetThird();
+                fl => fl.SecondLevel.GetThird();
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
@@ -112,7 +124,7 @@ namespace UltraMapper.Tests
         {
             var test = new FirstLevel();
             Expression<Func<FirstLevel, ThirdLevel>> func =
-                ( fl ) => fl.GetSecond().GetThird();
+                fl => fl.GetSecond().GetThird();
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
@@ -126,7 +138,7 @@ namespace UltraMapper.Tests
         {
             var test = new FirstLevel();
             Expression<Func<FirstLevel, ThirdLevel>> func =
-                ( fl ) => fl.GetSecond().ThirdLevel;
+                fl => fl.GetSecond().ThirdLevel;
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
@@ -140,7 +152,7 @@ namespace UltraMapper.Tests
         {
             var test = new FirstLevel();
             Expression<Func<FirstLevel, ThirdLevel>> func =
-                ( fl ) => fl.SecondLevel.ThirdLevel;
+                fl => fl.SecondLevel.ThirdLevel;
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];

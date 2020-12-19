@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Tests
 {
@@ -25,8 +26,11 @@ namespace UltraMapper.Tests
             var mapper = new Mapper();
             mapper.Map( dateTime, out DateTime clone );
 
+            var mapping = mapper.MappingConfiguration[ typeof( DateTime ), typeof( DateTime ) ];
+
             Assert.IsTrue( dateTime == clone );
             Assert.IsTrue( !Object.ReferenceEquals( dateTime, clone ) );
+            Assert.IsTrue( mapping.Mapper is StructMapper ); //convert mapper can get the job done as well but is slower
         }
 
         [TestMethod]

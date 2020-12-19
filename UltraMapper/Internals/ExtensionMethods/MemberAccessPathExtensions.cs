@@ -11,17 +11,30 @@ namespace UltraMapper.Internals
     {
         internal static LambdaExpression GetGetterLambdaExpression( this MemberAccessPath memberAccessPath )
         {
-            var instanceType = memberAccessPath.First().ReflectedType;
+            var entryMember = memberAccessPath.First();
+
+            var instanceType = entryMember.ReflectedType ??
+                entryMember.GetMemberType().UnderlyingSystemType;
+
             var returnType = memberAccessPath.Last().GetMemberType();
 
             var accessInstance = Expression.Parameter( instanceType, "instance" );
             Expression accessPath = accessInstance;
-            foreach( var memberAccess in memberAccessPath )
+
+            if( memberAccessPath.Count == 1 && entryMember is Type )
             {
-                if( memberAccess is MethodInfo )
-                    accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess );
-                else
-                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                //instance => instance
+                //do nothing
+            }
+            else
+            {
+                foreach( var memberAccess in memberAccessPath )
+                {
+                    if( memberAccess is MethodInfo )
+                        accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess );
+                    else
+                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                }
             }
 
             var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
@@ -30,7 +43,11 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetSetterLambdaExpression( this MemberAccessPath memberAccessPath )
         {
-            var instanceType = memberAccessPath.First().ReflectedType;
+            var entryMember = memberAccessPath.First();
+
+            var instanceType = entryMember.ReflectedType ??
+                entryMember.GetMemberType().UnderlyingSystemType;
+
             var valueType = memberAccessPath.Last().GetMemberType();
 
             var value = Expression.Parameter( valueType, "value" );
@@ -38,17 +55,25 @@ namespace UltraMapper.Internals
 
             Expression accessPath = accessInstance;
 
-            foreach( var memberAccess in memberAccessPath )
+            if( memberAccessPath.Count == 1 && entryMember is Type )
             {
-                if( memberAccess is MethodInfo methodInfo )
+                //instance => instance
+                //do nothing
+            }
+            else
+            {
+                foreach( var memberAccess in memberAccessPath )
                 {
-                    if( methodInfo.IsGetterMethod() )
-                        accessPath = Expression.Call( accessPath, methodInfo );
+                    if( memberAccess is MethodInfo methodInfo )
+                    {
+                        if( methodInfo.IsGetterMethod() )
+                            accessPath = Expression.Call( accessPath, methodInfo );
+                        else
+                            accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
+                    }
                     else
-                        accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
+                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
                 }
-                else
-                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
             }
 
             if( !(accessPath is MethodCallExpression) )
@@ -60,7 +85,11 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetGetterLambdaExpressionWithNullChecks( this MemberAccessPath memberAccessPath )
         {
-            var instanceType = memberAccessPath.First().ReflectedType;
+            var entryMember = memberAccessPath.First();
+
+            var instanceType = entryMember.ReflectedType ??
+                entryMember.GetMemberType().UnderlyingSystemType;
+
             var returnType = memberAccessPath.Last().GetMemberType();
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );
@@ -69,14 +98,22 @@ namespace UltraMapper.Internals
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
 
-            foreach( var memberAccess in memberAccessPath )
+            if( memberAccessPath.Count == 1 && entryMember is Type )
             {
-                if( memberAccess is MethodInfo )
-                    accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess );
-                else
-                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                //instance => instance
+                //do nothing
+            }
+            else
+            {
+                foreach( var memberAccess in memberAccessPath )
+                {
+                    if( memberAccess is MethodInfo )
+                        accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess );
+                    else
+                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
 
-                memberAccesses.Add( accessPath );
+                    memberAccesses.Add( accessPath );
+                }
             }
 
             var nullConstant = Expression.Constant( null );
@@ -103,7 +140,11 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetSetterLambdaExpressionWithNullChecks( this MemberAccessPath memberAccessPath )
         {
-            var instanceType = memberAccessPath.First().ReflectedType;
+            var entryMember = memberAccessPath.First();
+
+            var instanceType = entryMember.ReflectedType ??
+                entryMember.GetMemberType().UnderlyingSystemType;
+
             var valueType = memberAccessPath.Last().GetMemberType();
             var value = Expression.Parameter( valueType, "value" );
 
@@ -113,19 +154,27 @@ namespace UltraMapper.Internals
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
 
-            foreach( var memberAccess in memberAccessPath )
+            if( memberAccessPath.Count == 1 && entryMember is Type )
             {
-                if( memberAccess is MethodInfo methodInfo )
+                //instance => instance
+                //do nothing
+            }
+            else
+            {
+                foreach( var memberAccess in memberAccessPath )
                 {
-                    if( methodInfo.IsGetterMethod() )
-                        accessPath = Expression.Call( accessPath, methodInfo );
+                    if( memberAccess is MethodInfo methodInfo )
+                    {
+                        if( methodInfo.IsGetterMethod() )
+                            accessPath = Expression.Call( accessPath, methodInfo );
+                        else
+                            accessPath = Expression.Call( accessPath, methodInfo, value );
+                    }
                     else
-                        accessPath = Expression.Call( accessPath, methodInfo, value );
-                }
-                else
-                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
 
-                memberAccesses.Add( accessPath );
+                    memberAccesses.Add( accessPath );
+                }
             }
 
             if( !(accessPath is MethodCallExpression) )
@@ -156,7 +205,11 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetSetterLambdaExpressionWithNullInstancesInstantiation( this MemberAccessPath memberAccessPath )
         {
-            var instanceType = memberAccessPath.First().ReflectedType;
+            var entryMember = memberAccessPath.First();
+
+            var instanceType = entryMember.ReflectedType ??
+                entryMember.GetMemberType().UnderlyingSystemType;
+
             var valueType = memberAccessPath.Last().GetMemberType();
             var value = Expression.Parameter( valueType, "value" );
 
@@ -166,19 +219,27 @@ namespace UltraMapper.Internals
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
 
-            foreach( var memberAccess in memberAccessPath )
+            if( memberAccessPath.Count == 1 && entryMember is Type )
             {
-                if( memberAccess is MethodInfo methodInfo )
+                //instance => instance
+                //do nothing
+            }
+            else
+            {
+                foreach( var memberAccess in memberAccessPath )
                 {
-                    if( methodInfo.IsGetterMethod() )
-                        accessPath = Expression.Call( accessPath, methodInfo );
+                    if( memberAccess is MethodInfo methodInfo )
+                    {
+                        if( methodInfo.IsGetterMethod() )
+                            accessPath = Expression.Call( accessPath, methodInfo );
+                        else
+                            accessPath = Expression.Call( accessPath, methodInfo, value );
+                    }
                     else
-                        accessPath = Expression.Call( accessPath, methodInfo, value );
-                }
-                else
-                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
 
-                memberAccesses.Add( accessPath );
+                    memberAccesses.Add( accessPath );
+                }
             }
 
             if( !(accessPath is MethodCallExpression) )

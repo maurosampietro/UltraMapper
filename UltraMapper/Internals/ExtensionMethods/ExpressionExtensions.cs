@@ -65,18 +65,26 @@ namespace UltraMapper.Internals
             var member = lambda.Parameters.First(
                 p => p.Name == lambdaMember.Name ).Type as MemberInfo;
 
-            var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            foreach( var item in stack )
+            if( stack.Count == 0 ) //noticed we already popped once!
             {
-                string memberName = null;
-
-                if( item is MemberExpression )
-                    memberName = ((MemberExpression)item).Member.Name;
-                else if( item is MethodCallExpression )
-                    memberName = ((MethodCallExpression)item).Method.Name;
-
-                member = member.GetMemberType().GetMember( memberName, bindingFlags )[ 0 ];
+                //return entry instance
                 memberAcessPath.Add( member );
+            }
+            else
+            {
+                var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+                foreach( var item in stack )
+                {
+                    string memberName = null;
+
+                    if( item is MemberExpression memberExp )
+                        memberName = memberExp.Member.Name;
+                    else if( item is MethodCallExpression methodCallExp )
+                        memberName = methodCallExp.Method.Name;
+
+                    member = member.GetMemberType().GetMember( memberName, bindingFlags )[ 0 ];
+                    memberAcessPath.Add( member );
+                }
             }
 
             return memberAcessPath;

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders.MapperContexts;
+using UltraMapper.ReferenceTracking;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -192,15 +193,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected Expression GetComplexMemberExpression( MemberMapping mapping )
         {
-            /* SOURCE (NULL) -> TARGET = NULL
-             * 
-             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NULL) = ASSIGN TRACKED OBJECT
-             * SOURCE (NOT NULL / VALUE ALREADY TRACKED) -> TARGET (NOT NULL) = ASSIGN TRACKED OBJECT (the priority is to map identically the source to the target)
-             * 
-             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NULL) = ASSIGN NEW OBJECT 
-             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
-             */
-
             var memberContext = new MemberMappingContext( mapping );
 
             if( mapping.CustomConverter != null )
@@ -216,27 +208,14 @@ namespace UltraMapper.MappingExpressionBuilders
                     .ReplaceParameter( valueReaderExp, mapping.CustomConverter.Parameters[ 0 ].Name );
             }
 
-            var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo.MakeGenericMethod(
-                memberContext.SourceMember.Type, memberContext.TargetMember.Type );
+            var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
+                .GetMemberAssignment( memberContext );
 
-            Expression itemLookupCall = Expression.Call
-            (
-                Expression.Constant( refTrackingLookup.Target ),
-                refTrackingLookup.Method,
-                memberContext.ReferenceTracker,
-                memberContext.SourceMember,
-                Expression.Constant( memberContext.TargetMember.Type )
-            );
-
-            Expression itemCacheCall = Expression.Call
-            (
-                Expression.Constant( addToTracker.Target ),
-                addToTracker.Method,
-                memberContext.ReferenceTracker,
-                memberContext.SourceMember,
-                Expression.Constant( memberContext.TargetMember.Type ),
-                memberContext.TargetMember
-            );
+            var referenceTrackingExp = ReferenceTrackingExpression.GetMappingExpression(
+                memberContext.ReferenceTracker, memberContext.SourceMember,
+                memberContext.TargetMember, memberAssignmentExp,
+                memberContext.Mapper, _mapper,
+                Expression.Constant( mapping ) );
 
             return Expression.Block
             (
@@ -244,37 +223,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
 
-                Expression.IfThenElse
-                (
-                     Expression.Equal( memberContext.SourceMember, memberContext.SourceMemberNullValue ),
-
-                     Expression.Assign( memberContext.TargetMember, memberContext.TargetMemberNullValue ),
-
-                     Expression.Block
-                     (
-                        //object lookup. An intermediate variable (TrackedReference) is needed in order to deal with ReferenceMappingStrategies
-                        Expression.Assign( memberContext.TrackedReference,
-                            Expression.Convert( itemLookupCall, memberContext.TargetMember.Type ) ),
-
-                        Expression.IfThenElse
-                        (
-                            Expression.NotEqual( memberContext.TrackedReference, memberContext.TargetMemberNullValue ),
-                            Expression.Assign( memberContext.TargetMember, memberContext.TrackedReference ),
-                            Expression.Block
-                            (
-                                ((IMemberMappingExpression)mapping.Mapper)
-                                    .GetMemberAssignment( memberContext ),
-
-                                //cache reference
-                                itemCacheCall,
-
-                                Expression.Call( memberContext.Mapper, mapMethod,
-                                    memberContext.SourceMember, memberContext.TargetMember,
-                                    memberContext.ReferenceTracker, Expression.Constant( mapping ) )
-                            )
-                        )
-                    )
-                ),
+                referenceTrackingExp,            
 
                 memberContext.TargetMemberValueSetter
             );

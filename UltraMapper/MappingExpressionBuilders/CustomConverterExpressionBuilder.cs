@@ -6,19 +6,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class CustomConverterExpressionBuilder
     {
-        public static Func<ReferenceTracker, object, Type, object> refTrackingLookup =
-            ( referenceTracker, sourceInstance, targetType ) =>
-            {
-                referenceTracker.TryGetValue( sourceInstance, targetType, out object targetInstance );
-                return targetInstance;
-            };
-
-        public static Action<ReferenceTracker, object, Type, object> addToTracker =
-            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-            {
-                referenceTracker.Add( sourceInstance, targetType, targetInstance );
-            };
-
         /// <summary>
         /// Adds reference tracking
         /// </summary>
@@ -51,49 +38,17 @@ namespace UltraMapper.MappingExpressionBuilders
                 return Expression.Invoke( customConverter, context.SourceInstance );
             }
 
-            Expression itemLookupCall = Expression.Call
-            (
-                Expression.Constant( refTrackingLookup.Target ),
-                refTrackingLookup.Method,
-                context.ReferenceTracker,
-                context.SourceInstance,
-                Expression.Constant( targetType )
-            );
+            var memberAssignment = Expression.Assign( context.TargetInstance, customConverter.Body
+                .ReplaceParameter( context.SourceInstance, customConverter.Parameters[ 0 ].Name ) );
 
-            Expression itemCacheCall = Expression.Call
-            (
-                Expression.Constant( addToTracker.Target ),
-                addToTracker.Method,
-                context.ReferenceTracker,
-                context.SourceInstance,
-                Expression.Constant( targetType ),
-                context.TargetInstance
-            );
+            var lookUpBlock = ReferenceTracking.ReferenceTrackingExpression.GetMappingExpression(
+                context.ReferenceTracker, context.SourceInstance, context.TargetInstance, 
+                memberAssignment, null, null, null, false );
 
             return Expression.Block
             (
-                new[] { context.TrackedReference, context.TargetInstance },
-
-                //object lookup. An intermediate variable (TrackedReference) is needed in order to deal with ReferenceMappingStrategies
-                Expression.Assign( context.TrackedReference,
-                    Expression.Convert( itemLookupCall, targetType ) ),
-
-                Expression.IfThenElse
-                (
-                    Expression.Equal( context.TrackedReference, context.TargetNullValue ),
-
-                    Expression.Block
-                    (
-                        Expression.Assign( context.TargetInstance, customConverter.Body
-                            .ReplaceParameter( context.SourceInstance, customConverter.Parameters[ 0 ].Name ) ),
-
-                        //cache reference
-                        itemCacheCall
-                    ),
-
-                    Expression.Assign( context.TargetInstance, context.TrackedReference )
-                ),
-
+                new[] { context.TargetInstance },
+                lookUpBlock,
                 context.TargetInstance
             );
         }
