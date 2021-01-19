@@ -27,19 +27,6 @@ namespace UltraMapper.MappingExpressionBuilders
             ( o ) => _debug( o );
 #endif
 
-        public static Func<ReferenceTracker, object, Type, object> refTrackingLookup =
-         ( referenceTracker, sourceInstance, targetType ) =>
-         {
-             referenceTracker.TryGetValue( sourceInstance, targetType, out object targetInstance );
-             return targetInstance;
-         };
-
-        public static Action<ReferenceTracker, object, Type, object> addToTracker =
-            ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
-        {
-            referenceTracker.Add( sourceInstance, targetType, targetInstance );
-        };
-
         public virtual bool CanHandle( Type source, Type target )
         {
             bool builtInTypes = source.IsBuiltIn( false )
@@ -188,10 +175,12 @@ namespace UltraMapper.MappingExpressionBuilders
                     return GetSimpleMemberExpression( mapping );
                 } ).ToList();
 
-            return !memberMappingExps.Any() ? (Expression)Expression.Empty() : Expression.Block( memberMappingExps );
+            return !memberMappingExps.Any() ?
+                (Expression)Expression.Empty() : 
+                Expression.Block( memberMappingExps );
         }
 
-        protected Expression GetComplexMemberExpression( MemberMapping mapping )
+        protected virtual Expression GetComplexMemberExpression( MemberMapping mapping )
         {
             var memberContext = new MemberMappingContext( mapping );
 
@@ -222,9 +211,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 new[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember },
 
                 Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
-
                 referenceTrackingExp,            
-
                 memberContext.TargetMemberValueSetter
             );
         }
@@ -258,7 +245,6 @@ namespace UltraMapper.MappingExpressionBuilders
                 memberContext.TargetInstance, memberContext.SourceMemberValueGetter,
                 mapping.TargetMember.ValueSetter );
         }
-
         #endregion
     }
 }

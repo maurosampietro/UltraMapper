@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using UltraMapper.Internals;
-using UltraMapper.Internals.ExtensionMethods;
 
 namespace UltraMapper
 {

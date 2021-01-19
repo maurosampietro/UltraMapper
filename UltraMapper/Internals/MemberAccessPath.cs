@@ -11,7 +11,7 @@ namespace UltraMapper.Internals
         private readonly List<MemberInfo> _memberAccess
             = new List<MemberInfo>();
 
-        public int Count { get { return _memberAccess.Count; } }
+        public int Count => _memberAccess.Count;
 
         public MemberAccessPath() { }
 
@@ -61,8 +61,8 @@ namespace UltraMapper.Internals
 
             for( int i = 0; i < this.Count - 1; i++ )
                 sb.Append( $"{this[ i ].Name} -> " );
+          
             sb.Append( $"{this[ this.Count - 1 ].Name}" );
-
             return sb.ToString();
         }
     }

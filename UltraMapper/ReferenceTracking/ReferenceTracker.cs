@@ -34,7 +34,7 @@ namespace UltraMapper
             }
         }
 
-        private Dictionary<Key, object> _mappings
+        private readonly Dictionary<Key, object> _mappings
             = new Dictionary<Key, object>( 512 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )

@@ -26,7 +26,7 @@ namespace UltraMapper.MappingExpressionBuilders
             return new CollectionMapperContext( source, target, options );
         }
 
-        object runtimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
         {
             var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
             return map.MappingFuncPrimitives( null, loopingvar );
@@ -48,7 +48,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
-                   ( loopingvar, targetType ) => runtimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
+                   ( loopingvar, targetType ) => RuntimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
 
                 var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
@@ -128,7 +128,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 sourceParam.Type, targetParam.Type, itemMapping );
 
             var memberAssignment = Expression.Assign( targetParam, constructorExp );
-
+            
             Expression lookUpBlock = ReferenceTrackingExpression.GetMappingExpression( referenceTracker, sourceParam, targetParam,
                memberAssignment, mapper, null, Expression.Constant( itemMapping ) );
 

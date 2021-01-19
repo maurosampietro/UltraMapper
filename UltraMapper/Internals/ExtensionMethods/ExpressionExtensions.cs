@@ -81,6 +81,8 @@ namespace UltraMapper.Internals
                         memberName = memberExp.Member.Name;
                     else if( item is MethodCallExpression methodCallExp )
                         memberName = methodCallExp.Method.Name;
+                    //else if( item is UnaryExpression unaryExp )
+                    //    item = unaryExp.Operand;
 
                     member = member.GetMemberType().GetMember( memberName, bindingFlags )[ 0 ];
                     memberAcessPath.Add( member );

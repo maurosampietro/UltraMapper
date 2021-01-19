@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using UltraMapper.Internals;
-[assembly: InternalsVisibleTo( "UltraMapper.Tests" )]
 
 namespace UltraMapper
 {
@@ -99,7 +97,7 @@ namespace UltraMapper
             }
         }
 
-        public TTarget MapStruct<TSource, TTarget>( TSource source, 
+        public TTarget MapStruct<TSource, TTarget>( TSource source,
           ReferenceTracker referenceTracking = null ) where TTarget : struct
         {
             if( referenceTracking == null )
@@ -153,7 +151,8 @@ namespace UltraMapper
         /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking = null,
-            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
+            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL,
+            bool cantrack = true )
             where TTarget : class
         {
             if( source == null )
@@ -164,13 +163,14 @@ namespace UltraMapper
                 return;
             }
 
-            if( referenceTracking == null )
+            if( referenceTracking == null && cantrack )
                 referenceTracking = new ReferenceTracker();
 
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
-            referenceTracking.Add( source, targetType, target );
+            if( cantrack )
+                referenceTracking.Add( source, targetType, target );
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
             //since we pass an existing target instance to map onto;
@@ -239,7 +239,7 @@ namespace UltraMapper
                     return this.MappingConfiguration[ sourceType, target.GetType() ];
 
                 return mapping;
-            };
+            }
 
             if( mapping is TypeMapping typeMapping )
             {

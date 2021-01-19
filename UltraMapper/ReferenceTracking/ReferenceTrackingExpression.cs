@@ -4,9 +4,9 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.ReferenceTracking
 {
-    public class ReferenceTrackingExpression
+    public static class ReferenceTrackingExpression
     {
-        public static Func<ReferenceTracker, object, Type, object> referenceLookup =
+        private static readonly Func<ReferenceTracker, object, Type, object> _referenceLookup =
             ( referenceTracker, sourceInstance, targetType ) =>
         {
             referenceTracker.TryGetValue( sourceInstance,
@@ -15,7 +15,7 @@ namespace UltraMapper.ReferenceTracking
             return targetInstance;
         };
 
-        public static Action<ReferenceTracker, object, Type, object> addReferenceToTracker =
+        private static readonly Action<ReferenceTracker, object, Type, object> _addReferenceToTracker =
             ( referenceTracker, sourceInstance, targetType, targetInstance ) =>
         {
             referenceTracker.Add( sourceInstance,
@@ -23,18 +23,19 @@ namespace UltraMapper.ReferenceTracking
         };
 
         public static Expression GetMappingExpression(
-        ParameterExpression referenceTracker,
-        ParameterExpression sourceMember,
-        Expression targetMember,
-        Expression memberAssignment,
-        ParameterExpression mapperParam,
-        Mapper mapper,
-        Expression mapping, bool redirectMappingToRuntime = true )
+            ParameterExpression referenceTracker,
+            ParameterExpression sourceMember,
+            Expression targetMember,
+            Expression memberAssignment,
+            ParameterExpression mapperParam,
+            Mapper mapper,
+            Expression mapping, 
+            bool redirectMappingToRuntime = true )
         {
             var refLookupExp = Expression.Call
             (
-                Expression.Constant( referenceLookup.Target ),
-                referenceLookup.Method,
+                Expression.Constant( _referenceLookup.Target ),
+                _referenceLookup.Method,
                 referenceTracker,
                 sourceMember,
                 Expression.Constant( targetMember.Type )
@@ -42,8 +43,8 @@ namespace UltraMapper.ReferenceTracking
 
             var addRefToTrackerExp = Expression.Call
             (
-                Expression.Constant( addReferenceToTracker.Target ),
-                addReferenceToTracker.Method,
+                Expression.Constant( _addReferenceToTracker.Target ),
+                _addReferenceToTracker.Method,
                 referenceTracker,
                 sourceMember,
                 Expression.Constant( targetMember.Type ),

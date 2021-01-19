@@ -86,14 +86,17 @@ namespace UltraMapper
 
     public class MemberConfigurator<TSource, TTarget> : MemberConfigurator
     {
-        public MemberConfigurator( TypeMapping typeMapping ) : base( typeMapping ) { }
+        public MemberConfigurator( TypeMapping typeMapping )
+            : base( typeMapping ) { }
 
         public MemberConfigurator<TSource, TTarget> IgnoreSourceMember<TSourceMember>(
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector )
         {
-            var sourceMember = sourceMemberSelector.GetMemberAccessPath().Last();
+            var sourceMemberAcessPath = sourceMemberSelector.GetMemberAccessPath();
+            var sourceMember = sourceMemberAcessPath.Last();
+
             var mappingSource = _typeMapping.GetMappingSource(
-                sourceMember, sourceMemberSelector );
+                sourceMember, sourceMemberAcessPath );
 
             mappingSource.Ignore = true;
             return this;
@@ -102,7 +105,8 @@ namespace UltraMapper
         public MemberConfigurator<TSource, TTarget> IgnoreTargetMember<TTargetMember>(
             Expression<Func<TTarget, TTargetMember>> targetMemberSelector )
         {
-            var targetMember = targetMemberSelector.GetMemberAccessPath().Last();
+            var targetMemberAccessPath = targetMemberSelector.GetMemberAccessPath();
+            var targetMember = targetMemberAccessPath.Last();
             var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
 
             var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
