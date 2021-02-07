@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace UltraMapper
+namespace UltraMapper.Config
 {
     internal class Tree<T>
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UltraMapper.Internals;
 
-namespace UltraMapper
+namespace UltraMapper.Config
 {
     internal class TypeMappingInheritanceTree : Tree<TypeMapping>
     {

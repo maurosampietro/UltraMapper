@@ -128,11 +128,30 @@ namespace UltraMapper.MappingExpressionBuilders
                 sourceParam.Type, targetParam.Type, itemMapping );
 
             var memberAssignment = Expression.Assign( targetParam, constructorExp );
-            
-            Expression lookUpBlock = ReferenceTrackingExpression.GetMappingExpression( referenceTracker, sourceParam, targetParam,
-               memberAssignment, mapper, null, Expression.Constant( itemMapping ) );
 
-            return lookUpBlock;
+            Expression innerMappingExp = Expression.Empty();
+            if( MapperConfiguration.IsReferenceTrackingEnabled )
+            {
+                innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(
+                    referenceTracker, sourceParam, targetParam,
+                    memberAssignment, mapper, null,
+                    Expression.Constant( itemMapping ) );
+            }
+            else
+            {
+                var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
+                    .MakeGenericMethod( sourceParam.Type, targetParam.Type );
+
+                innerMappingExp = Expression.Block
+                (
+                    memberAssignment,
+
+                    Expression.Call( mapper, mapMethod, sourceParam, targetParam,
+                        referenceTracker, Expression.Constant( itemMapping ) )
+                );
+            }
+
+            return innerMappingExp;
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )

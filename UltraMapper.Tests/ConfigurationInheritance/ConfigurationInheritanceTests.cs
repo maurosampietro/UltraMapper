@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using UltraMapper.Config;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Tests.ConfigurationInheritance

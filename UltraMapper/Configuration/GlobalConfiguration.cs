@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using UltraMapper.Config;
 using UltraMapper.Conventions;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
@@ -21,6 +22,8 @@ namespace UltraMapper
         /// are taken into account in the mapping process.
         /// </summary>
         public bool IgnoreMemberMappingResolvedByConvention { get; set; } = false;
+
+        public bool IsReferenceTrackingEnabled { get; set; } = true;
 
         public CollectionBehaviors CollectionBehavior
         {

@@ -176,7 +176,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 } ).ToList();
 
             return !memberMappingExps.Any() ?
-                (Expression)Expression.Empty() : 
+                (Expression)Expression.Empty() :
                 Expression.Block( memberMappingExps );
         }
 
@@ -200,18 +200,35 @@ namespace UltraMapper.MappingExpressionBuilders
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
                 .GetMemberAssignment( memberContext );
 
-            var referenceTrackingExp = ReferenceTrackingExpression.GetMappingExpression(
-                memberContext.ReferenceTracker, memberContext.SourceMember,
-                memberContext.TargetMember, memberAssignmentExp,
-                memberContext.Mapper, _mapper,
-                Expression.Constant( mapping ) );
+            Expression innerMappingExp = Expression.Empty();
+            if( MapperConfiguration.IsReferenceTrackingEnabled )
+            {
+                innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(
+                    memberContext.ReferenceTracker, memberContext.SourceMember,
+                    memberContext.TargetMember, memberAssignmentExp,
+                    memberContext.Mapper, _mapper,
+                    Expression.Constant( mapping ) );
+            }
+            else
+            {
+                var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
+                    .MakeGenericMethod( memberContext.SourceMember.Type, memberContext.TargetMember.Type );
+
+                innerMappingExp = Expression.Block
+                (
+                    memberAssignmentExp,
+
+                    Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
+                        memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )
+                );
+            }
 
             return Expression.Block
             (
                 new[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember },
 
                 Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
-                referenceTrackingExp,            
+                innerMappingExp,
                 memberContext.TargetMemberValueSetter
             );
         }

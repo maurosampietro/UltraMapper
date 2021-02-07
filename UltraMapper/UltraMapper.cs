@@ -151,8 +151,7 @@ namespace UltraMapper
         /// <param name="target">The target instance to which the values are written.</param>
         public void Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking = null,
-            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL,
-            bool cantrack = true )
+            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
             where TTarget : class
         {
             if( source == null )
@@ -163,14 +162,16 @@ namespace UltraMapper
                 return;
             }
 
-            if( referenceTracking == null && cantrack )
-                referenceTracking = new ReferenceTracker();
-
             Type sourceType = source.GetType();
             Type targetType = target.GetType();
 
-            if( cantrack )
+            if( this.MappingConfiguration.IsReferenceTrackingEnabled )
+            {
+                if( referenceTracking == null )
+                    referenceTracking = new ReferenceTracker();
+
                 referenceTracking.Add( source, targetType, target );
+            }
 
             var mapping = this.MappingConfiguration[ sourceType, targetType ];
             //since we pass an existing target instance to map onto;
@@ -223,7 +224,6 @@ namespace UltraMapper
             //A new mapping is created only if no compatible mapping is already available
             //for concrete classes. If a mapping for the interfaces is found, it is used.
 
-            //---runtime checks for abstract classes and interfaces.
             IMapping CheckResolveAbstractMapping( Type sourceType, Type targetType )
             {
                 if( (sourceType.IsInterface || sourceType.IsAbstract) &&
@@ -241,60 +241,62 @@ namespace UltraMapper
                 return mapping;
             }
 
-            if( mapping is TypeMapping typeMapping )
+            switch( mapping )
             {
-                var mappingSourceType = typeMapping.TypePair.SourceType;
-                var mappingTargetType = typeMapping.TypePair.TargetType;
-
-                mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-            }
-            else if( mapping is MemberMapping memberMapping )
-            {
-                if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                case TypeMapping typeMapping:
                 {
-                    var memberTypeMapping = memberMapping.MemberTypeMapping;
-                    var mappingSourceType = memberTypeMapping.TypePair.SourceType;
-                    var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+                    var mappingSourceType = typeMapping.TypePair.SourceType;
+                    var mappingTargetType = typeMapping.TypePair.TargetType;
 
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                    break;
                 }
-            }
-            else if( mapping is TypeMappingOptionsInheritanceTraversal ttrav )
-            {
-                var mappingSourceType = ttrav.TypeMapping.TypePair.SourceType;
-                var mappingTargetType = ttrav.TypeMapping.TypePair.TargetType;
 
-                mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-            }
-            else if( mapping is MemberMappingOptionsInheritanceTraversal mtrav )
-            {
-                if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                case MemberMapping memberMapping:
                 {
-                    var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
-                    var mappingSourceType = memberTypeMapping.TypePair.SourceType;
-                    var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+                    if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                    {
+                        var memberTypeMapping = memberMapping.MemberTypeMapping;
+                        var mappingSourceType = memberTypeMapping.TypePair.SourceType;
+                        var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+
+                        mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                    }
+
+                    break;
+                }
+
+                case TypeMappingOptionsInheritanceTraversal ttrav:
+                {
+                    var mappingSourceType = ttrav.TypeMapping.TypePair.SourceType;
+                    var mappingTargetType = ttrav.TypeMapping.TypePair.TargetType;
 
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                    break;
+                }
+
+                case MemberMappingOptionsInheritanceTraversal mtrav:
+                {
+                    if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                    {
+                        var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
+                        var mappingSourceType = memberTypeMapping.TypePair.SourceType;
+                        var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+
+                        mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                    }
+
+                    break;
+                }
+
+                case null:
+                {
+                    mapping = CheckResolveAbstractMapping( typeof( TSource ), typeof( TTarget ) );
+                    break;
                 }
             }
-            else if( mapping == null )
-            {
-                mapping = CheckResolveAbstractMapping( typeof( TSource ), typeof( TTarget ) );
-            }
-            //---ends of runtime checks for abstract classes and interfaces
 
-#if DEBUG
-            try
-            {
-                mapping.MappingFunc.Invoke( referenceTracking, source, target );
-            }
-            catch( Exception ex )
-            {
-                throw;
-            }
-#else
             mapping.MappingFunc.Invoke( referenceTracking, source, target );
-#endif
         }
     }
 }

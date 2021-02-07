@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace UltraMapper
+namespace UltraMapper.Config
 {
     internal sealed class TreeNode<T>
     {

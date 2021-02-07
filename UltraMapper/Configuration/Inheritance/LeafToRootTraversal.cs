@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UltraMapper
+namespace UltraMapper.Config
 {
     internal class LeafToRootTraversal
     {
