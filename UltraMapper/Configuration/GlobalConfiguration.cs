@@ -57,7 +57,6 @@ namespace UltraMapper
 
             this.Mappers = new List<IMappingExpressionBuilder>()
             {   
-                //new AbstractMappingExpressionBuilder( this ),
                 new StringToEnumMapper( this ),
                 new EnumMapper( this ),
                 new BuiltInTypeMapper( this ),
@@ -198,16 +197,6 @@ namespace UltraMapper
             } );
 
             return typeMappingNode.Item;
-            //if( typeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-            //{
-            //    var parentMapping = typeMappingNode.Parent?.Item;
-            //    if( parentMapping != null )
-            //    {
-            //        typeMapping.CollectionBehavior = parentMapping.CollectionBehavior;
-            //        typeMapping.CollectionItemEqualityComparer = parentMapping.CollectionItemEqualityComparer;
-            //        typeMappingNode.Item.ReferenceBehavior = parentMapping.ReferenceBehavior;
-            //    }
-            //}
         }
 
         internal TypeMapping this[ TypePair typePair ]

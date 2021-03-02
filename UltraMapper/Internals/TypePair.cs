@@ -34,7 +34,7 @@ namespace UltraMapper.Internals
         {
             if( _hashcode == null )
             {
-                _hashcode = unchecked(this.SourceType.GetHashCode() * 31)
+                _hashcode = this.SourceType.GetHashCode()
                     ^ this.TargetType.GetHashCode();
             }
 

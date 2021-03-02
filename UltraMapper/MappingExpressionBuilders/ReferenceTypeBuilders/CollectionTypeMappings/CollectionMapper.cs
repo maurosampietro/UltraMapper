@@ -26,10 +26,22 @@ namespace UltraMapper.MappingExpressionBuilders
             return new CollectionMapperContext( source, target, options );
         }
 
+        private Type lastRtLoopingVarType;
+        private Type lastRtTargetType;
+        private TypeMapping lastMap;
+
         private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
         {
-            var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
-            return map.MappingFuncPrimitives( null, loopingvar );
+            if( lastRtLoopingVarType != loopingvar.GetType() ||
+                lastRtTargetType != targetType )
+            {
+                lastRtLoopingVarType = loopingvar.GetType();
+                lastRtTargetType = targetType;
+
+                lastMap = this.MapperConfiguration[ lastRtLoopingVarType, lastRtTargetType ];
+            }
+
+            return lastMap.MappingFuncPrimitives( null, loopingvar );
         }
 
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
