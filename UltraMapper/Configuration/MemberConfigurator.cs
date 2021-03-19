@@ -135,7 +135,15 @@ namespace UltraMapper
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector )
         {
-            return MapMember( sourceSelector, targetSelector, null, null );
+            return MapMember( sourceSelector, targetSelector, (Expression<Func<TSourceMember, TTargetMember>>)null, null );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+          Expression<Func<TSource, TSourceMember>> sourceSelector,
+          Expression<Func<TTarget, TTargetMember>> targetSelector,
+          Expression<Func<ReferenceTracker, TSourceMember, TTargetMember>> converter )
+        {
+            return MapMember( sourceSelector, targetSelector, converter, null );
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
@@ -151,7 +159,17 @@ namespace UltraMapper
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Action<IMemberOptions> memberMappingConfig )
         {
-            return MapMember( sourceSelector, targetSelector, null, memberMappingConfig );
+            return MapMember( sourceSelector, targetSelector, 
+                (Expression<Func<TSourceMember, TTargetMember>>)null, memberMappingConfig );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Expression<Func<ReferenceTracker, TSourceMember, TTargetMember>> converter,
+            Action<IMemberOptions> memberMappingConfig )
+        {
+            return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(

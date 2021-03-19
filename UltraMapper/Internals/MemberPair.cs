@@ -4,39 +4,39 @@ namespace UltraMapper.Internals
 {
     public struct MemberPair
     {
-        public readonly MemberAccessPath SourceMemberAccess;
-        public readonly MemberAccessPath TargetMemberAccess;
+        public readonly MemberAccessPath SourceMemberPath;
+        public readonly MemberAccessPath TargetMemberPath;
 
         public MemberPair( MemberAccessPath source, MemberAccessPath target )
         {
-            this.SourceMemberAccess = source;
-            this.TargetMemberAccess = target;
-        }
-
-        public MemberPair( MemberAccessPath source, MemberInfo target )
-        {
-            this.SourceMemberAccess = source;
-            this.TargetMemberAccess = new MemberAccessPath { target };
-        }
-
-        public MemberPair( MemberInfo source, MemberAccessPath target )
-        {
-            this.SourceMemberAccess = new MemberAccessPath { source };
-            this.TargetMemberAccess = target;
+            this.SourceMemberPath = source;
+            this.TargetMemberPath = target;
         }
 
         public MemberPair( MemberInfo source, MemberInfo target )
         {
-            this.SourceMemberAccess = new MemberAccessPath { source };
-            this.TargetMemberAccess = new MemberAccessPath { target };
+            this.SourceMemberPath = new MemberAccessPath { source };
+            this.TargetMemberPath = new MemberAccessPath { target };
+        }
+
+        public MemberPair( MemberAccessPath source, MemberInfo target )
+        {
+            this.SourceMemberPath = source;
+            this.TargetMemberPath = new MemberAccessPath { target };
+        }
+
+        public MemberPair( MemberInfo source, MemberAccessPath target )
+        {
+            this.SourceMemberPath = new MemberAccessPath { source };
+            this.TargetMemberPath = target;
         }
 
         public override bool Equals( object obj )
         {
             if( obj is MemberPair memberPair )
             {
-                return this.SourceMemberAccess.Equals( memberPair.SourceMemberAccess ) &&
-                    this.TargetMemberAccess.Equals( memberPair.TargetMemberAccess );
+                return this.SourceMemberPath.Equals( memberPair.SourceMemberPath ) &&
+                    this.TargetMemberPath.Equals( memberPair.TargetMemberPath );
             }
 
             return false;
@@ -44,8 +44,8 @@ namespace UltraMapper.Internals
 
         public override int GetHashCode()
         {
-            return this.SourceMemberAccess.GetHashCode() ^
-                 this.TargetMemberAccess.GetHashCode();
+            return this.SourceMemberPath.GetHashCode() ^
+                 this.TargetMemberPath.GetHashCode();
         }
 
         public static bool operator ==( MemberPair left, MemberPair right )

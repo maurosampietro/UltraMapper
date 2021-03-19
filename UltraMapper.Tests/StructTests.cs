@@ -26,7 +26,7 @@ namespace UltraMapper.Tests
             var mapper = new Mapper();
             mapper.Map( dateTime, out DateTime clone );
 
-            var mapping = mapper.MappingConfiguration[ typeof( DateTime ), typeof( DateTime ) ];
+            var mapping = mapper.Config[ typeof( DateTime ), typeof( DateTime ) ];
 
             Assert.IsTrue( dateTime == clone );
             Assert.IsTrue( !Object.ReferenceEquals( dateTime, clone ) );

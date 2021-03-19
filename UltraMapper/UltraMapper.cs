@@ -5,7 +5,7 @@ namespace UltraMapper
 {
     public partial class Mapper
     {
-        public Configuration MappingConfiguration { get; protected set; }
+        public Configuration Config { get; protected set; }
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
@@ -13,7 +13,7 @@ namespace UltraMapper
         /// <param name="config">The mapping configuration.</param>
         public Mapper( Configuration config )
         {
-            this.MappingConfiguration = config;
+            this.Config = config;
         }
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace UltraMapper
         /// </summary>
         /// <param name="config"></param>
         public Mapper( Action<Configuration> config = null )
-            : this( new Configuration() ) { config?.Invoke( this.MappingConfiguration ); }
+            : this( new Configuration() ) { config?.Invoke( this.Config ); }
 
         /// <summary>
         /// Maps <param name="source"/> on a new instance of the same type.
@@ -76,7 +76,7 @@ namespace UltraMapper
                 return;
             }
 
-            if( this.MappingConfiguration.IsReferenceTrackingEnabled )
+            if( this.Config.IsReferenceTrackingEnabled )
             {
                 Type targetType = target.GetType();
 
@@ -88,7 +88,7 @@ namespace UltraMapper
 
             //this.MappingConfiguration.ReferenceBehavior = refBehavior;
 
-            var mapping = this.MappingConfiguration[ source.GetType(), target.GetType() ];
+            var mapping = this.Config[ source.GetType(), target.GetType() ];
             //since we pass an existing target instance to map onto;
             //by default we use all of the existing instances we found on the target
             mapping.ReferenceBehavior = refBehavior;
@@ -144,32 +144,23 @@ namespace UltraMapper
                 if( (sourceType.IsInterface || sourceType.IsAbstract) &&
                     (targetType.IsInterface || targetType.IsAbstract) )
                 {
-                    return this.MappingConfiguration[ source.GetType(), target.GetType() ];
+                    return this.Config[ source.GetType(), target.GetType() ];
                 }
 
                 if( sourceType.IsInterface || sourceType.IsAbstract )
-                    return this.MappingConfiguration[ source.GetType(), targetType ];
+                    return this.Config[ source.GetType(), targetType ];
 
                 if( targetType.IsInterface || targetType.IsAbstract )
-                    return this.MappingConfiguration[ sourceType, target.GetType() ];
+                    return this.Config[ sourceType, target.GetType() ];
 
                 if( mapping == null )
-                    return this.MappingConfiguration[ sourceType, targetType ];
+                    return this.Config[ sourceType, targetType ];
 
                 return mapping;
             }
 
             switch( mapping )
             {
-                case TypeMapping typeMapping:
-                {
-                    var mappingSourceType = typeMapping.TypePair.SourceType;
-                    var mappingTargetType = typeMapping.TypePair.TargetType;
-
-                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                    break;
-                }
-
                 case MemberMapping memberMapping:
                 {
                     if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
@@ -183,6 +174,16 @@ namespace UltraMapper
 
                     break;
                 }
+
+                case TypeMapping typeMapping:
+                {
+                    var mappingSourceType = typeMapping.TypePair.SourceType;
+                    var mappingTargetType = typeMapping.TypePair.TargetType;
+
+                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                    break;
+                }
+
 
                 case TypeMappingOptionsInheritanceTraversal ttrav:
                 {
@@ -218,6 +219,21 @@ namespace UltraMapper
         }
     }
 
+    //type
+    public partial class Mapper
+    {
+        public object Map( object source, Type targetType )
+        {
+            if( source == null ) return null;
+
+            var target = InstanceFactory.CreateObject( targetType );
+            this.Map( source, target );
+
+            return target;
+        }
+    }
+
+    //structs
     public partial class Mapper
     {
         public TTarget MapStruct<TSource, TTarget>( TSource source,
@@ -229,7 +245,7 @@ namespace UltraMapper
             Type sourceType = typeof( TSource );
             Type targetType = typeof( TTarget );
 
-            var mapping = this.MappingConfiguration[ sourceType, targetType ];
+            var mapping = this.Config[ sourceType, targetType ];
 
             if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) )
             {
@@ -251,7 +267,7 @@ namespace UltraMapper
             Type sourceType = typeof( TSource );
             Type targetType = typeof( TTarget );
 
-            var mapping = this.MappingConfiguration[ sourceType, targetType ];
+            var mapping = this.Config[ sourceType, targetType ];
 
             if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) )
             {

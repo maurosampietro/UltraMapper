@@ -200,7 +200,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
                 .GetMemberAssignment( memberContext );
 
-            Expression innerMappingExp = Expression.Empty();
+            Expression innerMappingExp;
             if( MapperConfiguration.IsReferenceTrackingEnabled )
             {
                 innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(

@@ -1,6 +1,0 @@
-﻿namespace UltraMapper
-{
-    class ConventionMappigResolver
-    {
-    }
-}

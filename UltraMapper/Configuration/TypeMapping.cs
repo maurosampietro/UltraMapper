@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public sealed class TypeMapping : ITypeOptions, IMapping
+    public class TypeMapping : BaseMapping, ITypeOptions
     {
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
@@ -26,113 +26,36 @@ namespace UltraMapper.Internals
          *The target member can be therefore used as the key of this dictionary
          */
         public readonly Dictionary<MappingTarget, MemberMapping> MemberMappings;
-        public readonly Configuration GlobalConfiguration;
-        internal TypePair TypePair { get; private set; }
-
-        public MappingResolution MappingResolution { get; internal set; }
 
         public TypeMapping( Configuration globalConfig, TypePair typePair )
+            : base( globalConfig, typePair )
         {
-            this.GlobalConfiguration = globalConfig;
-            this.TypePair = typePair;
             this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
         }
 
+        public bool? IgnoreMemberMappingResolvedByConvention { get; set; }
+
+        public ReferenceBehaviors ReferenceBehavior { get; set; }
+            = ReferenceBehaviors.INHERIT;
+
+        public CollectionBehaviors CollectionBehavior { get; set; }
+            = CollectionBehaviors.INHERIT;
+
         private LambdaExpression _customConverter = null;
-        public LambdaExpression CustomConverter
+        public override LambdaExpression CustomConverter
         {
             get { return _customConverter; }
             set
             {
                 //if( TypePair.SourceType.IsBuiltIn( true ) && TypePair.TargetType.IsBuiltIn( true ) )
-                //    _customConverter = value;
+                //    _customConverter = CustomConverterExpressionBuilder.ReplaceParams( value );
                 //else
                     _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
             }
         }
 
         public LambdaExpression CustomTargetConstructor { get; set; }
-
-        public bool? IgnoreMemberMappingResolvedByConvention { get; set; }
-        public ReferenceBehaviors ReferenceBehavior { get; set; } = ReferenceBehaviors.INHERIT;
-        public CollectionBehaviors CollectionBehavior { get; set; } = CollectionBehaviors.INHERIT;
         public LambdaExpression CollectionItemEqualityComparer { get; set; }
-
-        private IMappingExpressionBuilder _mapper;
-        public IMappingExpressionBuilder Mapper
-        {
-            get
-            {
-                if( _mapper == null )
-                {
-                    _mapper = GlobalConfiguration.Mappers.FirstOrDefault(
-                        mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
-
-                    if( _mapper == null )
-                        throw new Exception( $"No object mapper can handle {this.TypePair}" );
-                }
-
-                return _mapper;
-            }
-        }
-
-        private LambdaExpression _mappingExpression;
-        public LambdaExpression MappingExpression
-        {
-            get
-            {
-                if( this.CustomConverter != null )
-                    return this.CustomConverter;
-
-                if( _mappingExpression != null ) return _mappingExpression;
-
-                return _mappingExpression = this.Mapper.GetMappingExpression(
-                    this.TypePair.SourceType, this.TypePair.TargetType, this );
-            }
-        }
-
-        private Func<ReferenceTracker, object, object> _mappingFuncPrimitives;
-        public Func<ReferenceTracker, object, object> MappingFuncPrimitives
-        {
-            get
-            {
-                if( _mappingFuncPrimitives != null )
-                    return _mappingFuncPrimitives;
-
-                var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
-
-                var sourceType = this.TypePair.SourceType;
-                var sourceParam = Expression.Parameter( typeof( object ), "sourceInstance" );
-                var sourceInstance = Expression.Convert( sourceParam, sourceType );
-
-                var bodyExp = (Expression)Expression.Empty();
-                if( this.MappingExpression.Parameters.Count == 1 )
-                    bodyExp = Expression.Convert( Expression.Invoke( this.MappingExpression, sourceInstance ), typeof( object ) );
-
-                else if( this.MappingExpression.Parameters.Count == 2 )
-                    bodyExp = Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance );
-
-                else throw new NotSupportedException( "Unsupported number of arguments" );
-
-                return _mappingFuncPrimitives = Expression.Lambda<Func<ReferenceTracker, object, object>>(
-                    bodyExp, referenceTrackerParam, sourceParam ).Compile();
-            }
-        }
-
-        private Action<ReferenceTracker, object, object> _mappingFunc;
-        public Action<ReferenceTracker, object, object> MappingFunc
-        {
-            get
-            {
-                if( _mappingFunc != null ) return _mappingFunc;
-
-                var sourceType = this.TypePair.SourceType;
-                var targetType = this.TypePair.TargetType;
-
-                return _mappingFunc = MappingExpressionBuilder.GetMappingFunc(
-                   sourceType, targetType, this.MappingExpression );
-            }
-        }
 
         public MappingSource GetMappingSource( MemberInfo sourceMember,
             LambdaExpression sourceMemberGetterExpression )
@@ -161,5 +84,7 @@ namespace UltraMapper.Internals
             return _targetProperties.GetOrAdd( targetMember,
                 () => new MappingTarget( targetMemberPath ) );
         }
+
+        public override string ToString() => TypePair.ToString();
     }
 }

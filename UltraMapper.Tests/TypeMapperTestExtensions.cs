@@ -59,7 +59,7 @@ namespace UltraMapper.Tests
                     return false;
             }
 
-            var typeMapping = ultraMapper.MappingConfiguration[
+            var typeMapping = ultraMapper.Config[
                 source.GetType(), target.GetType() ];
 
             foreach( var mapping in typeMapping.MemberMappings.Values )

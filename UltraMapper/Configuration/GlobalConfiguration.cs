@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using UltraMapper.Config;
 using UltraMapper.Conventions;
+using UltraMapper.Conventions.Resolvers;
 using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 
@@ -13,6 +14,8 @@ namespace UltraMapper
     public class Configuration
     {
         private readonly TypeMappingInheritanceTree _typeMappings;
+        private readonly IConventionResolver _conventionResolver;
+        public readonly GeneratedExpressionCache ExpCache;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -39,9 +42,9 @@ namespace UltraMapper
 
         //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
         //Make sure to use a collection which preserve insertion order!
-        public List<IMappingExpressionBuilder> Mappers { get; set; }
+        public List<IMappingExpressionBuilder> Mappers { get; private set; }
 
-        public MappingConventions Conventions { get; set; }
+        public MappingConventions Conventions { get; private set; }
 
         public Configuration( Action<Configuration> config = null )
         {
@@ -54,9 +57,12 @@ namespace UltraMapper
             };
 
             _typeMappings = new TypeMappingInheritanceTree( rootMapping );
+            _conventionResolver = new DefaultConventionResolver();
+            ExpCache = new GeneratedExpressionCache();
 
             this.Mappers = new List<IMappingExpressionBuilder>()
-            {   
+            {
+                //new AbstractMappingExpressionBuilder(this),
                 new StringToEnumMapper( this ),
                 new EnumMapper( this ),
                 new BuiltInTypeMapper( this ),
@@ -94,7 +100,9 @@ namespace UltraMapper
                         .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true );
                 } );
             } );
-
+                       
+            //new BuiltInConversionConverters().OnItself( this );
+            
             config?.Invoke( this );
         }
 
@@ -147,6 +155,25 @@ namespace UltraMapper
         /// </summary>
         /// <typeparam name="TSource">Source type</typeparam>
         /// <typeparam name="TTarget">Target type</typeparam>
+        /// <param name="targetConstructor">The conversion mechanism to be used to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
+        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
+        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
+            Expression<Func<ReferenceTracker,TSource, TTarget>> converter, Action<ITypeOptions> typeMappingConfig = null )
+        {
+            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
+            typeMapping.CustomConverter = converter;
+            typeMappingConfig?.Invoke( typeMapping );
+
+            return new MemberConfigurator<TSource, TTarget>( typeMapping );
+        }
+
+        /// <summary>
+        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
+        /// This overrides mapping conventions.
+        /// </summary>
+        /// <typeparam name="TSource">Source type</typeparam>
+        /// <typeparam name="TTarget">Target type</typeparam>
         /// <param name="targetConstructor">The expression providing an instance of <typeparamref name="TTarget"/>.</param>
         /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
         public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
@@ -180,7 +207,7 @@ namespace UltraMapper
         }
         #endregion
 
-        private TypeMapping GetTypeMapping( Type source, Type target )
+        private TypeMapping GetTypeMapping( Type source, Type target /*, IMappingOptions options = null*/ )
         {
             var typePair = new TypePair( source, target );
             return this.GetTypeMapping( typePair );
@@ -191,7 +218,7 @@ namespace UltraMapper
             var typeMappingNode = _typeMappings.GetOrAdd( typePair, () =>
             {
                 var newTypeMapping = new TypeMapping( this, typePair );
-                this.MapByConvention( newTypeMapping );
+                _conventionResolver.MapByConvention( newTypeMapping, this.Conventions );
 
                 return newTypeMapping;
             } );
@@ -204,34 +231,9 @@ namespace UltraMapper
             get { return this.GetTypeMapping( typePair ); }
         }
 
-        public TypeMapping this[ Type source, Type target ]
+        public TypeMapping this[ Type source, Type target/*, IMappingOptions options = null*/ ]
         {
             get { return this.GetTypeMapping( source, target ); }
-        }
-
-        private void MapByConvention( TypeMapping typeMapping )
-        {
-            foreach( var convention in this.Conventions )
-            {
-                var memberPairings = convention.MapByConvention(
-                    typeMapping.TypePair.SourceType, typeMapping.TypePair.TargetType );
-
-                foreach( var memberPair in memberPairings )
-                {
-                    var sourceMember = memberPair.SourceMemberAccess.Last();
-                    var mappingSource = typeMapping.GetMappingSource( sourceMember, memberPair.SourceMemberAccess );
-
-                    var targetMember = memberPair.TargetMemberAccess.Last();
-                    var mappingTarget = typeMapping.GetMappingTarget( targetMember, memberPair.TargetMemberAccess );
-
-                    var mapping = new MemberMapping( typeMapping, mappingSource, mappingTarget )
-                    {
-                        MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION
-                    };
-
-                    typeMapping.MemberMappings[ mappingTarget ] = mapping;
-                }
-            }
         }
 
         public TypeMapping GetParentConfiguration( TypeMapping typeMapping )

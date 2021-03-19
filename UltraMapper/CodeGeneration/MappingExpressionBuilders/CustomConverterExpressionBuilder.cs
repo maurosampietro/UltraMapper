@@ -42,7 +42,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 .ReplaceParameter( context.SourceInstance, customConverter.Parameters[ 0 ].Name ) );
 
             var lookUpBlock = ReferenceTracking.ReferenceTrackingExpression.GetMappingExpression(
-                context.ReferenceTracker, context.SourceInstance, context.TargetInstance, 
+                context.ReferenceTracker, context.SourceInstance, context.TargetInstance,
                 memberAssignment, null, null, null, false );
 
             return Expression.Block

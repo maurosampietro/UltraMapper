@@ -24,7 +24,7 @@ namespace UltraMapper.Conventions
 
             this.MatchingRules = new ReadOnlyCollection<IMatchingRule>( matchingRules.ToList() );
 
-            Func<IMatchingRule, Type> ruleType = rule => rule.GetType().GetInterfaces()
+            Type ruleType( IMatchingRule rule ) => rule.GetType().GetInterfaces()
                  .First( @interface => typeof( IMatchingRule ).IsAssignableFrom( @interface ) );
 
             _ruleGroups = this.MatchingRules.GroupBy( ruleType ).ToList();

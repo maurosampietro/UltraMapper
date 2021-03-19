@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UltraMapper.Config;
@@ -46,10 +45,6 @@ namespace UltraMapper.Tests.ConfigurationInheritance
             tree.Add( dup3 );
 
             var visualizeTree = tree.ToString();
-
-            Assert.IsTrue( visualizeTree.Split( new string[] { dup1.ToString() }, StringSplitOptions.RemoveEmptyEntries ).Length == 1 );
-            Assert.IsTrue( visualizeTree.Split( new string[] { dup2.ToString() }, StringSplitOptions.RemoveEmptyEntries ).Length == 1 );
-            Assert.IsTrue( visualizeTree.Split( new string[] { dup3.ToString() }, StringSplitOptions.RemoveEmptyEntries ).Length == 1 );
 
             //var node = new LeafToRootTraversal().Traverse( tree.Root, m => m.CollectionItemEqualityComparer != null );
         }

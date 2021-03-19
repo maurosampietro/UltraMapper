@@ -391,7 +391,7 @@ namespace UltraMapper.Tests
                 var target = new GenericCollections<double>( false );
 
                 var ultraMapper = new Mapper();
-                var typeMappingConfig = ultraMapper.MappingConfiguration.MapTypes( source, target );
+                var typeMappingConfig = ultraMapper.Config.MapTypes( source, target );
 
                 foreach( var targetProp in targetProperties )
                     typeMappingConfig.MapMember( sourceProp, targetProp );
@@ -432,7 +432,7 @@ namespace UltraMapper.Tests
 
                 var target = new GenericCollections<ComplexType>( false );
 
-                var typeMappingConfig = ultraMapper.MappingConfiguration.MapTypes( source, target );
+                var typeMappingConfig = ultraMapper.Config.MapTypes( source, target );
                 foreach( var targetProp in typeProperties )
                     typeMappingConfig.MapMember( sourceProp, targetProp );
 

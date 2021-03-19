@@ -14,43 +14,51 @@ namespace UltraMapper.Internals
     {
         public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
         {
-            if( memberInfo is FieldInfo )
-                return GetGetterLambdaExpression( (FieldInfo)memberInfo );
+            switch( memberInfo )
+            {
+                case FieldInfo fi: 
+                    return fi.GetGetterLambdaExpression();
 
-            if( memberInfo is PropertyInfo )
-                return GetGetterLambdaExpression( (PropertyInfo)memberInfo );
+                case PropertyInfo pi: 
+                    return pi.GetGetterLambdaExpression();
 
-            if( memberInfo is MethodInfo )
-                return GetGetterLambdaExpression( (MethodInfo)memberInfo );
+                case MethodInfo mi:
+                    return mi.GetGetterLambdaExpression();
 
-            throw new ArgumentException( $"'{memberInfo}' is not supported." );
+                default:
+                    throw new ArgumentException( $"'{memberInfo}' is not supported." );
+            }
         }
 
         public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
         {
-            if( memberInfo is Type type )
+            switch( memberInfo )
             {
-                // (target, value) => target.field;
+                case Type type:
+                {
+                    // (target, value) => target.field;
 
-                var targetInstance = Expression.Parameter( type, "target" );
-                var value = Expression.Parameter( type, "value" );
+                    var targetInstance = Expression.Parameter( type, "target" );
+                    var value = Expression.Parameter( type, "value" );
 
-                var body = Expression.Assign( targetInstance, value );
-                var delegateType = typeof( Action<,> ).MakeGenericType( type, type );
+                    var body = Expression.Assign( targetInstance, value );
+                    var delegateType = typeof( Action<,> ).MakeGenericType( type, type );
 
-                return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
+                    return Expression.Lambda( delegateType, body, targetInstance, value );
+                }
+
+                case FieldInfo fieldInfo:
+                    return fieldInfo.GetSetterLambdaExpression();
+
+                case PropertyInfo propertyInfo:
+                    return propertyInfo.GetSetterLambdaExpression();
+
+                case MethodInfo methodInfo:
+                    return methodInfo.GetSetterLambdaExpression();
+
+                default:
+                    throw new ArgumentException( $"'{memberInfo}' is not supported." );
             }
-
-            if( memberInfo is FieldInfo fieldInfo )
-                return GetSetterLambdaExpression( fieldInfo );
-
-            if( memberInfo is PropertyInfo propertyInfo )
-                return GetSetterLambdaExpression( propertyInfo );
-
-            if( memberInfo is MethodInfo methodInfo )
-                return GetSetterLambdaExpression( methodInfo );
-
-            throw new ArgumentException( $"'{memberInfo}' is not supported." );
         }
 
         public static LambdaExpression GetGetterLambdaExpression( this FieldInfo fieldInfo )

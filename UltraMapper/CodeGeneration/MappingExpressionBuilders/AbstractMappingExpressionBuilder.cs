@@ -27,7 +27,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 new[] { context.Mapper },
 
                 Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
-                
+
                 Expression.Call( context.Mapper, mapMethod,
                     context.SourceInstance, context.TargetInstance,
                     context.ReferenceTracker, Expression.Constant( typeMapping ) )

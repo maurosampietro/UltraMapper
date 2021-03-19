@@ -12,6 +12,7 @@ namespace UltraMapper.Tests
         {
             public List<int> List1 { get; set; }
             public List<int> List2 { get; set; }
+            public List<int> List3 { get; set; }
         }
 
         private class GetMethodConventions
@@ -76,13 +77,15 @@ namespace UltraMapper.Tests
             var source = new TestType()
             {
                 List1 = Enumerable.Range( 1, 10 ).ToList(),
-                List2 = Enumerable.Range( 20, 10 ).ToList()
+                List2 = Enumerable.Range( 20, 10 ).ToList(),
+                List3 = Enumerable.Range( 30, 10 ).ToList()
             };
 
             var target = new TestType()
             {
-                List1 = Enumerable.Range( 30, 10 ).ToList(),
-                List2 = Enumerable.Range( 40, 10 ).ToList()
+                List1 = Enumerable.Range( 40, 10 ).ToList(),
+                List2 = Enumerable.Range( 50, 10 ).ToList(),
+                List3 = Enumerable.Range( 60, 10 ).ToList()
             };
 
             var targetPrimitiveListCount = target.List1.Count;
@@ -95,19 +98,25 @@ namespace UltraMapper.Tests
                 cfg.MapTypes<TestType, TestType>( typeConfig =>
                 {
                     typeConfig.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
-                    typeConfig.CollectionBehavior = CollectionBehaviors.RESET;
+                    typeConfig.CollectionBehavior = CollectionBehaviors.MERGE;
                 } )
                 .MapMember( s => s.List1, t => t.List1, memberConfig =>
                 {
                     memberConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                     memberConfig.CollectionBehavior = CollectionBehaviors.MERGE;
+                } )
+                .MapMember( s => s.List2, t => t.List2, memberConfig =>
+                {
+                    memberConfig.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                    memberConfig.CollectionBehavior = CollectionBehaviors.RESET;
                 } );
             } );
 
             mapper.Map( source, target );
 
-            Assert.IsTrue( target.List1.SequenceEqual( Enumerable.Range( 30, 10 ).Concat( Enumerable.Range( 1, 10 ) ) ) );
+            Assert.IsTrue( target.List1.SequenceEqual( Enumerable.Range( 40, 10 ).Concat( Enumerable.Range( 1, 10 ) ) ) );
             Assert.IsTrue( source.List2.SequenceEqual( target.List2 ) );
+            Assert.IsTrue( source.List3.SequenceEqual( target.List3 ) );
         }
 
         [TestMethod]

@@ -14,11 +14,11 @@ namespace UltraMapper.Internals
             config?.Invoke( this );
         }
 
-        public SingletonList<TInterface> GetOrAdd<T>( Action<T> ruleConfig = null )
+        public SingletonList<TInterface> GetOrAdd<T>( Action<T> config = null )
             where T : TInterface, new()
         {
             var instance = _instances.GetOrAdd( typeof( T ), () => new T() );
-            ruleConfig?.Invoke( (T)instance );
+            config?.Invoke( (T)instance );
 
             return this;
         }
