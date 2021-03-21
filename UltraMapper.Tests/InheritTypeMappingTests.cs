@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
@@ -8,6 +9,13 @@ namespace UltraMapper.Tests
     [TestClass]
     public class InheritTypeMappingTests
     {
+        private class ConfigOverrideTestType
+        {
+            public List<int> List1 { get; set; }
+            public List<int> List2 { get; set; }
+            public List<int> List3 { get; set; }
+        }
+
         public class TestClass
         {
             public bool Boolean { get; set; }
@@ -114,6 +122,57 @@ namespace UltraMapper.Tests
 
             var isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void ConfigurationOptionOverride()
+        {
+            //In this test the collection update adds elements to the target.
+            //This works if the capacity of the target list is updated BEFORE adding elements.
+
+            var source = new ConfigOverrideTestType()
+            {
+                List1 = Enumerable.Range( 1, 10 ).ToList(),
+                List2 = Enumerable.Range( 20, 10 ).ToList(),
+                List3 = Enumerable.Range( 30, 10 ).ToList()
+            };
+
+            var target = new ConfigOverrideTestType()
+            {
+                List1 = Enumerable.Range( 40, 10 ).ToList(),
+                List2 = Enumerable.Range( 50, 10 ).ToList(),
+                List3 = Enumerable.Range( 60, 10 ).ToList()
+            };
+
+            var targetPrimitiveListCount = target.List1.Count;
+
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.CollectionBehavior = CollectionBehaviors.UPDATE;
+                cfg.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+
+                cfg.MapTypes<ConfigOverrideTestType, ConfigOverrideTestType>( typeConfig =>
+                {
+                    typeConfig.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                    typeConfig.CollectionBehavior = CollectionBehaviors.MERGE;
+                } )
+                .MapMember( s => s.List1, t => t.List1, memberConfig =>
+                {
+                    memberConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                    memberConfig.CollectionBehavior = CollectionBehaviors.MERGE;
+                } )
+                .MapMember( s => s.List2, t => t.List2, memberConfig =>
+                {
+                    memberConfig.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                    memberConfig.CollectionBehavior = CollectionBehaviors.RESET;
+                } );
+            } );
+
+            mapper.Map( source, target );
+
+            Assert.IsTrue( target.List1.SequenceEqual( Enumerable.Range( 40, 10 ).Concat( Enumerable.Range( 1, 10 ) ) ) );
+            Assert.IsTrue( source.List2.SequenceEqual( target.List2 ) );
+            Assert.IsTrue( source.List3.SequenceEqual( target.List3 ) );
         }
     }
 }

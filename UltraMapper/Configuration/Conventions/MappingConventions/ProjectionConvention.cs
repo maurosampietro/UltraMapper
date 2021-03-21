@@ -21,13 +21,11 @@ namespace UltraMapper.Conventions
             this.TargetMemberProvider = new TargetMemberProvider();
             this.StringSplitter = new StringSplitter( StringSplittingRules.PascalCase );
             this.MatchingRules = new MatchingRules();
+            this.MatchingRulesEvaluator = new DefaultMatchingRuleEvaluator();
         }
 
         public IEnumerable<MemberPair> MapByConvention( Type source, Type target )
         {
-            if( MatchingRulesEvaluator == null )
-                MatchingRulesEvaluator = new DefaultMatchingRuleEvaluator( this.MatchingRules );
-
             //unflattening: CustomerName -> Customer.Name
             //unflattening: GetCustomerName() -> Customer.Name
             //unflattening: GetCustomerName() -> GetCustomer().SetName();
@@ -39,7 +37,7 @@ namespace UltraMapper.Conventions
                 if( splitNames.Count <= 1 ) continue;
 
                 var targetAccessPath = FollowPathUnflattening( target, splitNames, this.TargetMemberProvider );
-                if( targetAccessPath != null && this.MatchingRulesEvaluator.IsMatch( sourceMember, targetAccessPath.Last() ) )
+                if( targetAccessPath != null && this.MatchingRulesEvaluator.IsMatch( sourceMember, targetAccessPath.Last(), this.MatchingRules ) )
                     yield return new MemberPair( sourceMember, targetAccessPath );
             }
 
@@ -55,7 +53,7 @@ namespace UltraMapper.Conventions
 
                 var sourceAccessPath = FollowPathFlattening( source, splitNames, this.SourceMemberProvider );
 
-                if( sourceAccessPath != null && this.MatchingRulesEvaluator.IsMatch( sourceAccessPath.Last(), targetMember ) )
+                if( sourceAccessPath != null && this.MatchingRulesEvaluator.IsMatch( sourceAccessPath.Last(), targetMember, this.MatchingRules ) )
                     yield return new MemberPair( sourceAccessPath, targetMember );
             }
         }

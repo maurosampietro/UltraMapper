@@ -13,25 +13,21 @@ namespace UltraMapper.Conventions
     /// </summary>
     public class DefaultMatchingRuleEvaluator : IMatchingRulesEvaluator
     {
-        private IEnumerable<IGrouping<Type, IMatchingRule>> _ruleGroups;
+        private IEnumerable<IMatchingRule> _lastMatchingRuleSet;
+        private List<IGrouping<Type, IMatchingRule>> _ruleGroups;
 
-        public IEnumerable<IMatchingRule> MatchingRules { get; private set; }
-
-        public DefaultMatchingRuleEvaluator( MatchingRules matchingRules )
+        public bool IsMatch( MemberInfo source, MemberInfo target, IEnumerable<IMatchingRule> matchingRules )
         {
-            if( matchingRules == null )
-                throw new ArgumentNullException( nameof( matchingRules ) );
+            //try not to degrade performance too much by caching the last grouped set of rules
+            if( _lastMatchingRuleSet != matchingRules )
+            {
+                Type ruleType( IMatchingRule rule ) => rule.GetType().GetInterfaces()
+                    .First( @interface => typeof( IMatchingRule ).IsAssignableFrom( @interface ) );
 
-            this.MatchingRules = new ReadOnlyCollection<IMatchingRule>( matchingRules.ToList() );
+                _ruleGroups = matchingRules.GroupBy( ruleType ).ToList();
+                _lastMatchingRuleSet = matchingRules;
+            }
 
-            Type ruleType( IMatchingRule rule ) => rule.GetType().GetInterfaces()
-                 .First( @interface => typeof( IMatchingRule ).IsAssignableFrom( @interface ) );
-
-            _ruleGroups = this.MatchingRules.GroupBy( ruleType ).ToList();
-        }
-
-        public bool IsMatch( MemberInfo source, MemberInfo target )
-        {
             return _ruleGroups.All( ruleGroup =>
                 ruleGroup.Any( rule => rule.IsCompliant( source, target ) ) );
         }

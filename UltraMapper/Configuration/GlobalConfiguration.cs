@@ -106,7 +106,9 @@ namespace UltraMapper
                 } );
             } );
 
-            //new BuiltInConversionConverters().OnItself( this );
+            new BuiltInConversionConverters().OnItself( this );
+            new BuiltInConversionConverters().AddExplicitNumeriConverters( this );
+            new BuiltInConversionConverters().AddImplicitNumeriConverters( this );
 
             config?.Invoke( this );
         }

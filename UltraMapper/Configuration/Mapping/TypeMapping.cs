@@ -49,10 +49,13 @@ namespace UltraMapper.Internals
             get { return _customConverter; }
             set
             {
-                //if( TypePair.SourceType.IsBuiltIn( true ) && TypePair.TargetType.IsBuiltIn( true ) )
-                //    _customConverter = CustomConverterExpressionBuilder.ReplaceParams( value );
-                //else
-                _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
+                _customConverter = CustomConverterExpressionBuilder.ReplaceParams( value );
+                //_customConverter = value;
+
+                ////if( TypePair.SourceType.IsBuiltIn( true ) && TypePair.TargetType.IsBuiltIn( true ) )
+                ////    _customConverter = CustomConverterExpressionBuilder.ReplaceParams( value );
+                ////else
+                //_customConverter = CustomConverterExpressionBuilder.Encapsule( value );
             }
         }
 

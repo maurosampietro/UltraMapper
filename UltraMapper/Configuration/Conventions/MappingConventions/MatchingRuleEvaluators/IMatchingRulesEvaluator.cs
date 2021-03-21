@@ -5,7 +5,6 @@ namespace UltraMapper.Conventions
 {
     public interface IMatchingRulesEvaluator
     {
-        IEnumerable<IMatchingRule> MatchingRules { get; }
-        bool IsMatch( MemberInfo source, MemberInfo target );
+        bool IsMatch( MemberInfo source, MemberInfo target, IEnumerable<IMatchingRule> matchingRules );
     }
 }
