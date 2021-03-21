@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public class TypeMapping : BaseMapping, ITypeOptions
+    public sealed class TypeMapping : Mapping, ITypeMappingOptions
     {
+        private string _toString;
+
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
         private readonly Dictionary<MemberInfo, MappingSource> _sourceProperties
@@ -27,8 +28,8 @@ namespace UltraMapper.Internals
          */
         public readonly Dictionary<MappingTarget, MemberMapping> MemberMappings;
 
-        public TypeMapping( Configuration globalConfig, TypePair typePair )
-            : base( globalConfig, typePair )
+        public TypeMapping( Configuration globalConfig, Type sourceType, Type targetType )
+            : base( globalConfig, sourceType, targetType )
         {
             this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
         }
@@ -42,6 +43,7 @@ namespace UltraMapper.Internals
             = CollectionBehaviors.INHERIT;
 
         private LambdaExpression _customConverter = null;
+
         public override LambdaExpression CustomConverter
         {
             get { return _customConverter; }
@@ -50,7 +52,7 @@ namespace UltraMapper.Internals
                 //if( TypePair.SourceType.IsBuiltIn( true ) && TypePair.TargetType.IsBuiltIn( true ) )
                 //    _customConverter = CustomConverterExpressionBuilder.ReplaceParams( value );
                 //else
-                    _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
+                _customConverter = CustomConverterExpressionBuilder.Encapsule( value );
             }
         }
 
@@ -85,6 +87,12 @@ namespace UltraMapper.Internals
                 () => new MappingTarget( targetMemberPath ) );
         }
 
-        public override string ToString() => TypePair.ToString();
+        public override string ToString()
+        {
+            if( _toString == null )
+                _toString = $"{this.SourceType} -> {this.TargetType}";
+
+            return _toString;
+        }
     }
 }

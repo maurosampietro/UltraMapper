@@ -166,8 +166,8 @@ namespace UltraMapper
                     if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
                     {
                         var memberTypeMapping = memberMapping.MemberTypeMapping;
-                        var mappingSourceType = memberTypeMapping.TypePair.SourceType;
-                        var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+                        var mappingSourceType = memberTypeMapping.SourceType;
+                        var mappingTargetType = memberTypeMapping.TargetType;
 
                         mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     }
@@ -177,8 +177,8 @@ namespace UltraMapper
 
                 case TypeMapping typeMapping:
                 {
-                    var mappingSourceType = typeMapping.TypePair.SourceType;
-                    var mappingTargetType = typeMapping.TypePair.TargetType;
+                    var mappingSourceType = typeMapping.SourceType;
+                    var mappingTargetType = typeMapping.TargetType;
 
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     break;
@@ -187,8 +187,8 @@ namespace UltraMapper
 
                 case TypeMappingOptionsInheritanceTraversal ttrav:
                 {
-                    var mappingSourceType = ttrav.TypeMapping.TypePair.SourceType;
-                    var mappingTargetType = ttrav.TypeMapping.TypePair.TargetType;
+                    var mappingSourceType = ttrav.TypeMapping.SourceType;
+                    var mappingTargetType = ttrav.TypeMapping.TargetType;
 
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     break;
@@ -199,8 +199,8 @@ namespace UltraMapper
                     if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
                     {
                         var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
-                        var mappingSourceType = memberTypeMapping.TypePair.SourceType;
-                        var mappingTargetType = memberTypeMapping.TypePair.TargetType;
+                        var mappingSourceType = memberTypeMapping.SourceType;
+                        var mappingTargetType = memberTypeMapping.TargetType;
 
                         mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     }

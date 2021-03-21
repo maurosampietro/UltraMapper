@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Text;
 
 namespace UltraMapper.Internals
 {
-    public struct TypePair
+    internal struct TypePair
     {
         public readonly Type SourceType;
         public readonly Type TargetType;

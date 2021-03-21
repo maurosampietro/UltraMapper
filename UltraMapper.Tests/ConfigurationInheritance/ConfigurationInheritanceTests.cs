@@ -13,32 +13,32 @@ namespace UltraMapper.Tests.ConfigurationInheritance
         public void SimpleTest()
         {
             // we set as root a typePair different from (object,object)
-            var falseRoot = new TypeMapping( null, new TypePair( typeof( object ), typeof( string ) ) );
+            var falseRoot = new TypeMapping( null, typeof( object ), typeof( string ) );
             var tree = new TypeMappingInheritanceTree( falseRoot );
 
             //we add the real root (object,object)
-            var trueRoot = new TypePair( typeof( object ), typeof( object ) );
-            tree.Add( new TypeMapping( null, trueRoot ) );
+            tree.Add( new TypeMapping( null, typeof( object ), typeof( object ) ) );
 
-            tree.Add( new TypeMapping( null, new TypePair( typeof( Dictionary<string, string> ), typeof( Dictionary<string, string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( ObservableCollection<string> ), typeof( IList<string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( IList<string> ), typeof( IList<string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( ICollection<string> ), typeof( ICollection<string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( Collection<string> ), typeof( Collection<string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( List<string> ), typeof( List<string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( IEnumerable<string> ), typeof( IEnumerable<string> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( IEnumerable<char> ), typeof( IEnumerable<char> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( IEnumerable<IEnumerable<char>> ), typeof( IEnumerable<IEnumerable<char>> ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( object ), typeof( string ) ) ) );
-            tree.Add( new TypeMapping( null, new TypePair( typeof( string ), typeof( string ) ) ) );
+            tree.Add( new TypeMapping( null, typeof( Dictionary<string, string> ), typeof( Dictionary<string, string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( ObservableCollection<string> ), typeof( IList<string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( IList<string> ), typeof( IList<string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( ICollection<string> ), typeof( ICollection<string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( Collection<string> ), typeof( Collection<string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( List<string> ), typeof( List<string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( IEnumerable<string> ), typeof( IEnumerable<string> ) ) );
+            tree.Add( new TypeMapping( null, typeof( IEnumerable<char> ), typeof( IEnumerable<char> ) ) );
+            tree.Add( new TypeMapping( null, typeof( IEnumerable<IEnumerable<char>> ), typeof( IEnumerable<IEnumerable<char>> ) ) );
+            tree.Add( new TypeMapping( null, typeof( object ), typeof( string ) ) );
+            tree.Add( new TypeMapping( null, typeof( string ), typeof( string ) ) );
 
             //check root is been updated
-            Assert.IsTrue( tree.Root.Item.TypePair == trueRoot );
+            Assert.IsTrue( tree.Root.Item.SourceType == typeof( object ) );
+            Assert.IsTrue( tree.Root.Item.TargetType == typeof( object ) );
 
             //no duplicates allowed
-            var dup1 = new TypeMapping( null, new TypePair( typeof( object ), typeof( object ) ) );
-            var dup2 = new TypeMapping( null, new TypePair( typeof( IEnumerable<IEnumerable<char>> ), typeof( IEnumerable<IEnumerable<char>> ) ) );
-            var dup3 = new TypeMapping( null, new TypePair( typeof( object ), typeof( string ) ) );
+            var dup1 = new TypeMapping( null, typeof( object ), typeof( object ) );
+            var dup2 = new TypeMapping( null, typeof( IEnumerable<IEnumerable<char>> ), typeof( IEnumerable<IEnumerable<char>> ) );
+            var dup3 = new TypeMapping( null, typeof( object ), typeof( string ) );
 
             tree.Add( dup1 );
             tree.Add( dup2 );

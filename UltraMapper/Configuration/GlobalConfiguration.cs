@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using UltraMapper.Config;
 using UltraMapper.Conventions;
 using UltraMapper.Conventions.Resolvers;
@@ -13,9 +10,9 @@ namespace UltraMapper
 {
     public class Configuration
     {
-        private readonly TypeMappingInheritanceTree _typeMappings;
+        internal readonly TypeMappingInheritanceTree TypeMappingTree;
+        internal readonly GeneratedExpressionCache ExpCache;
         private readonly IConventionResolver _conventionResolver;
-        public readonly GeneratedExpressionCache ExpCache;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -26,40 +23,48 @@ namespace UltraMapper
         /// </summary>
         public bool IgnoreMemberMappingResolvedByConvention { get; set; } = false;
 
+        /// <summary>
+        /// Enables or disables the reference tracking mechanism
+        /// </summary>
         public bool IsReferenceTrackingEnabled { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the default strategy used when mapping collections.
+        /// </summary>
         public CollectionBehaviors CollectionBehavior
         {
-            get { return _typeMappings.Root.Item.CollectionBehavior; }
-            set { _typeMappings.Root.Item.CollectionBehavior = value; }
+            get { return TypeMappingTree.Root.Item.CollectionBehavior; }
+            set { TypeMappingTree.Root.Item.CollectionBehavior = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the default strategy used when mapping reference objects.
+        /// </summary>
         public ReferenceBehaviors ReferenceBehavior
         {
-            get { return _typeMappings.Root.Item.ReferenceBehavior; }
-            set { _typeMappings.Root.Item.ReferenceBehavior = value; }
+            get { return TypeMappingTree.Root.Item.ReferenceBehavior; }
+            set { TypeMappingTree.Root.Item.ReferenceBehavior = value; }
         }
 
-        //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
-        //Make sure to use a collection which preserve insertion order!
         public List<IMappingExpressionBuilder> Mappers { get; private set; }
 
         public MappingConventions Conventions { get; private set; }
 
         public Configuration( Action<Configuration> config = null )
         {
-            var rootTypePair = new TypePair( typeof( object ), typeof( object ) );
-            var rootMapping = new TypeMapping( this, rootTypePair )
+            var rootMapping = new TypeMapping( this, typeof( object ), typeof( object ) )
             {
-                //for the root mapping set values aside from INHERIT for each option
+                //avoid INHERIT as a value for root-mapping options
                 ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE,
                 CollectionBehavior = CollectionBehaviors.RESET
             };
 
-            _typeMappings = new TypeMappingInheritanceTree( rootMapping );
+            TypeMappingTree = new TypeMappingInheritanceTree( rootMapping );
             _conventionResolver = new DefaultConventionResolver();
             ExpCache = new GeneratedExpressionCache();
 
+            //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
+            //Make sure to use a collection which preserve insertion order!
             this.Mappers = new List<IMappingExpressionBuilder>()
             {
                 //new AbstractMappingExpressionBuilder(this),
@@ -100,150 +105,31 @@ namespace UltraMapper
                         .GetOrAdd<SuffixMatching>( rule => rule.IgnoreCase = true );
                 } );
             } );
-                       
+
             //new BuiltInConversionConverters().OnItself( this );
-            
+
             config?.Invoke( this );
         }
 
-        #region Type-to-Type Mapping
-        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget, TSourceElement, TTargetElement>(
-            Expression<Func<TSourceElement, TTargetElement, bool>> elementEqualityComparison )
-            where TSource : IEnumerable
-            where TTarget : IEnumerable
+        public TypeMapping this[ Type source, Type target ]
         {
-            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
-            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMapping.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
-            typeMapping.CollectionBehavior = CollectionBehaviors.UPDATE;
-            typeMapping.CollectionItemEqualityComparer = elementEqualityComparison;
-
-            return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
-
-        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( Action<ITypeOptions> typeMappingConfig = null )
-        {
-            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
-            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMappingConfig?.Invoke( typeMapping );
-
-            return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
-
-        /// <summary>
-        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
-        /// This overrides mapping conventions.
-        /// </summary>
-        /// <typeparam name="TSource">Source type</typeparam>
-        /// <typeparam name="TTarget">Target type</typeparam>
-        /// <param name="targetConstructor">The conversion mechanism to be used to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
-        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-            Expression<Func<TSource, TTarget>> converter, Action<ITypeOptions> typeMappingConfig = null )
-        {
-            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
-            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMapping.CustomConverter = converter;
-            typeMappingConfig?.Invoke( typeMapping );
-
-            return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
-
-        /// <summary>
-        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
-        /// This overrides mapping conventions.
-        /// </summary>
-        /// <typeparam name="TSource">Source type</typeparam>
-        /// <typeparam name="TTarget">Target type</typeparam>
-        /// <param name="targetConstructor">The conversion mechanism to be used to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
-        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-            Expression<Func<ReferenceTracker,TSource, TTarget>> converter, Action<ITypeOptions> typeMappingConfig = null )
-        {
-            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
-            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMapping.CustomConverter = converter;
-            typeMappingConfig?.Invoke( typeMapping );
-
-            return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
-
-        /// <summary>
-        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
-        /// This overrides mapping conventions.
-        /// </summary>
-        /// <typeparam name="TSource">Source type</typeparam>
-        /// <typeparam name="TTarget">Target type</typeparam>
-        /// <param name="targetConstructor">The expression providing an instance of <typeparamref name="TTarget"/>.</param>
-        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>(
-            Expression<Func<TTarget>> targetConstructor, Action<ITypeOptions> typeMappingConfig = null )
-        {
-            var typeMapping = this.GetTypeMapping( typeof( TSource ), typeof( TTarget ) );
-            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMapping.CustomTargetConstructor = targetConstructor;
-            typeMappingConfig?.Invoke( typeMapping );
-
-            return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
-
-        /// <summary>
-        /// Lets you configure how to map from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
-        /// This overrides mapping conventions.
-        /// </summary>
-        /// <typeparam name="TSource">Source type</typeparam>
-        /// <typeparam name="TTarget">Target type</typeparam>
-        /// <param name="source">Source instance</param>
-        /// <param name="target">Target instance</param>
-        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
-        public MemberConfigurator<TSource, TTarget> MapTypes<TSource, TTarget>( TSource source, TTarget target,
-            Action<ITypeOptions> typeMappingConfig = null )
-        {
-            var typeMapping = this.GetTypeMapping( source.GetType(), target.GetType() );
-            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
-            typeMappingConfig?.Invoke( typeMapping );
-
-            return new MemberConfigurator<TSource, TTarget>( typeMapping );
-        }
-        #endregion
-
-        private TypeMapping GetTypeMapping( Type source, Type target /*, IMappingOptions options = null*/ )
-        {
-            var typePair = new TypePair( source, target );
-            return this.GetTypeMapping( typePair );
-        }
-
-        private TypeMapping GetTypeMapping( TypePair typePair )
-        {
-            var typeMappingNode = _typeMappings.GetOrAdd( typePair, () =>
+            get
             {
-                var newTypeMapping = new TypeMapping( this, typePair );
-                _conventionResolver.MapByConvention( newTypeMapping, this.Conventions );
+                var typeMappingNode = this.TypeMappingTree.GetOrAdd( source, target, () =>
+                {
+                    var newTypeMapping = new TypeMapping( this, source, target );
+                    _conventionResolver.MapByConvention( newTypeMapping, this.Conventions );
 
-                return newTypeMapping;
-            } );
+                    return newTypeMapping;
+                } );
 
-            return typeMappingNode.Item;
-        }
-
-        internal TypeMapping this[ TypePair typePair ]
-        {
-            get { return this.GetTypeMapping( typePair ); }
-        }
-
-        public TypeMapping this[ Type source, Type target/*, IMappingOptions options = null*/ ]
-        {
-            get { return this.GetTypeMapping( source, target ); }
-        }
-
-        public TypeMapping GetParentConfiguration( TypeMapping typeMapping )
-        {
-            return _typeMappings[ typeMapping.TypePair ].Parent?.Item;
+                return typeMappingNode.Item;
+            }
         }
 
         public override string ToString()
         {
-            return _typeMappings.ToString();
+            return this.TypeMappingTree.ToString();
         }
     }
 }

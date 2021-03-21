@@ -11,23 +11,28 @@ namespace UltraMapper.Config
             = new Dictionary<TypePair, TreeNode<TypeMapping>>();
 
         private static readonly Func<TypeMapping, TypeMapping, bool> _parentChildRelation = ( s, t ) =>
-            s.TypePair.SourceType.IsAssignableFrom( t.TypePair.SourceType ) &&
-            s.TypePair.TargetType.IsAssignableFrom( t.TypePair.TargetType );
+            s.SourceType.IsAssignableFrom( t.SourceType ) &&
+            s.TargetType.IsAssignableFrom( t.TargetType );
 
         public TypeMappingInheritanceTree( TypeMapping root )
                  : base( root, _parentChildRelation )
         {
-            _nodeDictionary.Add( root.TypePair, new TreeNode<TypeMapping>( root ) );
+            var typePair = new TypePair( root.SourceType, root.TargetType );
+            _nodeDictionary.Add( typePair, new TreeNode<TypeMapping>( root ) );
         }
 
-        public TreeNode<TypeMapping> this[ TypePair key ]
+        public TreeNode<TypeMapping> this[ Type sourceType, Type targetType ]
         {
-            get { return _nodeDictionary[ key ]; }
+            get
+            {
+                var typePair = new TypePair( sourceType, targetType );
+                return _nodeDictionary[ typePair ];
+            }
         }
 
         public override TreeNode<TypeMapping> Add( TypeMapping element )
         {
-            var key = element.TypePair;
+            var key = new TypePair( element.SourceType, element.TargetType );
             if( !_nodeDictionary.TryGetValue( key, out TreeNode<TypeMapping> value ) )
             {
                 value = base.Add( element );
@@ -37,26 +42,27 @@ namespace UltraMapper.Config
             return value;
         }
 
-        public TreeNode<TypeMapping> GetOrAdd( TypePair typePair, Func<TypeMapping> valueFactory )
+        public TreeNode<TypeMapping> GetOrAdd( Type sourceType, Type targetType, Func<TypeMapping> valueFactory )
         {
+            var typePair = new TypePair( sourceType, targetType );
             if( !_nodeDictionary.TryGetValue( typePair, out TreeNode<TypeMapping> value ) )
             {
                 var element = valueFactory.Invoke();
-                this.Add( element );
-
-                return this[ typePair ];
+                return this.Add( element );
             }
 
             return value;
         }
 
-        public bool ContainsKey( TypePair key )
+        public bool ContainsKey( Type sourceType, Type targetType )
         {
+            var key = new TypePair( sourceType, targetType );
             return _nodeDictionary.ContainsKey( key );
         }
 
-        public bool TryGetValue( TypePair key, out TreeNode<TypeMapping> value )
+        public bool TryGetValue( Type sourceType, Type targetType, out TreeNode<TypeMapping> value )
         {
+            var key = new TypePair( sourceType, targetType );
             return _nodeDictionary.TryGetValue( key, out value );
         }
 
@@ -72,8 +78,11 @@ namespace UltraMapper.Config
 
         private void ToStringInternal( StringBuilder stringBuilder, int indentationLevel, TreeNode<TypeMapping> initialNode )
         {
+            string sourceTypeName = initialNode.Item.SourceType.GetPrettifiedName();
+            string targetTypeName = initialNode.Item.TargetType.GetPrettifiedName();
+
             stringBuilder.Append( new String( '\t', indentationLevel++ ) );
-            stringBuilder.AppendLine( initialNode.Item.TypePair.ToString() );
+            stringBuilder.AppendLine( $"[{sourceTypeName} -> {targetTypeName}" );
 
             foreach( var node in initialNode.Children )
                 this.ToStringInternal( stringBuilder, indentationLevel, node );

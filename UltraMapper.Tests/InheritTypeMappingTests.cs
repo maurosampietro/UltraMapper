@@ -104,12 +104,8 @@ namespace UltraMapper.Tests
 
             ultraMapper.Map( source, target );
 
-            var userDefinedTypePair = new Internals.TypePair( typeof( IEnumerable<TestClass> ), typeof( IEnumerable<TestClass> ) );
-            var userDefinedMap = ultraMapper.Config[ userDefinedTypePair ];
-
-            var inheritedTypePair = new Internals.TypePair( typeof( ReadOnlyCollection<TestClass> ), typeof( ObservableCollection<TestClass> ) );
-            var conventionDefinedMap = ultraMapper.Config[ inheritedTypePair ];
-
+            var userDefinedMap = ultraMapper.Config[ typeof( IEnumerable<TestClass> ), typeof( IEnumerable<TestClass> ) ];
+            var conventionDefinedMap = ultraMapper.Config[ typeof( ReadOnlyCollection<TestClass> ), typeof( ObservableCollection<TestClass> ) ];
             var conventionDefinedMapOptionCrawler = new TypeMappingOptionsInheritanceTraversal( conventionDefinedMap );
 
             Assert.IsTrue( userDefinedMap.CollectionBehavior == conventionDefinedMapOptionCrawler.CollectionBehavior );

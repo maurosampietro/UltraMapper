@@ -4,16 +4,17 @@ using System.Reflection;
 
 namespace UltraMapper.Internals
 {
-    public abstract class MappingMemberBase
+    public abstract class MappingPoint : IMappingPoint
     {
+        private string _toString;
+
         public readonly MemberAccessPath MemberAccessPath;
         public readonly MemberInfo MemberInfo;
         public readonly Type MemberType;
-        private string _toString;
 
         public bool Ignore { get; set; }
 
-        internal MappingMemberBase( MemberAccessPath memberAccessPath )
+        internal MappingPoint( MemberAccessPath memberAccessPath )
         {
             this.MemberAccessPath = memberAccessPath;
             this.MemberInfo = memberAccessPath.Last();
@@ -22,8 +23,8 @@ namespace UltraMapper.Internals
 
         public override bool Equals( object obj )
         {
-            if( obj is MappingMemberBase propertyBase )
-                return this.MemberInfo.Equals( propertyBase.MemberInfo );
+            if( obj is MappingPoint mp )
+                return this.MemberInfo.Equals( mp.MemberInfo );
 
             return false;
         }

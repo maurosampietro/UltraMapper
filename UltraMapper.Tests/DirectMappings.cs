@@ -1,9 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace UltraMapper.Tests
+﻿namespace UltraMapper.Tests
 {
+#if NET5_0_OR_GREATER
     [TestClass]
     public class DirectMappings
     {
@@ -194,4 +191,5 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
     }
+#endif
 }

@@ -825,7 +825,7 @@ namespace UltraMapper.Tests
             {
                 cfg.CollectionBehavior = CollectionBehaviors.MERGE;
 
-                cfg.MapTypes<IEnumerable<int>, IEnumerable<int>>( ( ITypeOptions op ) =>
+                cfg.MapTypes<IEnumerable<int>, IEnumerable<int>>( ( ITypeMappingOptions op ) =>
                     op.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL );
             } );
 

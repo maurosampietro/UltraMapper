@@ -11,12 +11,12 @@ namespace UltraMapper
         LambdaExpression CustomTargetConstructor { get; set; }
     }
 
-    public interface ITypeOptions : IMappingOptions
+    public interface ITypeMappingOptions : IMappingOptions
     {
         bool? IgnoreMemberMappingResolvedByConvention { get; set; }
     }
 
-    public interface IMemberOptions : IMappingOptions
+    public interface IMemberMappingOptions : IMappingOptions
     {
         bool Ignore { get; set; }
     }

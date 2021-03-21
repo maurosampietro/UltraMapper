@@ -2,23 +2,21 @@
 
 namespace UltraMapper.Internals
 {
-    public class MemberMapping : BaseMapping, IMemberOptions
+    public sealed class MemberMapping : Mapping, IMemberMappingOptions
     {
         private string _toString;
-        
+
         public readonly TypeMapping InstanceTypeMapping;
         public readonly MappingSource SourceMember;
         public readonly MappingTarget TargetMember;
 
-        public MemberMapping( TypeMapping typeMapping,
-            MappingSource sourceMember, MappingTarget targetMember )
-            : base( typeMapping.GlobalConfig,
-                 new TypePair( sourceMember.MemberType, targetMember.MemberType ) )
+        public MemberMapping( TypeMapping typeMapping, MappingSource source, MappingTarget target )
+            : base( typeMapping.GlobalConfig, source.MemberType, target.MemberType )
         {
             this.InstanceTypeMapping = typeMapping;
 
-            this.SourceMember = sourceMember;
-            this.TargetMember = targetMember;
+            this.SourceMember = source;
+            this.TargetMember = target;
         }
 
         public bool Ignore { get; set; }
@@ -30,8 +28,7 @@ namespace UltraMapper.Internals
             {
                 if( _memberTypeMapping == null )
                 {
-                    _memberTypeMapping = 
-                        GlobalConfig[ SourceMember.MemberType, TargetMember.MemberType ];
+                    _memberTypeMapping = GlobalConfig[ SourceType, TargetType ];
                 }
 
                 return _memberTypeMapping;
@@ -51,13 +48,13 @@ namespace UltraMapper.Internals
             get { return _customTargetConstructor ?? MemberTypeMapping.CustomTargetConstructor; }
             set { _customTargetConstructor = value; }
         }
-        
+
         public LambdaExpression CollectionItemEqualityComparer { get; set; }
-        
-        public CollectionBehaviors CollectionBehavior { get; set; } 
+
+        public CollectionBehaviors CollectionBehavior { get; set; }
             = CollectionBehaviors.INHERIT;
 
-        public ReferenceBehaviors ReferenceBehavior { get; set; } 
+        public ReferenceBehaviors ReferenceBehavior { get; set; }
             = ReferenceBehaviors.INHERIT;
 
         public override string ToString()

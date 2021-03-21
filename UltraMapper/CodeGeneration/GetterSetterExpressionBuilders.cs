@@ -10,27 +10,27 @@ namespace UltraMapper.Internals
     //if the member is extracted from a complex expression chain 
     //(for example in the expression 'a => a.PropertyA.PropertyB.PropertyC'
     //the ReflectedType info of PropertyC (that should be of type 'a') is lost (and will be of the type of 'PropertyC'))
-    public static class GetterSetterLambdaExpressionBuilders
+    internal static class GetterSetterExpressionBuilders
     {
-        public static LambdaExpression GetGetterLambdaExpression( this MemberInfo memberInfo )
+        internal static LambdaExpression GetGetterExp( this MemberInfo memberInfo )
         {
             switch( memberInfo )
             {
                 case FieldInfo fi: 
-                    return fi.GetGetterLambdaExpression();
+                    return fi.GetGetterExp();
 
                 case PropertyInfo pi: 
-                    return pi.GetGetterLambdaExpression();
+                    return pi.GetGetterExp();
 
                 case MethodInfo mi:
-                    return mi.GetGetterLambdaExpression();
+                    return mi.GetGetterExp();
 
                 default:
                     throw new ArgumentException( $"'{memberInfo}' is not supported." );
             }
         }
 
-        public static LambdaExpression GetSetterLambdaExpression( this MemberInfo memberInfo )
+        internal static LambdaExpression GetSetterExp( this MemberInfo memberInfo )
         {
             switch( memberInfo )
             {
@@ -48,20 +48,20 @@ namespace UltraMapper.Internals
                 }
 
                 case FieldInfo fieldInfo:
-                    return fieldInfo.GetSetterLambdaExpression();
+                    return fieldInfo.GetSetterExp();
 
                 case PropertyInfo propertyInfo:
-                    return propertyInfo.GetSetterLambdaExpression();
+                    return propertyInfo.GetSetterExp();
 
                 case MethodInfo methodInfo:
-                    return methodInfo.GetSetterLambdaExpression();
+                    return methodInfo.GetSetterExp();
 
                 default:
                     throw new ArgumentException( $"'{memberInfo}' is not supported." );
             }
         }
 
-        public static LambdaExpression GetGetterLambdaExpression( this FieldInfo fieldInfo )
+        internal static LambdaExpression GetGetterExp( this FieldInfo fieldInfo )
         {
             // (target) => target.field;
 
@@ -74,7 +74,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
 
-        public static LambdaExpression GetSetterLambdaExpression( this FieldInfo fieldInfo )
+        internal static LambdaExpression GetSetterExp( this FieldInfo fieldInfo )
         {
             // (target, value) => target.field = value;
             var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
@@ -89,7 +89,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
 
-        public static LambdaExpression GetGetterLambdaExpression( this PropertyInfo propertyInfo )
+        internal static LambdaExpression GetGetterExp( this PropertyInfo propertyInfo )
         {
             // (target) => target.get_Property()
             var targetType = propertyInfo.ReflectedType;
@@ -104,7 +104,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
 
-        public static LambdaExpression GetSetterLambdaExpression( this PropertyInfo propertyInfo )
+        internal static LambdaExpression GetSetterExp( this PropertyInfo propertyInfo )
         {
             // (target, value) => target.set_Property( value )
             var methodInfo = propertyInfo.GetSetMethod();
@@ -122,7 +122,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
 
-        public static LambdaExpression GetGetterLambdaExpression( this MethodInfo methodInfo )
+        internal static LambdaExpression GetGetterExp( this MethodInfo methodInfo )
         {
             if( methodInfo.GetParameters().Length > 0 )
                 throw new NotImplementedException( "Only parameterless methods are supported" );
@@ -138,7 +138,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
 
-        public static LambdaExpression GetSetterLambdaExpression( this MethodInfo methodInfo )
+        internal static LambdaExpression GetSetterExp( this MethodInfo methodInfo )
         {
             if( methodInfo.GetParameters().Length != 1 )
                 throw new NotImplementedException( $"Only methods taking as input exactly one parameter are supported." );
@@ -154,7 +154,7 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, body, targetInstance, value );
         }
 
-        public static LambdaExpression GetSetterLambdaExpressionInstantiateNullInstances( this MemberAccessPath memberAccessPath )
+        internal static LambdaExpression GetSetterExpInstantiateNullInstances( this MemberAccessPath memberAccessPath )
         {
             var instanceType = memberAccessPath.First().ReflectedType;
             var valueType = memberAccessPath.Last().GetMemberType();

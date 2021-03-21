@@ -4,7 +4,7 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public class MemberMappingOptionsInheritanceTraversal : IMapping, IMemberOptions
+    internal class MemberMappingOptionsInheritanceTraversal : IMapping, IMemberMappingOptions
     {
         public readonly MemberMapping MemberMapping;
         private readonly TypeMappingOptionsInheritanceTraversal MemberMappingTypeCrawler;
@@ -88,7 +88,7 @@ namespace UltraMapper.Internals
         public IMappingExpressionBuilder Mapper => this.MemberMapping.Mapper;
     }
 
-    public class TypeMappingOptionsInheritanceTraversal : IMapping, ITypeOptions
+    internal class TypeMappingOptionsInheritanceTraversal : IMapping, ITypeMappingOptions
     {
         public readonly TypeMapping TypeMapping;
 
@@ -107,7 +107,7 @@ namespace UltraMapper.Internals
                 if( this.TypeMapping.IgnoreMemberMappingResolvedByConvention != null )
                     return this.TypeMapping.IgnoreMemberMappingResolvedByConvention;
 
-                var parent = TypeMapping.GlobalConfig.GetParentConfiguration( this.TypeMapping );
+                var parent = this.GetParentConfiguration( this.TypeMapping );
                 if( parent != null ) return parent.IgnoreMemberMappingResolvedByConvention;
 
                 return this.TypeMapping.GlobalConfig.IgnoreMemberMappingResolvedByConvention;
@@ -123,7 +123,7 @@ namespace UltraMapper.Internals
                 if( this.TypeMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
                     return this.TypeMapping.ReferenceBehavior;
 
-                var parent = this.TypeMapping.GlobalConfig.GetParentConfiguration( this.TypeMapping );
+                var parent = this.GetParentConfiguration( this.TypeMapping );
                 if( parent != null ) return parent.ReferenceBehavior;
 
                 return this.TypeMapping.GlobalConfig.ReferenceBehavior;
@@ -139,7 +139,7 @@ namespace UltraMapper.Internals
                 if( this.TypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
                     return this.TypeMapping.CollectionBehavior;
 
-                var parent = this.TypeMapping.GlobalConfig.GetParentConfiguration( this.TypeMapping );
+                var parent = this.GetParentConfiguration( this.TypeMapping );
                 if( parent != null ) return parent.CollectionBehavior;
 
                 return this.TypeMapping.GlobalConfig.CollectionBehavior;
@@ -155,7 +155,7 @@ namespace UltraMapper.Internals
                 if( this.TypeMapping.CollectionItemEqualityComparer != null )
                     return this.TypeMapping.CollectionItemEqualityComparer;
 
-                var parent = this.TypeMapping.GlobalConfig.GetParentConfiguration( this.TypeMapping );
+                var parent = this.GetParentConfiguration( this.TypeMapping );
                 if( parent != null ) return parent.CollectionItemEqualityComparer;
 
                 return null;
@@ -171,5 +171,11 @@ namespace UltraMapper.Internals
         }
 
         public IMappingExpressionBuilder Mapper => this.TypeMapping.Mapper;
+
+        private TypeMapping GetParentConfiguration( TypeMapping typeMapping )
+        {
+            return typeMapping.GlobalConfig
+                .TypeMappingTree[ typeMapping.SourceType, typeMapping.TargetType ].Parent?.Item;
+        }
     }
 }

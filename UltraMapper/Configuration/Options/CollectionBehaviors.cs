@@ -6,11 +6,14 @@
         /// Inherits this option
         /// </summary>
         INHERIT,
-        
+
         /// <summary>
-        /// Keep using the target collection (same reference). 
+        /// If <see cref="ReferenceBehaviors"/> is set to <see cref="ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL"/>
+        /// Keeps using the target collection (same reference). 
         /// The target collection is cleared and then elements are added. 
-        /// The target collection is not cleared if <see cref="ReferenceBehaviors"/> is set to <see cref="ReferenceBehaviors.CREATE_NEW_INSTANCE"/>
+        /// 
+        /// If <see cref="ReferenceBehaviors"/> is set to <see cref="ReferenceBehaviors.CREATE_NEW_INSTANCE"/>
+        /// A new instance is created the target collection.
         /// </summary>
         RESET,
 

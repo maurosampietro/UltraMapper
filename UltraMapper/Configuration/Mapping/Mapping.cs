@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
-    public abstract class BaseMapping : IMapping
+    public abstract class Mapping : IMapping
     {
         public readonly Configuration GlobalConfig;
-        public readonly TypePair TypePair;
+        public readonly Type SourceType;
+        public readonly Type TargetType;
 
         public MappingResolution MappingResolution { get; internal set; }
-
         public abstract LambdaExpression CustomConverter { get; set; }
 
         private IMappingExpressionBuilder _mapper;
@@ -24,10 +22,15 @@ namespace UltraMapper.Internals
                 if( _mapper == null )
                 {
                     _mapper = GlobalConfig.Mappers.FirstOrDefault(
-                        mapper => mapper.CanHandle( this.TypePair.SourceType, this.TypePair.TargetType ) );
+                        mapper => mapper.CanHandle( this.SourceType, this.TargetType ) );
 
                     if( _mapper == null && this.CustomConverter == null )
-                        throw new Exception( $"No object mapper can handle {this.TypePair}" );
+                    {
+                        string sourceTypeName = this.SourceType.GetPrettifiedName();
+                        string targetTypeName = this.TargetType.GetPrettifiedName();
+
+                        throw new Exception( $"No object mapper can handle [{sourceTypeName} -> {targetTypeName}]" );
+                    }
                 }
 
                 return _mapper;
@@ -45,16 +48,16 @@ namespace UltraMapper.Internals
                 if( _mappingExpression != null )
                     return _mappingExpression;
 
-                var sourceType = this.TypePair.SourceType;
-                var targetType = this.TypePair.TargetType;
+                _mappingExpression = GlobalConfig.ExpCache.Get( this.SourceType, 
+                    this.TargetType, (IMappingOptions)this );
 
-                _mappingExpression =GlobalConfig.ExpCache.Get( sourceType, targetType, (IMappingOptions)this );
                 if( _mappingExpression == null )
                 {
                     _mappingExpression = this.Mapper.GetMappingExpression(
-                          sourceType, targetType, (IMappingOptions)this );
+                        this.SourceType, this.TargetType, (IMappingOptions)this );
 
-                    GlobalConfig.ExpCache.Add( sourceType, targetType, (IMappingOptions)this, _mappingExpression );
+                    GlobalConfig.ExpCache.Add( this.SourceType, 
+                        this.TargetType, (IMappingOptions)this, _mappingExpression );
                 }
 
                 return _mappingExpression;
@@ -71,9 +74,8 @@ namespace UltraMapper.Internals
 
                 var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
 
-                var sourceType = this.TypePair.SourceType;
                 var sourceParam = Expression.Parameter( typeof( object ), "sourceInstance" );
-                var sourceInstance = Expression.Convert( sourceParam, sourceType );
+                var sourceInstance = Expression.Convert( sourceParam, this.SourceType );
 
                 Expression bodyExp;
                 if( this.MappingExpression.Parameters.Count == 1 )
@@ -96,18 +98,16 @@ namespace UltraMapper.Internals
             {
                 if( _mappingFunc != null ) return _mappingFunc;
 
-                var sourceType = this.TypePair.SourceType;
-                var targetType = this.TypePair.TargetType;
-
                 return _mappingFunc = MappingExpressionBuilder.GetMappingFunc(
-                   sourceType, targetType, this.MappingExpression );
+                   this.SourceType, this.TargetType, this.MappingExpression );
             }
         }
 
-        protected BaseMapping( Configuration globalConfig, TypePair typePair )
+        protected Mapping( Configuration globalConfig, Type sourceType, Type targetType )
         {
             this.GlobalConfig = globalConfig;
-            this.TypePair = typePair;
+            this.SourceType = sourceType;
+            this.TargetType = targetType;
         }
     }
 }

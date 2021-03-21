@@ -19,9 +19,9 @@ namespace UltraMapper
         public MemberConfigurator MapMember( MemberInfo sourceMember,
             MemberInfo targetMemberGetter, MemberInfo targetMemberSetter )
         {
-            var sourceMemberGetter = sourceMember.GetGetterLambdaExpression();
-            var targetMemberGetterExp = targetMemberGetter.GetGetterLambdaExpression();
-            var targetMemberSetterExp = targetMemberSetter.GetSetterLambdaExpression();
+            var sourceMemberGetter = sourceMember.GetGetterExp();
+            var targetMemberGetterExp = targetMemberGetter.GetGetterExp();
+            var targetMemberSetterExp = targetMemberSetter.GetSetterExp();
 
             MemberMapping mapping = this.MapMemberInternal( sourceMember, targetMemberGetter,
                 sourceMemberGetter, targetMemberGetterExp, targetMemberSetterExp );
@@ -33,9 +33,9 @@ namespace UltraMapper
 
         public MemberConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
         {
-            var sourceMemberGetter = sourceMember.GetGetterLambdaExpression();
-            var targetMemberGetter = targetMember.GetGetterLambdaExpression();
-            var targetMemberSetter = targetMember.GetSetterLambdaExpression();
+            var sourceMemberGetter = sourceMember.GetGetterExp();
+            var targetMemberGetter = targetMember.GetGetterExp();
+            var targetMemberSetter = targetMember.GetSetterExp();
 
             MemberMapping mapping = this.MapMemberInternal( sourceMember, targetMember,
                 sourceMemberGetter, targetMemberGetter, targetMemberSetter );
@@ -59,9 +59,10 @@ namespace UltraMapper
             LambdaExpression targetMemberGetter )
         {
             var sourceMember = sourceMemberGetter.GetMemberAccessPath().Last();
-            var targetMember = targetMemberGetter.GetMemberAccessPath().Last();
+            var targetMemberPath = targetMemberGetter.GetMemberAccessPath();
+            var targetMember = targetMemberPath.Last();
 
-            var targetMemberSetterExpression = targetMemberGetter.GetMemberAccessPath().GetSetterLambdaExpression();
+            var targetMemberSetterExpression = targetMemberPath.GetSetterExp();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetter,
                 targetMemberGetter, targetMemberSetterExpression );
@@ -107,7 +108,7 @@ namespace UltraMapper
         {
             var targetMemberAccessPath = targetMemberSelector.GetMemberAccessPath();
             var targetMember = targetMemberAccessPath.Last();
-            var targetMemberSetterExpression = targetMember.GetSetterLambdaExpression();
+            var targetMemberSetterExpression = targetMember.GetSetterExp();
 
             var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
                 targetMemberSelector, targetMemberSetterExpression );
@@ -120,7 +121,7 @@ namespace UltraMapper
             Expression<Func<TSource, TSourceMember>> sourceMemberSelector,
             Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
             Expression<Action<TTarget, TSourceMember>> targetMemberSetter,
-            Action<IMemberOptions> memberMappingConfig = null )
+            Action<IMemberMappingOptions> memberMappingConfig = null )
         {
             var mapping = base.MapMemberInternal( sourceMemberSelector,
                 targetMemberGetter, targetMemberSetter );
@@ -157,7 +158,7 @@ namespace UltraMapper
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
-            Action<IMemberOptions> memberMappingConfig )
+            Action<IMemberMappingOptions> memberMappingConfig )
         {
             return MapMember( sourceSelector, targetSelector, 
                 (Expression<Func<TSourceMember, TTargetMember>>)null, memberMappingConfig );
@@ -167,7 +168,7 @@ namespace UltraMapper
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Expression<Func<ReferenceTracker, TSourceMember, TTargetMember>> converter,
-            Action<IMemberOptions> memberMappingConfig )
+            Action<IMemberMappingOptions> memberMappingConfig )
         {
             return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
         }
@@ -176,7 +177,7 @@ namespace UltraMapper
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Expression<Func<TSourceMember, TTargetMember>> converter,
-            Action<IMemberOptions> memberMappingConfig )
+            Action<IMemberMappingOptions> memberMappingConfig )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
@@ -216,7 +217,7 @@ namespace UltraMapper
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, IEnumerable<TSourceMember>>> sourceSelector,
             Expression<Func<TTarget, IEnumerable<TTargetMember>>> targetSelector,
-            Action<IMemberOptions> memberMappingConfig = null )
+            Action<IMemberMappingOptions> memberMappingConfig = null )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
