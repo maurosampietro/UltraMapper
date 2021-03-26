@@ -14,6 +14,21 @@ namespace UltraMapper.Conventions
         public bool IgnoreNonPublicMembers { get; set; } = true;
 
         /// <summary>
+        /// Sets BindingFlags.FlattenHierarchy
+        /// </summary>
+        public bool FlattenHierarchy { get; set; } = true;
+
+        /// <summary>
+        /// Sets BindingFlags.DeclaredOnly
+        /// </summary>
+        public bool DeclaredOnly { get; set; } = false;
+
+        /// <summary>
+        /// Consider only methods that return void and take as input exactly one parameter
+        /// </summary>
+        public bool AllowSetterMethodsOnly = true;
+
+        /// <summary>
         /// Allows to write on readonly fields and to set getter only properties 
         /// (since the compiler generates readonly backingfields for getter only properties).
         /// 
@@ -26,14 +41,18 @@ namespace UltraMapper.Conventions
 
         public IEnumerable<MemberInfo> GetMembers( Type type )
         {
-            var bindingAttributes = BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy;
-            if( !this.IgnoreNonPublicMembers ) bindingAttributes |= BindingFlags.NonPublic;
+            var bindingFlags = BindingFlags.Instance | BindingFlags.Public;
+
+            if( this.FlattenHierarchy ) bindingFlags |= BindingFlags.FlattenHierarchy;
+            if( this.DeclaredOnly ) bindingFlags |= BindingFlags.DeclaredOnly;
+
+            if( !this.IgnoreNonPublicMembers ) bindingFlags |= BindingFlags.NonPublic;
 
             if( !this.IgnoreFields )
             {
                 //- In case of an interface type we do nothing special since interfaces do not support fields
 
-                var targetFields = type.GetFields( bindingAttributes )
+                var targetFields = type.GetFields( bindingFlags )
                   .Select( field => field );
 
                 if( this.IgnoreReadonlyFields )
@@ -44,13 +63,13 @@ namespace UltraMapper.Conventions
 
             if( !this.IgnoreProperties )
             {
-                var targetProperties = type.GetProperties( bindingAttributes )
+                var targetProperties = type.GetProperties( bindingFlags )
                     .Select( property => property );
 
                 if( type.IsInterface )
                 {
                     targetProperties = targetProperties.Concat( type.GetInterfaces()
-                        .SelectMany( i => i.GetProperties( bindingAttributes ) ) );
+                        .SelectMany( i => i.GetProperties( bindingFlags ) ) );
                 }
 
                 targetProperties = targetProperties.Where( property =>
@@ -62,16 +81,17 @@ namespace UltraMapper.Conventions
 
             if( !this.IgnoreMethods )
             {
-                var targetMethods = type.GetMethods( bindingAttributes )
+                var targetMethods = type.GetMethods( bindingFlags )
                     .Select( method => method );
 
                 if( type.IsInterface )
                 {
                     targetMethods = targetMethods.Concat( type.GetInterfaces()
-                        .SelectMany( i => i.GetMethods( bindingAttributes ) ) );
+                        .SelectMany( i => i.GetMethods( bindingFlags ) ) );
                 }
 
-                targetMethods = targetMethods.Where( method => method.IsSetterMethod() );
+                if( this.AllowSetterMethodsOnly )
+                    targetMethods = targetMethods.Where( method => method.IsSetterMethod() );
 
                 foreach( var method in targetMethods ) yield return method;
             }

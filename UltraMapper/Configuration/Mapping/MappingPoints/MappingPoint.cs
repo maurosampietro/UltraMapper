@@ -8,13 +8,12 @@ namespace UltraMapper.Internals
     {
         private string _toString;
 
-        public readonly MemberAccessPath MemberAccessPath;
+        public bool Ignore { get; set; }
+        public MemberAccessPath MemberAccessPath { get; }
         public readonly MemberInfo MemberInfo;
         public readonly Type MemberType;
 
-        public bool Ignore { get; set; }
-
-        internal MappingPoint( MemberAccessPath memberAccessPath )
+        public MappingPoint( MemberAccessPath memberAccessPath )
         {
             this.MemberAccessPath = memberAccessPath;
             this.MemberInfo = memberAccessPath.Last();

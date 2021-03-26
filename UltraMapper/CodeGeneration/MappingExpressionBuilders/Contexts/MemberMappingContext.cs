@@ -22,8 +22,8 @@ namespace UltraMapper.MappingExpressionBuilders.MapperContexts
             : base( mapping.InstanceTypeMapping.SourceType,
                     mapping.InstanceTypeMapping.TargetType, mapping )
         {
-            var sourceMemberType = mapping.SourceMember.MemberInfo.GetMemberType();
-            var targetMemberType = mapping.TargetMember.MemberInfo.GetMemberType();
+            var sourceMemberType = mapping.SourceMember.MemberType;
+            var targetMemberType = mapping.TargetMember.MemberType;
 
             TrackedReference = Expression.Parameter( targetMemberType, "trackedReference" );
 

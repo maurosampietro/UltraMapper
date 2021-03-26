@@ -185,28 +185,28 @@ namespace UltraMapper
                 }
 
 
-                case TypeMappingOptionsInheritanceTraversal ttrav:
-                {
-                    var mappingSourceType = ttrav.TypeMapping.SourceType;
-                    var mappingTargetType = ttrav.TypeMapping.TargetType;
+                //case TypeMappingOptionsInheritanceTraversal ttrav:
+                //{
+                //    var mappingSourceType = ttrav.TypeMapping.SourceType;
+                //    var mappingTargetType = ttrav.TypeMapping.TargetType;
 
-                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                    break;
-                }
+                //    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                //    break;
+                //}
 
-                case MemberMappingOptionsInheritanceTraversal mtrav:
-                {
-                    if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-                    {
-                        var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
-                        var mappingSourceType = memberTypeMapping.SourceType;
-                        var mappingTargetType = memberTypeMapping.TargetType;
+                //case MemberMappingOptionsInheritanceTraversal mtrav:
+                //{
+                //    if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                //    {
+                //        var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
+                //        var mappingSourceType = memberTypeMapping.SourceType;
+                //        var mappingTargetType = memberTypeMapping.TargetType;
 
-                        mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                    }
+                //        mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                //    }
 
-                    break;
-                }
+                //    break;
+                //}
 
                 case null:
                 {

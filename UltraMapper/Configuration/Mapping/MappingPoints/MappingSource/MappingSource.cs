@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace UltraMapper.Internals
 {
-    public class MappingSource : MappingPoint, IMappingSource
+    public sealed class MappingSource : MappingPoint, IMappingSource
     {
         public LambdaExpression ValueGetter { get; }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using UltraMapper.Config;
 using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
@@ -34,16 +35,7 @@ namespace UltraMapper.Internals
             this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
         }
 
-        public bool? IgnoreMemberMappingResolvedByConvention { get; set; }
-
-        public ReferenceBehaviors ReferenceBehavior { get; set; }
-            = ReferenceBehaviors.INHERIT;
-
-        public CollectionBehaviors CollectionBehavior { get; set; }
-            = CollectionBehaviors.INHERIT;
-
         private LambdaExpression _customConverter = null;
-
         public override LambdaExpression CustomConverter
         {
             get { return _customConverter; }
@@ -59,8 +51,91 @@ namespace UltraMapper.Internals
             }
         }
 
-        public LambdaExpression CustomTargetConstructor { get; set; }
-        public LambdaExpression CollectionItemEqualityComparer { get; set; }
+        public bool? _ignoreMemberMappingResolvedByConvention = null;
+        public bool? IgnoreMemberMappingResolvedByConvention
+        {
+            get
+            {
+                if( _ignoreMemberMappingResolvedByConvention != null )
+                    return _ignoreMemberMappingResolvedByConvention.Value;
+
+                var parent = this.GetParentConfiguration();
+                if( parent != null ) return parent.IgnoreMemberMappingResolvedByConvention;
+
+                return this.GlobalConfig.IgnoreMemberMappingResolvedByConvention;
+            }
+
+            set => _ignoreMemberMappingResolvedByConvention = value;
+        }
+
+        public ReferenceBehaviors _referenceBehavior = ReferenceBehaviors.INHERIT;
+        public ReferenceBehaviors ReferenceBehavior
+        {
+            get
+            {
+                if( _referenceBehavior != ReferenceBehaviors.INHERIT )
+                    return _referenceBehavior;
+
+                var parent = this.GetParentConfiguration();
+                if( parent != null ) return parent.ReferenceBehavior;
+
+                return this.GlobalConfig.ReferenceBehavior;
+            }
+
+            set => _referenceBehavior = value;
+        }
+
+        public CollectionBehaviors _collectionBehavior = CollectionBehaviors.INHERIT;
+        public CollectionBehaviors CollectionBehavior
+        {
+            get
+            {
+                if( _collectionBehavior != CollectionBehaviors.INHERIT )
+                    return _collectionBehavior;
+
+                var parent = this.GetParentConfiguration();
+                if( parent != null ) return parent.CollectionBehavior;
+
+                return this.GlobalConfig.CollectionBehavior;
+            }
+
+            set => _collectionBehavior = value;
+        }
+
+        public LambdaExpression _collectionItemEqualityComparer;
+        public LambdaExpression CollectionItemEqualityComparer
+        {
+            get
+            {
+                if( _collectionItemEqualityComparer != null )
+                    return _collectionItemEqualityComparer;
+
+                var parent = this.GetParentConfiguration();
+                if( parent != null ) return parent.CollectionItemEqualityComparer;
+
+                return null;
+            }
+
+            set => _collectionItemEqualityComparer = value;
+        }
+
+        public LambdaExpression _customTargetConstructor;
+        public LambdaExpression CustomTargetConstructor
+        {
+            get => _customTargetConstructor;
+            set => _customTargetConstructor = value;
+        }
+
+        private TypeMapping GetParentConfiguration()
+        {
+            if( this.GlobalConfig.TypeMappingTree.TryGetValue(
+                SourceType, TargetType, out TreeNode<TypeMapping> value ) )
+            {
+                return value.Parent?.Item;
+            }
+
+            return null;
+        }
 
         public MappingSource GetMappingSource( MemberInfo sourceMember,
             LambdaExpression sourceMemberGetterExpression )

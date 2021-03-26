@@ -7,7 +7,7 @@ namespace UltraMapper.Internals
 {
     public class GeneratedExpressionCache
     {
-        private struct GeneratedExpressionKey
+        private struct TypePairWithOptions
         {
             private static readonly MappingOptionsComparer _mappingOptionsComparer
                 = new MappingOptionsComparer();
@@ -19,7 +19,7 @@ namespace UltraMapper.Internals
             private string _toString;
             private int? _hashcode;
 
-            public GeneratedExpressionKey( Type source, Type target, IMappingOptions mappingOptions = null )
+            public TypePairWithOptions( Type source, Type target, IMappingOptions mappingOptions = null )
             {
                 this.SourceType = source;
                 this.TargetType = target;
@@ -31,7 +31,7 @@ namespace UltraMapper.Internals
 
             public override bool Equals( object obj )
             {
-                if( obj is GeneratedExpressionKey typePair )
+                if( obj is TypePairWithOptions typePair )
                 {
                     return this.SourceType.Equals( typePair.SourceType ) &&
                         this.TargetType.Equals( typePair.TargetType )
@@ -53,12 +53,12 @@ namespace UltraMapper.Internals
                 return _hashcode.Value;
             }
 
-            public static bool operator !=( GeneratedExpressionKey obj1, GeneratedExpressionKey obj2 )
+            public static bool operator !=( TypePairWithOptions obj1, TypePairWithOptions obj2 )
             {
                 return !(obj1 == obj2);
             }
 
-            public static bool operator ==( GeneratedExpressionKey obj1, GeneratedExpressionKey obj2 )
+            public static bool operator ==( TypePairWithOptions obj1, TypePairWithOptions obj2 )
             {
                 return obj1.Equals( obj2 );
             }
@@ -84,19 +84,19 @@ namespace UltraMapper.Internals
             }
         }
 
-        private readonly Dictionary<GeneratedExpressionKey, LambdaExpression> _cache =
-            new Dictionary<GeneratedExpressionKey, LambdaExpression>();
+        private readonly Dictionary<TypePairWithOptions, LambdaExpression> _cache =
+            new Dictionary<TypePairWithOptions, LambdaExpression>();
 
         public LambdaExpression Get( Type source, Type target, IMappingOptions options )
         {
-            var key = new GeneratedExpressionKey( source, target, options );
+            var key = new TypePairWithOptions( source, target, options );
             _cache.TryGetValue( key, out var value );
             return value;
         }
 
         public void Add( Type source, Type target, IMappingOptions options, LambdaExpression mappingExpression )
         {
-            var key = new GeneratedExpressionKey( source, target, options );
+            var key = new TypePairWithOptions( source, target, options );
             _cache.Add( key, mappingExpression );
         }
     }

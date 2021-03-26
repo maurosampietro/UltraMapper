@@ -15,6 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Configuration\GlobalConfiguration.cs~RF1058f3a8.TMP" />
     <None Remove="UltraMapper.csproj.old" />
   </ItemGroup>
 

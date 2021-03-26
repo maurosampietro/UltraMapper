@@ -170,7 +170,14 @@ namespace UltraMapper
             Expression<Func<ReferenceTracker, TSourceMember, TTargetMember>> converter,
             Action<IMemberMappingOptions> memberMappingConfig )
         {
-            return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.CustomConverter = converter;
+            memberMappingConfig?.Invoke( mapping );
+
+            return this;
+
+           // return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(

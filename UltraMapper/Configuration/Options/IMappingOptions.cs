@@ -10,14 +10,4 @@ namespace UltraMapper
         LambdaExpression CollectionItemEqualityComparer { get; set; }
         LambdaExpression CustomTargetConstructor { get; set; }
     }
-
-    public interface ITypeMappingOptions : IMappingOptions
-    {
-        bool? IgnoreMemberMappingResolvedByConvention { get; set; }
-    }
-
-    public interface IMemberMappingOptions : IMappingOptions
-    {
-        bool Ignore { get; set; }
-    }
 }

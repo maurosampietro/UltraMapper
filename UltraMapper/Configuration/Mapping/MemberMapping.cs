@@ -27,35 +27,83 @@ namespace UltraMapper.Internals
             get
             {
                 if( _memberTypeMapping == null )
-                {
                     _memberTypeMapping = GlobalConfig[ SourceType, TargetType ];
-                }
 
                 return _memberTypeMapping;
             }
         }
 
+        private ReferenceBehaviors _referenceBehavior = ReferenceBehaviors.INHERIT;
+        public ReferenceBehaviors ReferenceBehavior
+        {
+            get
+            {
+                //options resolving:
+                //1. user defined manual member option override
+                //2. user defined manual instance option override
+                //3. member-type config traversal
+
+                if( _referenceBehavior != ReferenceBehaviors.INHERIT )
+                    return _referenceBehavior;
+
+                if( this.InstanceTypeMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
+                    return this.InstanceTypeMapping.ReferenceBehavior;
+
+                return MemberTypeMapping.ReferenceBehavior;
+            }
+
+            set => _referenceBehavior = value;
+        }
+
+        private CollectionBehaviors _collectionBehaviors = CollectionBehaviors.INHERIT;
+        public CollectionBehaviors CollectionBehavior
+        {
+            get
+            {
+                //options resolving:
+                //1. user defined manual member option override
+                //2. user defined manual instance option override
+                //3. member-type config traversal
+
+                if( _collectionBehaviors != CollectionBehaviors.INHERIT )
+                    return _collectionBehaviors;
+
+                if( this.InstanceTypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
+                    return this.InstanceTypeMapping.CollectionBehavior;
+
+                return MemberTypeMapping.CollectionBehavior;
+            }
+
+            set => _collectionBehaviors = value;
+        }
+
+        private LambdaExpression _collectionItemEqualityComparer;
+        public LambdaExpression CollectionItemEqualityComparer
+        {
+            get
+            {
+                if( _collectionItemEqualityComparer != null )
+                    return _collectionItemEqualityComparer;
+
+                return this.MemberTypeMapping.CollectionItemEqualityComparer;
+            }
+
+            set => _collectionItemEqualityComparer = value;
+        }
+
         private LambdaExpression _customConverter;
         public override LambdaExpression CustomConverter
         {
-            get { return _customConverter ?? MemberTypeMapping.CustomConverter; }
-            set { _customConverter = value; }
+            get => _customConverter ?? this.MemberTypeMapping.CustomConverter;
+            set => _customConverter = value;
         }
 
         private LambdaExpression _customTargetConstructor;
         public LambdaExpression CustomTargetConstructor
         {
-            get { return _customTargetConstructor ?? MemberTypeMapping.CustomTargetConstructor; }
-            set { _customTargetConstructor = value; }
+            get => _customTargetConstructor ?? this.MemberTypeMapping.CustomTargetConstructor;
+            set => _customTargetConstructor = value;
         }
-
-        public LambdaExpression CollectionItemEqualityComparer { get; set; }
-
-        public CollectionBehaviors CollectionBehavior { get; set; }
-            = CollectionBehaviors.INHERIT;
-
-        public ReferenceBehaviors ReferenceBehavior { get; set; }
-            = ReferenceBehaviors.INHERIT;
 
         public override string ToString()
         {

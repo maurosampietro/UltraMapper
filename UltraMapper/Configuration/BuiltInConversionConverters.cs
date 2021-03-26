@@ -7,7 +7,7 @@
     /// </summary>
     public class BuiltInConversionConverters
     {
-        public void OnItself( Configuration config )
+        public void AddSelfCopies( Configuration config )
         {
             config.MapTypes<bool, bool>( s => s );
             config.MapTypes<byte, byte>( s => s );
@@ -159,6 +159,40 @@
             config.MapTypes<decimal, ulong>( s => (ulong)s );
             config.MapTypes<decimal, float>( s => (float)s );
             config.MapTypes<decimal, double>( s => (double)s );
+        }
+
+        public void AddStringToPrimitiveTypeConverters( Configuration config )
+        {
+            config.MapTypes<string, bool>( s => s.ToString() );
+            config.MapTypes<string, byte>( s => s.ToString() );
+            config.MapTypes<string, sbyte>( s => s.ToString() );
+            config.MapTypes<string, char>( s => s.ToString() );
+            config.MapTypes<string, decimal>( s => s.ToString() );
+            config.MapTypes<string, double>( s => s.ToString() );
+            config.MapTypes<string, float>( s => s.ToString() );
+            config.MapTypes<string, int>( s => s.ToString() );
+            config.MapTypes<string, uint>( s => s.ToString() );
+            config.MapTypes<string, long>( s => s.ToString() );
+            config.MapTypes<string, ulong>( s => s.ToString() );
+            config.MapTypes<string, short>( s => s.ToString() );
+            config.MapTypes<string, ushort>( s => s.ToString() );
+        }
+
+        public void AddPrimitiveTypeToStringConverters( Configuration config )
+        {
+            config.MapTypes<bool, string>( s => s.ToString() );
+            config.MapTypes<byte, string>( s => s.ToString() );
+            config.MapTypes<sbyte, string>( s => s.ToString() );
+            config.MapTypes<char, string>( s => s.ToString() );
+            config.MapTypes<decimal, string>( s => s.ToString() );
+            config.MapTypes<double, string>( s => s.ToString() );
+            config.MapTypes<float, string>( s => s.ToString() );
+            config.MapTypes<int, string>( s => s.ToString() );
+            config.MapTypes<uint, string>( s => s.ToString() );
+            config.MapTypes<long, string>( s => s.ToString() );
+            config.MapTypes<ulong, string>( s => s.ToString() );
+            config.MapTypes<short, string>( s => s.ToString() );
+            config.MapTypes<ushort, string>( s => s.ToString() );
         }
     }
 }
