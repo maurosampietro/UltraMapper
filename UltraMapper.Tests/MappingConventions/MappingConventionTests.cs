@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UltraMapper.Conventions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
 {
@@ -101,7 +102,7 @@ namespace UltraMapper.Tests
 
             var mapper = new Mapper( cfg =>
             {
-                var matching = new MatchingRules();
+                var matching = new TypeSet<IMatchingRule>();
 
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {

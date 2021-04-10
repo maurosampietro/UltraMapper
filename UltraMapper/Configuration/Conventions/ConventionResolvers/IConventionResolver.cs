@@ -3,7 +3,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Conventions.Resolvers
 {
-    interface IConventionResolver
+    public interface IConventionResolver
     {
         void MapByConvention( TypeMapping newTypeMapping, 
             IEnumerable<IMappingConvention> conventions );

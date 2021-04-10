@@ -5,9 +5,9 @@
     /// We can improve performance by setting them up as converters at compile time.
     /// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions
     /// </summary>
-    public class BuiltInConversionConverters
+    public class BuiltInConverters
     {
-        public void AddSelfCopies( Configuration config )
+        public void AddPrimitiveTypeToItself( Configuration config )
         {
             config.MapTypes<bool, bool>( s => s );
             config.MapTypes<byte, byte>( s => s );

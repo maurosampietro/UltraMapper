@@ -11,18 +11,18 @@ namespace UltraMapper.Conventions
         public IMemberProvider TargetMemberProvider { get; set; }
 
         public IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
-        public MatchingRules MatchingRules { get; set; }
+        public TypeSet<IMatchingRule> MatchingRules { get; set; }
 
         public DefaultConvention()
         {
             this.SourceMemberProvider = new SourceMemberProvider();
             this.TargetMemberProvider = new TargetMemberProvider();
 
-            this.MatchingRules = new MatchingRules( cfg =>
+            this.MatchingRules = new TypeSet<IMatchingRule>( cfg =>
             {
                 cfg.GetOrAdd<ExactNameMatching>( rule => rule.IgnoreCase = true );
             } );
-
+            
             this.MatchingRulesEvaluator = new DefaultMatchingRuleEvaluator();
         }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UltraMapper.Conventions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
 {
@@ -28,10 +29,9 @@ namespace UltraMapper.Tests
             var source2 = new TestClass() { Property = 11 };
             var mapper2 = new Mapper( cfg =>
             {
-                var matching = new MatchingRules();
-
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
+                    convention.MatchingRules.Clear();
                     convention.MatchingRules.GetOrAdd<PrefixMatching>();
                 } );
             } );
@@ -43,10 +43,9 @@ namespace UltraMapper.Tests
             var source = new PrefixTestClass() { DtoProperty = 11 };
             var mapper = new Mapper( cfg =>
             {
-                var matching = new MatchingRules();
-
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
+                    convention.MatchingRules.Clear();
                     convention.MatchingRules.GetOrAdd<PrefixMatching>();
                 } );
             } );
@@ -62,10 +61,9 @@ namespace UltraMapper.Tests
             var source2 = new TestClass() { Property = 11 };
             var mapper2 = new Mapper( cfg =>
             {
-                var matching = new MatchingRules();
-
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
+                    convention.MatchingRules.Clear();
                     convention.MatchingRules.GetOrAdd<SuffixMatching>();
                 } );
             } );
@@ -77,10 +75,9 @@ namespace UltraMapper.Tests
             var source = new SuffixTestClass() { PropertyDto = 11 };
             var mapper = new Mapper( cfg =>
             {
-                var matching = new MatchingRules();
-
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
+                    convention.MatchingRules.Clear();
                     convention.MatchingRules.GetOrAdd<SuffixMatching>();
                 } );
             } );

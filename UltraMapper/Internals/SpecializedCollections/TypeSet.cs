@@ -4,17 +4,20 @@ using System.Collections.Generic;
 
 namespace UltraMapper.Internals
 {
-    public class SingletonList<TInterface> : IEnumerable<TInterface>
+    /// <summary>
+    /// Represents a collection where each element is unique by type.
+    /// </summary>
+    public class TypeSet<TInterface> : IEnumerable<TInterface>
     {
         protected Dictionary<Type, TInterface> _instances;
 
-        public SingletonList( Action<SingletonList<TInterface>> config = null )
+        public TypeSet( Action<TypeSet<TInterface>> config = null )
         {
             _instances = new Dictionary<Type, TInterface>();
             config?.Invoke( this );
         }
 
-        public SingletonList<TInterface> GetOrAdd<T>( Action<T> config = null )
+        public TypeSet<TInterface> GetOrAdd<T>( Action<T> config = null )
             where T : TInterface, new()
         {
             var instance = _instances.GetOrAdd( typeof( T ), () => new T() );
@@ -23,10 +26,15 @@ namespace UltraMapper.Internals
             return this;
         }
 
-        public SingletonList<TInterface> Remove<T>() where T : TInterface
+        public TypeSet<TInterface> Remove<T>() where T : TInterface
         {
             _instances.Remove( typeof( T ) );
             return this;
+        }
+
+        public void Clear()
+        {
+            _instances.Clear();
         }
 
         public IEnumerator<TInterface> GetEnumerator()

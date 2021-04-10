@@ -12,7 +12,7 @@ namespace UltraMapper.Conventions
         public IMemberProvider TargetMemberProvider { get; set; }
 
         public IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
-        public MatchingRules MatchingRules { get; set; }
+        public TypeSet<IMatchingRule> MatchingRules { get; set; }
         public StringSplitter StringSplitter { get; set; }
 
         public ProjectionConvention()
@@ -20,7 +20,7 @@ namespace UltraMapper.Conventions
             this.SourceMemberProvider = new SourceMemberProvider();
             this.TargetMemberProvider = new TargetMemberProvider();
             this.StringSplitter = new StringSplitter( StringSplittingRules.PascalCase );
-            this.MatchingRules = new MatchingRules();
+            this.MatchingRules = new TypeSet<IMatchingRule>();
             this.MatchingRulesEvaluator = new DefaultMatchingRuleEvaluator();
         }
 

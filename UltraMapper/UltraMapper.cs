@@ -184,30 +184,6 @@ namespace UltraMapper
                     break;
                 }
 
-
-                //case TypeMappingOptionsInheritanceTraversal ttrav:
-                //{
-                //    var mappingSourceType = ttrav.TypeMapping.SourceType;
-                //    var mappingTargetType = ttrav.TypeMapping.TargetType;
-
-                //    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                //    break;
-                //}
-
-                //case MemberMappingOptionsInheritanceTraversal mtrav:
-                //{
-                //    if( mtrav.MemberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-                //    {
-                //        var memberTypeMapping = mtrav.MemberMapping.MemberTypeMapping;
-                //        var mappingSourceType = memberTypeMapping.SourceType;
-                //        var mappingTargetType = memberTypeMapping.TargetType;
-
-                //        mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                //    }
-
-                //    break;
-                //}
-
                 case null:
                 {
                     mapping = CheckResolveAbstractMapping( source.GetType(), target.GetType() );

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UltraMapper.Config;
 using UltraMapper.Conventions;
 using UltraMapper.Conventions.Resolvers;
@@ -12,7 +11,6 @@ namespace UltraMapper
     {
         internal readonly TypeMappingInheritanceTree TypeMappingTree;
         internal readonly GeneratedExpressionCache ExpCache;
-        private readonly IConventionResolver _conventionResolver;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -46,26 +44,25 @@ namespace UltraMapper
             set { TypeMappingTree.Root.Item.ReferenceBehavior = value; }
         }
 
-        public List<IMappingExpressionBuilder> Mappers { get; private set; }
-
-        public MappingConventions Conventions { get; private set; }
+        public OrderedTypeSet<IMappingExpressionBuilder> Mappers { get; private set; }
+        public TypeSet<IMappingConvention> Conventions { get; private set; }
+        public IConventionResolver ConventionResolver { get; set; }
 
         public Configuration( Action<Configuration> config = null )
         {
             var rootMapping = new TypeMapping( this, typeof( object ), typeof( object ) )
             {
-                //avoid INHERIT as a value for root-mapping options
+                //Must not use INHERIT as a value for root-mapping options
                 ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE,
                 CollectionBehavior = CollectionBehaviors.RESET
             };
 
             TypeMappingTree = new TypeMappingInheritanceTree( rootMapping );
-            _conventionResolver = new DefaultConventionResolver();
             ExpCache = new GeneratedExpressionCache();
 
             //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.
             //Make sure to use a collection which preserve insertion order!
-            this.Mappers = new List<IMappingExpressionBuilder>()
+            this.Mappers = new OrderedTypeSet<IMappingExpressionBuilder>()
             {
                 //new AbstractMappingExpressionBuilder(this),
                 new StringToEnumMapper( this ),
@@ -85,7 +82,7 @@ namespace UltraMapper
                 new ReferenceToStructMapper( this ),
             };
 
-            this.Conventions = new MappingConventions( cfg =>
+            this.Conventions = new TypeSet<IMappingConvention>( cfg =>
             {
                 cfg.GetOrAdd<DefaultConvention>( conv =>
                 {
@@ -106,11 +103,13 @@ namespace UltraMapper
                 } );
             } );
 
-            new BuiltInConversionConverters().AddSelfCopies( this );
-            new BuiltInConversionConverters().AddExplicitNumeriConverters( this );
-            new BuiltInConversionConverters().AddImplicitNumeriConverters( this );
-            new BuiltInConversionConverters().AddPrimitiveTypeToStringConverters( this );
-            new BuiltInConversionConverters().AddStringToPrimitiveTypeConverters( this );
+            this.ConventionResolver = new DefaultConventionResolver();
+
+            new BuiltInConverters().AddPrimitiveTypeToItself( this );
+            new BuiltInConverters().AddExplicitNumeriConverters( this );
+            new BuiltInConverters().AddImplicitNumeriConverters( this );
+            new BuiltInConverters().AddPrimitiveTypeToStringConverters( this );
+            new BuiltInConverters().AddStringToPrimitiveTypeConverters( this );
 
             config?.Invoke( this );
         }
@@ -122,7 +121,7 @@ namespace UltraMapper
                 var typeMappingNode = this.TypeMappingTree.GetOrAdd( source, target, () =>
                 {
                     var newTypeMapping = new TypeMapping( this, source, target );
-                    _conventionResolver.MapByConvention( newTypeMapping, this.Conventions );
+                    ConventionResolver.MapByConvention( newTypeMapping, this.Conventions );
 
                     return newTypeMapping;
                 } );

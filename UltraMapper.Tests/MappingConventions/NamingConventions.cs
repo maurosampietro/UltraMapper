@@ -82,12 +82,10 @@ namespace UltraMapper.Tests
             {
                 cfg.Conventions.GetOrAdd<DefaultConvention>( convention =>
                 {
-                    convention.MatchingRules = new MatchingRules( rules =>
-                    {
-                        rules.GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
-                            .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
-                            .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true );
-                    } );
+                    convention.MatchingRules
+                        .GetOrAdd<TypeMatchingRule>( ruleConfig => ruleConfig.AllowImplicitConversions = true )
+                        .GetOrAdd<ExactNameMatching>( ruleConfig => ruleConfig.IgnoreCase = true )
+                        .GetOrAdd<SuffixMatching>( ruleConfig => ruleConfig.IgnoreCase = true );               
                 } );
             } );
 
