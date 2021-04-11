@@ -9,7 +9,7 @@ namespace UltraMapper
 {
     public class Configuration
     {
-        internal readonly TypeMappingInheritanceTree TypeMappingTree;
+        internal readonly ConfigInheritanceTree TypeMappingTree;
         internal readonly GeneratedExpressionCache ExpCache;
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace UltraMapper
                 CollectionBehavior = CollectionBehaviors.RESET
             };
 
-            TypeMappingTree = new TypeMappingInheritanceTree( rootMapping );
+            TypeMappingTree = new ConfigInheritanceTree( rootMapping );
             ExpCache = new GeneratedExpressionCache();
 
             //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.

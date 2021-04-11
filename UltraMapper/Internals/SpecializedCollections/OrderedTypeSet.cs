@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace UltraMapper.Internals
 {
     /// <summary>
-    /// Represents a collection  where each element is unique by type 
+    /// Represents a collection where each element is unique by type 
     /// and insertion order is preserved.
     /// </summary>
     public sealed class OrderedTypeSet<T> : ICollection<T>

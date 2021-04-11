@@ -129,7 +129,7 @@ namespace UltraMapper.Internals
         private TypeMapping GetParentConfiguration()
         {
             if( this.GlobalConfig.TypeMappingTree.TryGetValue(
-                SourceType, TargetType, out TreeNode<TypeMapping> value ) )
+                SourceType, TargetType, out ConfigInheritanceNode value ) )
             {
                 return value.Parent?.Item;
             }
