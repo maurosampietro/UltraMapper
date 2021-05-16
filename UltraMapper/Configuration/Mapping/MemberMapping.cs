@@ -67,9 +67,10 @@ namespace UltraMapper.Internals
 
                 if( _collectionBehaviors != CollectionBehaviors.INHERIT )
                     return _collectionBehaviors;
-
-                if( this.InstanceTypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
-                    return this.InstanceTypeMapping.CollectionBehavior;
+                
+                //architecturally not ready for this
+                //if( this.InstanceTypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
+                //    return this.InstanceTypeMapping.CollectionBehavior;
 
                 return MemberTypeMapping.CollectionBehavior;
             }

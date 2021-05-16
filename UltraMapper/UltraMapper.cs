@@ -163,9 +163,11 @@ namespace UltraMapper
             {
                 case MemberMapping memberMapping:
                 {
-                    if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                    if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION &&
+                        memberMapping.InstanceTypeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
                     {
                         var memberTypeMapping = memberMapping.MemberTypeMapping;
+
                         var mappingSourceType = memberTypeMapping.SourceType;
                         var mappingTargetType = memberTypeMapping.TargetType;
 

@@ -14,7 +14,7 @@ namespace UltraMapper.Tests.ConfigurationInheritance
         {
             // we set as root a typePair different from (object,object)
             var falseRoot = new TypeMapping( null, typeof( object ), typeof( string ) );
-            var tree = new TypeMappingInheritanceTree( falseRoot );
+            var tree = new ConfigInheritanceTree( falseRoot );
 
             //we add the real root (object,object)
             tree.Add( new TypeMapping( null, typeof( object ), typeof( object ) ) );
@@ -43,10 +43,6 @@ namespace UltraMapper.Tests.ConfigurationInheritance
             tree.Add( dup1 );
             tree.Add( dup2 );
             tree.Add( dup3 );
-
-            var visualizeTree = tree.ToString();
-
-            //var node = new LeafToRootTraversal().Traverse( tree.Root, m => m.CollectionItemEqualityComparer != null );
         }
     }
 }

@@ -105,11 +105,11 @@ namespace UltraMapper
 
             this.ConventionResolver = new DefaultConventionResolver();
 
-            new BuiltInConverters().AddPrimitiveTypeToItself( this );
-            new BuiltInConverters().AddExplicitNumeriConverters( this );
-            new BuiltInConverters().AddImplicitNumeriConverters( this );
-            new BuiltInConverters().AddPrimitiveTypeToStringConverters( this );
-            new BuiltInConverters().AddStringToPrimitiveTypeConverters( this );
+            //new BuiltInConverters().AddPrimitiveTypeToItself( this );
+            //new BuiltInConverters().AddExplicitNumeriConverters( this );
+            //new BuiltInConverters().AddImplicitNumeriConverters( this );
+            //new BuiltInConverters().AddPrimitiveTypeToStringConverters( this );
+            //new BuiltInConverters().AddStringToPrimitiveTypeConverters( this );
 
             config?.Invoke( this );
         }
@@ -118,21 +118,14 @@ namespace UltraMapper
         {
             get
             {
-                var typeMappingNode = this.TypeMappingTree.GetOrAdd( source, target, () =>
+                return this.TypeMappingTree.GetOrAdd( source, target, () =>
                 {
                     var newTypeMapping = new TypeMapping( this, source, target );
                     ConventionResolver.MapByConvention( newTypeMapping, this.Conventions );
 
                     return newTypeMapping;
                 } );
-
-                return typeMappingNode.Item;
             }
-        }
-
-        public override string ToString()
-        {
-            return this.TypeMappingTree.ToString();
         }
     }
 }

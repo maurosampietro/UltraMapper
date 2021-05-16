@@ -20,7 +20,14 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void DeepCopyWithInterface()
         {
-            var source = new MyType() { Interface = new TypeBImplementingI() { MyProperty = 1, MyProperty2 = 2 } };
+            var source = new MyType()
+            {
+                Interface = new TypeBImplementingI()
+                {
+                    MyProperty = 1,
+                    MyProperty2 = 2
+                }
+            };
 
             var ultraMapper = new Mapper();
             var target = ultraMapper.Map( source );

@@ -89,23 +89,23 @@ namespace UltraMapper.Config
             return newNode;
         }
 
-        public ConfigInheritanceNode GetOrAdd( Type sourceType, Type targetType, Func<TypeMapping> valueFactory )
+        public TypeMapping GetOrAdd( Type sourceType, Type targetType, Func<TypeMapping> valueFactory )
         {
             var typePair = new TypePair( sourceType, targetType );
             if( !_nodeDictionary.TryGetValue( typePair, out ConfigInheritanceNode value ) )
             {
                 var element = valueFactory.Invoke();
-                return this.Add( element );
+                value = this.Add( element );
             }
 
-            return value;
+            return value.Item;//[ options ];
         }
 
-        public bool ContainsKey( Type sourceType, Type targetType )
-        {
-            var key = new TypePair( sourceType, targetType );
-            return _nodeDictionary.ContainsKey( key );
-        }
+        //public bool ContainsKey( Type sourceType, Type targetType )
+        //{
+        //    var key = new TypePair( sourceType, targetType );
+        //    return _nodeDictionary.ContainsKey( key );
+        //}
 
         public bool TryGetValue( Type sourceType, Type targetType, out ConfigInheritanceNode value )
         {
