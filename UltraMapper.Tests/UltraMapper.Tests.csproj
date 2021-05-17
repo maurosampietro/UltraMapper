@@ -7,7 +7,6 @@
     <Authors>Mauro Sampietro</Authors>
     <Copyright>2020</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
