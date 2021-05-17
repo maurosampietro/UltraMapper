@@ -125,6 +125,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public void ConfigurationOptionOverride()
         {
             //In this test the collection update adds elements to the target.

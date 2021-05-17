@@ -157,6 +157,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public void CollectionOfInterfaceElementToCollectionOfComplexElement()
         {
             var source = new List<I>()
