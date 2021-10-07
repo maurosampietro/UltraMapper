@@ -151,5 +151,30 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
+
+        [TestMethod()]
+        public void GetCountMethodExceptionTest()
+        {
+            try
+            {
+                Outer source = new Outer();
+                source.Inter.Dict = new Dictionary<string, float>() { { "0", 0f } };
+                UltraMapper.Mapper mapper = new Mapper();
+                var clone = mapper.Map(source);
+                Assert.IsTrue(true);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail();
+            }
+        }
+        internal class Outer
+        {
+            public Inter Inter { get; set; } = new Inter();
+        }
+        internal class Inter
+        {
+            public Dictionary<string, float> Dict { get; set; }
+        }
     }
 }
