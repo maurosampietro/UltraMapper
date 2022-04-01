@@ -41,7 +41,7 @@ Would you still map it manually!?
 With UltraMapper you can solve this problem efficiently like this:
 
 ````c#
-UltraMapper ultraMapper = new UltraMapper();
+Mapper ultraMapper = new Mapper();
 Person clone = ultraMapper.Map<Person>( person );
 ````
 
