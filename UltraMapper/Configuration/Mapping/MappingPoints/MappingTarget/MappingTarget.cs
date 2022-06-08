@@ -50,7 +50,7 @@ namespace UltraMapper.Internals
         }
     }
 
-    public class MappingTarget<TSource, TTarget> : MappingPoint, IMappingTarget
+    public sealed class MappingTarget<TSource, TTarget> : MappingPoint, IMappingTarget
     {
         public LambdaExpression ValueGetter { get; }
         public LambdaExpression ValueSetter { get; }

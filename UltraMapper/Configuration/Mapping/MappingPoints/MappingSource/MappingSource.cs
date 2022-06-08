@@ -35,7 +35,7 @@ namespace UltraMapper.Internals
         }
     }
 
-    public class MappingSource<TSource, TTarget> : MappingPoint, IMappingSource
+    public sealed class MappingSource<TSource, TTarget> : MappingPoint, IMappingSource
     {
         public LambdaExpression ValueGetter { get; }
 
