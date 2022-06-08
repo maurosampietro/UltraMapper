@@ -80,7 +80,7 @@
             config.MapTypes<float, double>( s => s );
         }
 
-        public void AddExplicitNumeriConverters( Configuration config )
+        public void AddExplicitNumericConverters( Configuration config )
         {
             config.MapTypes<sbyte, byte>( s => (byte)s );
             config.MapTypes<sbyte, ushort>( s => (ushort)s );
@@ -163,19 +163,19 @@
 
         public void AddStringToPrimitiveTypeConverters( Configuration config )
         {
-            config.MapTypes<string, bool>( s => s.ToString() );
-            config.MapTypes<string, byte>( s => s.ToString() );
-            config.MapTypes<string, sbyte>( s => s.ToString() );
-            config.MapTypes<string, char>( s => s.ToString() );
-            config.MapTypes<string, decimal>( s => s.ToString() );
-            config.MapTypes<string, double>( s => s.ToString() );
-            config.MapTypes<string, float>( s => s.ToString() );
-            config.MapTypes<string, int>( s => s.ToString() );
-            config.MapTypes<string, uint>( s => s.ToString() );
-            config.MapTypes<string, long>( s => s.ToString() );
-            config.MapTypes<string, ulong>( s => s.ToString() );
-            config.MapTypes<string, short>( s => s.ToString() );
-            config.MapTypes<string, ushort>( s => s.ToString() );
+            config.MapTypes<string, bool>( s => bool.Parse( s ) );
+            config.MapTypes<string, byte>( s => byte.Parse( s.ToString() ) );
+            config.MapTypes<string, sbyte>( s => sbyte.Parse( s.ToString() ) );
+            config.MapTypes<string, char>( s => char.Parse( s.ToString() ) );
+            config.MapTypes<string, decimal>( s => decimal.Parse( s.ToString() ) );
+            config.MapTypes<string, double>( s => double.Parse( s.ToString() ) );
+            config.MapTypes<string, float>( s => float.Parse( s.ToString() ) );
+            config.MapTypes<string, int>( s => int.Parse( s.ToString() ) );
+            config.MapTypes<string, uint>( s => uint.Parse( s.ToString() ) );
+            config.MapTypes<string, long>( s => long.Parse( s.ToString() ) );
+            config.MapTypes<string, ulong>( s => ulong.Parse( s.ToString() ) );
+            config.MapTypes<string, short>( s => short.Parse( s.ToString() ) );
+            config.MapTypes<string, ushort>( s => ushort.Parse( s.ToString() ) );
         }
 
         public void AddPrimitiveTypeToStringConverters( Configuration config )
