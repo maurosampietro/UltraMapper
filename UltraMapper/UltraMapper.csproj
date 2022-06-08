@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45;net46;net47;net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net452;net46;net461;net462;net47;net471;net472;net48;net5.0</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Authors>Mauro Sampietro</Authors>
-    <Copyright>2020</Copyright>
+    <Copyright>2021</Copyright>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageVersion>1.0.0.0</PackageVersion>
     <PackageProjectUrl>https://maurosampietro.github.io/UltraMapper/</PackageProjectUrl>
@@ -12,6 +12,9 @@
     <Description>A .NET object-mapper useful to deep-copy an object, or transform (map) an object of a certain type to another type.</Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageTags>map mapper object deep copy</PackageTags>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

@@ -434,15 +434,19 @@ namespace UltraMapper.MappingExpressionBuilders
             var getCountProperty = type.GetProperty( nameof( ICollection<int>.Count ),
                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );
 
-            if( getCountProperty == null )
+            if( getCountProperty != null )
+                return getCountProperty.GetGetMethod();
+
+            if( type.IsArray )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
                 //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
                 getCountProperty = type.GetProperty( nameof( Array.Length ) );
 
-            if( getCountProperty != null )
-                return getCountProperty.GetGetMethod();
-            
+                if( getCountProperty != null )
+                    return getCountProperty.GetGetMethod();
+            }
+
             var getLinqCount = typeof( System.Linq.Enumerable ).GetMethods(
                     BindingFlags.Static | BindingFlags.Public )
                 .First( m =>
