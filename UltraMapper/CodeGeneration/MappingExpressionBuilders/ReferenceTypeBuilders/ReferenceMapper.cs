@@ -109,20 +109,27 @@ namespace UltraMapper.MappingExpressionBuilders
             if( options?.CustomTargetConstructor != null )
                 return Expression.Invoke( options.CustomTargetConstructor );
 
+            var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );
+            if( defaultCtor != null )
+                return Expression.New( targetType );
+
+            //DON'T TRY TO AUTOMATICALLY HANDLE INHERITANCE WITH CONCRETE OBJECTS HERE
+            //JUST CONFIGURE THAT OUT: cfg.MapTypes<CA, CB>( () => new ConcreteType() )
+
             //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
             //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
-            if( targetType.IsAssignableFrom( sourceType ) )
+            if( targetType.IsAssignableFrom( sourceType ) && (targetType.IsAbstract || targetType.IsInterface ) )
             {
                 MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
                 var getSourceType = Expression.Call( sourceValue, getTypeMethodInfo );
 
                 return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
                     getSourceType, Expression.Constant( null, typeof( object[] ) ) ), targetType );
-            }
 
-            var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );
-            if( defaultCtor != null )
-                return Expression.New( targetType );
+                //static should be faster but cannot handle non-concrete objects the same way
+                //return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
+                //   Expression.Constant( sourceType ), Expression.Constant( null, typeof( object[] ) ) ), targetType );
+            }
 
             if( targetType.IsInterface )
             {

@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace UltraMapper.Internals
 {
@@ -67,7 +68,7 @@ namespace UltraMapper.Internals
 
                 if( _collectionBehaviors != CollectionBehaviors.INHERIT )
                     return _collectionBehaviors;
-                
+
                 //architecturally not ready for this
                 //if( this.InstanceTypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
                 //    return this.InstanceTypeMapping.CollectionBehavior;
@@ -105,6 +106,12 @@ namespace UltraMapper.Internals
             get => _customTargetConstructor ?? this.MemberTypeMapping.CustomTargetConstructor;
             set => _customTargetConstructor = value;
         }
+
+        public void SetCustomTargetConstructor<T>( Expression<Func<T>> ctor )
+            => CustomTargetConstructor = ctor;
+
+        public void SetCollectionItemEqualityComparer<TSource, TTarget>(Expression<Func<TSource, TTarget, bool>> converter )
+            => CollectionItemEqualityComparer = converter;
 
         public override string ToString()
         {

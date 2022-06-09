@@ -126,6 +126,12 @@ namespace UltraMapper.Internals
             set => _customTargetConstructor = value;
         }
 
+        public void SetCustomTargetConstructor<T>( Expression<Func<T>> ctor )
+            => CustomTargetConstructor = ctor;
+
+        public void SetCollectionItemEqualityComparer<TSource, TTarget>( Expression<Func<TSource, TTarget, bool>> converter )
+            => CollectionItemEqualityComparer = converter;
+
         private TypeMapping GetParentConfiguration()
         {
             if( this.GlobalConfig.TypeMappingTree.TryGetValue(

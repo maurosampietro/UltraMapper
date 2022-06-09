@@ -106,7 +106,7 @@ namespace UltraMapper
             this.ConventionResolver = new DefaultConventionResolver();
 
             //new BuiltInConverters().AddPrimitiveTypeToItself( this );
-            //new BuiltInConverters().AddExplicitNumeriConverters( this );
+            //new BuiltInConverters().AddExplicitNumericConverters( this );
             //new BuiltInConverters().AddImplicitNumeriConverters( this );
             //new BuiltInConverters().AddPrimitiveTypeToStringConverters( this );
             //new BuiltInConverters().AddStringToPrimitiveTypeConverters( this );

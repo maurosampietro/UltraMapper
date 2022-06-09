@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Tests
@@ -85,10 +86,23 @@ namespace UltraMapper.Tests
 
             var target = new Container();
 
-            var ultraMapper = new Mapper();
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<TestClass, TestClass>( () => new SubTestClass() );
+                cfg.MapTypes<Container, Container>().MapMember
+                (
+                    s => s.TestClass,
+                    t => t.TestClass,
+                    memberMappingConfig: cfg2 =>
+                    {
+                        cfg2.SetCustomTargetConstructor( () => new SubTestClass() );
+                    }
+                );
+            } );
+
             ultraMapper.Map( source, target );
 
-            Assert.IsTrue( target.TestClass.GetType() == source.TestClass.GetType() );
+            Assert.IsTrue( source.TestClass.GetType() == target.TestClass.GetType() );
 
             var isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
