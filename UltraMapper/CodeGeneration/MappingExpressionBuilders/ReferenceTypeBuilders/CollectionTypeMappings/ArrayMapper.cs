@@ -19,8 +19,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
         {
-            return typeof( Array ).GetMethod( nameof( Array.Clear ),
-                BindingFlags.Public | BindingFlags.Static );
+            var paramTypes = new[] { typeof( Array ), typeof( int ), typeof( int ) };
+            return typeof( Array ).GetMethod( nameof( Array.Clear ), paramTypes );
         }
 
         protected override Expression GetTargetCollectionClearExpression( CollectionMapperContext context )

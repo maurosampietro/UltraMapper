@@ -2,54 +2,32 @@
 using System.Collections.Generic;
 
 namespace UltraMapper
-{ 
+{
     /// <summary>
     /// This class helps tracking and retrieving each source reference to its mapped target instance.
     /// A reference type can be mapped to many different types (one instance for each target type).
     /// </summary>
     public class ReferenceTracker
     {
-        private struct Key
-        {
-            public readonly object Instance;
-            public readonly Type TargetType;
-
-            public Key( object instance, Type targetType )
-            {
-                this.Instance = instance;
-                this.TargetType = targetType;
-            }
-
-            public override int GetHashCode()
-            {
-                int instanceHashCode = this.Instance?.GetHashCode() ?? 0;
-                return instanceHashCode ^ this.TargetType.GetHashCode();
-            }
-
-            public override bool Equals( object obj )
-            {
-                var otherKey = (Key)obj;
-                return Object.ReferenceEquals( this.Instance, otherKey.Instance )
-                    && this.TargetType == otherKey.TargetType;
-            }
-        }
-
         //<sourceInstance, <targetType,targetInstance>>
         private readonly Dictionary<object, Dictionary<Type, object>> _mappings
             = new Dictionary<object, Dictionary<Type, object>>( 64 );
 
         public void Add( object sourceInstance, Type targetType, object targetInstance )
         {
-            if( !_mappings.ContainsKey( sourceInstance ) )
+            if( !_mappings.TryGetValue( sourceInstance, out var dict ) )
             {
-                var dict = new Dictionary<Type, object>() { { targetType, targetInstance } };
+                dict = new Dictionary<Type, object>() { { targetType, targetInstance } };
                 _mappings.Add( sourceInstance, dict );
             }
             else
             {
-                var dict = _mappings[ sourceInstance ];
+#if NET5_0_OR_GREATER
+                dict.TryAdd( targetType, targetInstance );
+#else
                 if( !dict.ContainsKey( targetType ) )
                     dict.Add( targetType, targetInstance );
+#endif
             }
         }
 
