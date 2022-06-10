@@ -132,7 +132,7 @@ namespace UltraMapper.Benchmarks
             } );
             _autoMapper = new AutoMapper.Mapper( config );
 
-            _ultraMapper = new Mapper( cfg => cfg.IsReferenceTrackingEnabled = false );
+            _ultraMapper = new Mapper( cfg => cfg.IsReferenceTrackingEnabled = true );
 
             var innerType = new InnerType() { String = "test" };
 
@@ -150,13 +150,10 @@ namespace UltraMapper.Benchmarks
             }
         }
 
-
         [Benchmark]
         public void UltraMapperTest()
         {
             var target = new ReadOnlyGeneric<ComplexType>();
-            //((ICollection<ComplexType>)target.HashSet).Add( new ComplexType() );
-
             _ultraMapper.Map( _source, target );
         }
 
@@ -165,6 +162,6 @@ namespace UltraMapper.Benchmarks
         {
             var target = new ReadOnlyGeneric<ComplexType>();
             _autoMapper.Map( _source, target );
-        }      
+        }
     }
 }

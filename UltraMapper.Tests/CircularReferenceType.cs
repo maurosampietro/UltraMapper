@@ -18,6 +18,29 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void NestingAndReferringTheSameObject()
+        {
+            var obj = new OuterType.InnerType
+            {
+                A = "a",
+                B = "b"
+            };
+
+            obj.Inner = obj;
+
+            var source = new OuterType()
+            {
+                Move = obj
+            };
+
+            var ultraMapper = new Mapper( cfg => cfg.IsReferenceTrackingEnabled = true );
+            var target = ultraMapper.Map( source );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
         public void NestingAndReferringTheSameType()
         {
             var source = new OuterType()
