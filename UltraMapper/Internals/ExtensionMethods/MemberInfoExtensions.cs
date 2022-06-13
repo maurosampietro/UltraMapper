@@ -71,7 +71,7 @@ namespace UltraMapper.Internals
                     if( methodInfo.IsSetterMethod() )
                         memberType = methodInfo.GetParameters()[ 0 ].ParameterType;
 
-                    return true;
+                    return false;
                 }
             }
 

@@ -100,7 +100,9 @@ namespace UltraMapper.Conventions
 
             foreach( var splitName in memberNames.Take( memberNames.Count() - 1 ) )
             {
-                var members = type.GetMember( splitName, bindingAttributes );
+                var members = type.GetMember( splitName, bindingAttributes )
+                    .Where( m => m.TryGetMemberType( out var tempMemberType ) ).ToArray();
+
                 if( members.Length == 0 )
                 {
                     var getMethodPrefixes = new string[] { "Get_", "Get", "get", "get_" };
