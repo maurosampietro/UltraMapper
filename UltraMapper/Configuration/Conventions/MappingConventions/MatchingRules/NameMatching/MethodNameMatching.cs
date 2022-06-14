@@ -5,33 +5,26 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Conventions
 {
-    public class MethodMatching : INameMatchingRule
+    public class MethodNameMatching : INameMatchingRule
     {
         public bool IgnoreCase { get; set; }
 
         public string[] GetMethodPrefixes { get; set; }
         public string[] SetMethodPrefixes { get; set; }
 
-        public MethodMatching()
+        public MethodNameMatching()
         {
             this.GetMethodPrefixes = new string[] { "Get_", "Get" };
             this.SetMethodPrefixes = new string[] { "Set_", "Set" };
         }
 
+        public bool CanHandle( MemberInfo source, MemberInfo target )
+        {
+            return source is MethodInfo && target is MethodInfo;
+        }
+
         public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
-            if( source is MethodInfo )
-            {
-                var methodInfo = (MethodInfo)source;
-                if( !methodInfo.IsGetterMethod() ) return false;
-            }
-
-            if( target is MethodInfo )
-            {
-                var methodInfo = (MethodInfo)target;
-                if( !methodInfo.IsSetterMethod() ) return false;
-            }
-
             var comparisonType = this.IgnoreCase ?
                 StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 

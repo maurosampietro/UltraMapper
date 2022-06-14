@@ -8,8 +8,8 @@ namespace UltraMapper.Conventions
 {
     public class ProjectionConvention : IMappingConvention
     {
-        public IMemberProvider SourceMemberProvider { get; set; }
-        public IMemberProvider TargetMemberProvider { get; set; }
+        public ISourceMemberProvider SourceMemberProvider { get; set; }
+        public ITargetMemberProvider TargetMemberProvider { get; set; }
 
         public IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
         public TypeSet<IMatchingRule> MatchingRules { get; set; }
@@ -62,19 +62,19 @@ namespace UltraMapper.Conventions
         {
             var accessPath = new MemberAccessPath();
 
-            var bindingAttributes = BindingFlags.Instance | BindingFlags.Public;
-            if( !memberProvider.IgnoreNonPublicMembers )
-                bindingAttributes |= BindingFlags.NonPublic;
-
             foreach( var splitName in memberNames )
             {
-                var members = type.GetMember( splitName, bindingAttributes );
+                var members = memberProvider.GetMembers( type )
+                    .Where( m => m.Name == splitName ).ToArray();
+
                 if( members.Length == 0 )
                 {
                     var getMethodPrefixes = new string[] { "Get_", "Get", "get", "get_" };
                     foreach( var prefix in getMethodPrefixes )
                     {
-                        members = type.GetMember( prefix + splitName, bindingAttributes );
+                        members = memberProvider.GetMembers( type )
+                            .Where( m => m.Name == prefix + splitName ).ToArray();
+
                         if( members.Length > 0 ) break;
                     }
 
@@ -90,25 +90,23 @@ namespace UltraMapper.Conventions
             return accessPath;
         }
 
-        private MemberAccessPath FollowPathUnflattening( Type type, IEnumerable<string> memberNames, IMemberProvider memberProvider )
+        private MemberAccessPath FollowPathUnflattening( Type type, IEnumerable<string> memberNames, ITargetMemberProvider memberProvider )
         {
             var accessPath = new MemberAccessPath();
 
-            var bindingAttributes = BindingFlags.Instance | BindingFlags.Public;
-            if( !memberProvider.IgnoreNonPublicMembers )
-                bindingAttributes |= BindingFlags.NonPublic;
-
             foreach( var splitName in memberNames.Take( memberNames.Count() - 1 ) )
             {
-                var members = type.GetMember( splitName, bindingAttributes )
-                    .Where( m => m.TryGetMemberType( out var tempMemberType ) ).ToArray();
+                var members = memberProvider.GetMembers( type )
+                    .Where( m => m.Name == splitName ).ToArray();
 
                 if( members.Length == 0 )
                 {
                     var getMethodPrefixes = new string[] { "Get_", "Get", "get", "get_" };
                     foreach( var prefix in getMethodPrefixes )
                     {
-                        members = type.GetMember( prefix + splitName, bindingAttributes );
+                        members = memberProvider.GetMembers( type )
+                            .Where( m => m.Name == prefix + splitName ).ToArray();
+
                         if( members.Length > 0 ) break;
                     }
 
@@ -122,13 +120,17 @@ namespace UltraMapper.Conventions
             }
 
             {
-                var members = type.GetMember( memberNames.Last(), bindingAttributes );
+                var members = memberProvider.GetMembers( type )
+                    .Where( m => m.Name == memberNames.Last() ).ToArray();
+
                 if( members.Length == 0 )
                 {
                     var getMethodPrefixes = new string[] { "Set_", "Set", "set", "set_" };
                     foreach( var prefix in getMethodPrefixes )
                     {
-                        members = type.GetMember( prefix + memberNames.Last(), bindingAttributes );
+                        members = memberProvider.GetMembers( type )
+                            .Where( m => m.Name == prefix + memberNames.Last() ).ToArray();
+
                         if( members.Length > 0 ) break;
                     }
 

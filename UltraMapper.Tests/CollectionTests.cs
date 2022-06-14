@@ -201,7 +201,7 @@ namespace UltraMapper.Tests
 
                     var targetType = typeof( GenericCollections<> )
                         .MakeGenericType( targetElementType );
-
+                    
                     var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( sourceType );
                     var targetTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( targetType );
 
@@ -648,10 +648,10 @@ namespace UltraMapper.Tests
                 {
                     cfg2.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
                     cfg2.CollectionBehavior = CollectionBehaviors.UPDATE;
-                   
+
                     //use one or the other:
                     cfg2.CollectionItemEqualityComparer = itemComparer;
-                    cfg2.SetCollectionItemEqualityComparer<ComplexType,ComplexType>( ( s, t ) => Comparison( s, t ) );
+                    cfg2.SetCollectionItemEqualityComparer<ComplexType, ComplexType>( ( s, t ) => Comparison( s, t ) );
                 } );
             } );
 

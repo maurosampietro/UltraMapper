@@ -6,7 +6,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Conventions
 {
-    public class TargetMemberProvider : IMemberProvider
+    public class TargetMemberProvider : ITargetMemberProvider
     {
         public bool IgnoreFields { get; set; } = true;
         public bool IgnoreProperties { get; set; } = false;
@@ -24,9 +24,10 @@ namespace UltraMapper.Conventions
         public bool DeclaredOnly { get; set; } = false;
 
         /// <summary>
-        /// Consider only methods that return void and take as input exactly one parameter
+        /// Consider only methods that return void and take as input exactly one parameter (getters or getter-like methods); 
+        /// Or methods that return anything but void and take exactly one parameter as input (setters or setters-like methods).
         /// </summary>
-        public bool AllowSetterMethodsOnly = true;
+        public bool AllowGetterOrSetterMethodsOnly { get; set; } = true;
 
         /// <summary>
         /// Allows to write on readonly fields and to set getter only properties 
@@ -55,10 +56,11 @@ namespace UltraMapper.Conventions
                 var targetFields = type.GetFields( bindingFlags )
                   .Select( field => field );
 
-                if( this.IgnoreReadonlyFields )
+                if( IgnoreReadonlyFields )
                     targetFields = targetFields.Where( field => !field.IsInitOnly );
 
-                foreach( var field in targetFields ) yield return field;
+                foreach( var field in targetFields )
+                    yield return field;
             }
 
             if( !this.IgnoreProperties )
@@ -76,7 +78,8 @@ namespace UltraMapper.Conventions
                      property.CanWrite && property.GetSetMethod() != null
                      && property.GetIndexParameters().Length == 0 ); //no indexed properties
 
-                foreach( var property in targetProperties ) yield return property;
+                foreach( var property in targetProperties )
+                    yield return property;
             }
 
             if( !this.IgnoreMethods )
@@ -90,10 +93,14 @@ namespace UltraMapper.Conventions
                         .SelectMany( i => i.GetMethods( bindingFlags ) ) );
                 }
 
-                if( this.AllowSetterMethodsOnly )
-                    targetMethods = targetMethods.Where( method => method.IsSetterMethod() );
+                if( this.AllowGetterOrSetterMethodsOnly )
+                {
+                    targetMethods = targetMethods.Where( method =>
+                        method.IsGetterMethod() || method.IsSetterMethod() );
+                }
 
-                foreach( var method in targetMethods ) yield return method;
+                foreach( var method in targetMethods )
+                    yield return method;
             }
         }
     }

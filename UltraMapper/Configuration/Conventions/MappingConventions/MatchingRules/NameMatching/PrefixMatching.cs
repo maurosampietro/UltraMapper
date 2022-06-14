@@ -21,6 +21,11 @@ namespace UltraMapper.Conventions
             this.Prefixes = prefixes;
         }
 
+        public bool CanHandle( MemberInfo source, MemberInfo target )
+        {
+            return !(source is MethodInfo) && !(target is MethodInfo);
+        }
+
         public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var comparisonType = this.IgnoreCase ?

@@ -14,6 +14,11 @@ namespace UltraMapper.Conventions
         public bool AllowExplicitConversions { get; set; } = true;
         //public bool AllowNullableUnwrappings { get; set; } = true;
 
+        public bool CanHandle( MemberInfo source, MemberInfo target )
+        {
+            return !(source is MethodInfo) && !(target is MethodInfo);
+        }
+
         public bool IsCompliant( MemberInfo source, MemberInfo target )
         {
             var sourceType = source.GetMemberType();
@@ -37,15 +42,15 @@ namespace UltraMapper.Conventions
         private bool CanHandle( Type source, Type target )
         {
             //PrimitiveType -> Nullable<PrimitiveType> always possible. No flag to disable that.
-            Lazy<bool> primitiveToNullablePrimitive = new Lazy<bool>( () =>
+            var primitiveToNullablePrimitive = new Lazy<bool>( () =>
             {
-                return !source.IsNullable() && target.IsNullable() 
+                return !source.IsNullable() && target.IsNullable()
                     && target.IsAssignableFrom( source );
             } );
 
             return source == target || primitiveToNullablePrimitive.Value ||
-                (this.AllowImplicitConversions && source.IsImplicitlyConvertibleTo( target )) ||
-                (this.AllowExplicitConversions && source.IsExplicitlyConvertibleTo( target ));
+                this.AllowImplicitConversions && source.IsImplicitlyConvertibleTo( target ) ||
+                this.AllowExplicitConversions && source.IsExplicitlyConvertibleTo( target );
         }
     }
 }

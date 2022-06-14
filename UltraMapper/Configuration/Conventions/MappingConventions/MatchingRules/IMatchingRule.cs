@@ -4,16 +4,7 @@ namespace UltraMapper.Conventions
 {
     public interface IMatchingRule
     {
+        bool CanHandle( MemberInfo source, MemberInfo target );
         bool IsCompliant( MemberInfo source, MemberInfo target );
-    }
-
-    public interface ITypeMatchingRule : IMatchingRule
-    {
-
-    }
-
-    public interface INameMatchingRule : IMatchingRule
-    {
-        bool IgnoreCase { get; set; }
     }
 }

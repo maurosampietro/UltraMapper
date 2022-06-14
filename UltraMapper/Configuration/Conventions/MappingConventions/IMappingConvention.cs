@@ -9,8 +9,8 @@ namespace UltraMapper.Conventions
         TypeSet<IMatchingRule> MatchingRules { get; set; }
         IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
 
-        IMemberProvider SourceMemberProvider { get; set; }
-        IMemberProvider TargetMemberProvider { get; set; }
+        ISourceMemberProvider SourceMemberProvider { get; set; }
+        ITargetMemberProvider TargetMemberProvider { get; set; }
 
         IEnumerable<MemberPair> MapByConvention( Type source, Type target );        
     }

@@ -75,7 +75,9 @@ namespace UltraMapper.Tests
                     convention.SourceMemberProvider.IgnoreMethods = false;
                     convention.TargetMemberProvider.IgnoreMethods = false;
 
-                    convention.MatchingRules.GetOrAdd<MethodMatching>();
+                    convention.MatchingRules.GetOrAdd<MethodNameMatching>();
+                    convention.MatchingRules.GetOrAdd<MethodTypeMatching>();
+                    convention.MatchingRules.GetOrAdd<TypeMatchingRule>();
                 } );
             } );
 

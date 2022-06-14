@@ -7,8 +7,8 @@ namespace UltraMapper.Conventions
 {
     public class DefaultConvention : IMappingConvention
     {
-        public IMemberProvider SourceMemberProvider { get; set; }
-        public IMemberProvider TargetMemberProvider { get; set; }
+        public ISourceMemberProvider SourceMemberProvider { get; set; }
+        public ITargetMemberProvider TargetMemberProvider { get; set; }
 
         public IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
         public TypeSet<IMatchingRule> MatchingRules { get; set; }

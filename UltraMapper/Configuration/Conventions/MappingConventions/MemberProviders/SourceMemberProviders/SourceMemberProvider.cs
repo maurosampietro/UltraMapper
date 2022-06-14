@@ -6,7 +6,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Conventions
 {
-    public class SourceMemberProvider : IMemberProvider
+    public class SourceMemberProvider : ISourceMemberProvider
     {
         public bool IgnoreFields { get; set; } = true;
         public bool IgnoreProperties { get; set; } = false;
