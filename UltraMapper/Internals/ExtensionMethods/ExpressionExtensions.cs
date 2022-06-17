@@ -29,9 +29,9 @@ namespace UltraMapper.Internals
                 return memberAcessPath;
             }
 
-            if( exp is GotoExpression )
+            if( exp is GotoExpression expression )
             {
-                stack.Push( ((GotoExpression)exp).Value );
+                stack.Push( expression.Value );
             }
             else
             {
@@ -48,9 +48,6 @@ namespace UltraMapper.Internals
 
                     else if( exp.NodeType == ExpressionType.Call )
                         exp = ((MethodCallExpression)exp).Object;
-
-                    else if( exp.NodeType == ExpressionType.Goto )
-                        exp = ((GotoExpression)exp).Value;
                 }
 
                 //instance parameter
