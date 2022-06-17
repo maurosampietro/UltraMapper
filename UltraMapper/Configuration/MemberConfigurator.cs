@@ -16,6 +16,20 @@ namespace UltraMapper
             _typeMapping = typeMapping;
         }
 
+        public MemberConfigurator MapMember( Type sourceType, MemberInfo targetMember )
+        {
+            var sourceMemberGetter = sourceType.GetGetterExp();
+            var targetMemberGetterExp = targetMember.GetGetterExp();
+            var targetMemberSetterExp = targetMember.GetSetterExp();
+
+            MemberMapping mapping = this.MapMemberInternal( sourceType, targetMember,
+                sourceMemberGetter, targetMemberGetterExp, targetMemberSetterExp );
+
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+
+            return this;
+        }
+
         public MemberConfigurator MapMember( MemberInfo sourceMember,
             MemberInfo targetMemberGetter, MemberInfo targetMemberSetter )
         {
@@ -85,7 +99,8 @@ namespace UltraMapper
         }
     }
 
-    public class MemberConfigurator<TSource, TTarget> : MemberConfigurator
+    //Member to member
+    public partial class MemberConfigurator<TSource, TTarget> : MemberConfigurator
     {
         public MemberConfigurator( TypeMapping typeMapping )
             : base( typeMapping ) { }
@@ -160,7 +175,7 @@ namespace UltraMapper
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Action<IMemberMappingOptions> memberMappingConfig )
         {
-            return MapMember( sourceSelector, targetSelector, 
+            return MapMember( sourceSelector, targetSelector,
                 (Expression<Func<TSourceMember, TTargetMember>>)null, memberMappingConfig );
         }
 
@@ -177,7 +192,7 @@ namespace UltraMapper
 
             return this;
 
-           // return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
+            // return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
@@ -229,6 +244,38 @@ namespace UltraMapper
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
             memberMappingConfig.Invoke( mapping );
+
+            return this;
+        }
+
+        //type to member
+        public MemberConfigurator MapTypeToMember<TType, TTargetMember>(
+            Expression<Func<TTarget, TTargetMember>> targetSelector )
+        {
+            var sourceSelector = typeof( TType ).GetGetterExp();
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+
+            return this;
+        }
+
+        public MemberConfigurator MapTypeToMember<TTargetMember>( Type type,
+            Expression<Func<TTarget, TTargetMember>> targetSelector )
+        {
+            var sourceSelector = type.GetGetterExp();
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+
+            return this;
+        }
+
+        public MemberConfigurator MapTypeToMember<TType>( MemberInfo targetMember )
+        {
+            var sourceSelector = typeof( TType ).GetGetterExp();
+            var targetSelector = targetMember.GetSetterExp();
+
+            var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
 
             return this;
         }

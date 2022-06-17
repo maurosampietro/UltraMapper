@@ -15,7 +15,9 @@ namespace UltraMapper.Benchmarks
     {
         static void Main( string[] args )
         {
-            var summary = BenchmarkRunner.Run<MappersBenchmark>( new DebugInProcessConfig() );
+            //   var summary = BenchmarkRunner.Run<MappersBenchmark>( new DebugInProcessConfig() );
+
+            new MappersBenchmark().UltraMapperTest();
         }
     }
 
@@ -133,7 +135,13 @@ namespace UltraMapper.Benchmarks
             } );
             _autoMapper = new AutoMapper.Mapper( config );
 
-            _ultraMapper = new Mapper( cfg => cfg.IsReferenceTrackingEnabled = true );
+            _ultraMapper = new Mapper( cfg =>
+            {
+                cfg.IsReferenceTrackingEnabled = true;
+
+                cfg.MapTypes<ComplexType, ComplexType>()
+                    .MapTypeToMember( typeof(int), t => t.InnerType );
+            } );
 
             var innerType = new InnerType() { String = "test" };
 

@@ -16,10 +16,13 @@ namespace UltraMapper.Internals
         {
             switch( memberInfo )
             {
-                case FieldInfo fi: 
+                case Type type:
+                    return type.GetGetterExp();
+
+                case FieldInfo fi:
                     return fi.GetGetterExp();
 
-                case PropertyInfo pi: 
+                case PropertyInfo pi:
                     return pi.GetGetterExp();
 
                 case MethodInfo mi:
@@ -28,6 +31,17 @@ namespace UltraMapper.Internals
                 default:
                     throw new ArgumentException( $"'{memberInfo}' is not supported." );
             }
+        }
+
+        internal static LambdaExpression GetGetterExp( this Type type )
+        {
+            LabelTarget returnTarget = Expression.Label( type );
+
+            var targetInstance = Expression.Parameter( type, "target" );
+            var body = Expression.Return( returnTarget, targetInstance, type );
+
+            var delegateType = typeof( Func<,> ).MakeGenericType( type, type );
+            return LambdaExpression.Lambda( delegateType, body, targetInstance );
         }
 
         internal static LambdaExpression GetSetterExp( this MemberInfo memberInfo )
