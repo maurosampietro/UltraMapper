@@ -7,7 +7,7 @@ using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper
 {
-    public class Configuration
+    public sealed class Configuration
     {
         internal readonly ConfigInheritanceTree TypeMappingTree;
         internal readonly GeneratedExpressionCache ExpCache;
@@ -105,11 +105,11 @@ namespace UltraMapper
 
             this.ConventionResolver = new DefaultConventionResolver();
 
-            //new BuiltInConverters().AddPrimitiveTypeToItself( this );
-            //new BuiltInConverters().AddExplicitNumericConverters( this );
-            //new BuiltInConverters().AddImplicitNumeriConverters( this );
-            //new BuiltInConverters().AddPrimitiveTypeToStringConverters( this );
-            //new BuiltInConverters().AddStringToPrimitiveTypeConverters( this );
+            //BuiltInConverters.AddPrimitiveTypeToItself( this );
+            //BuiltInConverters.AddExplicitNumericConverters( this );
+            //BuiltInConverters.AddImplicitNumericConverters( this );
+            //BuiltInConverters.AddPrimitiveTypeToStringConverters( this );
+            //BuiltInConverters.AddStringToPrimitiveTypeConverters( this );
 
             config?.Invoke( this );
         }

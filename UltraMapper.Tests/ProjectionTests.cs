@@ -22,6 +22,7 @@ namespace UltraMapper.Tests
         private class SecondLevel
         {
             public string A { get; set; }
+            public string A1 { get; set; }
             public ThirdLevel ThirdLevel { get; set; }
 
             public ThirdLevel GetThird() { return this.ThirdLevel; }
@@ -31,6 +32,7 @@ namespace UltraMapper.Tests
         private class ThirdLevel
         {
             public string A { get; set; }
+            public string A1 { get; set; }
 
             public void SetA( string value )
             {
@@ -39,24 +41,23 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        [Ignore]
         public void FlatteningToInstance()
         {
-            //var source = new FirstLevel()
-            //{
-            //    A = "first",
-            //};
+            var source = new FirstLevel()
+            {
+                A = "first",
+            };
 
-            //var ultraMapper = new Mapper( cfg =>
-            //{
-            //    cfg.MapTypes<FirstLevel, object>()
-            //        .MapMember( a => a.A.Length, b => b );
-            //} );
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<FirstLevel, object>()
+                    .MapMember( a => a.A.Length, b => b );
+            } );
 
-            //var target = ultraMapper.MapStruct<FirstLevel, int>( source );
+            var target = ultraMapper.MapStruct<FirstLevel, int>( source );
 
-            //bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            //Assert.IsTrue( isResultOk );
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
         }
 
         [TestMethod]
@@ -79,15 +80,18 @@ namespace UltraMapper.Tests
 
             var target = new FirstLevel()
             {
-                A = "first",
+                A = "firstTarget",
+                A1 = "untouched",
 
                 SecondLevel = new SecondLevel()
                 {
-                    A = "second",
+                    A = "secondTarget",
+                    A1 = "untouched",
 
                     ThirdLevel = new ThirdLevel()
                     {
-                        A = "third"
+                        A = "thirdTarget",
+                        A1 = "untouched"
                     }
                 }
             };
@@ -96,21 +100,29 @@ namespace UltraMapper.Tests
             {
                 cfg.MapTypes<SecondLevel, SecondLevel>( typeConfig =>
                 {
+                    typeConfig.IgnoreMemberMappingResolvedByConvention = true;
                     typeConfig.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
-                } );
+                } )
+                .MapMember( s => s.A, t => t.A );
 
                 cfg.MapTypes<FirstLevel, FirstLevel>()
                     .MapMember( a => a.SecondLevel.ThirdLevel.A, b => b.A )
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
                     .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
-                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
+                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );               
             } );
 
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( target.A == "third" );
+            Assert.IsTrue( target.A1 == "third" );
+            Assert.IsTrue( target.A2 == "third" );
+
             Assert.IsTrue( isResultOk );
+            Assert.IsTrue( target.SecondLevel.A1 == "untouched" );
+            Assert.IsTrue( target.SecondLevel.ThirdLevel.A1 == "untouched" );
         }
 
         [TestMethod]

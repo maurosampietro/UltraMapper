@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UltraMapper.Conventions
 {
-    public sealed class StringSplitter
+    public sealed class StringSplitter : IStringSplitter
     {
         public readonly IStringSplittingRule SplittingRule;
 
