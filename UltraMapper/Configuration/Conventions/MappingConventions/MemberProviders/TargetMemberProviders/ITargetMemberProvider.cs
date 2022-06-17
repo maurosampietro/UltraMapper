@@ -4,6 +4,6 @@ namespace UltraMapper.Conventions
 {
     public interface ITargetMemberProvider : IMemberProvider
     {
-        bool AllowGetterOrSetterMethodsOnly { get; set; }
+        bool AllowGetterOrSetterMethodsOnly { get; }
     }
 }

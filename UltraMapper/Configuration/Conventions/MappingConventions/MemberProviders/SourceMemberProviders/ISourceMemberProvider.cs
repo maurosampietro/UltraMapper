@@ -4,6 +4,6 @@ namespace UltraMapper.Conventions
 {
     public interface ISourceMemberProvider : IMemberProvider
     {
-        bool AllowGetterMethodsOnly { get; set; }
+        bool AllowGetterMethodsOnly { get; }
     }
 }
