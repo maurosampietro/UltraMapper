@@ -5,9 +5,9 @@
     /// We can improve performance by setting them up as converters at compile time.
     /// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions
     /// </summary>
-    public class BuiltInConverters
+    public static class BuiltInConverters
     {
-        public void AddPrimitiveTypeToItself( Configuration config )
+        public static void AddPrimitiveTypeToItself( Configuration config )
         {
             config.MapTypes<bool, bool>( s => s );
             config.MapTypes<byte, byte>( s => s );
@@ -25,7 +25,7 @@
             config.MapTypes<string, string>( s => s );
         }
 
-        public void AddImplicitNumeriConverters( Configuration config )
+        public static void AddImplicitNumericConverters( Configuration config )
         {
             config.MapTypes<sbyte, short>( s => s );
             config.MapTypes<sbyte, int>( s => s );
@@ -80,7 +80,7 @@
             config.MapTypes<float, double>( s => s );
         }
 
-        public void AddExplicitNumericConverters( Configuration config )
+        public static void AddExplicitNumericConverters( Configuration config )
         {
             config.MapTypes<sbyte, byte>( s => (byte)s );
             config.MapTypes<sbyte, ushort>( s => (ushort)s );
@@ -161,7 +161,7 @@
             config.MapTypes<decimal, double>( s => (double)s );
         }
 
-        public void AddStringToPrimitiveTypeConverters( Configuration config )
+        public static void AddStringToPrimitiveTypeConverters( Configuration config )
         {
             config.MapTypes<string, bool>( s => bool.Parse( s ) );
             config.MapTypes<string, byte>( s => byte.Parse( s.ToString() ) );
@@ -178,7 +178,7 @@
             config.MapTypes<string, ushort>( s => ushort.Parse( s.ToString() ) );
         }
 
-        public void AddPrimitiveTypeToStringConverters( Configuration config )
+        public static void AddPrimitiveTypeToStringConverters( Configuration config )
         {
             config.MapTypes<bool, string>( s => s.ToString() );
             config.MapTypes<byte, string>( s => s.ToString() );

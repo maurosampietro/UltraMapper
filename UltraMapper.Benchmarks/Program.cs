@@ -20,6 +20,7 @@ namespace UltraMapper.Benchmarks
     }
 
     [SimpleJob( RuntimeMoniker.Net50 )]
+    [SimpleJob( RuntimeMoniker.Net60 )]
     public class MappersBenchmark
     {
         private readonly AutoMapper.Mapper _autoMapper;

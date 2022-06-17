@@ -13,7 +13,7 @@ namespace UltraMapper.Conventions
 
         public IMatchingRulesEvaluator MatchingRulesEvaluator { get; set; }
         public TypeSet<IMatchingRule> MatchingRules { get; set; }
-        public StringSplitter StringSplitter { get; set; }
+        public IStringSplitter StringSplitter { get; set; }
 
         public ProjectionConvention()
         {
