@@ -29,24 +29,33 @@ namespace UltraMapper.Internals
                 return memberAcessPath;
             }
 
-            //break the expression down member by member
-            while( !(exp is ParameterExpression) )
+            if( exp is GotoExpression )
             {
-                stack.Push( exp );
-
-                if( exp.NodeType == ExpressionType.Convert )
-                    exp = ((UnaryExpression)exp).Operand as Expression;
-
-                else if( exp.NodeType == ExpressionType.MemberAccess )
-                    exp = ((MemberExpression)exp).Expression;
-
-                else if( exp.NodeType == ExpressionType.Call )
-                    exp = ((MethodCallExpression)exp).Object;
+                stack.Push( ((GotoExpression)exp).Value );
             }
+            else
+            {
+                //break the expression down member by member
+                while( !(exp is ParameterExpression) )
+                {
+                    stack.Push( exp );
 
-            //instance parameter
-            stack.Push( exp );
+                    if( exp.NodeType == ExpressionType.Convert )
+                        exp = ((UnaryExpression)exp).Operand as Expression;
 
+                    else if( exp.NodeType == ExpressionType.MemberAccess )
+                        exp = ((MemberExpression)exp).Expression;
+
+                    else if( exp.NodeType == ExpressionType.Call )
+                        exp = ((MethodCallExpression)exp).Object;
+
+                    else if( exp.NodeType == ExpressionType.Goto )
+                        exp = ((GotoExpression)exp).Value;
+                }
+
+                //instance parameter
+                stack.Push( exp );
+            }
 
             //If the instance on which we call is a derived class and the property
             //we select is defined in the base class, we will notice that
