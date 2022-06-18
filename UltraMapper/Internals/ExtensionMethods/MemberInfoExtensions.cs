@@ -35,14 +35,16 @@ namespace UltraMapper.Internals
         }
 
         /// <summary>
-        /// Gets the type of the accessed member (last member) of the expression.
+        /// Attemps to get the type of the accessed member (last member) of the expression.
         /// </summary>
         /// <param name="memberInfo"></param>
+        /// <param name="memberType">  When this method returns, contains the accessed member if found; 
+        /// otherwise, the default value for the type of the value parameter
         /// <returns></returns>
         public static bool TryGetMemberType( this MemberInfo memberInfo, out Type memberType )
         {
-            memberType = null;
-
+            memberType = default;
+            
             switch( memberInfo )
             {
                 case Type type:
@@ -77,5 +79,23 @@ namespace UltraMapper.Internals
 
             return false;
         }
+
+        /// <summary>
+        /// Checks if a member it's part of a specific type.
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public static bool BelongsTo<TTarget>( this MemberInfo member )
+            => BelongsTo( member, typeof( TTarget ) );
+
+        /// <summary>
+        /// Checks if a member it's part of a specific type.
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public static bool BelongsTo( this MemberInfo member, Type type )
+            => type == member.ReflectedType;
     }
 }

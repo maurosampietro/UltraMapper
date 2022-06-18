@@ -140,7 +140,7 @@ namespace UltraMapper.Benchmarks
                 cfg.IsReferenceTrackingEnabled = true;
 
                 cfg.MapTypes<ComplexType, ComplexType>()
-                    .MapTypeToMember( typeof(int), t => t.InnerType );
+                    .MapTypeToMember<int>( typeof( InnerType ).GetProperties().First() );
             } );
 
             var innerType = new InnerType() { String = "test" };

@@ -16,8 +16,10 @@ namespace UltraMapper
             _typeMapping = typeMapping;
         }
 
-        public MemberConfigurator MapMember( Type sourceType, MemberInfo targetMember )
+        public MemberConfigurator MapTypeToMember( Type sourceType, MemberInfo targetMember )
         {
+            CheckThrowMemberBelongsToType(targetMember, sourceType);
+
             var sourceMemberGetter = sourceType.GetGetterExp();
             var targetMemberGetterExp = targetMember.GetGetterExp();
             var targetMemberSetterExp = targetMember.GetSetterExp();
@@ -33,6 +35,10 @@ namespace UltraMapper
         public MemberConfigurator MapMember( MemberInfo sourceMember,
             MemberInfo targetMemberGetter, MemberInfo targetMemberSetter )
         {
+            CheckThrowMemberBelongsToType( sourceMember, _typeMapping.SourceType );
+            CheckThrowMemberBelongsToType( targetMemberGetter, _typeMapping.TargetType );
+            CheckThrowMemberBelongsToType( targetMemberSetter, _typeMapping.TargetType );
+
             var sourceMemberGetter = sourceMember.GetGetterExp();
             var targetMemberGetterExp = targetMemberGetter.GetGetterExp();
             var targetMemberSetterExp = targetMemberSetter.GetSetterExp();
@@ -47,6 +53,9 @@ namespace UltraMapper
 
         public MemberConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
         {
+            CheckThrowMemberBelongsToType( sourceMember, _typeMapping.SourceType );
+            CheckThrowMemberBelongsToType( targetMember, _typeMapping.TargetType );
+
             var sourceMemberGetter = sourceMember.GetGetterExp();
             var targetMemberGetter = targetMember.GetGetterExp();
             var targetMemberSetter = targetMember.GetSetterExp();
@@ -96,6 +105,17 @@ namespace UltraMapper
             _typeMapping.MemberMappings[ mappingTarget ] = mapping;
 
             return mapping;
+        }
+
+        private void CheckThrowMemberBelongsToType( MemberInfo member, Type type )
+        {
+            if( !member.BelongsTo( type ) )
+            {
+                var formatMember = $"{member.ReflectedType.GetPrettifiedName()}.{member.Name}";
+                var formatType = type.GetPrettifiedName();
+
+                throw new ArgumentException( $"Member '{formatMember}' does not belong to type '{formatType}'" );
+            }
         }
     }
 
@@ -249,7 +269,7 @@ namespace UltraMapper
         }
 
         //type to member
-        public MemberConfigurator MapTypeToMember<TType, TTargetMember>(
+        public MemberConfigurator<TSource, TTarget> MapTypeToMember<TType, TTargetMember>(
             Expression<Func<TTarget, TTargetMember>> targetSelector )
         {
             var sourceSelector = typeof( TType ).GetGetterExp();
@@ -259,7 +279,7 @@ namespace UltraMapper
             return this;
         }
 
-        public MemberConfigurator MapTypeToMember<TTargetMember>( Type type,
+        public MemberConfigurator<TSource, TTarget> MapTypeToMember<TTargetMember>( Type type,
             Expression<Func<TTarget, TTargetMember>> targetSelector )
         {
             var sourceSelector = type.GetGetterExp();
@@ -269,8 +289,11 @@ namespace UltraMapper
             return this;
         }
 
-        public MemberConfigurator MapTypeToMember<TType>( MemberInfo targetMember )
+        public MemberConfigurator<TSource, TTarget> MapTypeToMember<TType>( MemberInfo targetMember )
         {
+            if( !targetMember.BelongsTo<TTarget>() )
+                throw new ArgumentException( $"Member '{targetMember.ReflectedType.GetPrettifiedName()}.{targetMember.Name}' does not belong to type '{typeof( TTarget ).GetPrettifiedName()}'" );
+
             var sourceSelector = typeof( TType ).GetGetterExp();
             var targetSelector = targetMember.GetSetterExp();
 
