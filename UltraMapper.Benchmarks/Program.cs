@@ -134,7 +134,7 @@ namespace UltraMapper.Benchmarks
                 cfg.CreateMap<InnerType, InnerType>();
             } );
             _autoMapper = new AutoMapper.Mapper( config );
-
+            
             _ultraMapper = new Mapper( cfg =>
             {
                 cfg.IsReferenceTrackingEnabled = true;

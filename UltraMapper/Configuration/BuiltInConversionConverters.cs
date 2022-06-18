@@ -1,4 +1,6 @@
-﻿namespace UltraMapper
+﻿using System;
+
+namespace UltraMapper
 {
     /// <summary>
     /// This conversions would be figured out and generated at runtime every time.
@@ -7,6 +9,12 @@
     /// </summary>
     public static class BuiltInConverters
     {
+        public static void AddStringToDateTime( Configuration config )
+        {
+            config.MapTypes<string, DateTime>( s => DateTime.Parse( s, config.Culture ) );
+            config.MapTypes<DateTime, string>( s => s.ToString( config.Culture ) );
+        }
+
         public static void AddPrimitiveTypeToItself( Configuration config )
         {
             config.MapTypes<bool, bool>( s => s );

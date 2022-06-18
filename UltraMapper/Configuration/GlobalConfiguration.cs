@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using UltraMapper.Config;
 using UltraMapper.Conventions;
 using UltraMapper.Conventions.Resolvers;
@@ -11,6 +12,8 @@ namespace UltraMapper
     {
         internal readonly ConfigInheritanceTree TypeMappingTree;
         internal readonly GeneratedExpressionCache ExpCache;
+
+        public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
 
         /// <summary>
         /// If set to True only explicitly user-defined member-mappings are 
@@ -105,6 +108,7 @@ namespace UltraMapper
 
             this.ConventionResolver = new DefaultConventionResolver();
 
+            BuiltInConverters.AddStringToDateTime( this );
             //BuiltInConverters.AddPrimitiveTypeToItself( this );
             //BuiltInConverters.AddExplicitNumericConverters( this );
             //BuiltInConverters.AddImplicitNumericConverters( this );
