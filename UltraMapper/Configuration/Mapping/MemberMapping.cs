@@ -40,8 +40,10 @@ namespace UltraMapper.Internals
             get
             {
                 if( _typeToMemberMapping == null )
+                {
                     _typeToMemberMapping = this.InstanceTypeMapping
                         .GetTypeToMember( this.SourceType, this.TargetMember );
+                }
 
                 return _typeToMemberMapping;
             }
@@ -54,11 +56,15 @@ namespace UltraMapper.Internals
             {
                 //options resolving:
                 //1. user defined manual member option override
-                //2. user defined manual instance option override
+                //2. user defined manual type-to-member option override
+                //2. user defined manual instance type-to-type option override
                 //3. member-type config traversal
 
                 if( _referenceBehavior != ReferenceBehaviors.INHERIT )
                     return _referenceBehavior;
+
+                if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT)
+                    return this.TypeToMemberMapping.ReferenceBehavior;
 
                 if( this.InstanceTypeMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
                     return this.InstanceTypeMapping.ReferenceBehavior;
@@ -76,11 +82,15 @@ namespace UltraMapper.Internals
             {
                 //options resolving:
                 //1. user defined manual member option override
-                //2. user defined manual instance option override
+                //2. user defined manual type-to-member option override
+                //2. user defined manual instance type-to-type option override
                 //3. member-type config traversal
 
                 if( _collectionBehaviors != CollectionBehaviors.INHERIT )
                     return _collectionBehaviors;
+
+                if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
+                    return this.TypeToMemberMapping.CollectionBehavior;
 
                 //architecturally not ready for this
                 //if( this.InstanceTypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
@@ -100,6 +110,9 @@ namespace UltraMapper.Internals
                 if( _collectionItemEqualityComparer != null )
                     return _collectionItemEqualityComparer;
 
+                if( this.TypeToMemberMapping?.CollectionItemEqualityComparer != null )
+                    return this.TypeToMemberMapping.CollectionItemEqualityComparer;
+
                 return this.MemberTypeMapping.CollectionItemEqualityComparer;
             }
 
@@ -114,7 +127,7 @@ namespace UltraMapper.Internals
                 if( _customConverter != null )
                     return _customConverter;
 
-                if( this.TypeToMemberMapping != null )
+                if( this.TypeToMemberMapping?.CustomConverter != null )
                     return this.TypeToMemberMapping.CustomConverter;
 
                 return this.MemberTypeMapping.CustomConverter;
@@ -126,7 +139,17 @@ namespace UltraMapper.Internals
         private LambdaExpression _customTargetConstructor;
         public LambdaExpression CustomTargetConstructor
         {
-            get => _customTargetConstructor ?? this.MemberTypeMapping.CustomTargetConstructor;
+            get
+            {
+                if( _customTargetConstructor != null )
+                    return _customTargetConstructor;
+
+                if( this.TypeToMemberMapping?.CustomTargetConstructor != null )
+                    return this.TypeToMemberMapping.CustomTargetConstructor;
+
+                return this.MemberTypeMapping.CustomTargetConstructor;
+            }
+
             set => _customTargetConstructor = value;
         }
 

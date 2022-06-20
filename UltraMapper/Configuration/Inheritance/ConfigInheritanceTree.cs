@@ -129,7 +129,7 @@ namespace UltraMapper.Config
             string targetTypeName = initialNode.Item.TargetType.GetPrettifiedName();
 
             stringBuilder.Append( new String( '\t', indentationLevel++ ) );
-            stringBuilder.AppendLine( $"[{sourceTypeName} -> {targetTypeName}" );
+            stringBuilder.AppendLine( $"[{sourceTypeName} -> {targetTypeName}]" );
 
             foreach( var node in initialNode.Children )
                 this.ToStringInternal( stringBuilder, indentationLevel, node );

@@ -657,6 +657,8 @@ namespace UltraMapper.Tests
 
             ultraMapper.Map( source, target );
 
+            string tree = ultraMapper.Config.TypeMappingTree.ToString();
+
             Assert.IsTrue( target.Array.Length == source.Array.Length );
             Assert.IsTrue( object.ReferenceEquals( target.Array.First( item => item.A == 1 ), tempItemA ) );
             Assert.IsTrue( object.ReferenceEquals( target.Array.First( item => item.A == 9 ), tempItemB ) );
