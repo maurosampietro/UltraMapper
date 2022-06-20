@@ -3,9 +3,9 @@ using UltraMapper.Internals;
 
 namespace UltraMapper
 {
-    public partial class Mapper
+    public sealed partial class Mapper
     {
-        public Configuration Config { get; protected set; }
+        public readonly Configuration Config;       
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
@@ -198,7 +198,7 @@ namespace UltraMapper
     }
 
     //type
-    public partial class Mapper
+    public sealed partial class Mapper
     {
         public object Map( object source, Type targetType )
         {
@@ -212,7 +212,7 @@ namespace UltraMapper
     }
 
     //structs
-    public partial class Mapper
+    public sealed partial class Mapper
     {
         public TTarget MapStruct<TSource, TTarget>( TSource source,
             ReferenceTracker referenceTracking = null ) where TTarget : struct

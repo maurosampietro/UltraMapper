@@ -27,12 +27,26 @@ namespace UltraMapper.Internals
          *
          *The target member can be therefore used as the key of this dictionary
          */
-        public readonly Dictionary<MappingTarget, MemberMapping> MemberMappings;
+        public readonly Dictionary<MappingTarget, MemberMapping> MemberToMemberMappings;
+
+        public readonly Dictionary<MappingTarget, Dictionary<Type, MemberMapping>> TypeToMemberMappings;
 
         public TypeMapping( Configuration globalConfig, Type sourceType, Type targetType )
             : base( globalConfig, sourceType, targetType )
         {
-            this.MemberMappings = new Dictionary<MappingTarget, MemberMapping>();
+            this.MemberToMemberMappings = new Dictionary<MappingTarget, MemberMapping>();
+            this.TypeToMemberMappings = new Dictionary<MappingTarget, Dictionary<Type, MemberMapping>>();
+        }
+
+        public MemberMapping GetTypeToMember( Type sourceType, MappingTarget targetMember )
+        {
+            if( TypeToMemberMappings.TryGetValue( targetMember, out var dict ) )
+            {
+                if( dict.TryGetValue( sourceType, out var typeToMemberMapping ) )
+                    return typeToMemberMapping;
+            }
+
+            return null;
         }
 
         private LambdaExpression _customConverter = null;

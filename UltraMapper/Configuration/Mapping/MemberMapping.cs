@@ -34,6 +34,19 @@ namespace UltraMapper.Internals
             }
         }
 
+        private MemberMapping _typeToMemberMapping;
+        public MemberMapping TypeToMemberMapping
+        {
+            get
+            {
+                if( _typeToMemberMapping == null )
+                    _typeToMemberMapping = this.InstanceTypeMapping
+                        .GetTypeToMember( this.SourceType, this.TargetMember );
+
+                return _typeToMemberMapping;
+            }
+        }
+
         private ReferenceBehaviors _referenceBehavior = ReferenceBehaviors.INHERIT;
         public ReferenceBehaviors ReferenceBehavior
         {
@@ -96,7 +109,17 @@ namespace UltraMapper.Internals
         private LambdaExpression _customConverter;
         public override LambdaExpression CustomConverter
         {
-            get => _customConverter ?? this.MemberTypeMapping.CustomConverter;
+            get
+            {
+                if( _customConverter != null )
+                    return _customConverter;
+
+                if( this.TypeToMemberMapping != null )
+                    return this.TypeToMemberMapping.CustomConverter;
+
+                return this.MemberTypeMapping.CustomConverter;
+            }
+
             set => _customConverter = value;
         }
 
@@ -110,7 +133,7 @@ namespace UltraMapper.Internals
         public void SetCustomTargetConstructor<T>( Expression<Func<T>> ctor )
             => CustomTargetConstructor = ctor;
 
-        public void SetCollectionItemEqualityComparer<TSource, TTarget>(Expression<Func<TSource, TTarget, bool>> converter )
+        public void SetCollectionItemEqualityComparer<TSource, TTarget>( Expression<Func<TSource, TTarget, bool>> converter )
             => CollectionItemEqualityComparer = converter;
 
         public override string ToString()

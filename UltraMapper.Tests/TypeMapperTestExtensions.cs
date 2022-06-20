@@ -62,7 +62,7 @@ namespace UltraMapper.Tests
             var typeMapping = ultraMapper.Config[
                 source.GetType(), target.GetType() ];
 
-            foreach( var mapping in typeMapping.MemberMappings.Values )
+            foreach( var mapping in typeMapping.MemberToMemberMappings.Values )
             {
                 if( mapping.MappingResolution == Internals.MappingResolution.RESOLVED_BY_CONVENTION
                     && typeMapping.IgnoreMemberMappingResolvedByConvention == true ) continue;

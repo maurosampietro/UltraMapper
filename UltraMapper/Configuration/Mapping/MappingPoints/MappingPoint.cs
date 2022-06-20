@@ -38,7 +38,8 @@ namespace UltraMapper.Internals
             if( _toString == null )
             {
                 string typeName = this.MemberType.GetPrettifiedName();
-                _toString = $"{typeName} {this.MemberInfo.Name}";
+                _toString = this.MemberInfo == this.MemberType ? typeName
+                    : $"{typeName} {this.MemberInfo.Name}";
             }
 
             return _toString;

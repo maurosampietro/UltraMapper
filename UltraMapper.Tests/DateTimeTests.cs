@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace UltraMapper.Tests
 {
     [TestClass]
-    public class DateTimeTests
+    public partial class DateTimeTests
     {
         private class Source
         {
@@ -25,7 +25,12 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void DateTimeAndString()
         {
-            var source = new Source() { Date = new DateTime( 2000, 12, 31 ), DateString = new DateTime( 2000, 1, 1 ).ToString( "yyyyMMdd" ) };
+            var source = new Source()
+            {
+                Date = new DateTime( 2000, 12, 31 ),
+                DateString = new DateTime( 2000, 1, 1 ).ToString( "yyyyMMdd" )
+            };
+
             var target = new Target();
 
             var ultraMapper = new Mapper( cfg =>
@@ -41,6 +46,47 @@ namespace UltraMapper.Tests
 
             Assert.IsTrue( source.Date.ToString( ultraMapper.Config.Culture ) == target.DateString );
             Assert.IsTrue( DateTime.ParseExact( source.DateString, "yyyyMMdd", ultraMapper.Config.Culture ) == target.Date );
+        }
+    }
+
+    public partial class DateTimeTests
+    {
+        private class Source2
+        {
+            public DateTime Date1 { get; set; }
+            public DateTime Date2 { get; set; }
+        }
+
+        private class Target2
+        {
+            public string LongDateString { get; set; }
+            public string ShortDateString { get; set; }
+        }
+
+        [TestMethod]
+        public void DifferentDateTimeFormatsTypeMemberConfig()
+        {
+            var source = new Source2()
+            {
+                Date1 = new DateTime( 2000, 12, 31 ),
+                Date2 = new DateTime( 2000, 12, 31 ),
+            };
+
+            var target = new Target2();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<Source2, Target2>()
+                    .MapTypeToMember<DateTime, string>( t => t.LongDateString, s => s.ToLongDateString() )
+                    .MapTypeToMember<DateTime, string>( t => t.ShortDateString, s => s.ToShortDateString() )
+                    .MapMember( s => s.Date1, t => t.LongDateString )
+                    .MapMember( s => s.Date2, t => t.ShortDateString );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.Date1.ToLongDateString() == target.LongDateString );
+            Assert.IsTrue( source.Date2.ToShortDateString() == target.ShortDateString );
         }
     }
 }

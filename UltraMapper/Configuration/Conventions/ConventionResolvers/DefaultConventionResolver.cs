@@ -28,7 +28,7 @@ namespace UltraMapper
                         MappingResolution = MappingResolution.RESOLVED_BY_CONVENTION
                     };
 
-                    typeMapping.MemberMappings[ mappingTarget ] = mapping;
+                    typeMapping.MemberToMemberMappings[ mappingTarget ] = mapping;
                 }
             }
         }

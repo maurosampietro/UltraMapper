@@ -162,7 +162,7 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
-            var memberMappings = typeMapping.MemberMappings.Values.ToList();
+            var memberMappings = typeMapping.MemberToMemberMappings.Values.ToList();
             if( typeMapping.IgnoreMemberMappingResolvedByConvention == true )
             {
                 memberMappings = memberMappings.Where( mapping =>
