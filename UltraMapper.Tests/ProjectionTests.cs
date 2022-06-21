@@ -50,8 +50,8 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.MapTypes<FirstLevel, object>()
-                    .MapMember( a => a.A.Length, b => b );
+                cfg.MapTypes<FirstLevel, int>( k => k.A.Length );
+                    //.MapMember( a => a.A.Length, b => b );
             } );
 
             var target = ultraMapper.MapStruct<FirstLevel, int>( source );

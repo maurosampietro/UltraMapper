@@ -5,7 +5,7 @@ namespace UltraMapper
 {
     public sealed partial class Mapper
     {
-        public readonly Configuration Config;       
+        public readonly Configuration Config;
 
         /// <summary>
         /// Initialize a new instance with the specified mapping configuration.
@@ -225,7 +225,7 @@ namespace UltraMapper
 
             var mapping = this.Config[ sourceType, targetType ];
 
-            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) )
+            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) && !targetType.IsBuiltIn( true ) )
             {
                 var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
                 return method.Invoke( referenceTracking, source, new TTarget() );
@@ -247,7 +247,7 @@ namespace UltraMapper
 
             var mapping = this.Config[ sourceType, targetType ];
 
-            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) )
+            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) && !targetType.IsBuiltIn( true ) )
             {
                 var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
                 target = method.Invoke( referenceTracking, source, new TTarget() );

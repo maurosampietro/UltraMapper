@@ -85,6 +85,9 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetGetterExpWithNullChecks( this MemberAccessPath memberAccessPath )
         {
+            if( memberAccessPath.Count == 1 )
+                return memberAccessPath.First().GetGetterExp();
+
             var entryMember = memberAccessPath.First();
 
             var instanceType = entryMember.ReflectedType ??
@@ -98,22 +101,14 @@ namespace UltraMapper.Internals
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
 
-            if( memberAccessPath.Count == 1 && entryMember is Type )
+            foreach( var memberAccess in memberAccessPath )
             {
-                //instance => instance
-                //do nothing
-            }
-            else
-            {
-                foreach( var memberAccess in memberAccessPath )
-                {
-                    if( memberAccess is MethodInfo mi )
-                        accessPath = Expression.Call( accessPath, mi );
-                    else
-                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                if( memberAccess is MethodInfo mi )
+                    accessPath = Expression.Call( accessPath, mi );
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
 
-                    memberAccesses.Add( accessPath );
-                }
+                memberAccesses.Add( accessPath );
             }
 
             var nullConstant = Expression.Constant( null );
