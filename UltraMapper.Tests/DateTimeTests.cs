@@ -49,44 +49,78 @@ namespace UltraMapper.Tests
         }
     }
 
-    public partial class DateTimeTests
+    [TestClass]
+    public class DateTimeTests2
     {
+        private class Source1
+        {
+            public DateTime Date1 { get; set; }
+            public DateTime Date2 { get; set; }
+            public DateTime Date3 { get; set; }
+        }
+
+        private class Target
+        {
+            public string LongDateString { get; set; }
+            public string ShortDateString { get; set; }
+            public string DefaultFormat { get; set; }
+        }
+
         private class Source2
         {
             public DateTime Date1 { get; set; }
             public DateTime Date2 { get; set; }
-        }
-
-        private class Target2
-        {
-            public string LongDateString { get; set; }
-            public string ShortDateString { get; set; }
+            public DateTime Date3 { get; set; }
         }
 
         [TestMethod]
-        public void DifferentDateTimeFormatsTypeMemberConfig()
+        public void DifferentFormatsAndConfigInheritance()
         {
-            var source = new Source2()
+            var source1 = new Source1()
             {
                 Date1 = new DateTime( 2000, 12, 31 ),
-                Date2 = new DateTime( 2000, 12, 31 ),
+                Date2 = new DateTime( 2001, 12, 31 ),
+                Date3 = new DateTime( 2002, 12, 31 )
             };
 
-            var target = new Target2();
+            var source2 = new Source2()
+            {
+                Date1 = new DateTime( 2002, 12, 31 ),
+                Date2 = new DateTime( 2003, 12, 31 ),
+                Date3 = new DateTime( 2002, 12, 31 )
+            };
+
+            var target = new Target();
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.MapTypes<Source2, Target2>()
+                cfg.MapTypes<DateTime, string>( s => "default format" );
+
+                cfg.MapTypes<Source1, Target>()
                     .MapTypeToMember<DateTime, string>( t => t.LongDateString, s => s.ToLongDateString() )
                     .MapTypeToMember<DateTime, string>( t => t.ShortDateString, s => s.ToShortDateString() )
                     .MapMember( s => s.Date1, t => t.LongDateString )
-                    .MapMember( s => s.Date2, t => t.ShortDateString );
+                    .MapMember( s => s.Date2, t => t.ShortDateString )
+                    .MapMember( s => s.Date3, t => t.DefaultFormat );
+
+                cfg.MapTypes<Source2, Target>()
+                    .MapTypeToMember<DateTime, string>( t => t.LongDateString, s => "long format" )
+                    .MapMember( s => s.Date1, t => t.LongDateString )
+                    .MapMember( s => s.Date2, t => t.ShortDateString, s => "short format" )
+                    .MapMember( s => s.Date3, t => t.DefaultFormat, s => "default format override" );
             } );
 
-            ultraMapper.Map( source, target );
+            ultraMapper.Map( source1, target );
 
-            Assert.IsTrue( source.Date1.ToLongDateString() == target.LongDateString );
-            Assert.IsTrue( source.Date2.ToShortDateString() == target.ShortDateString );
+            Assert.IsTrue( source1.Date1.ToLongDateString() == target.LongDateString );
+            Assert.IsTrue( source1.Date2.ToShortDateString() == target.ShortDateString );
+            Assert.IsTrue( target.DefaultFormat == "default format" );
+
+            ultraMapper.Map( source2, target );
+
+            Assert.IsTrue( target.LongDateString == "long format" );
+            Assert.IsTrue( target.ShortDateString == "short format" );
+            Assert.IsTrue( target.DefaultFormat == "default format override" );
         }
     }
 }
