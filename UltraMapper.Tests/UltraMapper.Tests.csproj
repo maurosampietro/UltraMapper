@@ -8,7 +8,7 @@
     <Copyright>2020</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Platforms>AnyCPU</Platforms>
-	 <istestproject>true</istestproject>
+	  <istestproject>true</istestproject>
   </PropertyGroup>
 
   <ItemGroup>
