@@ -131,5 +131,18 @@ namespace UltraMapper
                 } );
             }
         }
+
+        public bool TryGetMapping( Type source, Type target, out TypeMapping typeMapping )
+        {
+            typeMapping = null;
+
+            if( this.TypeMappingTree.TryGetValue( source, target, out var node ) )
+            {
+                typeMapping = node.Item;
+                return true;
+            }
+
+            return false;
+        }
     }
 }

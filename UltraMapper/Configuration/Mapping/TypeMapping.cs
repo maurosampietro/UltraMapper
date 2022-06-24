@@ -49,6 +49,23 @@ namespace UltraMapper.Internals
             return null;
         }
 
+        private bool? _isReferenceTrackingEnabled = null;
+        public bool IsReferenceTrackingEnabled
+        {
+            get
+            {
+                if( _isReferenceTrackingEnabled != null )
+                    return _isReferenceTrackingEnabled.Value;
+
+                var parent = this.GetParentConfiguration();
+                if( parent != null ) return parent.IsReferenceTrackingEnabled;
+
+                return this.GlobalConfig.IsReferenceTrackingEnabled;
+            }
+            
+            set => _isReferenceTrackingEnabled = value;
+        }
+
         private LambdaExpression _customConverter = null;
         public override LambdaExpression CustomConverter
         {

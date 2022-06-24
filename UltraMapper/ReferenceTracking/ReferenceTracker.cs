@@ -50,5 +50,7 @@ namespace UltraMapper
 
         public object this[ object sourceInstance, Type targetType ]
             => _mappings[ sourceInstance ][ targetType ];
+
+        public void Clear() => _mappings.Clear();
     }
 }

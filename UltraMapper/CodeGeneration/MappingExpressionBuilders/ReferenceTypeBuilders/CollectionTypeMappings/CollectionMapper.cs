@@ -142,7 +142,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var memberAssignment = Expression.Assign( targetParam, constructorExp );
 
             Expression innerMappingExp = Expression.Empty();
-            if( MapperConfiguration.IsReferenceTrackingEnabled )
+            if( itemMapping.IsReferenceTrackingEnabled )
             {
                 innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(
                     referenceTracker, sourceParam, targetParam,

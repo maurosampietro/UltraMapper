@@ -5,6 +5,8 @@ namespace UltraMapper
 {
     public interface IMappingOptions
     {
+        bool IsReferenceTrackingEnabled { get; set; }
+
         CollectionBehaviors CollectionBehavior { get; set; }
         ReferenceBehaviors ReferenceBehavior { get; set; }
 

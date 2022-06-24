@@ -22,6 +22,23 @@ namespace UltraMapper.Internals
 
         public bool Ignore { get; set; }
 
+        private bool? _isReferenceTrackingEnabled = null;
+        public bool IsReferenceTrackingEnabled
+        {
+            get
+            {
+                if( _isReferenceTrackingEnabled != null )
+                    return _isReferenceTrackingEnabled.Value;
+
+                if( this.TypeToMemberMapping != null )
+                    return this.TypeToMemberMapping.IsReferenceTrackingEnabled;
+
+                return TypeToTypeMapping.IsReferenceTrackingEnabled;
+            }
+
+            set => _isReferenceTrackingEnabled = value;
+        }
+
         private TypeMapping _typeToTypeMapping;
         public TypeMapping TypeToTypeMapping
         {
@@ -63,7 +80,7 @@ namespace UltraMapper.Internals
                 if( _referenceBehavior != ReferenceBehaviors.INHERIT )
                     return _referenceBehavior;
 
-                if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT)
+                if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
                     return this.TypeToMemberMapping.ReferenceBehavior;
 
                 //if( this.InstanceTypeMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
