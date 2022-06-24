@@ -132,7 +132,7 @@ namespace UltraMapper
                     if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION &&
                         memberMapping.InstanceTypeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
                     {
-                        var memberTypeMapping = memberMapping.MemberTypeMapping;
+                        var memberTypeMapping = memberMapping.TypeToTypeMapping;
 
                         var mappingSourceType = memberTypeMapping.SourceType;
                         var mappingTargetType = memberTypeMapping.TargetType;

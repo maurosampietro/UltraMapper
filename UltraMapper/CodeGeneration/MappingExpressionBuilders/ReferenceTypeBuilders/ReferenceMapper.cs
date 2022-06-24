@@ -208,7 +208,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 .GetMemberAssignment( memberContext );
 
             Expression innerMappingExp;
-            if( MapperConfiguration.IsReferenceTrackingEnabled )
+            if( memberContext.Options.IsReferenceTrackingEnabled )
             {
                 innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(
                     memberContext.ReferenceTracker, memberContext.SourceMember,

@@ -146,7 +146,7 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.Array.SequenceEqual( target.List ) );
-        }
+       }
 
         [TestMethod]
         public void SimpleCollectionToArray()

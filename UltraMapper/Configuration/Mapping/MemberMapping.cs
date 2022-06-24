@@ -22,15 +22,32 @@ namespace UltraMapper.Internals
 
         public bool Ignore { get; set; }
 
-        private TypeMapping _memberTypeMapping;
-        public TypeMapping MemberTypeMapping
+        private bool? _isReferenceTrackingEnabled = null;
+        public bool IsReferenceTrackingEnabled
         {
             get
             {
-                if( _memberTypeMapping == null )
-                    _memberTypeMapping = GlobalConfig[ SourceType, TargetType ];
+                if( _isReferenceTrackingEnabled != null )
+                    return _isReferenceTrackingEnabled.Value;
 
-                return _memberTypeMapping;
+                if( this.TypeToMemberMapping != null )
+                    return this.TypeToMemberMapping.IsReferenceTrackingEnabled;
+
+                return TypeToTypeMapping.IsReferenceTrackingEnabled;
+            }
+
+            set => _isReferenceTrackingEnabled = value;
+        }
+
+        private TypeMapping _typeToTypeMapping;
+        public TypeMapping TypeToTypeMapping
+        {
+            get
+            {
+                if( _typeToTypeMapping == null )
+                    _typeToTypeMapping = GlobalConfig[ SourceType, TargetType ];
+
+                return _typeToTypeMapping;
             }
         }
 
@@ -63,13 +80,13 @@ namespace UltraMapper.Internals
                 if( _referenceBehavior != ReferenceBehaviors.INHERIT )
                     return _referenceBehavior;
 
-                if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT)
+                if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
                     return this.TypeToMemberMapping.ReferenceBehavior;
 
-                if( this.InstanceTypeMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
-                    return this.InstanceTypeMapping.ReferenceBehavior;
+                //if( this.InstanceTypeMapping.ReferenceBehavior != ReferenceBehaviors.INHERIT )
+                //    return this.InstanceTypeMapping.ReferenceBehavior;
 
-                return MemberTypeMapping.ReferenceBehavior;
+                return TypeToTypeMapping.ReferenceBehavior;
             }
 
             set => _referenceBehavior = value;
@@ -92,11 +109,11 @@ namespace UltraMapper.Internals
                 if( this.TypeToMemberMapping != null && this.TypeToMemberMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
                     return this.TypeToMemberMapping.CollectionBehavior;
 
-                //architecturally not ready for this
+                //in some cases its ok in some cases its not.. do not traver instance type
                 //if( this.InstanceTypeMapping.CollectionBehavior != CollectionBehaviors.INHERIT )
                 //    return this.InstanceTypeMapping.CollectionBehavior;
 
-                return MemberTypeMapping.CollectionBehavior;
+                return TypeToTypeMapping.CollectionBehavior;
             }
 
             set => _collectionBehaviors = value;
@@ -113,7 +130,7 @@ namespace UltraMapper.Internals
                 if( this.TypeToMemberMapping?.CollectionItemEqualityComparer != null )
                     return this.TypeToMemberMapping.CollectionItemEqualityComparer;
 
-                return this.MemberTypeMapping.CollectionItemEqualityComparer;
+                return this.TypeToTypeMapping.CollectionItemEqualityComparer;
             }
 
             set => _collectionItemEqualityComparer = value;
@@ -130,7 +147,7 @@ namespace UltraMapper.Internals
                 if( this.TypeToMemberMapping?.CustomConverter != null )
                     return this.TypeToMemberMapping.CustomConverter;
 
-                return this.MemberTypeMapping.CustomConverter;
+                return this.TypeToTypeMapping.CustomConverter;
             }
 
             set => _customConverter = value;
@@ -147,7 +164,7 @@ namespace UltraMapper.Internals
                 if( this.TypeToMemberMapping?.CustomTargetConstructor != null )
                     return this.TypeToMemberMapping.CustomTargetConstructor;
 
-                return this.MemberTypeMapping.CustomTargetConstructor;
+                return this.TypeToTypeMapping.CustomTargetConstructor;
             }
 
             set => _customTargetConstructor = value;

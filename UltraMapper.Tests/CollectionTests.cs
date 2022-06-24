@@ -201,7 +201,7 @@ namespace UltraMapper.Tests
 
                     var targetType = typeof( GenericCollections<> )
                         .MakeGenericType( targetElementType );
-                    
+
                     var sourceTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( sourceType );
                     var targetTypeCtor = ConstructorFactory.CreateConstructor<bool, uint, uint>( targetType );
 
@@ -657,7 +657,7 @@ namespace UltraMapper.Tests
 
             ultraMapper.Map( source, target );
 
-            string tree = ultraMapper.Config.TypeMappingTree.ToString();
+            string tree = ultraMapper.Config.TypeMappingTree.ToString( includeMembers: true, includeOptions: true );
 
             Assert.IsTrue( target.Array.Length == source.Array.Length );
             Assert.IsTrue( object.ReferenceEquals( target.Array.First( item => item.A == 1 ), tempItemA ) );
