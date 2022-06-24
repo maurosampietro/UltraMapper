@@ -253,7 +253,7 @@ namespace UltraMapper.MappingExpressionBuilders
         /// </summary>
         protected virtual Expression GetTargetCollectionClearExpression( CollectionMapperContext context )
         {
-            bool isResetCollection = context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&
+            bool isResetCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
                 context.Options.CollectionBehavior == CollectionBehaviors.RESET;
 
             if( isResetCollection )

@@ -113,26 +113,74 @@ namespace UltraMapper.Config
             return _nodeDictionary.TryGetValue( key, out value );
         }
 
-        public override string ToString()
+        public override string ToString() => this.ToString( false, false );
+
+        public string ToString( bool includeMembers, bool includeOptions )
         {
             if( this.Root == null ) return "{}";
 
             var stringBuilder = new StringBuilder();
-            this.ToStringInternal( stringBuilder, 0, this.Root );
+            this.ToStringInternal( stringBuilder, 0, this.Root, includeMembers, includeOptions );
 
             return stringBuilder.ToString();
         }
 
-        private void ToStringInternal( StringBuilder stringBuilder, int indentationLevel, ConfigInheritanceNode initialNode )
+        private void ToStringInternal( StringBuilder stringBuilder, int indentationLevel,
+            ConfigInheritanceNode initialNode, bool includeMembers, bool includeOptions )
         {
             string sourceTypeName = initialNode.Item.SourceType.GetPrettifiedName();
             string targetTypeName = initialNode.Item.TargetType.GetPrettifiedName();
 
+            StringBuilder options = new StringBuilder();
+            if( includeOptions )
+            {
+                options.Append( $"{nameof( IMappingOptions.ReferenceBehavior )}: {initialNode.Item.ReferenceBehavior}, " );
+                options.Append( $"{nameof( IMappingOptions.CollectionBehavior )}: {initialNode.Item.CollectionBehavior}" );
+
+                if( initialNode.Item.CustomTargetConstructor != null )
+                    options.Append( $" ,{nameof( IMappingOptions.CustomTargetConstructor )}: PROVIDED" );
+
+                if( initialNode.Item.CustomConverter != null )
+                    options.Append( $" ,{nameof( IMappingOptions.CustomConverter )}: PROVIDED" );
+
+                if( initialNode.Item.CollectionItemEqualityComparer != null )
+                    options.Append( $" ,{nameof( IMappingOptions.CollectionItemEqualityComparer )}: PROVIDED" );
+            }
+
             stringBuilder.Append( new String( '\t', indentationLevel++ ) );
-            stringBuilder.AppendLine( $"[{sourceTypeName} -> {targetTypeName}]" );
+            stringBuilder.AppendLine( $"[{sourceTypeName} -> {targetTypeName}] ({options})" );
+
+            if( includeMembers )
+            {
+                var indent = new String( '\t', indentationLevel++ );
+                StringBuilder memberOptions = new StringBuilder();
+
+                foreach( var item in initialNode.Item.MemberToMemberMappings.Values )
+                {
+                    if( includeOptions )
+                    {
+                        memberOptions.Append( $"{nameof( IMappingOptions.ReferenceBehavior )}: {item.ReferenceBehavior}, " );
+                        memberOptions.Append( $"{nameof( IMappingOptions.CollectionBehavior )}: {item.CollectionBehavior}" );
+
+                        if( item.CustomTargetConstructor != null )
+                            memberOptions.Append( $" ,{nameof( IMappingOptions.CustomTargetConstructor )}: PROVIDED" );
+
+                        if( item.CustomConverter != null )
+                            memberOptions.Append( $" ,{nameof( IMappingOptions.CustomConverter )}: PROVIDED" );
+
+                        if( item.CollectionItemEqualityComparer != null )
+                            memberOptions.Append( $" ,{nameof( IMappingOptions.CollectionItemEqualityComparer )}: PROVIDED" );
+                    }
+
+                    stringBuilder.AppendLine( $"{indent}{item} ({memberOptions})" );
+                    memberOptions.Clear();
+                }
+
+                indentationLevel--;
+            }
 
             foreach( var node in initialNode.Children )
-                this.ToStringInternal( stringBuilder, indentationLevel, node );
+                this.ToStringInternal( stringBuilder, indentationLevel, node, includeMembers, includeOptions );
         }
 
         private bool IsParentChildRelation( TypeMapping s, TypeMapping t )
