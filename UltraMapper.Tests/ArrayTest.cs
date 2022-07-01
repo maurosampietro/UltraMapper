@@ -9,7 +9,7 @@ using UltraMapper.Internals;
 namespace UltraMapper.Tests
 {
     [TestClass]
-    public class ArrayTests 
+    public class ArrayTests
     {
         public class User
         {
@@ -135,18 +135,18 @@ namespace UltraMapper.Tests
                 Array = Enumerable.Range( 0, 100 ).ToArray()
             };
 
-            var target = new GenericCollections<int>( false );
+            var target = new GenericCollections<int>( true );
 
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes( source, target )
-                    .MapMember( a => a.Array, b => b.List );
+                    .MapMember( a => a.Array, b => b.List);
             } );
 
             ultraMapper.Map( source, target );
 
             Assert.IsTrue( source.Array.SequenceEqual( target.List ) );
-       }
+        }
 
         [TestMethod]
         public void SimpleCollectionToArray()

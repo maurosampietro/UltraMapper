@@ -118,13 +118,17 @@ namespace UltraMapper.MappingExpressionBuilders
 
             //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
             //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
-            if( targetType.IsAssignableFrom( sourceType ) && (targetType.IsAbstract || targetType.IsInterface ) )
+            if( targetType.IsAssignableFrom( sourceType ) && (targetType.IsAbstract || targetType.IsInterface) )
             {
                 MethodInfo getTypeMethodInfo = typeof( object ).GetMethod( nameof( object.GetType ) );
                 var getSourceType = Expression.Call( sourceValue, getTypeMethodInfo );
 
-                return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],
-                    getSourceType, Expression.Constant( null, typeof( object[] ) ) ), targetType );
+                var createObjectMethod = typeof( InstanceFactory ).GetMethods()
+                    .Where( m => m.Name == nameof( InstanceFactory.CreateObject ) )
+                    .Where( m => !m.IsGenericMethod )
+                    .First();
+
+                return Expression.Convert( Expression.Call( null, createObjectMethod, getSourceType ), targetType );
 
                 //static should be faster but cannot handle non-concrete objects the same way
                 //return Expression.Convert( Expression.Call( null, typeof( InstanceFactory ).GetMethods()[ 1 ],

@@ -6,11 +6,81 @@ using UltraMapper.Internals;
 
 namespace UltraMapper
 {
-    internal class InstanceFactory
+    public class InstanceFactory
     {
+        #region Instance type passed as generic param
+        public static T CreateObject<TArg1, T>( TArg1 arg1 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, T>();
+            return instanceCreator( arg1 );
+        }
+
+        public static T CreateObject<TArg1, TArg2, T>( TArg1 arg1, TArg2 arg2 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, T>();
+            return instanceCreator( arg1, arg2 );
+        }
+
+        public static T CreateObject<TArg1, TArg2, TArg3, T>( TArg1 arg1, TArg2 arg2, TArg3 arg3 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, T>();
+            return instanceCreator( arg1, arg2, arg3 );
+        }
+
+        public static T CreateObject<TArg1, TArg2, TArg3, TArg4, T>( TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, T>();
+            return instanceCreator( arg1, arg2, arg3, arg4 );
+        }
+
+        public static T CreateObject<TArg1, TArg2, TArg3, TArg4, TArg5, T>( TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, T>();
+            return instanceCreator( arg1, arg2, arg3, arg4, arg5 );
+        }
+
         public static T CreateObject<T>( params object[] constructorValues )
         {
             return (T)CreateObject( typeof( T ), constructorValues );
+        }
+        #endregion
+
+        #region Instance type passed as type param
+
+        public static object CreateObject( Type instanceType )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor( instanceType );
+            return instanceCreator();
+        }
+
+        public static object CreateObject<TArg1>( Type instanceType, TArg1 arg1 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1>( instanceType );
+            return instanceCreator( arg1 );
+        }
+
+        public static object CreateObject<TArg1, TArg2>( Type instanceType, TArg1 arg1, TArg2 arg2 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2>( instanceType );
+            return instanceCreator( arg1, arg2 );
+        }
+
+        public static object CreateObject<TArg1, TArg2, TArg3>( Type instanceType, TArg1 arg1, TArg2 arg2, TArg3 arg3 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3>( instanceType );
+            return instanceCreator( arg1, arg2, arg3 );
+        }
+
+        public static object CreateObject<TArg1, TArg2, TArg3, TArg4>( Type instanceType, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4>( instanceType );
+            return instanceCreator( arg1, arg2, arg3, arg4 );
+        }
+
+        public static object CreateObject<TArg1, TArg2, TArg3, TArg4, TArg5>( Type instanceType, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5 )
+        {
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5>( instanceType );
+            return instanceCreator( arg1, arg2, arg3, arg4, arg5 );
         }
 
         public static object CreateObject( Type intanceType, params object[] constructorValues )
@@ -30,6 +100,7 @@ namespace UltraMapper
                 return instanceCreator( constructorValues );
             }
         }
+        #endregion
     }
 
     internal partial class ConstructorFactory
@@ -37,6 +108,7 @@ namespace UltraMapper
         private static readonly Dictionary<Type, Delegate> _cache
             = new Dictionary<Type, Delegate>();
 
+        #region Instance type passed as type param
         public static Func<object> CreateConstructor( Type instanceType )
         {
             return (Func<object>)_cache.GetOrAdd( instanceType, () =>
@@ -52,16 +124,32 @@ namespace UltraMapper
         {
             return (Func<TArg1, object>)_cache.GetOrAdd( instanceType, () =>
             {
-                var ctorArgTypes = new[] { typeof( TArg1 ) };
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                if( instanceType.IsArray )
+                {
+                    var ctorArgTypes = new[] { typeof( TArg1 ) };
+                    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                Expression.Parameter( type, $"p{index}" ) ).ToArray();
+                    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
-                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                    var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
+                    Expression.Convert( Expression.NewArrayInit( instanceType, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                return instanceCreatorExp.Compile();
+                    return instanceCreatorExp.Compile();
+                }
+                else
+                {
+                    var ctorArgTypes = new[] { typeof( TArg1 ) };
+                    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+
+                    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+
+                    var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
+                    Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+
+                    return instanceCreatorExp.Compile();
+                }
             } );
         }
 
@@ -156,11 +244,10 @@ namespace UltraMapper
                 return instanceCreatorExp.Compile();
             } );
         }
-    }
+        #endregion
 
-    internal partial class ConstructorFactory
-    {
-        public static Func<TInstance> CreateConstructor<TInstance>() where TInstance : class
+        #region Instance type passed as generic param
+        public static Func<TInstance> CreateConstructor<TInstance>()
         {
             var instanceType = typeof( TInstance );
 
@@ -173,11 +260,11 @@ namespace UltraMapper
             } );
         }
 
-        public static Func<TArg1, TInstance> CreateConstructor<TArg1, TInstance>() where TInstance : class
+        public static Func<TArg1, TInstance> CreateConstructor<TArg1, TInstance>()
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TArg1,TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TInstance>)_cache.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ) };
                 var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
@@ -192,7 +279,7 @@ namespace UltraMapper
             } );
         }
 
-        public static Func<TArg1, TArg2, TInstance> CreateConstructor<TArg1, TArg2, TInstance>() where TInstance : class
+        public static Func<TArg1, TArg2, TInstance> CreateConstructor<TArg1, TArg2, TInstance>()
         {
             var instanceType = typeof( TInstance );
 
@@ -211,7 +298,7 @@ namespace UltraMapper
             } );
         }
 
-        public static Func<TArg1, TArg2, TArg3, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TInstance>() where TInstance : class
+        public static Func<TArg1, TArg2, TArg3, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TInstance>()
         {
             var instanceType = typeof( TInstance );
 
@@ -230,7 +317,7 @@ namespace UltraMapper
             } );
         }
 
-        public static Func<TArg1, TArg2, TArg3, TArg4, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TInstance>() where TInstance : class
+        public static Func<TArg1, TArg2, TArg3, TArg4, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TInstance>()
         {
             var instanceType = typeof( TInstance );
 
@@ -251,7 +338,7 @@ namespace UltraMapper
             } );
         }
 
-        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>() where TInstance : class
+        public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>()
         {
             var instanceType = typeof( TInstance );
 
@@ -293,5 +380,6 @@ namespace UltraMapper
                 return instanceCreatorExp.Compile();
             } );
         }
+        #endregion
     }
 }

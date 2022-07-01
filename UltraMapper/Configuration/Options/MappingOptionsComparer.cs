@@ -10,13 +10,15 @@ namespace UltraMapper.Internals
             if( x == null || y == null ) return false;
 
             return x.CollectionBehavior == y.CollectionBehavior &&
-                x.ReferenceBehavior == y.ReferenceBehavior;
+                x.ReferenceBehavior == y.ReferenceBehavior &&
+                x.IsReferenceTrackingEnabled == y.IsReferenceTrackingEnabled;
         }
 
         public int GetHashCode( IMappingOptions obj )
         {
             return (obj?.CollectionBehavior.GetHashCode() ?? 0) ^
-                (obj?.ReferenceBehavior.GetHashCode() ?? 0);
+                (obj?.ReferenceBehavior.GetHashCode() ?? 0) ^
+                (obj?.IsReferenceTrackingEnabled.GetHashCode() ?? 0);
         }
     }
 }
