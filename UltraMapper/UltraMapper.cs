@@ -8,7 +8,7 @@ namespace UltraMapper
         public readonly Configuration Config;
 
         /// <summary>
-        /// Initialize a new instance with the specified mapping configuration.
+        /// Initialize a new instance with the specified configuration.
         /// </summary>
         /// <param name="config">The mapping configuration.</param>
         public Mapper( Configuration config )
@@ -32,7 +32,7 @@ namespace UltraMapper
         /// <returns>A deep copy of the source instance.</returns>
         public TSource Map<TSource>( TSource source ) where TSource : class, new()
         {
-            if( source == null ) return null;
+            if( source == default ) return default;
 
             var target = (TSource)InstanceFactory.CreateObject( source.GetType() );
             this.Map( source, target );

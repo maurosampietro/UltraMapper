@@ -7,28 +7,28 @@ namespace UltraMapper.Tests
 {
     [TestClass]
     public class BuiltInTypeTests
-    {      
+    {
         private class PrimitiveTypes
         {
-            public bool Boolean { get; set; } = true;
-            public byte Byte { get; set; } = 0x1;
-            public char Char { get; set; } = (char)2;
-            public decimal Decimal { get; set; } = 3;
-            public double Double { get; set; } = 4.0;
-            public short Int16 { get; set; } = 5;
-            public int Int32 { get; set; } = 6;
-            public long Int64 { get; set; } = 7;
-            public sbyte SByte { get; set; } = 0x8;
-            public float Single { get; set; } = 9.0f;
-            public ushort UInt16 { get; set; } = 10;
-            public uint UInt32 { get; set; } = 11;
-            public ulong UInt64 { get; set; } = 12;
+            public bool Boolean { get; set; }
+            public byte Byte { get; set; }
+            public char Char { get; set; }
+            public decimal Decimal { get; set; }
+            public double Double { get; set; }
+            public short Int16 { get; set; }
+            public int Int32 { get; set; }
+            public long Int64 { get; set; }
+            public sbyte SByte { get; set; }
+            public float Single { get; set; }
+            public ushort UInt16 { get; set; }
+            public uint UInt32 { get; set; }
+            public ulong UInt64 { get; set; }
         }
 
         //Inheritance is tested too
         private class BuiltInTypes : PrimitiveTypes
         {
-            public string String { get; set; } = "14";
+            public string String { get; set; }
         }
 
         private class NullablePrimitiveTypes
@@ -56,8 +56,25 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void BuiltInToBuiltIn()
         {
-            var source = new BuiltInTypes();
-            
+            var source = new BuiltInTypes()
+            {
+                Boolean = true,
+                Byte = 0x1,
+                Char = (char)2,
+                Decimal = 3,
+                Double = 4.0,
+                Int16 = 5,
+                Int32 = 6,
+                Int64 = 7,
+                SByte = 0x8,
+                Single = 9.0f,
+                UInt16 = 10,
+                UInt32 = 11,
+                UInt64 = 12,
+
+                String = "13"
+            };
+
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
@@ -65,14 +82,14 @@ namespace UltraMapper.Tests
                     .MapMember( a => a.Single, d => d.String, single => single.ToString() )
 
                     //map same source property to many different targets
-                    .MapMember( a => a.Char, d => d.Single )
                     .MapMember( a => a.Char, d => d.Int32 )
 
-                    .MapMember( a => 123, d => d.Single )
-                    
                     //same source and destination members: last mapping overrides and adds the converter 
+                    .MapMember( a => a.Char, d => d.Single )
+                    .MapMember( a => 123, d => d.Single )
                     .MapMember( a => a.String, d => d.Single )
                     .MapMember( a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+
 
                     //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
                     .MapMember( a => a.Single, y => y.Double, a => a + 254 )
@@ -81,14 +98,25 @@ namespace UltraMapper.Tests
 
             var target = ultraMapper.Map( source );
 
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
+            Assert.IsTrue( target.Boolean );
+            Assert.IsTrue( target.Byte == 0x1 );
+            Assert.IsTrue( target.Char == (char)2 );
+            Assert.IsTrue( target.Decimal == 3 );
+            Assert.IsTrue( target.Double == 9.0 );
+            Assert.IsTrue( target.Int16 == 5 );
+            Assert.IsTrue( target.Int32 == 2 );
+            Assert.IsTrue( target.Int64 == 7 );
+            Assert.IsTrue( target.SByte == 0x8 );
+            Assert.IsTrue( target.Single == 13 );
+            Assert.IsTrue( target.UInt16 == 10 );
+            Assert.IsTrue( target.UInt32 == 11 );
+            Assert.IsTrue( target.UInt64 == 12 );
         }
 
         [TestMethod]
         public void NullablePrimitiveTypeToADifferentPrimitiveType()
         {
-            var source = new NullablePrimitiveTypes(); 
+            var source = new NullablePrimitiveTypes();
             var target = new BuiltInTypes();
 
             var ultraMapper = new Mapper
@@ -165,7 +193,7 @@ namespace UltraMapper.Tests
                 Double = 4.0,
                 Int16 = 5,
                 Int32 = 6,
-                Int64 = 7,                
+                Int64 = 7,
                 SByte = 0x9,
                 Single = 10,
                 String = "11",
@@ -212,7 +240,7 @@ namespace UltraMapper.Tests
                 Double = 4.0,
                 Int16 = 5,
                 Int32 = 6,
-                Int64 = 7,                
+                Int64 = 7,
                 SByte = 0x9,
                 Single = 10f,
                 String = "11",

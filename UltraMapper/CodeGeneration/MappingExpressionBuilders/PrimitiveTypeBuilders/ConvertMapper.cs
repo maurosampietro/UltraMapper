@@ -5,47 +5,45 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
-    public class ConvertMapper : PrimitiveMapperBase
+    public sealed class ConvertMapper : PrimitiveMapperBase
     {
-        private static Type _convertType = typeof( Convert );
-        private static HashSet<TypePair> _supportedConversions = new HashSet<TypePair>();
+        private static readonly Type _convertType = typeof( Convert );
+        private static readonly HashSet<TypePair> _supportedConversions = new HashSet<TypePair>();
 
         public ConvertMapper( Configuration configuration )
             : base( configuration ) { }
 
         public override bool CanHandle( Type source, Type target )
         {
-            bool areTypesBuiltIn = source.IsBuiltIn( false ) &&
-                target.IsBuiltIn( false );
+            bool areTypesBuiltIn = source.IsBuiltIn( false ) && target.IsBuiltIn( false );
+            return areTypesBuiltIn || SourceIsConvertibleToTarget( source, target );
+        }
 
-            var isConvertible = new Lazy<bool>( () =>
+        private bool SourceIsConvertibleToTarget( Type source, Type target )
+        {
+            try
             {
-                try
-                {
-                    var typePair = new TypePair( source, target );
-                    if( _supportedConversions.Contains( typePair ) )
-                        return true;
-
-                    if( !source.ImplementsInterface( typeof( IConvertible ) ) )
-                        return false;
-
-                    var testValue = Activator.CreateInstance( source );
-                    Convert.ChangeType( testValue, target );
-
-                    _supportedConversions.Add( typePair );
+                var typePair = new TypePair( source, target );
+                if( _supportedConversions.Contains( typePair ) )
                     return true;
-                }
-                catch( InvalidCastException )
-                {
-                    return false;
-                }
-                catch( Exception )
-                {
-                    return false;
-                }
-            } );
 
-            return areTypesBuiltIn || isConvertible.Value;
+                if( !source.ImplementsInterface( typeof( IConvertible ) ) )
+                    return false;
+
+                var testValue = Activator.CreateInstance( source );
+                Convert.ChangeType( testValue, target );
+
+                _supportedConversions.Add( typePair );
+                return true;
+            }
+            catch( InvalidCastException )
+            {
+                return false;
+            }
+            catch( Exception )
+            {
+                return false;
+            }
         }
 
         protected override Expression GetValueExpression( MapperContext context )

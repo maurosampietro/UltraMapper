@@ -73,6 +73,62 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        [Ignore]
+        public void ToPrimitiveArray()
+        {
+            var source = Enumerable.Range( 0, 10 ).ToList();
+
+            //var ultraMapper = new Mapper();
+            //var target = ultraMapper.Map<int[]>( source );
+
+            //bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            //Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        [Ignore]
+        public void ToPrimitiveMultidimensionalArray()
+        {
+            var source = Enumerable.Range( 0, 10 ).Select( i => Enumerable.Range( 1, 2 ) ).ToList();
+
+            //var ultraMapper = new Mapper();
+            //var target = ultraMapper.Map<int[][]>( source );
+
+            //bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            //Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        [Ignore]
+        public void ToNonPrimitiveArray()
+        {
+            var source = Enumerable.Range( 0, 10 ).ToList().Select( i => new ComplexType() { PropertyA = i } );
+
+            var ultraMapper = new Mapper();
+            //var target = ultraMapper.Map<ComplexType[]>( source );
+
+            //bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            //Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        [Ignore]
+        public void ToNonPrimitiveMultidimensionalArray()
+        {
+            var source = new List<List<ComplexType>>()
+            {
+               new List<ComplexType>(){  new ComplexType() { PropertyA = 1 }, new ComplexType() { PropertyA = 2 } },
+               new List<ComplexType>(){  new ComplexType() { PropertyA = 1 }, new ComplexType() { PropertyA = 2 } }
+            };
+
+            //var ultraMapper = new Mapper();
+            //var target = ultraMapper.Map<ComplexType[][]>( source );
+
+            //bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            //Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
         public void DictionaryToDictionarySameElementSimpleType()
         {
             var source = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 }, { 3, 3 } };
@@ -193,5 +249,7 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
+
+
     }
 }

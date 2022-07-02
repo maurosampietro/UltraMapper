@@ -109,6 +109,18 @@ namespace UltraMapper.MappingExpressionBuilders
             if( options?.CustomTargetConstructor != null )
                 return Expression.Invoke( options.CustomTargetConstructor );
 
+            if( targetType.IsArray )
+            {
+                var sourceCountMethod = CollectionMapper.GetCountMethod( sourceType );
+
+                Expression sourceCountMethodCallExp;
+                if( sourceCountMethod.IsStatic )
+                    sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, sourceValue );
+                else sourceCountMethodCallExp = Expression.Call( sourceValue, sourceCountMethod );
+
+                return Expression.NewArrayInit( targetType, sourceCountMethodCallExp );
+            }
+
             var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );
             if( defaultCtor != null )
                 return Expression.New( targetType );
@@ -244,34 +256,53 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        protected Expression GetSimpleMemberExpressionInternal(
-            LambdaExpression mappingExpression, ParameterExpression targetInstance,
-            Expression sourceMemberValueGetter, LambdaExpression targetMemberValueSetter )
-        {
-            var targetSetterInstanceParamName = targetMemberValueSetter.Parameters[ 0 ].Name;
-            var targetSetterValueParamName = targetMemberValueSetter.Parameters[ 1 ].Name;
-
-            var valueReaderExp = mappingExpression.Body.ReplaceParameter(
-                sourceMemberValueGetter, mappingExpression.Parameters[ 0 ].Name );
-
-            if( mappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
-            {
-                valueReaderExp = mappingExpression.Body.ReplaceParameter(
-                    sourceMemberValueGetter, mappingExpression.Parameters[ 1 ].Name );
-            }
-
-            return targetMemberValueSetter.Body
-                .ReplaceParameter( targetInstance, targetSetterInstanceParamName )
-                .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
-        }
-
         protected Expression GetSimpleMemberExpression( MemberMapping mapping )
         {
             var memberContext = new MemberMappingContext( mapping );
 
-            return GetSimpleMemberExpressionInternal( mapping.MappingExpression,
-                memberContext.TargetInstance, memberContext.SourceMemberValueGetter,
-                mapping.TargetMember.ValueSetter );
+            var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
+            var targetSetterValueParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
+
+            var valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
+                memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 0 ].Name );
+
+            if( mapping.MappingExpression.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
+            {
+                valueReaderExp = mapping.MappingExpression.Body.ReplaceParameter(
+                    memberContext.SourceMemberValueGetter, mapping.MappingExpression.Parameters[ 1 ].Name );
+            }
+
+            var expression = mapping.TargetMember.ValueSetter.Body
+                .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
+                .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
+
+            var exceptionParam = Expression.Parameter( typeof( Exception ), "exception" );
+            var ctor = typeof( ArgumentException )
+                .GetConstructor( new Type[] { typeof( string ), typeof( Exception ) } );
+
+            Expression<Func<string, string, object, string>> _getErrorExp =
+                ( error, mapping, sourceMemberValue ) => String.Format( error, mapping, sourceMemberValue ?? "null" );
+
+            string errorMsg = "Error mapping '{0}'. Value '{1}' cannot be assigned to the target.";
+
+            var getErrorMsg = Expression.Invoke
+            (
+                _getErrorExp,
+                Expression.Constant( errorMsg ),
+                Expression.Constant( memberContext.Options.ToString() ),
+                Expression.Convert( memberContext.SourceMemberValueGetter, typeof( object ) )
+            );
+
+            return Expression.TryCatch
+            (
+                Expression.Block( typeof( void ), expression ),
+
+                Expression.Catch( exceptionParam, Expression.Throw
+                (
+                    Expression.New( ctor, getErrorMsg, exceptionParam ),
+                    typeof( void )
+                ) )
+            );
         }
         #endregion
     }

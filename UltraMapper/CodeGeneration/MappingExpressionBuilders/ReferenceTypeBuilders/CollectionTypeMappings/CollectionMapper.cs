@@ -17,8 +17,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override bool CanHandle( Type source, Type target )
         {
-            return source.IsEnumerable() && target.IsEnumerable() &&
-                !source.IsBuiltIn( false ) && !target.IsBuiltIn( false ); //avoid strings
+            return source.IsEnumerable() && target.IsEnumerable();
         }
 
         protected override ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
@@ -288,6 +287,18 @@ namespace UltraMapper.MappingExpressionBuilders
             var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
                 context.TargetMember.Type, context.Options );
 
+            if( context.TargetMember.Type.IsArray )
+            {
+                var sourceCountMethod = GetCountMethod( context.SourceMember.Type );
+
+                Expression sourceCountMethodCallExp;
+                if( sourceCountMethod.IsStatic )
+                    sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, context.SourceMember );
+                else sourceCountMethodCallExp = Expression.Call( context.SourceMember, sourceCountMethod );
+
+                return Expression.NewArrayInit( context.TargetMember.Type, sourceCountMethodCallExp );
+            }
+
             //OPTIMIZATION: If the types involved are primitives of exactly the same type
             //we can use the constructor taking as input the collection and avoid recursion
             if( (collectionContext.IsSourceElementTypeBuiltIn || collectionContext.IsTargetElementTypeBuiltIn) &&
@@ -391,7 +402,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var constructorWithCapacity = context.TargetMember.Type.GetConstructor( new Type[] { typeof( int ) } );
             if( constructorWithCapacity == null ) return null;
 
-            var getCountMethod = this.GetCountMethod( context.SourceMember.Type );
+            var getCountMethod = GetCountMethod( context.SourceMember.Type );
 
             Expression getCountMethodCallExp;
             if( getCountMethod.IsStatic )
@@ -428,7 +439,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     typeof( Func<,,> ).MakeGenericType( context.SourceCollectionElementType, context.TargetCollectionElementType, typeof( bool ) ) ) );
         }
 
-        protected MethodInfo GetCountMethod( Type type )
+        public static MethodInfo GetCountMethod( Type type )
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             var getCountProperty = type.GetProperty( nameof( ICollection<int>.Count ),

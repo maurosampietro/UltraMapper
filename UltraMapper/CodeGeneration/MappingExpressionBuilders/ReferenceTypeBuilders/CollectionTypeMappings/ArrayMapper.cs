@@ -132,8 +132,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
             Expression newInstance = this.GetMemberNewInstance( context );
 
-            var sourceCountMethod = this.GetCountMethod( context.SourceMember.Type );
-            var targetCountMethod = this.GetCountMethod( context.TargetMember.Type );
+            var sourceCountMethod = GetCountMethod( context.SourceMember.Type );
+            var targetCountMethod = GetCountMethod( context.TargetMember.Type );
 
             Expression sourceCountMethodCallExp;
             if( sourceCountMethod.IsStatic )
