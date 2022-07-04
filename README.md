@@ -50,7 +50,7 @@ Getting started
 
 Check out the [wiki](https://github.com/maurosampietro/UltraMapper/wiki/Getting-started) for more information and advanced scenarios
 
-Why should I use UltraMapper instead of known alternatives like AutoMapper, ExpressMapper or TinyMapper?
+Why should I use UltraMapper instead of well-known alternatives?
 --------------------------------
 
 The answer is ReferenceTracking, Reliability, Performance and Maintainability.
