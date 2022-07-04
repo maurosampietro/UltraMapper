@@ -246,9 +246,13 @@ namespace UltraMapper.MappingExpressionBuilders
                 );
             }
 
+            var parameters = new ParameterExpression[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember };
+            if( !mapping.IsReferenceTrackingEnabled )
+                parameters = new ParameterExpression[] { memberContext.SourceMember, memberContext.TargetMember };
+
             return Expression.Block
             (
-                new[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember },
+                parameters,
 
                 Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
                 innerMappingExp,

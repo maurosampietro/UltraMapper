@@ -29,7 +29,7 @@ namespace UltraMapper.ReferenceTracking
             Expression memberAssignment,
             ParameterExpression mapperParam,
             Mapper mapper,
-            Expression mapping, 
+            Expression mapping,
             bool redirectMappingToRuntime = true )
         {
             var refLookupExp = Expression.Call
@@ -68,7 +68,11 @@ namespace UltraMapper.ReferenceTracking
             * SOURCE (NOT NULL / VALUE UNTRACKED) -> TARGET (NOT NULL) = KEEP USING INSTANCE OR CREATE NEW INSTANCE
             */
 
-            var blockParameters = new ParameterExpression[] { mapperParam, trackedReference };
+            ParameterExpression[] blockParameters = new ParameterExpression[ 0 ];
+
+            if( mapper != null && mapper.Config.IsReferenceTrackingEnabled )
+                blockParameters = new ParameterExpression[] { mapperParam, trackedReference };
+
             if( mapper == null ) //mapper param could be defined at higher level
                 blockParameters = new ParameterExpression[] { trackedReference };
 
