@@ -10,7 +10,8 @@ namespace UltraMapper.Internals
         protected override Expression VisitParameter( ParameterExpression node )
         {
             if( node.Name == _name && (node.Type == _expression.Type ||
-                node.Type.IsAssignableFrom( _expression.Type )) )
+                node.Type.IsAssignableFrom( _expression.Type ) ||
+                _expression.Type.IsAssignableFrom( node.Type )) )
             {
                 return _expression;
             }
