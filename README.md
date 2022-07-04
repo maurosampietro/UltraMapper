@@ -75,7 +75,7 @@ Key features
 Implemented features:
 
 - Powerful reference tracking mechanism
-- Powerful type/member configuration override mechanism, with configuration inheritance
+- Powerful type-to-type, type-to-member and member-to-member configuration override mechanism, with configuration inheritance
 - Supports self-references and circular references, anywhere down the object hierarchy
 - Supports object inheritance
 - Supports abstract classes
