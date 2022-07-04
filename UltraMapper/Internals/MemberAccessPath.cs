@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,18 +9,25 @@ namespace UltraMapper.Internals
 {
     public class MemberAccessPath : IEnumerable<MemberInfo>
     {
+        public Type EntryInstance { get; }
+
         private readonly List<MemberInfo> _memberAccess
             = new List<MemberInfo>();
 
         public int Count => _memberAccess.Count;
 
-        public MemberAccessPath() { }
-
-        public MemberAccessPath( MemberInfo memberInfo )
-            : this( new[] { memberInfo } ) { }
-
-        public MemberAccessPath( IEnumerable<MemberInfo> members )
+        public MemberAccessPath( Type entryInstance )
         {
+            this.EntryInstance = entryInstance;
+        }
+
+        public MemberAccessPath( Type entryInstance, MemberInfo memberInfo )
+            : this( entryInstance, new[] { memberInfo } ) { }
+
+        public MemberAccessPath( Type entryInstance, IEnumerable<MemberInfo> members )
+        {
+            this.EntryInstance = entryInstance;
+
             foreach( var member in members )
                 _memberAccess.Add( member );
         }
@@ -61,7 +69,7 @@ namespace UltraMapper.Internals
 
             for( int i = 0; i < this.Count - 1; i++ )
                 sb.Append( $"{this[ i ].Name} -> " );
-          
+
             sb.Append( $"{this[ this.Count - 1 ].Name}" );
             return sb.ToString();
         }

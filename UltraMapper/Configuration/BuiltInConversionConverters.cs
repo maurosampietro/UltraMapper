@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper
 {
@@ -202,5 +205,27 @@ namespace UltraMapper
             config.MapTypes<short, string>( s => s.ToString() );
             config.MapTypes<ushort, string>( s => s.ToString() );
         }
+
+        //public static void AddComplexType<TSource, TTarget>( Configuration config, Expression<Func<TSource, TTarget>> memberSelector )
+        //{
+        //    var memberType = memberSelector.GetMemberAccessPath().Last();
+        //    if( !memberType.GetMemberType().IsBuiltIn( false ) )
+        //        throw new ArgumentException( "Must select a member whose type is primitive or built-in (eg: string)" );
+
+        //    config.MapTypes<TTarget, bool>( s => s );
+        //    config.MapTypes<TTarget, byte>( s => s );
+        //    config.MapTypes<TTarget, sbyte>( s => s );
+        //    config.MapTypes<TTarget, char>( s => s );
+        //    config.MapTypes<TTarget, decimal>( s => s );
+        //    config.MapTypes<TTarget, double>( s => s );
+        //    config.MapTypes<TTarget, float>( s => s );
+        //    config.MapTypes<TTarget, int>( s => s );
+        //    config.MapTypes<TTarget, uint>( s => s );
+        //    config.MapTypes<TTarget, long>( s => s );
+        //    config.MapTypes<TTarget, ulong>( s => s );
+        //    config.MapTypes<TTarget, short>( s => s );
+        //    config.MapTypes<TTarget, ushort>( s => s );
+        //    config.MapTypes<TTarget, string>( s => s );
+        //}
     }
 }

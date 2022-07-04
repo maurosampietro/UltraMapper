@@ -11,7 +11,7 @@ namespace UltraMapper.Internals
         public bool Ignore { get; set; }
         public MemberAccessPath MemberAccessPath { get; }
         public readonly MemberInfo MemberInfo;
-        public readonly Type MemberType;
+        public Type MemberType { get; }
 
         public MappingPoint( MemberAccessPath memberAccessPath )
         {

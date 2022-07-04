@@ -9,7 +9,7 @@ namespace UltraMapper.Internals
         public LambdaExpression ValueGetter { get; }
 
         public MappingSource( MemberInfo memberInfo )
-            : this( new MemberAccessPath( memberInfo ) ) { }
+            : this( new MemberAccessPath( memberInfo.DeclaringType, memberInfo ) ) { }
 
         public MappingSource( MemberAccessPath memberGetter )
             : base( memberGetter )

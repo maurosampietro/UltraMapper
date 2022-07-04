@@ -8,10 +8,10 @@ namespace UltraMapper.Internals
         private string _toString;
 
         public readonly TypeMapping InstanceTypeMapping;
-        public readonly MappingSource SourceMember;
-        public readonly MappingTarget TargetMember;
+        public readonly IMappingSource SourceMember;
+        public readonly IMappingTarget TargetMember;
 
-        public MemberMapping( TypeMapping typeMapping, MappingSource source, MappingTarget target )
+        public MemberMapping( TypeMapping typeMapping, IMappingSource source, IMappingTarget target )
             : base( typeMapping.GlobalConfig, source.MemberType, target.MemberType )
         {
             this.InstanceTypeMapping = typeMapping;

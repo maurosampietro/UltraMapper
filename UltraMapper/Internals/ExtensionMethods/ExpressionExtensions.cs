@@ -10,8 +10,6 @@ namespace UltraMapper.Internals
     {
         public static MemberAccessPath GetMemberAccessPath( this Expression lambdaExpression )
         {
-            var memberAcessPath = new MemberAccessPath();
-
             if( !(lambdaExpression is LambdaExpression lambda) )
                 throw new InvalidCastException( "Invalid lambda expression" );
 
@@ -25,8 +23,8 @@ namespace UltraMapper.Internals
             //if the expression is a constant, we just return the type of the constant
             else if( exp.NodeType == ExpressionType.Constant )
             {
-                memberAcessPath.Add( ((ConstantExpression)exp).Type );
-                return memberAcessPath;
+                var type = ((ConstantExpression)exp).Type;
+                return new MemberAccessPath( lambda.Type, type );
             }
 
             if( exp is GotoExpression expression )
@@ -64,12 +62,12 @@ namespace UltraMapper.Internals
             //Since we support deep member accessing, things get a little more complex here
             //but we basically just follow each member access starting from the passed lambda parameter.
 
-            memberAcessPath = new MemberAccessPath();
-
             //Follow member accesses starting from the lambda input parameter.
             var lambdaMember = (stack.Pop() as ParameterExpression);
             var member = lambda.Parameters.First(
                 p => p.Name == lambdaMember.Name ).Type as MemberInfo;
+
+            var memberAcessPath = new MemberAccessPath( lambdaMember.Type );
 
             if( stack.Count == 0 ) //noticed we already popped once!
             {
@@ -79,19 +77,33 @@ namespace UltraMapper.Internals
             else
             {
                 var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+                Type type = member.GetMemberType();
                 foreach( var item in stack )
                 {
+                    var expItem = item;
                     string memberName = null;
 
-                    if( item is MemberExpression memberExp )
+                    if( expItem is MemberExpression memberExp )
+                    {
                         memberName = memberExp.Member.Name;
-                    else if( item is MethodCallExpression methodCallExp )
-                        memberName = methodCallExp.Method.Name;
-                    //else if( item is UnaryExpression unaryExp )
-                    //    item = unaryExp.Operand;
 
-                    member = member.GetMemberType().GetMember( memberName, bindingFlags )[ 0 ];
-                    memberAcessPath.Add( member );
+                        member = type.GetMember( memberName, bindingFlags )[ 0 ];
+                        type = member.GetMemberType();
+                        memberAcessPath.Add( member );
+                    }
+                    else if( expItem is MethodCallExpression methodCallExp )
+                    {
+                        memberName = methodCallExp.Method.Name;
+                        member = type.GetMember( memberName, bindingFlags )[ 0 ];
+                        type = member.GetMemberType();
+                        memberAcessPath.Add( member );
+                    }
+                    else if( expItem is UnaryExpression unaryExp )
+                    {
+                        expItem = unaryExp.Operand;
+                        type = unaryExp.Type;
+                    }
                 }
             }
 

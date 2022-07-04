@@ -16,8 +16,8 @@ namespace UltraMapper.Internals
         private readonly Dictionary<MemberInfo, MappingSource> _sourceProperties
             = new Dictionary<MemberInfo, MappingSource>();
 
-        private readonly Dictionary<MemberInfo, MappingTarget> _targetProperties
-            = new Dictionary<MemberInfo, MappingTarget>();
+        private readonly Dictionary<MemberInfo, IMappingTarget> _targetProperties
+            = new Dictionary<MemberInfo, IMappingTarget>();
 
         /*
          *A source member can be mapped to multiple target members.
@@ -27,18 +27,18 @@ namespace UltraMapper.Internals
          *
          *The target member can be therefore used as the key of this dictionary
          */
-        public readonly Dictionary<MappingTarget, MemberMapping> MemberToMemberMappings;
+        public readonly Dictionary<IMappingTarget, MemberMapping> MemberToMemberMappings;
 
-        public readonly Dictionary<MappingTarget, Dictionary<Type, MemberMapping>> TypeToMemberMappings;
+        public readonly Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>> TypeToMemberMappings;
 
         public TypeMapping( Configuration globalConfig, Type sourceType, Type targetType )
             : base( globalConfig, sourceType, targetType )
         {
-            this.MemberToMemberMappings = new Dictionary<MappingTarget, MemberMapping>();
-            this.TypeToMemberMappings = new Dictionary<MappingTarget, Dictionary<Type, MemberMapping>>();
+            this.MemberToMemberMappings = new Dictionary<IMappingTarget, MemberMapping>();
+            this.TypeToMemberMappings = new Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>>();
         }
 
-        public MemberMapping GetTypeToMember( Type sourceType, MappingTarget targetMember )
+        public MemberMapping GetTypeToMember( Type sourceType, IMappingTarget targetMember )
         {
             if( TypeToMemberMappings.TryGetValue( targetMember, out var dict ) )
             {
@@ -181,7 +181,7 @@ namespace UltraMapper.Internals
                () => new MappingSource( sourceMemberGetterExpression ) );
         }
 
-        public MappingTarget GetMappingTarget( MemberInfo targetMember,
+        public IMappingTarget GetMappingTarget( MemberInfo targetMember,
             LambdaExpression targetMemberGetter, LambdaExpression targetMemberSetter )
         {
             return _targetProperties.GetOrAdd( targetMember,
@@ -195,7 +195,7 @@ namespace UltraMapper.Internals
                 () => new MappingSource( sourceMemberPath ) );
         }
 
-        public MappingTarget GetMappingTarget( MemberInfo targetMember,
+        public IMappingTarget GetMappingTarget( MemberInfo targetMember,
             MemberAccessPath targetMemberPath )
         {
             return _targetProperties.GetOrAdd( targetMember,

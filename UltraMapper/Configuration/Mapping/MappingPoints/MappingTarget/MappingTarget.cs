@@ -12,7 +12,7 @@ namespace UltraMapper.Internals
         public LambdaExpression CustomConstructor { get; set; }
 
         public MappingTarget( MemberInfo memberInfo )
-            : this( new MemberAccessPath( memberInfo ), null ) { }
+            : this( new MemberAccessPath( memberInfo.DeclaringType, memberInfo ), null ) { }
 
         public MappingTarget( MemberAccessPath memberSetter, MemberAccessPath memberGetter = null )
             : base( memberSetter )
@@ -57,9 +57,9 @@ namespace UltraMapper.Internals
 
         public LambdaExpression CustomConstructor { get; set; }
 
-        public MappingTarget( Expression<Func<TSource, TTarget>> memberSetter, 
+        public MappingTarget( Expression<Func<TSource, TTarget>> memberSetter,
             Expression<Func<TSource, TTarget>> memberGetter = null )
-            :base( memberSetter.GetMemberAccessPath() )
+            : base( memberSetter.GetMemberAccessPath() )
         {
             this.ValueGetter = memberGetter?.GetMemberAccessPath()
                 .GetGetterExpWithNullChecks();

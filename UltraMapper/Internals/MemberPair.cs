@@ -15,19 +15,19 @@ namespace UltraMapper.Internals
 
         public MemberPair( MemberInfo source, MemberInfo target )
         {
-            this.SourceMemberPath = new MemberAccessPath { source };
-            this.TargetMemberPath = new MemberAccessPath { target };
+            this.SourceMemberPath = new MemberAccessPath( source.DeclaringType ) { source };
+            this.TargetMemberPath = new MemberAccessPath( target.DeclaringType ) { target };
         }
 
         public MemberPair( MemberAccessPath source, MemberInfo target )
         {
             this.SourceMemberPath = source;
-            this.TargetMemberPath = new MemberAccessPath { target };
+            this.TargetMemberPath = new MemberAccessPath( target.DeclaringType ) { target };
         }
 
         public MemberPair( MemberInfo source, MemberAccessPath target )
         {
-            this.SourceMemberPath = new MemberAccessPath { source };
+            this.SourceMemberPath = new MemberAccessPath( source.DeclaringType ) { source };
             this.TargetMemberPath = target;
         }
 

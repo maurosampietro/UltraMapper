@@ -47,7 +47,8 @@ namespace UltraMapper.Tests
             Expression<Func<FirstLevel, FirstLevel>> func = fl => fl;
 
             var expectedMember = typeof( FirstLevel );
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
 
             Assert.IsTrue( expectedMember == extractedMember );
         }
@@ -61,7 +62,9 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.A ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -74,7 +77,9 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.field ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -86,8 +91,10 @@ namespace UltraMapper.Tests
 
             var expectedMember = typeof( FirstLevel )
                 .GetMember( nameof( FirstLevel.GetSecond ) )[ 0 ];
+           
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
 
-            var extractedMember = func.GetMemberAccessPath().Last();
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -101,7 +108,9 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -109,13 +118,15 @@ namespace UltraMapper.Tests
         public void ExtractNestedMethodViaProperty()
         {
             var test = new FirstLevel();
-            Expression<Func<FirstLevel, ThirdLevel>> func = 
+            Expression<Func<FirstLevel, ThirdLevel>> func =
                 fl => fl.SecondLevel.GetThird();
 
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -129,7 +140,9 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.GetThird ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -143,7 +156,9 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
 
@@ -157,7 +172,39 @@ namespace UltraMapper.Tests
             var expectedMember = typeof( SecondLevel )
                 .GetMember( nameof( SecondLevel.ThirdLevel ) )[ 0 ];
 
-            var extractedMember = func.GetMemberAccessPath().Last();
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
+            Assert.IsTrue( expectedMember == extractedMember );
+        }
+
+        public interface IParsedParam
+        {
+            string Name { get; set; }
+            int Index { get; set; }
+        }
+
+        public class SimpleParam : IParsedParam
+        {
+            public string Name { get; set; }
+            public int Index { get; set; }
+            public string Value { get; set; }
+        }
+
+        [TestMethod]
+        public void ExtractNestedWithCast()
+        {
+            var test = new SimpleParam();
+            
+            Expression<Func<IParsedParam, string>> func =
+                p => ((SimpleParam)p).Value;
+
+            var expectedMember = typeof( SimpleParam )
+                .GetMember( nameof( SimpleParam.Value ) )[ 0 ];
+
+            var memberAccessPath = func.GetMemberAccessPath();
+            var extractedMember = memberAccessPath.Last();
+
             Assert.IsTrue( expectedMember == extractedMember );
         }
     }

@@ -60,7 +60,7 @@ namespace UltraMapper.Conventions
 
         private MemberAccessPath FollowPathFlattening( Type type, IEnumerable<string> memberNames, IMemberProvider memberProvider )
         {
-            var accessPath = new MemberAccessPath();
+            var accessPath = new MemberAccessPath( type );
 
             foreach( var splitName in memberNames )
             {
@@ -92,7 +92,7 @@ namespace UltraMapper.Conventions
 
         private MemberAccessPath FollowPathUnflattening( Type type, IEnumerable<string> memberNames, ITargetMemberProvider memberProvider )
         {
-            var accessPath = new MemberAccessPath();
+            var accessPath = new MemberAccessPath( type );
 
             foreach( var splitName in memberNames.Take( memberNames.Count() - 1 ) )
             {

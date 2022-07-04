@@ -11,10 +11,8 @@ namespace UltraMapper.Internals
     {
         internal static LambdaExpression GetGetterExp( this MemberAccessPath memberAccessPath )
         {
+            var instanceType = memberAccessPath.EntryInstance;
             var entryMember = memberAccessPath.First();
-
-            var instanceType = entryMember.ReflectedType ??
-                entryMember.GetMemberType().UnderlyingSystemType;
 
             var returnType = memberAccessPath.Last().GetMemberType();
 
@@ -33,7 +31,12 @@ namespace UltraMapper.Internals
                     if( memberAccess is MethodInfo mi )
                         accessPath = Expression.Call( accessPath, mi );
                     else
+                    {
+                        if( memberAccess.DeclaringType != accessPath.Type )
+                            accessPath = Expression.Convert( accessPath, memberAccess.DeclaringType );
+
                         accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                    }
                 }
             }
 
@@ -43,10 +46,8 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetSetterExp( this MemberAccessPath memberAccessPath )
         {
+            var instanceType = memberAccessPath.EntryInstance;
             var entryMember = memberAccessPath.First();
-
-            var instanceType = entryMember.ReflectedType ??
-                entryMember.GetMemberType().UnderlyingSystemType;
 
             var valueType = memberAccessPath.Last().GetMemberType();
 
@@ -88,10 +89,8 @@ namespace UltraMapper.Internals
             if( memberAccessPath.Count == 1 )
                 return memberAccessPath.First().GetGetterExp();
 
+            var instanceType = memberAccessPath.EntryInstance;
             var entryMember = memberAccessPath.First();
-
-            var instanceType = entryMember.ReflectedType ??
-                entryMember.GetMemberType().UnderlyingSystemType;
 
             var returnType = memberAccessPath.Last().GetMemberType();
 
@@ -135,10 +134,8 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetSetterExpWithNullChecks( this MemberAccessPath memberAccessPath )
         {
+            var instanceType = memberAccessPath.EntryInstance;
             var entryMember = memberAccessPath.First();
-
-            var instanceType = entryMember.ReflectedType ??
-                entryMember.GetMemberType().UnderlyingSystemType;
 
             var valueType = memberAccessPath.Last().GetMemberType();
             var value = Expression.Parameter( valueType, "value" );
@@ -200,10 +197,8 @@ namespace UltraMapper.Internals
 
         internal static LambdaExpression GetSetterExpWithNullInstancesInstantiation( this MemberAccessPath memberAccessPath )
         {
+            var instanceType = memberAccessPath.EntryInstance;
             var entryMember = memberAccessPath.First();
-
-            var instanceType = entryMember.ReflectedType ??
-                entryMember.GetMemberType().UnderlyingSystemType;
 
             var valueType = memberAccessPath.Last().GetMemberType();
             var value = Expression.Parameter( valueType, "value" );

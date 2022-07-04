@@ -203,57 +203,5 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
-
-        [TestMethod]
-        public void BuildGetterWithNullChecks()
-        {
-            Expression<Func<FirstLevel, string>> selector = t => t.SecondLevel.ThirdLevel.A;
-
-            var accessPath = selector.GetMemberAccessPath();
-            var expression = accessPath.GetGetterExpWithNullChecks();
-            var functor = (Func<FirstLevel, string>)expression.Compile();
-
-            // LEVEL 1
-            var source = new FirstLevel();
-            var result = functor( source );
-
-            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
-
-            // LEVEL 2
-            source = new FirstLevel()
-            {
-                SecondLevel = new SecondLevel()
-            };
-
-            result = functor( source );
-            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
-
-            // LEVEL 3
-            source = new FirstLevel()
-            {
-                SecondLevel = new SecondLevel()
-                {
-                    ThirdLevel = new ThirdLevel()
-                }
-            };
-
-            result = functor( source );
-            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
-
-            // LEVEL 4
-            source = new FirstLevel()
-            {
-                SecondLevel = new SecondLevel()
-                {
-                    ThirdLevel = new ThirdLevel()
-                    {
-                        A = "Ok"
-                    }
-                }
-            };
-
-            result = functor( source );
-            Assert.IsTrue( result == source?.SecondLevel?.ThirdLevel?.A );
-        }
     }
 }
