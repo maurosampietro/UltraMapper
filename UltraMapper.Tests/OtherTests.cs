@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Linq;
 
 namespace UltraMapper.Tests
 {
@@ -135,6 +136,71 @@ namespace UltraMapper.Tests
 
             bool isResultOk = mapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
+        }
+    }
+
+    [TestClass]
+    public class RealWorldRequests
+    {
+        private class AInitialized
+        {
+            public int P1 { get; set; }
+            public string P2 { get; set; }
+            public List<string> P3 { get; set; }
+            public List<int> P4 { get; set; } = new List<int>();
+        }
+
+        [TestMethod]
+        public void CloneIgnoreSomePropertiesAndSetNull()
+        {
+            var source = new AInitialized()
+            {
+                P1 = 3,
+                P2 = "hello",
+                P3 = new List<string>() { "a", "b", "c" },
+                P4 = new List<int>() { 1, 2, 3 }
+            };
+
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<AInitialized, AInitialized>()
+                    .MapMember( s => s.P4, t => t.P4, s => null )
+                    .IgnoreSourceMember( s => s.P2 );
+            } );
+
+            var target = mapper.Map( source );
+
+            Assert.IsTrue( target.P1 == source.P1 );
+            Assert.IsTrue( target.P2 == null );
+            Assert.IsTrue( target.P3.SequenceEqual( source.P3 ) );
+            Assert.IsTrue( target.P4 == null );
+        }
+
+        [TestMethod]
+        public void CloneIgnoreSomePropertiesAndSetNullIgnoreConventionResolvedMappings()
+        {
+            var source = new AInitialized()
+            {
+                P1 = 3,
+                P2 = "hello",
+                P3 = new List<string>() { "a", "b", "c" },
+                P4 = new List<int>() { 1, 2, 3 }
+            };
+
+            var mapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<AInitialized, AInitialized>( cfgType => cfgType.IgnoreMemberMappingResolvedByConvention = true )
+                    .MapMember( s => s.P1, t => t.P1 )
+                    .MapMember( s => s.P3, t => t.P3 )
+                    .MapMember( s => s.P4, t => t.P4, s => null );
+            } );
+
+            var target = mapper.Map( source );
+
+            Assert.IsTrue( target.P1 == source.P1 );
+            Assert.IsTrue( target.P2 == null );
+            Assert.IsTrue( target.P3.SequenceEqual( source.P3 ) );
+            Assert.IsTrue( target.P4 == null );
         }
     }
 }

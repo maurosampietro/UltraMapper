@@ -216,8 +216,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 return mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
-                    .ReplaceParameter( valueReaderExp, targetSetterValueParamName )
-                    .ReplaceParameter( valueReaderExp, mapping.CustomConverter.Parameters[ 0 ].Name );
+                    .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
+                  //.ReplaceParameter( valueReaderExp, mapping.CustomConverter.Parameters[ 0 ].Name );
             }
 
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
