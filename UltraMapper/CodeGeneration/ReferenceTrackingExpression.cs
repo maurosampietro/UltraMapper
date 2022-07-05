@@ -73,7 +73,7 @@ namespace UltraMapper.ReferenceTracking
             if( mapper != null && mapper.Config.IsReferenceTrackingEnabled )
                 blockParameters = new ParameterExpression[] { mapperParam, trackedReference };
 
-            if( mapper == null ) //mapper param could be defined at higher level
+            else if( mapper == null ) //mapper param could be defined at higher level
                 blockParameters = new ParameterExpression[] { trackedReference };
 
             return Expression.Block

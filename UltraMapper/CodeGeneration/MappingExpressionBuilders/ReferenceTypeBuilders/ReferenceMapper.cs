@@ -217,48 +217,61 @@ namespace UltraMapper.MappingExpressionBuilders
                 return mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
                     .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
-                  //.ReplaceParameter( valueReaderExp, mapping.CustomConverter.Parameters[ 0 ].Name );
             }
 
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
                 .GetMemberAssignment( memberContext );
 
-            Expression innerMappingExp;
+            var parameters = new List<ParameterExpression>()
+            {
+                memberContext.SourceMember
+            };
+
             if( memberContext.Options.IsReferenceTrackingEnabled )
             {
-                innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(
-                    memberContext.ReferenceTracker, memberContext.SourceMember,
-                    memberContext.TargetMember, memberAssignmentExp,
-                    memberContext.Mapper, _mapper,
-                    Expression.Constant( mapping ) );
+                parameters.Add( memberContext.TargetMember );
+                parameters.Add( memberContext.TrackedReference );
+
+                return Expression.Block
+                (
+                    parameters,
+
+                    Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
+
+                    ReferenceTrackingExpression.GetMappingExpression
+                    (
+                        memberContext.ReferenceTracker, memberContext.SourceMember,
+                        memberContext.TargetMember, memberAssignmentExp,
+                        memberContext.Mapper, _mapper,
+                        Expression.Constant( mapping )
+                    ),
+
+                    memberContext.TargetMemberValueSetter
+                );
             }
             else
             {
                 var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                     .MakeGenericMethod( memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 
-                innerMappingExp = Expression.Block
+                return Expression.Block
                 (
-                    memberAssignmentExp,
+                    parameters,
+
+                    Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
+                    memberAssignmentExp.ReplaceParameter( memberContext.TargetMemberValueGetter, "targetValue" ),
 
                     Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
-                        memberContext.TargetMember, memberContext.ReferenceTracker, Expression.Constant( mapping ) )
+                        memberContext.TargetMemberValueGetter,
+                        memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                 );
             }
-
-            var parameters = new ParameterExpression[] { memberContext.TrackedReference, memberContext.SourceMember, memberContext.TargetMember };
-            if( !mapping.IsReferenceTrackingEnabled )
-                parameters = new ParameterExpression[] { memberContext.SourceMember, memberContext.TargetMember };
-
-            return Expression.Block
-            (
-                parameters,
-
-                Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
-                innerMappingExp,
-                memberContext.TargetMemberValueSetter
-            );
         }
+
+        private static readonly Expression<Func<string, string, object, string>> _getErrorExp =
+            ( error, mapping, sourceMemberValue ) => String.Format( error, mapping, sourceMemberValue ?? "null" );
+
+        private const string errorMsg = "Error mapping '{0}'. Value '{1}' cannot be assigned to the target.";
 
         protected Expression GetSimpleMemberExpression( MemberMapping mapping )
         {
@@ -283,11 +296,6 @@ namespace UltraMapper.MappingExpressionBuilders
             var exceptionParam = Expression.Parameter( typeof( Exception ), "exception" );
             var ctor = typeof( ArgumentException )
                 .GetConstructor( new Type[] { typeof( string ), typeof( Exception ) } );
-
-            Expression<Func<string, string, object, string>> _getErrorExp =
-                ( error, mapping, sourceMemberValue ) => String.Format( error, mapping, sourceMemberValue ?? "null" );
-
-            string errorMsg = "Error mapping '{0}'. Value '{1}' cannot be assigned to the target.";
 
             var getErrorMsg = Expression.Invoke
             (
