@@ -227,11 +227,6 @@ namespace UltraMapper.MappingExpressionBuilders
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
                 .GetMemberAssignment( memberContext, out bool needsTrackingOrRecursion );
 
-            var parameters = new List<ParameterExpression>()
-            {
-                memberContext.SourceMember
-            };
-
             if( !needsTrackingOrRecursion )
             {
                 var exp = memberAssignmentExp
@@ -248,8 +243,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( memberContext.Options.IsReferenceTrackingEnabled )
             {
-                parameters.Add( memberContext.TargetMember );
-                parameters.Add( memberContext.TrackedReference );
+                var parameters = new List<ParameterExpression>()
+                {
+                    memberContext.SourceMember,
+                    memberContext.TargetMember,
+                    memberContext.TrackedReference
+                };
 
                 return Expression.Block
                 (
@@ -275,12 +274,11 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 return Expression.Block
                 (
-                    parameters,
+                    memberAssignmentExp
+                        .ReplaceParameter( memberContext.SourceMemberValueGetter, "sourceValue" )
+                        .ReplaceParameter( memberContext.TargetMemberValueGetter, "targetValue" ),
 
-                    Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
-                    memberAssignmentExp.ReplaceParameter( memberContext.TargetMemberValueGetter, "targetValue" ),
-
-                    Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMember,
+                    Expression.Call( memberContext.Mapper, mapMethod, memberContext.SourceMemberValueGetter,
                         memberContext.TargetMemberValueGetter,
                         memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                 );

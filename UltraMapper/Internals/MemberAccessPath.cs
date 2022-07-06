@@ -10,6 +10,7 @@ namespace UltraMapper.Internals
     public class MemberAccessPath : IEnumerable<MemberInfo>
     {
         public Type EntryInstance { get; }
+        public Type ReturnType { get; set; }
 
         private readonly List<MemberInfo> _memberAccess
             = new List<MemberInfo>();

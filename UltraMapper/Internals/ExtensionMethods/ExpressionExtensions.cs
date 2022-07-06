@@ -73,6 +73,7 @@ namespace UltraMapper.Internals
             {
                 //return entry instance
                 memberAcessPath.Add( member );
+                memberAcessPath.ReturnType = member.GetMemberType();
             }
             else
             {
@@ -105,8 +106,10 @@ namespace UltraMapper.Internals
                         type = unaryExp.Type;
                     }
                 }
-            }
 
+                memberAcessPath.ReturnType = type;
+            }
+       
             return memberAcessPath;
         }
 

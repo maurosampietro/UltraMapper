@@ -16,7 +16,7 @@ namespace UltraMapper.Internals
         public MappingPoint( MemberAccessPath memberAccessPath )
         {
             this.MemberAccessPath = memberAccessPath;
-            this.MemberInfo = memberAccessPath.Last();
+            this.MemberInfo = memberAccessPath.LastOrDefault() ?? memberAccessPath.EntryInstance;
             this.MemberType = this.MemberInfo.GetMemberType();
         }
 
