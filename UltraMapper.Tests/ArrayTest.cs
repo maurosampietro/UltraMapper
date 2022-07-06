@@ -64,6 +64,8 @@ namespace UltraMapper.Tests
             public LinkedList<T> LinkedList { get; set; }
             public ObservableCollection<T> ObservableCollection { get; set; }
 
+            public GenericCollections() { }
+
             public GenericCollections( bool initializeIfPrimitiveGenericArg, uint minVal = 0, uint maxVal = 10 )
             {
                 if( minVal > maxVal )
@@ -135,15 +137,18 @@ namespace UltraMapper.Tests
                 Array = Enumerable.Range( 0, 100 ).ToArray()
             };
 
-            var target = new GenericCollections<int>( true );
+            //var target = new GenericCollections<int>( true );
 
             var ultraMapper = new Mapper( cfg =>
             {
-                cfg.MapTypes( source, target )
-                    .MapMember( a => a.Array, b => b.List);
+                cfg.MapTypes<GenericArray<int>, GenericCollections<int>>()
+                    .MapMember( a => a.Array, b => b.List );
             } );
 
-            ultraMapper.Map( source, target );
+            //using existing instance = reuse references
+            //ultraMapper.Map( source, target );
+
+            var target = ultraMapper.Map<GenericCollections<int>>( source );
 
             Assert.IsTrue( source.Array.SequenceEqual( target.List ) );
         }
@@ -306,6 +311,120 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
             Assert.IsTrue( source.List.Select( inner => inner.ToString() ).SequenceEqual(
                 target.Array.Select( item => item.String ) ) );
+        }
+    }
+
+    [TestClass]
+    public class ArrayCapacity
+    {
+        private class A
+        {
+            public int[] Array { get; set; }
+        }
+
+        [TestMethod]
+        public void ReuseResetInstance()
+        {
+            var source = new A
+            {
+                Array = Enumerable.Range( 0, 3 ).ToArray()
+            };
+
+            var target = new A() { Array = new int[ 5 ] { 10, 20, 30, 40, 50 } };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                cfg.CollectionBehavior = CollectionBehaviors.RESET;
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.Array.SequenceEqual( new[] { 0, 1, 2, 0, 0 } ) );
+        }
+
+        [TestMethod]
+        public void ReuseMergeInstance()
+        {
+            var source = new A
+            {
+                Array = Enumerable.Range( 0, 3 ).ToArray()
+            };
+
+            var target = new A() { Array = new int[ 5 ] { 10, 20, 30, 40, 50 } };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                cfg.CollectionBehavior = CollectionBehaviors.MERGE;
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.Array.SequenceEqual( new[] { 0, 1, 2, 40, 50 } ) );
+        }
+
+        [TestMethod]
+        public void ResizeInstance()
+        {
+            var source = new A
+            {
+                Array = Enumerable.Range( 0, 5 ).ToArray()
+            };
+
+            var target = new A() { Array = new int[ 3 ] };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.ReferenceBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL;
+                cfg.CollectionBehavior = CollectionBehaviors.MERGE;
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.Array.SequenceEqual( new[] { 0, 1, 2, 3, 4 } ) );
+        }
+
+        [TestMethod]
+        public void CreateNewInstanceMerge()
+        {
+            var source = new A
+            {
+                Array = Enumerable.Range( 0, 5 ).ToArray()
+            };
+
+            var target = new A() { Array = new int[ 3 ] };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                cfg.CollectionBehavior = CollectionBehaviors.MERGE;
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.Array.SequenceEqual( new[] { 0, 1, 2, 3, 4 } ) );
+        }
+
+        [TestMethod]
+        public void CreateNewInstanceReset()
+        {
+            var source = new A
+            {
+                Array = Enumerable.Range( 0, 5 ).ToArray()
+            };
+
+            var target = new A() { Array = new int[ 3 ] };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE;
+                cfg.CollectionBehavior = CollectionBehaviors.RESET;
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( target.Array.SequenceEqual( new[] { 0, 1, 2, 3, 4 } ) );
         }
     }
 }

@@ -49,8 +49,9 @@ namespace UltraMapper.MappingExpressionBuilders
             return typeof( List<> ).MakeGenericType( context.SourceCollectionElementType );
         }
 
-        public override Expression GetMemberNewInstance( MemberMappingContext context )
+        public override Expression GetMemberNewInstance( MemberMappingContext context, out bool isMapComplete )
         {
+            isMapComplete = false;
             //1. Create a new temporary collection passing source as input
             //2. Read items from the newly created temporary collection and add items to the target
 

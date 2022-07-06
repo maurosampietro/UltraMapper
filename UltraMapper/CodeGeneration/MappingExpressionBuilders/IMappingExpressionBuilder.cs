@@ -28,6 +28,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
     public interface IMemberMappingExpression
     {
-        Expression GetMemberAssignment( MemberMappingContext memberContext );
+        Expression GetMemberAssignment( MemberMappingContext memberContext, out bool needsTrackingOrRecursion );
     }
 }

@@ -74,9 +74,13 @@ namespace UltraMapper.MappingExpressionBuilders
             return Expression.Empty();
         }
 
-        public virtual Expression GetMemberAssignment( MemberMappingContext context )
+        public virtual Expression GetMemberAssignment( MemberMappingContext context, out bool needsTrackingOrRecursion )
         {
-            Expression newInstance = this.GetMemberNewInstance( context );
+            Expression newInstance = this.GetMemberNewInstance( context, out bool isMapComplete );
+            needsTrackingOrRecursion = !isMapComplete;
+
+            if( isMapComplete )
+                return newInstance;
 
             bool isCreateNewInstance = context.Options.ReferenceBehavior ==
                 ReferenceBehaviors.CREATE_NEW_INSTANCE;
@@ -97,8 +101,9 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        public virtual Expression GetMemberNewInstance( MemberMappingContext context )
+        public virtual Expression GetMemberNewInstance( MemberMappingContext context, out bool isMapComplete )
         {
+            isMapComplete = false;
             return GetMemberNewInstanceInternal( context.SourceMemberValueGetter,
                 context.SourceMember.Type, context.TargetMember.Type, context.Options );
         }
@@ -220,12 +225,26 @@ namespace UltraMapper.MappingExpressionBuilders
             }
 
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
-                .GetMemberAssignment( memberContext );
+                .GetMemberAssignment( memberContext, out bool needsTrackingOrRecursion );
 
             var parameters = new List<ParameterExpression>()
             {
                 memberContext.SourceMember
             };
+
+            if( !needsTrackingOrRecursion )
+            {
+                var exp = memberAssignmentExp
+                    .ReplaceParameter( memberContext.SourceMemberValueGetter, "sourceValue" );
+
+                //if a setter method was provided or resolved a target value getter may be missing
+                if( memberContext.TargetMemberValueGetter != null )
+                    exp = exp.ReplaceParameter( memberContext.TargetMemberValueGetter, "targetValue" );
+                else // if( memberContext.TargetMemberValueSetter != null ) fails directly if not resolved/provided
+                    exp = exp.ReplaceParameter( memberContext.TargetMemberValueSetter, "targetValue" );
+
+                return exp;
+            }
 
             if( memberContext.Options.IsReferenceTrackingEnabled )
             {

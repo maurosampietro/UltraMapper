@@ -66,6 +66,12 @@ namespace UltraMapper.Tests
             var ultraMapper = new Mapper();
             ultraMapper.Map( source, target );
 
+            Assert.IsTrue( source.InnerType != target.InnerType );
+            Assert.IsTrue( source.String == target.String );
+            Assert.IsTrue( source.PrimitiveList.SequenceEqual( target.PrimitiveList ) );
+            Assert.IsTrue( source.ComplexList.Count == target.ComplexList.Count );
+            Assert.IsTrue( target.ComplexList.First() == target.InnerType );
+
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }

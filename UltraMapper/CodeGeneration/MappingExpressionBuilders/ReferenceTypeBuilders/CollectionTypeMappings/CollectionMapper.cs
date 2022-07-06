@@ -185,11 +185,12 @@ namespace UltraMapper.MappingExpressionBuilders
              *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).             
              */
 
+            //reset only if we keep using the same target instance
+            bool isResetCollection = context.Options.ReferenceBehavior != ReferenceBehaviors.CREATE_NEW_INSTANCE
+                && context.Options.CollectionBehavior == CollectionBehaviors.RESET;
+
             bool isUpdateCollection = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
                 context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
-
-            bool isMerge = /*context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL &&*/
-                context.Options.CollectionBehavior == CollectionBehaviors.MERGE;
 
             var targetCollectionInsertionMethod = GetTargetCollectionInsertionMethod( context );
 
@@ -204,7 +205,7 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 return Expression.Block
                 (
-                    isMerge ? Expression.Empty() : GetTargetCollectionClearExpression( context ),
+                    isResetCollection ? GetTargetCollectionClearExpression( context ) : Expression.Empty(),
 
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
@@ -215,7 +216,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             return Expression.Block
             (
-                GetTargetCollectionClearExpression( context ),
+                isResetCollection ? GetTargetCollectionClearExpression( context ) : Expression.Empty(),
 
                 isUpdateCollection ? GetUpdateCollectionExpression( context )
                     : ComplexCollectionLoop
@@ -279,8 +280,10 @@ namespace UltraMapper.MappingExpressionBuilders
             return context.TargetInstance.Type.GetMethod( nameof( ICollection<int>.Add ) );
         }
 
-        public override Expression GetMemberNewInstance( MemberMappingContext context )
+        public override Expression GetMemberNewInstance( MemberMappingContext context, out bool isMapCompleted )
         {
+            isMapCompleted = false;
+
             if( context.Options.CustomTargetConstructor != null )
                 return Expression.Invoke( context.Options.CustomTargetConstructor );
 
@@ -311,21 +314,44 @@ namespace UltraMapper.MappingExpressionBuilders
                     var typeMapping = MapperConfiguration[ context.SourceMember.Type,
                         context.TargetMember.Type ];
 
+
                     //We do not want recursion on each collection's item
                     //but Capacity and other collection members must be mapped.
-                    var memberMappings = this.GetMemberMappings( typeMapping )
-                        .ReplaceParameter( context.Mapper, context.Mapper.Name )
-                        .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
-                        .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
-                        .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
+                    Expression memberMappings = Expression.Empty();
 
+                    if( context.TargetMemberValueGetter != null ) //we can only map subparam if a way to access subparam is provided/resolved. Edge case is: providing a member's setter method but not the getter's 
+                    {
+                        memberMappings = this.GetMemberMappings( typeMapping )
+                            .ReplaceParameter( context.Mapper, context.Mapper.Name )
+                            .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
+                            .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )
+                            .ReplaceParameter( context.TargetMember, context.TargetInstance.Name );
+                    }
+
+                    isMapCompleted = true; //we created a new instance also passing source array of non-reference type that will be copied
                     return Expression.Block
                     (
-                        //in order to assign inner members we need to assign TargetMember
-                        //(we also replaced TargetInstance with TargetMember)
-                        Expression.Assign( context.TargetMember, newInstance ),
-                        memberMappings,
-                        context.TargetMember
+                        Expression.IfThenElse
+                        (
+                            Expression.IsTrue( Expression.Equal( context.SourceMemberValueGetter, context.SourceMemberNullValue ) ),
+
+                            //Expression.Assign( context.TargetMember, context.TargetMemberNullValue ), //this only works for properties/fields
+                            context.TargetMemberValueSetter
+                                .ReplaceParameter( context.TargetMemberNullValue, "targetValue" ), //works on setter methods too
+
+                            Expression.Block
+                            (
+                                //in order to assign inner members we need to assign TargetMember
+                                //(we also replaced TargetInstance with TargetMember)
+
+                                context.TargetMemberValueSetter
+                                    .ReplaceParameter( newInstance, "targetValue" ), //works on setter methods too
+
+                                //Expression.Assign( context.TargetMember, newInstance ), //this only works for properties/fields
+
+                                memberMappings ?? Expression.Empty()
+                            )
+                        )
                     );
                 }
             }

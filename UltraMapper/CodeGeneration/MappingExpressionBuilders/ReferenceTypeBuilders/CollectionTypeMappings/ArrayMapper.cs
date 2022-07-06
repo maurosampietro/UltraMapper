@@ -119,18 +119,26 @@ namespace UltraMapper.MappingExpressionBuilders
             ) );
         }
 
-        public override Expression GetMemberNewInstance( MemberMappingContext context )
+        public override Expression GetMemberNewInstance( MemberMappingContext context, out bool isMapComplete )
         {
+            isMapComplete = false;
             return this.GetNewInstanceWithReservedCapacity( context );
         }
 
-        public override Expression GetMemberAssignment( MemberMappingContext context )
+        public override Expression GetMemberAssignment( MemberMappingContext context, out bool needsTrackingOrRecursion )
         {
+            needsTrackingOrRecursion = true;
+
+            if( context.Options.ReferenceBehavior == ReferenceBehaviors.CREATE_NEW_INSTANCE )
+                return base.GetMemberAssignment( context, out needsTrackingOrRecursion );
+
+            //if( context.Options.ReferenceBehavior == ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
+
+            Expression newInstance = this.GetMemberNewInstance( context, out bool isMapComplete );
+
             //FOR ARRAYS WE ALSO CHECK IF THE TARGET ARRAY IS LARGE ENOUGH
             //TO HOLD ALL OF THE ITEMS OF THE SOURCE COLLECTION.
             //IF THE ARRAY IS NOT LARGE ENOUGH, WE CREATE A NEW INSTANCE LARGE ENOUGH.
-
-            Expression newInstance = this.GetMemberNewInstance( context );
 
             var sourceCountMethod = GetCountMethod( context.SourceMember.Type );
             var targetCountMethod = GetCountMethod( context.TargetMember.Type );
@@ -148,7 +156,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             return Expression.Block
             (
-                base.GetMemberAssignment( context ),
+                base.GetMemberAssignment( context, out needsTrackingOrRecursion ),
 
                 Expression.IfThen
                 (
