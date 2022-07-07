@@ -62,7 +62,7 @@ namespace UltraMapper.Internals
 
                 return this.GlobalConfig.IsReferenceTrackingEnabled;
             }
-            
+
             set => _isReferenceTrackingEnabled = value;
         }
 
@@ -200,6 +200,12 @@ namespace UltraMapper.Internals
         {
             return _targetProperties.GetOrAdd( targetMember,
                 () => new MappingTarget( targetMemberPath ) );
+        }
+
+        public void AddMemberToMemberMapping( IMappingSource source, IMappingTarget target )
+        {
+            
+            this.MemberToMemberMappings[ target ] = new MemberMapping( this, source, target );
         }
 
         public override string ToString()
