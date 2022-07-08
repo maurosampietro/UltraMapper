@@ -202,10 +202,12 @@ namespace UltraMapper.Internals
                 () => new MappingTarget( targetMemberPath ) );
         }
 
-        public void AddMemberToMemberMapping( IMappingSource source, IMappingTarget target )
+        public MemberMapping AddMemberToMemberMapping( IMappingSource source, IMappingTarget target )
         {
-            
-            this.MemberToMemberMappings[ target ] = new MemberMapping( this, source, target );
+            var memberMapping = new MemberMapping( this, source, target );
+            this.MemberToMemberMappings[ target ] = memberMapping;
+           
+            return memberMapping;
         }
 
         public override string ToString()

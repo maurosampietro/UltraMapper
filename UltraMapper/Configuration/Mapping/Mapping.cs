@@ -48,7 +48,7 @@ namespace UltraMapper.Internals
                 if( _mappingExpression != null )
                     return _mappingExpression;
 
-                _mappingExpression = GlobalConfig.ExpCache.Get( this.SourceType, 
+                _mappingExpression = GlobalConfig.ExpCache.Get( this.SourceType,
                     this.TargetType, (IMappingOptions)this );
 
                 if( _mappingExpression == null )
@@ -56,7 +56,9 @@ namespace UltraMapper.Internals
                     _mappingExpression = this.Mapper.GetMappingExpression(
                         this.SourceType, this.TargetType, (IMappingOptions)this );
 
-                    GlobalConfig.ExpCache.Add( this.SourceType, 
+                    _mappingExpression = Decorate( _mappingExpression );
+
+                    GlobalConfig.ExpCache.Add( this.SourceType,
                         this.TargetType, (IMappingOptions)this, _mappingExpression );
                 }
 
@@ -102,6 +104,23 @@ namespace UltraMapper.Internals
                    this.SourceType, this.TargetType, this.MappingExpression );
             }
         }
+
+        private LambdaExpression Decorate( LambdaExpression expression )
+        {
+            var decoratedExp = Decoration?.Invoke( expression.Body );
+
+            var delegate1 = typeof( Func<ReferenceTracker, object, object> );
+            var delegate1 = typeof( Func<ReferenceTracker, object, object> );
+
+            var delegateType = typeof( Action<,,> ).MakeGenericType
+            (
+                 expression.Parameters.Select( p => p.Type ).ToArray()
+            );
+
+            return Expression.Lambda( delegateType, decoratedExp, expression.Parameters );
+        }
+
+        public Func<Expression, Expression> Decoration { get; set; }
 
         protected Mapping( Configuration globalConfig, Type sourceType, Type targetType )
         {
