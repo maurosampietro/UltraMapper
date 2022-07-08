@@ -321,7 +321,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     if( context.TargetMemberValueGetter != null ) //we can only map subparam if a way to access subparam is provided/resolved. Edge case is: providing a member's setter method but not the getter's 
                     {
-                        memberMappings = this.GetMemberMappings( typeMapping )
+                        memberMappings = this.GetMemberMappingsExpression( typeMapping )
                             .ReplaceParameter( context.Mapper, context.Mapper.Name )
                             .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                             .ReplaceParameter( context.SourceMember, context.SourceInstance.Name )

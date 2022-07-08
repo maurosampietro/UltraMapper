@@ -12,7 +12,7 @@ namespace UltraMapper.Internals
         {
             if( !(lambdaExpression is LambdaExpression lambda) )
                 throw new InvalidCastException( "Invalid lambda expression" );
-
+            
             var stack = new Stack<Expression>();
             Expression exp = lambda.Body;
 

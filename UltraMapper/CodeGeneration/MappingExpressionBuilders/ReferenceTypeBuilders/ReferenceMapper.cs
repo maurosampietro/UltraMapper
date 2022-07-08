@@ -45,7 +45,8 @@ namespace UltraMapper.MappingExpressionBuilders
             var context = this.GetMapperContext( source, target, options );
 
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
-            var memberMappings = this.GetMemberMappings( typeMapping )
+
+            var memberMappings = this.GetMemberMappingsExpression( typeMapping )
                 .ReplaceParameter( context.Mapper, context.Mapper.Name )
                 .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                 .ReplaceParameter( context.TargetInstance, context.TargetInstance.Name )
@@ -179,7 +180,7 @@ namespace UltraMapper.MappingExpressionBuilders
             }
         }
 
-        protected Expression GetMemberMappings( TypeMapping typeMapping )
+        public List<Expression> GetMemberMappingExpressions( TypeMapping typeMapping )
         {
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
@@ -190,7 +191,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     mapping.MappingResolution != MappingResolution.RESOLVED_BY_CONVENTION ).ToList();
             }
 
-            var memberMappingExps = memberMappings
+            return memberMappings
                 .Where( mapping => !mapping.Ignore )
                 .Where( mapping => !mapping.SourceMember.Ignore )
                 .Where( mapping => !mapping.TargetMember.Ignore )
@@ -202,9 +203,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     return GetSimpleMemberExpression( mapping );
                 } ).ToList();
+        }
 
-            return !memberMappingExps.Any() ?
-                (Expression)Expression.Empty() :
+        protected Expression GetMemberMappingsExpression( TypeMapping typeMapping )
+        {
+            var memberMappingExps = this.GetMemberMappingExpressions( typeMapping );
+            return !memberMappingExps.Any() ? Expression.Empty() :
                 Expression.Block( memberMappingExps );
         }
 
@@ -285,10 +289,11 @@ namespace UltraMapper.MappingExpressionBuilders
             }
         }
 
-        private static readonly Expression<Func<string, string, object, string>> _getErrorExp =
-            ( error, mapping, sourceMemberValue ) => String.Format( error, mapping, sourceMemberValue ?? "null" );
+        private static readonly Expression<Func<string, string, object, Type, Type, string>> _getErrorExp =
+            ( error, mapping, sourceMemberValue, sourceType, targetType ) => String.Format( error, mapping, 
+                sourceMemberValue ?? "null", sourceType.GetPrettifiedName(), targetType.GetPrettifiedName() );
 
-        private const string errorMsg = "Error mapping '{0}'. Value '{1}' cannot be assigned to the target.";
+        private const string errorMsg = "Error mapping '{0}'. Value '{1}' (of type '{2}') cannot be assigned to the target (of type '{3}').";
 
         protected Expression GetSimpleMemberExpression( MemberMapping mapping )
         {
@@ -319,7 +324,9 @@ namespace UltraMapper.MappingExpressionBuilders
                 _getErrorExp,
                 Expression.Constant( errorMsg ),
                 Expression.Constant( memberContext.Options.ToString() ),
-                Expression.Convert( memberContext.SourceMemberValueGetter, typeof( object ) )
+                Expression.Convert( memberContext.SourceMemberValueGetter, typeof( object ) ),
+                Expression.Constant( memberContext.SourceMember.Type ),
+                Expression.Constant( memberContext.TargetMember.Type )
             );
 
             return Expression.TryCatch

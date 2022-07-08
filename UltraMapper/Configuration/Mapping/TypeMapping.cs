@@ -206,8 +206,16 @@ namespace UltraMapper.Internals
         {
             var memberMapping = new MemberMapping( this, source, target );
             this.MemberToMemberMappings[ target ] = memberMapping;
-           
+
             return memberMapping;
+        }
+
+        public List<Expression> MemberToMemberMappingExpressions
+        {
+            get 
+            {
+               return ((ReferenceMapper)this.Mapper).GetMemberMappingExpressions( this );
+            }
         }
 
         public override string ToString()
