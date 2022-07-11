@@ -9,39 +9,39 @@ namespace UltraMapper
     public class InstanceFactory
     {
         #region Instance type passed as generic param
-        public static T CreateObject<TArg1, T>( TArg1 arg1 )
+        public static TReturn CreateObject<TArg1, TReturn>( TArg1 arg1 )
         {
-            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, T>();
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TReturn>();
             return instanceCreator( arg1 );
         }
 
-        public static T CreateObject<TArg1, TArg2, T>( TArg1 arg1, TArg2 arg2 )
+        public static TReturn CreateObject<TArg1, TArg2, TReturn>( TArg1 arg1, TArg2 arg2 )
         {
-            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, T>();
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TReturn>();
             return instanceCreator( arg1, arg2 );
         }
 
-        public static T CreateObject<TArg1, TArg2, TArg3, T>( TArg1 arg1, TArg2 arg2, TArg3 arg3 )
+        public static TReturn CreateObject<TArg1, TArg2, TArg3, TReturn>( TArg1 arg1, TArg2 arg2, TArg3 arg3 )
         {
-            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, T>();
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TReturn>();
             return instanceCreator( arg1, arg2, arg3 );
         }
 
-        public static T CreateObject<TArg1, TArg2, TArg3, TArg4, T>( TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4 )
+        public static TReturn CreateObject<TArg1, TArg2, TArg3, TArg4, TReturn>( TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4 )
         {
-            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, T>();
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, TReturn>();
             return instanceCreator( arg1, arg2, arg3, arg4 );
         }
 
-        public static T CreateObject<TArg1, TArg2, TArg3, TArg4, TArg5, T>( TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5 )
+        public static TReturn CreateObject<TArg1, TArg2, TArg3, TArg4, TArg5, TReturn>( TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5 )
         {
-            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, T>();
+            var instanceCreator = ConstructorFactory.CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5, TReturn>();
             return instanceCreator( arg1, arg2, arg3, arg4, arg5 );
         }
 
-        public static T CreateObject<T>( params object[] constructorValues )
+        public static TReturn CreateObject<TReturn>( params object[] constructorValues )
         {
-            return (T)CreateObject( typeof( T ), constructorValues );
+            return (TReturn)CreateObject( typeof( TReturn ), constructorValues );
         }
         #endregion
 
@@ -105,13 +105,16 @@ namespace UltraMapper
 
     internal partial class ConstructorFactory
     {
-        private static readonly Dictionary<Type, Delegate> _cache
+        private static readonly Dictionary<Type, Delegate> _cacheWeakTyped
+            = new Dictionary<Type, Delegate>();
+
+        private static readonly Dictionary<Type, Delegate> _cacheStrongTyped
             = new Dictionary<Type, Delegate>();
 
         #region Instance type passed as type param
         public static Func<object> CreateConstructor( Type instanceType )
         {
-            return (Func<object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
                 var instanceCreatorExp = Expression.Lambda<Func<object>>(
                     Expression.Convert( Expression.New( instanceType ), typeof( object ) ) );
@@ -122,40 +125,24 @@ namespace UltraMapper
 
         public static Func<TArg1, object> CreateConstructor<TArg1>( Type instanceType )
         {
-            return (Func<TArg1, object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
-                if( instanceType.IsArray )
-                {
-                    var ctorArgTypes = new[] { typeof( TArg1 ) };
-                    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorArgTypes = new[] { typeof( TArg1 ) };
+                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
 
-                    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
+                var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
+                Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
-                    var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
-                    Expression.Convert( Expression.NewArrayInit( instanceType, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
+                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
-                    return instanceCreatorExp.Compile();
-                }
-                else
-                {
-                    var ctorArgTypes = new[] { typeof( TArg1 ) };
-                    var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
-
-                    var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
-
-                    var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
-                    Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
-
-                    return instanceCreatorExp.Compile();
-                }
+                return instanceCreatorExp.Compile();
             } );
         }
 
         public static Func<TArg1, TArg2, object> CreateConstructor<TArg1, TArg2>( Type instanceType )
         {
-            return (Func<TArg1, TArg2, object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
                 var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
@@ -172,7 +159,7 @@ namespace UltraMapper
 
         public static Func<TArg1, TArg2, TArg3, object> CreateConstructor<TArg1, TArg2, TArg3>( Type instanceType )
         {
-            return (Func<TArg1, TArg2, TArg3, object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TArg3, object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
                 var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
@@ -189,7 +176,7 @@ namespace UltraMapper
 
         public static Func<TArg1, TArg2, TArg3, TArg4, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4>( Type instanceType )
         {
-            return (Func<TArg1, TArg2, TArg3, TArg4, object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TArg3, TArg4, object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof( TArg4 ) };
@@ -208,7 +195,7 @@ namespace UltraMapper
 
         public static Func<TArg1, TArg2, TArg3, TArg4, TArg5, object> CreateConstructor<TArg1, TArg2, TArg3, TArg4, TArg5>( Type instanceType )
         {
-            return (Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
@@ -227,7 +214,7 @@ namespace UltraMapper
 
         public static Func<object[], object> CreateConstructor( Type instanceType, params Type[] ctorArgTypes )
         {
-            return (Func<object[], object>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<object[], object>)_cacheWeakTyped.GetOrAdd( instanceType, () =>
             {
                 if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                     ctorArgTypes = Type.EmptyTypes;
@@ -251,7 +238,7 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 var instanceCreatorExp = Expression.Lambda<Func<TInstance>>(
                     Expression.New( typeof( TInstance ) ) );
@@ -264,7 +251,7 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TArg1, TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ) };
                 var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
@@ -283,7 +270,7 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TArg1, TArg2, TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
                 var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
@@ -302,7 +289,7 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TArg1, TArg2, TArg3, TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TArg3, TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
                 var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
@@ -321,10 +308,10 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TArg1, TArg2, TArg3, TArg4, TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TArg3, TArg4, TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
-                typeof( TArg3 ), typeof(TArg4)};
+                    typeof( TArg3 ), typeof(TArg4)};
 
                 var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
@@ -342,10 +329,10 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
-                typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
+                    typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
                 var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
@@ -363,7 +350,7 @@ namespace UltraMapper
         {
             var instanceType = typeof( TInstance );
 
-            return (Func<object[], TInstance>)_cache.GetOrAdd( instanceType, () =>
+            return (Func<object[], TInstance>)_cacheStrongTyped.GetOrAdd( instanceType, () =>
             {
                 if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                     ctorArgTypes = Type.EmptyTypes;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.Internals
 {
@@ -169,6 +170,36 @@ namespace UltraMapper.Internals
 
             set => _customTargetConstructor = value;
         }
+
+        private LambdaExpression _memberMappingExpression;
+        public LambdaExpression MemberMappingExpression
+        {
+            get
+            {
+                //do not return CustomConverter directly here: it works on type but here we are resolving on members (the targetinstance is passed as param)
+                //member expression will wrap the custom converter.
+
+                //if( this.CustomConverter != null ) 
+                //    return this.CustomConverter; DON'T RETURN THIS DIRECTLY!
+
+                if( _memberMappingExpression != null )
+                    return _memberMappingExpression;
+
+                //_memberMappingExpression = GlobalConfig.ExpCache.Get( this.SourceType,
+                //    this.TargetType, (IMappingOptions)this );
+
+                if( _memberMappingExpression == null )
+                {
+                    _memberMappingExpression = ((ReferenceMapper)this.InstanceTypeMapping.Mapper).GetMemberMappingExpression( this );
+
+                    //GlobalConfig.ExpCache.Add( this.SourceType,
+                    //    this.TargetType, (IMappingOptions)this, _memberMappingExpression );
+                }
+
+                return _memberMappingExpression;
+            }
+        }
+
 
         public void SetCustomTargetConstructor<T>( Expression<Func<T>> ctor )
             => CustomTargetConstructor = ctor;

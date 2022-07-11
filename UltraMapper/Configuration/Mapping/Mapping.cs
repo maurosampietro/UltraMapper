@@ -38,7 +38,7 @@ namespace UltraMapper.Internals
         }
 
         private LambdaExpression _mappingExpression;
-        public LambdaExpression MappingExpression
+        public virtual LambdaExpression MappingExpression
         {
             get
             {

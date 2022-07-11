@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UltraMapper.Internals;
 
 namespace UltraMapper.Conventions
@@ -85,7 +86,7 @@ namespace UltraMapper.Conventions
             if( !this.IgnoreMethods )
             {
                 var targetMethods = type.GetMethods( bindingFlags )
-                    .Select( method => method );
+                    .Where( method => method.GetCustomAttribute<CompilerGeneratedAttribute>() == null );
 
                 if( type.IsInterface )
                 {

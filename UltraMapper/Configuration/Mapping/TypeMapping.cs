@@ -210,14 +210,6 @@ namespace UltraMapper.Internals
             return memberMapping;
         }
 
-        public List<Expression> MemberToMemberMappingExpressions
-        {
-            get 
-            {
-               return ((ReferenceMapper)this.Mapper).GetMemberMappingExpressions( this );
-            }
-        }
-
         public override string ToString()
         {
             if( _toString == null )

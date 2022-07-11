@@ -21,10 +21,8 @@ namespace UltraMapper.MappingExpressionBuilders
         }
 
 #if DEBUG
-        private static void _debug( object o ) => Console.WriteLine( o );
-
-        public static readonly Expression<Action<object>> debugExp =
-            ( o ) => _debug( o );
+        private static void Debug( object o ) => Console.WriteLine( o );
+        public static readonly Expression<Action<object>> _debugExp =  o => Debug( o );
 #endif
 
         public virtual bool CanHandle( Type source, Type target )
@@ -164,6 +162,12 @@ namespace UltraMapper.MappingExpressionBuilders
         }
 
         #region MemberMapping
+        private static readonly Expression<Func<string, string, object, Type, Type, string>> _getErrorExp =
+            ( error, mapping, sourceMemberValue, sourceType, targetType ) => String.Format( error, mapping,
+                sourceMemberValue ?? "null", sourceType.GetPrettifiedName(), targetType.GetPrettifiedName() );
+
+        private const string errorMsg = "Error mapping '{0}'. Value '{1}' (of type '{2}') cannot be assigned to the target (of type '{3}').";
+
         private static readonly MemberMappingComparer _memberComparer = new MemberMappingComparer();
 
         private class MemberMappingComparer : IComparer<MemberMapping>
@@ -180,7 +184,7 @@ namespace UltraMapper.MappingExpressionBuilders
             }
         }
 
-        public List<Expression> GetMemberMappingExpressions( TypeMapping typeMapping )
+        private List<Expression> GetMemberMappingExpressions( TypeMapping typeMapping )
         {
             //since nested selectors are supported, we sort membermappings to grant
             //that we assign outer objects first
@@ -196,13 +200,16 @@ namespace UltraMapper.MappingExpressionBuilders
                 .Where( mapping => !mapping.SourceMember.Ignore )
                 .Where( mapping => !mapping.TargetMember.Ignore )
                 .OrderBy( mapping => mapping, _memberComparer )
-                .Select( mapping =>
-                {
-                    if( mapping.Mapper is ReferenceMapper )
-                        return GetComplexMemberExpression( mapping );
+                .Select( mapping => GetMemberMappingExpression( mapping ).Body )
+                .ToList();
+        }
 
-                    return GetSimpleMemberExpression( mapping );
-                } ).ToList();
+        public LambdaExpression GetMemberMappingExpression( MemberMapping memberMapping )
+        {
+            if( memberMapping.Mapper is ReferenceMapper )
+                return GetComplexMemberExpression( memberMapping );
+
+            return GetSimpleMemberExpression( memberMapping );
         }
 
         protected Expression GetMemberMappingsExpression( TypeMapping typeMapping )
@@ -212,7 +219,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 Expression.Block( memberMappingExps );
         }
 
-        protected virtual Expression GetComplexMemberExpression( MemberMapping mapping )
+        private LambdaExpression GetComplexMemberExpression( MemberMapping mapping )
         {
             var memberContext = new MemberMappingContext( mapping );
 
@@ -223,10 +230,13 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 var valueReaderExp = Expression.Invoke( mapping.CustomConverter, memberContext.SourceMemberValueGetter );
 
-                return mapping.TargetMember.ValueSetter.Body
+                var exp = mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
                     .ReplaceParameter( valueReaderExp, targetSetterValueParamName );
+
+                return ToActionWithReferenceTrackerLambda( exp, memberContext );
             }
+
 
             var memberAssignmentExp = ((IMemberMappingExpression)mapping.Mapper)
                 .GetMemberAssignment( memberContext, out bool needsTrackingOrRecursion );
@@ -242,19 +252,19 @@ namespace UltraMapper.MappingExpressionBuilders
                 else // if( memberContext.TargetMemberValueSetter != null ) fails directly if not resolved/provided
                     exp = exp.ReplaceParameter( memberContext.TargetMemberValueSetter, "targetValue" );
 
-                return exp;
+                return ToActionWithReferenceTrackerLambda( exp, memberContext );
             }
 
             if( memberContext.Options.IsReferenceTrackingEnabled )
             {
                 var parameters = new List<ParameterExpression>()
-                {
-                    memberContext.SourceMember,
-                    memberContext.TargetMember,
-                    memberContext.TrackedReference
-                };
+                    {
+                        memberContext.SourceMember,
+                        memberContext.TargetMember,
+                        memberContext.TrackedReference
+                    };
 
-                return Expression.Block
+                var exp = Expression.Block
                 (
                     parameters,
 
@@ -270,13 +280,16 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     memberContext.TargetMemberValueSetter
                 );
+
+                return ToActionWithReferenceTrackerLambda( exp, memberContext );
             }
+
             else
             {
                 var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                     .MakeGenericMethod( memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 
-                return Expression.Block
+                var exp = Expression.Block
                 (
                     memberAssignmentExp
                         .ReplaceParameter( memberContext.SourceMemberValueGetter, "sourceValue" )
@@ -286,16 +299,12 @@ namespace UltraMapper.MappingExpressionBuilders
                         memberContext.TargetMemberValueGetter,
                         memberContext.ReferenceTracker, Expression.Constant( mapping ) )
                 );
+
+                return ToActionWithReferenceTrackerLambda( exp, memberContext );
             }
         }
 
-        private static readonly Expression<Func<string, string, object, Type, Type, string>> _getErrorExp =
-            ( error, mapping, sourceMemberValue, sourceType, targetType ) => String.Format( error, mapping, 
-                sourceMemberValue ?? "null", sourceType.GetPrettifiedName(), targetType.GetPrettifiedName() );
-
-        private const string errorMsg = "Error mapping '{0}'. Value '{1}' (of type '{2}') cannot be assigned to the target (of type '{3}').";
-
-        protected Expression GetSimpleMemberExpression( MemberMapping mapping )
+        private LambdaExpression GetSimpleMemberExpression( MemberMapping mapping )
         {
             var memberContext = new MemberMappingContext( mapping );
 
@@ -329,7 +338,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 Expression.Constant( memberContext.TargetMember.Type )
             );
 
-            return Expression.TryCatch
+            expression = Expression.TryCatch
             (
                 Expression.Block( typeof( void ), expression ),
 
@@ -339,6 +348,21 @@ namespace UltraMapper.MappingExpressionBuilders
                     typeof( void )
                 ) )
             );
+
+            var delegateType = typeof( Action<,> ).MakeGenericType(
+            memberContext.SourceInstance.Type, memberContext.TargetInstance.Type );
+
+            return Expression.Lambda( delegateType, expression,
+                memberContext.SourceInstance, memberContext.TargetInstance );
+        }
+
+        private LambdaExpression ToActionWithReferenceTrackerLambda( Expression expression, MemberMappingContext memberContext )
+        {
+            var delegateType = typeof( Action<,,> ).MakeGenericType(
+                memberContext.ReferenceTracker.Type, memberContext.SourceInstance.Type, memberContext.TargetInstance.Type );
+
+            return Expression.Lambda( delegateType, expression,
+               memberContext.ReferenceTracker, memberContext.SourceInstance, memberContext.TargetInstance );
         }
         #endregion
     }
