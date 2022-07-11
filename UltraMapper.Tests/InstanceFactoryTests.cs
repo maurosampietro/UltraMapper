@@ -10,7 +10,30 @@ namespace UltraMapper.Tests
     [TestClass]
     public class InstanceFactoryStrongTypedTests
     {
-        private class Complex { }
+        private class Complex
+        {
+            public int Arg1 { get; }
+            public string Arg2 { get; }
+
+            public Complex() { }
+
+            public Complex( int arg1 )
+            {
+                this.Arg1 = arg1;
+            }
+
+            public Complex( int arg1, string arg2 )
+            {
+                this.Arg1 = arg1;
+                this.Arg2 = arg2;
+            }
+
+            public Complex( string arg2, int arg1 )
+            {
+                this.Arg1 = arg1;
+                this.Arg2 = arg2;
+            }
+        }
 
         #region Arrays
         [TestMethod]
@@ -127,6 +150,24 @@ namespace UltraMapper.Tests
             Assert.IsTrue( instance[ 0 ][ 1 ][ 1 ][ 1 ].Length == 2 );
         }
         #endregion
+
+        [TestMethod]
+        public void CreateComplexMultiplesCtors()
+        {
+            var instance1 = InstanceFactory.CreateObject<Complex>( 11 );
+            Assert.IsTrue( instance1.Arg1 == 11 );
+            Assert.IsTrue( instance1.Arg2 == null );
+
+            //different number of params
+            var instance2 = InstanceFactory.CreateObject<Complex>( 11, "second arg" );
+            Assert.IsTrue( instance2.Arg1 == 11 );
+            Assert.IsTrue( instance2.Arg2 == "second arg" );
+
+            //same number of params but different type (different order actually)
+            var instance3 = InstanceFactory.CreateObject<Complex>( "second arg", 11 );
+            Assert.IsTrue( instance3.Arg1 == 11 );
+            Assert.IsTrue( instance3.Arg2 == "second arg" );
+        }
     }
 
     [TestClass]
