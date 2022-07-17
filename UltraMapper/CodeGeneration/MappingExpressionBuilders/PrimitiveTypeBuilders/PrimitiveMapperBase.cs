@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -12,24 +13,27 @@ namespace UltraMapper.MappingExpressionBuilders
             this.MapperConfiguration = configuration;
         }
 
-        public LambdaExpression GetMappingExpression( Type sourceType, Type targetType, IMappingOptions options )
+        public LambdaExpression GetMappingExpression( Mapping mapping )
         {
-            var context = this.GetContext( sourceType, targetType, options );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            var context = this.GetContext( source.EntryType, target.EntryType, mapping );
             var getValueExpression = this.GetValueExpression( context );
 
             var delegateType = typeof( Func<,> )
-                .MakeGenericType( sourceType, targetType );
+                .MakeGenericType( source.EntryType, target.EntryType );
 
             return Expression.Lambda( delegateType,
                 getValueExpression, context.SourceInstance );
         }
 
-        protected virtual MapperContext GetContext( Type sourceType, Type targetType, IMappingOptions options )
+        protected virtual MapperContext GetContext( Type sourceType, Type targetType, Mapping mapping )
         {
-            return new MapperContext( sourceType, targetType, options );
+            return new MapperContext( sourceType, targetType, (IMappingOptions)mapping );
         }
 
-        public abstract bool CanHandle( Type sourceType, Type targetType );
+        public abstract bool CanHandle( Mapping mapping );
 
         protected abstract Expression GetValueExpression( MapperContext context );
     }

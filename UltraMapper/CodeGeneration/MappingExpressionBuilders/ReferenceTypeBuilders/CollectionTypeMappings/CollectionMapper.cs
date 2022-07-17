@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 using UltraMapper.Internals.ExtensionMethods;
-using UltraMapper.MappingExpressionBuilders.MapperContexts;
 using UltraMapper.ReferenceTracking;
 
 namespace UltraMapper.MappingExpressionBuilders
@@ -15,14 +14,18 @@ namespace UltraMapper.MappingExpressionBuilders
         public CollectionMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return source.IsEnumerable() && target.IsEnumerable();
+            var source = mapping.Source;
+            var target = mapping.Target;
+            return source.EntryType.IsEnumerable() && target.EntryType.IsEnumerable();
         }
 
-        protected override ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
+        protected override ReferenceMapperContext GetMapperContext( Mapping mapping )
         {
-            return new CollectionMapperContext( source, target, options );
+            var source = mapping.Source.EntryType;
+            var target = mapping.Target.EntryType;
+            return new CollectionMapperContext( mapping );
         }
 
         private Type lastRtLoopingVarType;
@@ -96,7 +99,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected virtual Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
-            ParameterExpression referenceTracker, ParameterExpression mapper )
+            ParameterExpression referenceTracker, ParameterExpression mapper, CollectionMapperContext context = null )
         {
             if( targetCollectionInsertionMethod == null )
             {
@@ -108,6 +111,17 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
+            var mapping = ((Mapping)context.Options).GlobalConfig[ sourceCollectionElementType, targetCollectionElementType ];
+            if( mapping.Source.EntryType != mapping.Source.ReturnType )
+                mapping = ((Mapping)context.Options).GlobalConfig[ mapping.Source.ReturnType, targetCollectionElementType ];
+
+            var valueGetter = mapping.Source.ValueGetter;
+
+            /*member extraction support*/
+            Expression valueExtraction = Expression.Invoke( valueGetter, sourceCollectionLoopingVar );
+            if( ((Mapping)context.Options).Source.MemberAccessPath.Count <= 1 )
+                valueExtraction = sourceCollectionLoopingVar;
+
             return Expression.Block
             (
                 new[] { newElement },
@@ -116,7 +130,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 (
                     Expression.IfThenElse
                     (
-                        Expression.Equal( sourceCollectionLoopingVar, Expression.Constant( null, sourceCollectionElementType ) ),
+                        Expression.Equal( valueExtraction, Expression.Constant( null, sourceCollectionElementType ) ),
 
                         Expression.Call( targetCollection, targetCollectionInsertionMethod, Expression.Default( targetCollectionElementType ) ),
 
@@ -228,7 +242,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         targetCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
                         context.ReferenceTracker,
-                        context.Mapper
+                        context.Mapper,
+                        context
                       )
             );
         }
@@ -287,8 +302,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( context.Options.CustomTargetConstructor != null )
                 return Expression.Invoke( context.Options.CustomTargetConstructor );
 
-            var collectionContext = new CollectionMapperContext( context.SourceMember.Type,
-                context.TargetMember.Type, context.Options );
+            var collectionContext = new CollectionMapperContext( (Mapping)context.Options );
 
             if( context.TargetMember.Type.IsArray )
             {
@@ -486,7 +500,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var getLinqCount = typeof( System.Linq.Enumerable ).GetMethods(
                     BindingFlags.Static | BindingFlags.Public )
-                .First( m =>
+                .FirstOrDefault( m =>
                 {
                     if( m.Name != nameof( System.Linq.Enumerable.Count ) )
                         return false;
@@ -495,11 +509,12 @@ namespace UltraMapper.MappingExpressionBuilders
                     if( parameters.Length != 1 ) return false;
 
                     return parameters[ 0 ].ParameterType.GetGenericTypeDefinition() == typeof( IEnumerable<> );
-                } )
-                .MakeGenericMethod( type.GetGenericArguments()[ 0 ] );
+                } );
 
-            if( getLinqCount != null )
-                return getLinqCount;
+            var genericCount = getLinqCount?.MakeGenericMethod( type.GetGenericArguments()[ 0 ] );
+
+            if( genericCount != null )
+                return genericCount;
 
             throw new ArgumentException( $"Type '{type}' does not define a Count or Length property and Linq.Count could not be used" );
         }

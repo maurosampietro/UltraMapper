@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 using UltraMapper.Internals.ExtensionMethods;
-using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -18,10 +17,13 @@ namespace UltraMapper.MappingExpressionBuilders
         public StackMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return base.CanHandle( source, target ) &&
-                target.IsCollectionOfType( typeof( Stack<> ) );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            return base.CanHandle( mapping ) &&
+                target.EntryType.IsCollectionOfType( typeof( Stack<> ) );
         }
 
         protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )

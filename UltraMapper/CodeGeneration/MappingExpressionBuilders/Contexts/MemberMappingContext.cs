@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using UltraMapper.Internals;
 
-namespace UltraMapper.MappingExpressionBuilders.MapperContexts
+namespace UltraMapper.MappingExpressionBuilders
 {
     public class MemberMappingContext : ReferenceMapperContext
     {
@@ -19,8 +19,8 @@ namespace UltraMapper.MappingExpressionBuilders.MapperContexts
         public Expression SourceMemberNullValue { get; internal set; }
 
         public MemberMappingContext( MemberMapping mapping )
-            : base( mapping.InstanceTypeMapping.SourceType,
-                    mapping.InstanceTypeMapping.TargetType, mapping )
+            : base( mapping.InstanceTypeMapping.Source.EntryType,
+                    mapping.InstanceTypeMapping.Target.EntryType, mapping )
         {
             var sourceMemberType = mapping.SourceMember.MemberType;
             var targetMemberType = mapping.TargetMember.MemberType;

@@ -13,10 +13,12 @@ namespace UltraMapper.MappingExpressionBuilders
         public ConvertMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            bool areTypesBuiltIn = source.IsBuiltIn( false ) && target.IsBuiltIn( false );
-            return areTypesBuiltIn || SourceIsConvertibleToTarget( source, target );
+            var source = mapping.Source;
+            var target = mapping.Target;
+            bool areTypesBuiltIn = source.EntryType.IsBuiltIn( false ) && target.EntryType.IsBuiltIn( false );
+            return areTypesBuiltIn || SourceIsConvertibleToTarget( source.EntryType, target.EntryType );
         }
 
         private bool SourceIsConvertibleToTarget( Type source, Type target )

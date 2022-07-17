@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -8,9 +9,12 @@ namespace UltraMapper.MappingExpressionBuilders
         public EnumMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type sourceType, Type targetType )
+        public override bool CanHandle( Mapping mapping )
         {
-            return targetType.IsEnum;
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            return target.EntryType.IsEnum;
         }
 
         protected override Expression GetValueExpression( MapperContext context )

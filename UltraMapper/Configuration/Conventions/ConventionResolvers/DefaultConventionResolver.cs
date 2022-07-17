@@ -13,7 +13,7 @@ namespace UltraMapper
             foreach( var convention in conventions )
             {
                 var memberPairings = convention.MapByConvention(
-                    typeMapping.SourceType, typeMapping.TargetType );
+                    typeMapping.Source.EntryType, typeMapping.Target.EntryType );
 
                 foreach( var memberPair in memberPairings )
                 {

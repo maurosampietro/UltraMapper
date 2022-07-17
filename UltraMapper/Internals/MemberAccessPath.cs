@@ -20,6 +20,7 @@ namespace UltraMapper.Internals
         public MemberAccessPath( Type entryInstance )
         {
             this.EntryInstance = entryInstance;
+            this.ReturnType = entryInstance;
         }
 
         public MemberAccessPath( Type entryInstance, MemberInfo memberInfo )

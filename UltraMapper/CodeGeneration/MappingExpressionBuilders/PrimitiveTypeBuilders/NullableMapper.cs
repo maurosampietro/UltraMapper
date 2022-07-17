@@ -9,9 +9,11 @@ namespace UltraMapper.MappingExpressionBuilders
         public NullableMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return source.IsNullable() || target.IsNullable();
+            var source = mapping.Source;
+            var target = mapping.Target;
+            return source.EntryType.IsNullable() || target.EntryType.IsNullable();
         }
 
         protected override Expression GetValueExpression( MapperContext context )
@@ -24,45 +26,44 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var labelTarget = Expression.Label( context.TargetInstance.Type, "returnTarget" );
 
-            Expression sourceNullTest = Expression.Empty();
-            if( context.SourceInstance.Type.IsNullable() )
-            {
-                sourceNullTest = Expression.IfThen
-                (
-                    Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
-                    Expression.Return( labelTarget, Expression.Default( context.TargetInstance.Type ) )
-                );
-            }
+            Expression returnValue = Expression.Convert( context.SourceInstance, sourceNullUnwrappedType );
 
-            LambdaExpression convert = null;
             if( sourceNullUnwrappedType != targetNullUnwrappedType )
             {
-                convert = MapperConfiguration[ sourceNullUnwrappedType,
+                var conversionlambda = MapperConfiguration[ sourceNullUnwrappedType,
                     targetNullUnwrappedType ].MappingExpression;
-            }
 
-            Expression returnValue = Expression.Convert( context.SourceInstance, sourceNullUnwrappedType );
+                returnValue = conversionlambda.Body
+                    .ReplaceParameter( returnValue, conversionlambda.Parameters[ 0 ].Name );
+            }
+                       
             if( context.TargetInstance.Type.IsNullable() )
             {
                 var constructor = context.TargetInstance.Type
                     .GetConstructor( new Type[] { targetNullUnwrappedType } );
 
-                Expression sourceValue = convert == null ? context.SourceInstance :
-                   convert.Body.ReplaceParameter( returnValue, convert.Parameters[ 0 ].Name );
-
-                returnValue = Expression.New( constructor, sourceValue );
+                returnValue = Expression.New( constructor, returnValue );
             }
             else
             {
-                returnValue = convert == null ? Expression.Convert( context.SourceInstance, targetNullUnwrappedType ) :
-                    convert.Body.ReplaceParameter( returnValue, convert.Parameters[ 0 ].Name );
+                returnValue = Expression.Convert( returnValue, targetNullUnwrappedType );
             }
 
-            return Expression.Block
-            (
-                sourceNullTest,
-                Expression.Label( labelTarget, returnValue )
-            );
+            if( context.SourceInstance.Type.IsNullable() )
+            {
+                return Expression.Block
+                (
+                    Expression.IfThen
+                    (
+                        Expression.Equal( context.SourceInstance, Expression.Constant( null, context.SourceInstance.Type ) ),
+                        Expression.Return( labelTarget, Expression.Default( context.TargetInstance.Type ) )
+                    ),
+
+                    Expression.Label( labelTarget, returnValue )
+                );
+            }
+
+            return returnValue;
         }
     }
 }

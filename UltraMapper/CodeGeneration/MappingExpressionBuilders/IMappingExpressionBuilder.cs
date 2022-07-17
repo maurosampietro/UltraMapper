@@ -1,6 +1,5 @@
-﻿using System;
-using System.Linq.Expressions;
-using UltraMapper.MappingExpressionBuilders.MapperContexts;
+﻿using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -13,7 +12,7 @@ namespace UltraMapper.MappingExpressionBuilders
         /// <param name="source">Source type</param>
         /// <param name="target">Target type</param>
         /// <returns>True if the mapping can be handled by the mapper, False otherwise.</returns>
-        bool CanHandle( Type source, Type target );
+        bool CanHandle( Mapping mapping );
 
         /// <summary>
         /// Gets an expression capable of mapping between 
@@ -23,7 +22,7 @@ namespace UltraMapper.MappingExpressionBuilders
         /// <param name="target">Target type</param>
         /// <param name="options">Mapping options</param>
         /// <returns>The mapping expression</returns>
-        LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options );
+        LambdaExpression GetMappingExpression( Mapping mapping );
     }
 
     public interface IMemberMappingExpression

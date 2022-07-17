@@ -8,18 +8,24 @@ namespace UltraMapper.MappingExpressionBuilders
     {
         public ReferenceToStructMapper( Configuration configuration ) : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return !source.IsBuiltIn( false ) && !target.IsBuiltIn( false );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            return !source.EntryType.IsBuiltIn( false ) && !target.EntryType.IsBuiltIn( false );
         }
 
-        public override LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
+        public override LambdaExpression GetMappingExpression( Mapping mapping )
         {
-            var context = this.GetMapperContext( source, target, options );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            var context = this.GetMapperContext( mapping );
 
             var expression = Expression.Block
             (
-                base.GetMappingExpression( source, target, options ).Body
+                base.GetMappingExpression( mapping ).Body
                     .ReplaceParameter( context.Mapper, context.Mapper.Name )
                     .ReplaceParameter( context.ReferenceTracker, context.ReferenceTracker.Name )
                     .ReplaceParameter( context.SourceInstance, context.SourceInstance.Name )

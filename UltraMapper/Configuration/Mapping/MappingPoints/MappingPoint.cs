@@ -13,6 +13,9 @@ namespace UltraMapper.Internals
         public readonly MemberInfo MemberInfo;
         public Type MemberType { get; }
 
+        public Type EntryType => this.MemberAccessPath.EntryInstance;
+        public Type ReturnType => this.MemberAccessPath.ReturnType;
+
         public MappingPoint( MemberAccessPath memberAccessPath )
         {
             this.MemberAccessPath = memberAccessPath;
@@ -23,14 +26,20 @@ namespace UltraMapper.Internals
         public override bool Equals( object obj )
         {
             if( obj is MappingPoint mp )
-                return this.MemberInfo.Equals( mp.MemberInfo );
+            {
+                return this.MemberInfo.Equals( mp.MemberInfo ) &&
+                    this.MemberAccessPath.EntryInstance.Equals( mp.MemberAccessPath.EntryInstance ) &&
+                    this.MemberAccessPath.ReturnType.Equals( mp.MemberAccessPath.ReturnType );
+            }
 
             return false;
         }
 
         public override int GetHashCode()
         {
-            return this.MemberInfo.GetHashCode();
+            return this.MemberInfo.GetHashCode() ^
+                this.MemberAccessPath.EntryInstance?.GetHashCode() ?? 0 ^
+                this.MemberAccessPath.ReturnType?.GetHashCode() ?? 0;
         }
 
         public override string ToString()

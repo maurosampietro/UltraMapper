@@ -32,8 +32,8 @@ namespace UltraMapper.Tests.ConfigurationInheritance
             tree.Add( new TypeMapping( null, typeof( string ), typeof( string ) ) );
 
             //check root is been updated
-            Assert.IsTrue( tree.Root.Item.SourceType == typeof( object ) );
-            Assert.IsTrue( tree.Root.Item.TargetType == typeof( object ) );
+            Assert.IsTrue( tree.Root.Item.Source.EntryType == typeof( object ) );
+            Assert.IsTrue( tree.Root.Item.Target.EntryType == typeof( object ) );
 
             //no duplicates allowed
             var dup1 = new TypeMapping( null, typeof( object ), typeof( object ) );

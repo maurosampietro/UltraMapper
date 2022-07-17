@@ -6,6 +6,8 @@ namespace UltraMapper.Internals
 {
     public interface IMapping
     {
+        IMappingSource Source { get; }
+        IMappingTarget Target { get; }
         IMappingExpressionBuilder Mapper { get; }
         Action<ReferenceTracker, object, object> MappingFunc { get; }
         LambdaExpression MappingExpression { get; }

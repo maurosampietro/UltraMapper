@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
-using UltraMapper.MappingExpressionBuilders.MapperContexts;
 using UltraMapper.ReferenceTracking;
 
 namespace UltraMapper.MappingExpressionBuilders
@@ -22,25 +21,28 @@ namespace UltraMapper.MappingExpressionBuilders
 
 #if DEBUG
         private static void Debug( object o ) => Console.WriteLine( o );
-        public static readonly Expression<Action<object>> _debugExp =  o => Debug( o );
+        public static readonly Expression<Action<object>> _debugExp = o => Debug( o );
 #endif
 
-        public virtual bool CanHandle( Type source, Type target )
+        public virtual bool CanHandle( Mapping mapping )
         {
-            bool builtInTypes = source.IsBuiltIn( false )
-                && target.IsBuiltIn( false );
+            var source = mapping.Source;
+            var target = mapping.Target;
 
-            return !target.IsValueType && !builtInTypes;
+            bool builtInTypes = source.EntryType.IsBuiltIn( false )
+                && target.EntryType.IsBuiltIn( false );
+
+            return !target.EntryType.IsValueType && !builtInTypes;
         }
 
-        protected virtual ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
-        {
-            return new ReferenceMapperContext( source, target, options );
+        protected virtual ReferenceMapperContext GetMapperContext( Mapping mapping )
+        { 
+            return new ReferenceMapperContext( mapping );
         }
 
-        public virtual LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
+        public virtual LambdaExpression GetMappingExpression( Mapping mapping )
         {
-            var context = this.GetMapperContext( source, target, options );
+            var context = this.GetMapperContext( mapping );
 
             var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
 

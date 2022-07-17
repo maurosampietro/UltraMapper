@@ -13,10 +13,10 @@ namespace UltraMapper.Internals
 
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
-        private readonly Dictionary<MemberInfo, MappingSource> _sourceProperties
-            = new Dictionary<MemberInfo, MappingSource>();
+        private readonly Dictionary<MemberInfo, IMappingSource> _sources
+            = new Dictionary<MemberInfo, IMappingSource>();
 
-        private readonly Dictionary<MemberInfo, IMappingTarget> _targetProperties
+        private readonly Dictionary<MemberInfo, IMappingTarget> _targets
             = new Dictionary<MemberInfo, IMappingTarget>();
 
         /*
@@ -30,6 +30,13 @@ namespace UltraMapper.Internals
         public readonly Dictionary<IMappingTarget, MemberMapping> MemberToMemberMappings;
 
         public readonly Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>> TypeToMemberMappings;
+
+        public TypeMapping( Configuration globalConfig, IMappingSource source, IMappingTarget target )
+            : base( globalConfig, source, target )
+        {
+            this.MemberToMemberMappings = new Dictionary<IMappingTarget, MemberMapping>();
+            this.TypeToMemberMappings = new Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>>();
+        }
 
         public TypeMapping( Configuration globalConfig, Type sourceType, Type targetType )
             : base( globalConfig, sourceType, targetType )
@@ -166,7 +173,7 @@ namespace UltraMapper.Internals
         private TypeMapping GetParentConfiguration()
         {
             if( this.GlobalConfig.TypeMappingTree.TryGetValue(
-                SourceType, TargetType, out ConfigInheritanceNode value ) )
+                Source.EntryType, Target.EntryType, out ConfigInheritanceNode value ) )
             {
                 return value.Parent?.Item;
             }
@@ -174,31 +181,31 @@ namespace UltraMapper.Internals
             return null;
         }
 
-        public MappingSource GetMappingSource( MemberInfo sourceMember,
+        public IMappingSource GetMappingSource( MemberInfo sourceMember,
             LambdaExpression sourceMemberGetterExpression )
         {
-            return _sourceProperties.GetOrAdd( sourceMember,
+            return _sources.GetOrAdd( sourceMember,
                () => new MappingSource( sourceMemberGetterExpression ) );
         }
 
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
             LambdaExpression targetMemberGetter, LambdaExpression targetMemberSetter )
         {
-            return _targetProperties.GetOrAdd( targetMember,
+            return _targets.GetOrAdd( targetMember,
                 () => new MappingTarget( targetMemberSetter, targetMemberGetter ) );
         }
 
-        public MappingSource GetMappingSource( MemberInfo sourceMember,
+        public IMappingSource GetMappingSource( MemberInfo sourceMember,
             MemberAccessPath sourceMemberPath )
         {
-            return _sourceProperties.GetOrAdd( sourceMember,
+            return _sources.GetOrAdd( sourceMember,
                 () => new MappingSource( sourceMemberPath ) );
         }
 
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
             MemberAccessPath targetMemberPath )
         {
-            return _targetProperties.GetOrAdd( targetMember,
+            return _targets.GetOrAdd( targetMember,
                 () => new MappingTarget( targetMemberPath ) );
         }
 
@@ -213,7 +220,7 @@ namespace UltraMapper.Internals
         public override string ToString()
         {
             if( _toString == null )
-                _toString = $"{this.SourceType} -> {this.TargetType}";
+                _toString = $"{this.Source.EntryType} -> {this.Target.EntryType}";
 
             return _toString;
         }

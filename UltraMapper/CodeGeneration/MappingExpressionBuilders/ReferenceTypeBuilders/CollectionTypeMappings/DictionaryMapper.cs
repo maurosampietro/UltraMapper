@@ -10,17 +10,23 @@ namespace UltraMapper.MappingExpressionBuilders
         public DictionaryMapper( Configuration configuration )
              : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom( source );
-            bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom( target );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            bool sourceIsDictionary = typeof( IDictionary ).IsAssignableFrom( source.EntryType );
+            bool targetIsDictionary = typeof( IDictionary ).IsAssignableFrom( target.EntryType );
 
             return sourceIsDictionary || targetIsDictionary;
         }
 
-        protected override ReferenceMapperContext GetMapperContext( Type source, Type target, IMappingOptions options )
+        protected override ReferenceMapperContext GetMapperContext( Mapping mapping )
         {
-            return new DictionaryMapperContext( source, target, options );
+            var source = mapping.Source.EntryType;
+            var target = mapping.Target.EntryType;
+
+            return new DictionaryMapperContext(mapping );
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )

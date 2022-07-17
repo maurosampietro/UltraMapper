@@ -3,7 +3,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
 using UltraMapper.Internals.ExtensionMethods;
-using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -12,9 +11,12 @@ namespace UltraMapper.MappingExpressionBuilders
         public ArrayMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return base.CanHandle( source, target ) && target.IsArray;
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            return base.CanHandle( mapping ) && target.EntryType.IsArray;
         }
 
         protected override MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
@@ -36,7 +38,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     : (Expression)Expression.Empty();
         }
 
-        private object runtimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
         {
             var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
             return map.MappingFuncPrimitives( null, loopingvar );
@@ -49,7 +51,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
-                   ( loopingvar, targetType ) => runtimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
+                   ( loopingvar, targetType ) => RuntimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
 
                 var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
                 var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
@@ -100,7 +102,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
-            ParameterExpression referenceTracker, ParameterExpression mapper )
+            ParameterExpression referenceTracker, ParameterExpression mapper, CollectionMapperContext context = null )
         {
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
             var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );

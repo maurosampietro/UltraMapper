@@ -11,6 +11,9 @@ namespace UltraMapper.Internals
 
         public LambdaExpression CustomConstructor { get; set; }
 
+        public MappingTarget( Type type )
+            : this( new MemberAccessPath( type ) ) { }
+
         public MappingTarget( MemberInfo memberInfo )
             : this( new MemberAccessPath( memberInfo.DeclaringType, memberInfo ), null ) { }
 

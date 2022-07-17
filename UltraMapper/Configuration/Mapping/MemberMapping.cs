@@ -16,7 +16,7 @@ namespace UltraMapper.Internals
             : base( typeMapping.GlobalConfig, source.MemberType, target.MemberType )
         {
             this.InstanceTypeMapping = typeMapping;
-
+            
             this.SourceMember = source;
             this.TargetMember = target;
         }
@@ -46,7 +46,7 @@ namespace UltraMapper.Internals
             get
             {
                 if( _typeToTypeMapping == null )
-                    _typeToTypeMapping = GlobalConfig[ SourceType, TargetType ];
+                    _typeToTypeMapping = GlobalConfig[ Source.EntryType, Target.EntryType ];
 
                 return _typeToTypeMapping;
             }
@@ -60,7 +60,7 @@ namespace UltraMapper.Internals
                 if( _typeToMemberMapping == null )
                 {
                     _typeToMemberMapping = this.InstanceTypeMapping
-                        .GetTypeToMember( this.SourceType, this.TargetMember );
+                        .GetTypeToMember( this.Source.EntryType, this.TargetMember );
                 }
 
                 return _typeToMemberMapping;

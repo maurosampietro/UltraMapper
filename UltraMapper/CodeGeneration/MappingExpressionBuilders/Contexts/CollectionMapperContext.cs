@@ -9,7 +9,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public Type SourceCollectionElementType { get; protected set; }
         public Type TargetCollectionElementType { get; protected set; }
 
-        public bool IsSourceElementTypeBuiltIn { get; protected set;}
+        public bool IsSourceElementTypeBuiltIn { get; protected set; }
         public bool IsTargetElementTypeBuiltIn { get; protected set; }
 
         public ParameterExpression SourceCollectionLoopingVar { get; set; }
@@ -17,8 +17,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public LabelTarget Continue { get; }
         public LabelTarget Break { get; }
 
-        public CollectionMapperContext( Type source, Type target, IMappingOptions options )
-         : base( source, target, options )
+        public CollectionMapperContext( Mapping mapping ) : base( mapping )
         {
             SourceCollectionElementType = SourceInstance.Type.GetCollectionGenericType();
             TargetCollectionElementType = TargetInstance.Type.GetCollectionGenericType();

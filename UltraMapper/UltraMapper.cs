@@ -134,8 +134,8 @@ namespace UltraMapper
                     {
                         var memberTypeMapping = memberMapping.TypeToTypeMapping;
 
-                        var mappingSourceType = memberTypeMapping.SourceType;
-                        var mappingTargetType = memberTypeMapping.TargetType;
+                        var mappingSourceType = memberTypeMapping.Source.EntryType;
+                        var mappingTargetType = memberTypeMapping.Target.EntryType;
 
                         mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     }
@@ -145,8 +145,8 @@ namespace UltraMapper
 
                 case TypeMapping typeMapping:
                 {
-                    var mappingSourceType = typeMapping.SourceType;
-                    var mappingTargetType = typeMapping.TargetType;
+                    var mappingSourceType = typeMapping.Source.EntryType;
+                    var mappingTargetType = typeMapping.Target.EntryType;
 
                     mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     break;

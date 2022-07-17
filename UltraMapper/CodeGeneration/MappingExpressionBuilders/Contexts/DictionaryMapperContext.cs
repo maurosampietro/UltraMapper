@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -11,8 +12,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public ParameterExpression TargetCollectionElementKey { get; private set; }
         public ParameterExpression TargetCollectionElementValue { get; private set; }
 
-        public DictionaryMapperContext( Type source, Type target, IMappingOptions options )
-            : base( source, target, options )
+        public DictionaryMapperContext( Mapping mapping ) : base( mapping )
         {
             var sourceCollectionElementKeyType = SourceCollectionElementType.GetGenericArguments()[ 0 ];
             var sourceCollectionElementValueType = SourceCollectionElementType.GetGenericArguments()[ 1 ];

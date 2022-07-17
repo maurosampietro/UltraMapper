@@ -21,6 +21,9 @@ namespace UltraMapper.MappingExpressionBuilders
             RecursiveMapMethodInfo = GetUltraMapperMapGenericMethodMemberMapping();
         }
 
+        public ReferenceMapperContext( Mapping mapping )
+            : this( mapping.Source.EntryType, mapping.Target.EntryType, (IMappingOptions)mapping ) { }
+
         public ReferenceMapperContext( Type source, Type target, IMappingOptions options )
              : base( source, target, options )
         {
@@ -47,13 +50,13 @@ namespace UltraMapper.MappingExpressionBuilders
                     GenericArgs = m.GetGenericArguments()
                 } )
                 .Where
-                (   
-                    x => 
-                    x.Params.Length == 4 && x.GenericArgs.Length == 2 && 
+                (
+                    x =>
+                    x.Params.Length == 4 && x.GenericArgs.Length == 2 &&
                     x.Params[ 0 ].ParameterType == x.GenericArgs[ 0 ] &&
                     x.Params[ 1 ].ParameterType == x.GenericArgs[ 1 ] &&
                     x.Params[ 2 ].ParameterType == typeof( ReferenceTracker ) &&
-                    x.Params[ 3 ].ParameterType == typeof( IMapping ) 
+                    x.Params[ 3 ].ParameterType == typeof( IMapping )
                  )
                 .Select( x => x.Method )
                 .First();

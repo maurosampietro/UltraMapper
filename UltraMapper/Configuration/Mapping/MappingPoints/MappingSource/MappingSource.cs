@@ -8,8 +8,11 @@ namespace UltraMapper.Internals
     {
         public LambdaExpression ValueGetter { get; }
 
+        public MappingSource( Type type )
+            : this( new MemberAccessPath( type ) ) { }
+
         public MappingSource( MemberInfo memberInfo )
-            : this( new MemberAccessPath( memberInfo.DeclaringType, memberInfo ) ) { }
+            : this( new MemberAccessPath( memberInfo.DeclaringType ?? (Type)memberInfo, memberInfo ) ) { }
 
         public MappingSource( MemberAccessPath memberGetter )
             : base( memberGetter )

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -8,19 +9,25 @@ namespace UltraMapper.MappingExpressionBuilders
         public AbstractMappingExpressionBuilder( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return source.IsAbstract || source.IsInterface || source == typeof( object ) ||
-                target.IsAbstract || target.IsInterface || target == typeof( object );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            return source.EntryType.IsAbstract || source.EntryType.IsInterface || source.EntryType == typeof( object ) ||
+                target.EntryType.IsAbstract || target.EntryType.IsInterface || target.EntryType == typeof( object );
         }
 
-        public override LambdaExpression GetMappingExpression( Type source, Type target, IMappingOptions options )
+        public override LambdaExpression GetMappingExpression( Mapping mapping )
         {
-            var context = GetMapperContext( source, target, options );
+            var source = mapping.Source;
+            var target = mapping.Target;
 
-            var typeMapping = MapperConfiguration[ source, target ];
+            var context = GetMapperContext( mapping );
+
+            var typeMapping = MapperConfiguration[ source.EntryType, target.EntryType ];
             var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
-                .MakeGenericMethod( source, target );
+                .MakeGenericMethod( source.EntryType, target.EntryType );
 
             var expression = Expression.Block
             (

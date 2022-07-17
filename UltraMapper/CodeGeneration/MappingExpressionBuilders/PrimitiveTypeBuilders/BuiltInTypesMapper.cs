@@ -9,14 +9,17 @@ namespace UltraMapper.MappingExpressionBuilders
         public BuiltInTypeMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            bool areTypesBuiltIn = source.IsBuiltIn( false )
-                && target.IsBuiltIn( false );
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            bool areTypesBuiltIn = source.EntryType.IsBuiltIn( false )
+                && target.EntryType.IsBuiltIn( false );
 
             return (areTypesBuiltIn ) && (source == target ||
-                source.IsImplicitlyConvertibleTo( target ) ||
-                source.IsExplicitlyConvertibleTo( target ));
+                source.EntryType.IsImplicitlyConvertibleTo( target.EntryType ) ||
+                source.EntryType.IsExplicitlyConvertibleTo( target.EntryType ));
         }
 
         protected override Expression GetValueExpression( MapperContext context )

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
-using UltraMapper.MappingExpressionBuilders.MapperContexts;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -13,16 +12,19 @@ namespace UltraMapper.MappingExpressionBuilders
         public ReadOnlyCollectionMapper( Configuration configuration )
             : base( configuration ) { }
 
-        public override bool CanHandle( Type source, Type target )
+        public override bool CanHandle( Mapping mapping )
         {
-            return base.CanHandle( source, target ) && new Lazy<bool>( () =>
+            var source = mapping.Source;
+            var target = mapping.Target;
+
+            return base.CanHandle( mapping ) && new Lazy<bool>( () =>
             {
-                bool hasTargetDefaultParameterlessCtor = target.GetConstructor(
+                bool hasTargetDefaultParameterlessCtor = target.EntryType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.Public, null, Type.EmptyTypes, null ) != null;
 
                 if( hasTargetDefaultParameterlessCtor ) return false;
 
-                bool hasInputCollectionCtor = target.GetConstructors().FirstOrDefault( ctor =>
+                bool hasInputCollectionCtor = target.EntryType.GetConstructors().FirstOrDefault( ctor =>
                 {
                     var parameters = ctor.GetParameters();
                     if( parameters.Length != 1 ) return false;
@@ -55,8 +57,7 @@ namespace UltraMapper.MappingExpressionBuilders
             //1. Create a new temporary collection passing source as input
             //2. Read items from the newly created temporary collection and add items to the target
 
-            var collectionContext = (CollectionMapperContext)GetMapperContext( 
-                context.SourceMember.Type, context.TargetMember.Type, context.Options );
+            var collectionContext = (CollectionMapperContext)GetMapperContext( (Mapping)context.Options );
 
             var tempCollectionType = this.GetTemporaryCollectionType( collectionContext );
             var tempCollectionConstructorInfo = tempCollectionType.GetConstructor( Type.EmptyTypes );
@@ -111,7 +112,8 @@ namespace UltraMapper.MappingExpressionBuilders
                     temporaryCollectionInsertionMethod,
                     collectionContext.SourceCollectionLoopingVar,
                     context.ReferenceTracker,
-                    context.Mapper
+                    context.Mapper,
+                    collectionContext
                 ),
 
                 Expression.New( newTargetCtor, tempCollection )

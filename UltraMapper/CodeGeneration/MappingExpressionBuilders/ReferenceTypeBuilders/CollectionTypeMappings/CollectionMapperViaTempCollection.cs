@@ -315,7 +315,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         temporaryCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
                         context.ReferenceTracker,
-                        context.Mapper
+                        context.Mapper,
+                        context
                     )
             );
         }

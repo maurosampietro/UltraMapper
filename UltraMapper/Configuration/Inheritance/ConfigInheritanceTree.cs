@@ -14,7 +14,7 @@ namespace UltraMapper.Config
 
         public ConfigInheritanceTree( TypeMapping root )
         {
-            var typePair = new TypePair( root.SourceType, root.TargetType );
+            var typePair = new TypePair( root.Source.EntryType, root.Target.EntryType );
             _nodeDictionary.Add( typePair, new ConfigInheritanceNode( root ) );
 
             this.Root = new ConfigInheritanceNode( root );
@@ -31,7 +31,7 @@ namespace UltraMapper.Config
 
         public ConfigInheritanceNode Add( TypeMapping element )
         {
-            var key = new TypePair( element.SourceType, element.TargetType );
+            var key = new TypePair( element.Source.EntryType, element.Target.EntryType );
             if( !_nodeDictionary.TryGetValue( key, out ConfigInheritanceNode value ) )
             {
                 value = this.AddInternal( this.Root, element );
@@ -128,8 +128,8 @@ namespace UltraMapper.Config
         private void ToStringInternal( StringBuilder stringBuilder, int indentationLevel,
             ConfigInheritanceNode initialNode, bool includeMembers, bool includeOptions )
         {
-            string sourceTypeName = initialNode.Item.SourceType.GetPrettifiedName();
-            string targetTypeName = initialNode.Item.TargetType.GetPrettifiedName();
+            string sourceTypeName = initialNode.Item.Source.EntryType.GetPrettifiedName();
+            string targetTypeName = initialNode.Item.Target.EntryType.GetPrettifiedName();
 
             StringBuilder options = new StringBuilder();
             if( includeOptions )
@@ -185,8 +185,8 @@ namespace UltraMapper.Config
 
         private bool IsParentChildRelation( TypeMapping s, TypeMapping t )
         {
-            return s.SourceType.IsAssignableFrom( t.SourceType ) &&
-                s.TargetType.IsAssignableFrom( t.TargetType );
+            return s.Source.EntryType.IsAssignableFrom( t.Source.EntryType ) &&
+                s.Target.EntryType.IsAssignableFrom( t.Target.EntryType );
         }
     }
 }

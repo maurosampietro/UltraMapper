@@ -47,34 +47,37 @@ namespace UltraMapper.Internals
         internal static LambdaExpression GetSetterExp( this MemberAccessPath memberAccessPath )
         {
             var instanceType = memberAccessPath.EntryInstance;
-            var entryMember = memberAccessPath.First();
-
-            var valueType = memberAccessPath.Last().GetMemberType();
-
-            var value = Expression.Parameter( valueType, "value" );
             var accessInstance = Expression.Parameter( instanceType, "instance" );
-
             Expression accessPath = accessInstance;
 
-            if( memberAccessPath.Count == 1 && entryMember is Type )
+            if( memberAccessPath.Count == 0 )
             {
-                //instance => instance
-                //do nothing
+                var valueType2 = memberAccessPath.ReturnType;
+                var value2 = Expression.Parameter( valueType2, "value" );
+
+                if( instanceType != memberAccessPath.ReturnType )
+                    accessPath = Expression.Convert( accessInstance, memberAccessPath.ReturnType );
+
+                var delegateType2 = typeof( Action<,> ).MakeGenericType( instanceType, instanceType );
+                return LambdaExpression.Lambda( delegateType2, accessPath, accessInstance, value2 );
             }
-            else
+
+
+            var valueType = memberAccessPath.Last().GetMemberType();
+            var value = Expression.Parameter( valueType, "value" );
+            var entryMember = memberAccessPath.First();
+
+            foreach( var memberAccess in memberAccessPath )
             {
-                foreach( var memberAccess in memberAccessPath )
+                if( memberAccess is MethodInfo methodInfo )
                 {
-                    if( memberAccess is MethodInfo methodInfo )
-                    {
-                        if( methodInfo.IsGetterMethod() )
-                            accessPath = Expression.Call( accessPath, methodInfo );
-                        else
-                            accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
-                    }
+                    if( methodInfo.IsGetterMethod() )
+                        accessPath = Expression.Call( accessPath, methodInfo );
                     else
-                        accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+                        accessPath = Expression.Call( accessPath, (MethodInfo)memberAccess, value );
                 }
+                else
+                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
             }
 
             if( !(accessPath is MethodCallExpression) )
@@ -212,7 +215,7 @@ namespace UltraMapper.Internals
             var value = Expression.Parameter( valueType, "value" );
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );
-            var labelTarget = Expression.Label( typeof( void ), "label" );
+            //var labelTarget = Expression.Label( typeof( void ), "label" );
 
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
@@ -302,8 +305,8 @@ namespace UltraMapper.Internals
                 nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
                     : (Expression)Expression.Empty(),
 
-                accessPath,
-                Expression.Label( labelTarget )
+                accessPath
+            //Expression.Label( labelTarget )
             );
 
             var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );

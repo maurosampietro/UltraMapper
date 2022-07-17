@@ -20,9 +20,9 @@ namespace UltraMapper
         public MemberConfigurator MapMember( MemberInfo sourceMember,
             MemberInfo targetMemberGetter, MemberInfo targetMemberSetter )
         {
-            CheckThrowMemberBelongsToType( sourceMember, _typeMapping.SourceType );
-            CheckThrowMemberBelongsToType( targetMemberGetter, _typeMapping.TargetType );
-            CheckThrowMemberBelongsToType( targetMemberSetter, _typeMapping.TargetType );
+            CheckThrowMemberBelongsToType( sourceMember, _typeMapping.Source.EntryType );
+            CheckThrowMemberBelongsToType( targetMemberGetter, _typeMapping.Target.EntryType );
+            CheckThrowMemberBelongsToType( targetMemberSetter, _typeMapping.Target.EntryType );
 
             var sourceMemberGetter = sourceMember.GetGetterExp();
             var targetMemberGetterExp = targetMemberGetter.GetGetterExp();
@@ -38,8 +38,8 @@ namespace UltraMapper
 
         public MemberConfigurator MapMember( MemberInfo sourceMember, MemberInfo targetMember )
         {
-            CheckThrowMemberBelongsToType( sourceMember, _typeMapping.SourceType );
-            CheckThrowMemberBelongsToType( targetMember, _typeMapping.TargetType );
+            CheckThrowMemberBelongsToType( sourceMember, _typeMapping.Source.EntryType );
+            CheckThrowMemberBelongsToType( targetMember, _typeMapping.Target.EntryType );
 
             var sourceMemberGetter = sourceMember.GetGetterExp();
             var targetMemberGetter = targetMember.GetGetterExp();
