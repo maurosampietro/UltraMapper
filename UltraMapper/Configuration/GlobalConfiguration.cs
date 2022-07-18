@@ -67,6 +67,7 @@ namespace UltraMapper
             //Make sure to use a collection which preserve insertion order!
             this.Mappers = new OrderedTypeSet<IMappingExpressionBuilder>()
             {
+                //new MemberMapper( this ),
                 //new AbstractMappingExpressionBuilder(this),
                 new StringToEnumMapper( this ),
                 new EnumMapper( this ),

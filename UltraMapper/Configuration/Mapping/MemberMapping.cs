@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using UltraMapper.MappingExpressionBuilders;
 
@@ -16,7 +17,7 @@ namespace UltraMapper.Internals
             : base( typeMapping.GlobalConfig, source.MemberType, target.MemberType )
         {
             this.InstanceTypeMapping = typeMapping;
-            
+
             this.SourceMember = source;
             this.TargetMember = target;
         }
@@ -188,13 +189,15 @@ namespace UltraMapper.Internals
                 //_memberMappingExpression = GlobalConfig.ExpCache.Get( this.SourceType,
                 //    this.TargetType, (IMappingOptions)this );
 
-                if( _memberMappingExpression == null )
-                {
-                    _memberMappingExpression = ((ReferenceMapper)this.InstanceTypeMapping.Mapper).GetMemberMappingExpression( this );
+                //if( _memberMappingExpression == null )
+                //{
+                var memberMapper = new MemberMapper( GlobalConfig );
+                //var memberMapper = GlobalConfig.Mappers.First( m => m.CanHandle( this ) );
+                _memberMappingExpression = memberMapper.GetMappingExpression( this );
 
-                    //GlobalConfig.ExpCache.Add( this.SourceType,
-                    //    this.TargetType, (IMappingOptions)this, _memberMappingExpression );
-                }
+                //GlobalConfig.ExpCache.Add( this.SourceType,
+                //    this.TargetType, (IMappingOptions)this, _memberMappingExpression );
+                //}
 
                 return _memberMappingExpression;
             }
