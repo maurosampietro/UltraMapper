@@ -8,9 +8,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class ArrayMapper : CollectionMapper
     {
-        public ArrayMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;
@@ -38,20 +35,21 @@ namespace UltraMapper.MappingExpressionBuilders
                     : (Expression)Expression.Empty();
         }
 
-        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
         {
-            var map = this.MapperConfiguration[ loopingvar.GetType(), targetType ];
+            var map = config[ loopingvar.GetType(), targetType ];
             return map.MappingFuncPrimitives( null, loopingvar );
         }
 
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar, ParameterExpression mapper, ParameterExpression referenceTracker )
+            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
+            ParameterExpression mapper, ParameterExpression referenceTracker, CollectionMapperContext context )
         {
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
-                   ( loopingvar, targetType ) => RuntimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
+                   ( loopingvar, targetType ) => RuntimeMappingInterfaceToPrimitiveType( loopingvar, targetType, context.MapperConfiguration );
 
                 var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
                 var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
@@ -77,7 +75,7 @@ namespace UltraMapper.MappingExpressionBuilders
             }
             else
             {
-                var itemMapping = MapperConfiguration[ sourceCollectionElementType,
+                var itemMapping = context.MapperConfiguration[ sourceCollectionElementType,
                 targetCollectionElementType ].MappingExpression;
 
                 var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
@@ -113,7 +111,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper ),
+                    LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper, context ),
                     Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ), newElement ),
 
                     Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )

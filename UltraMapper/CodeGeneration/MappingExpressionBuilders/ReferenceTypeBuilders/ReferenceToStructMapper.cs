@@ -6,8 +6,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReferenceToStructMapper : ReferenceMapper
     {
-        public ReferenceToStructMapper( Configuration configuration ) : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;

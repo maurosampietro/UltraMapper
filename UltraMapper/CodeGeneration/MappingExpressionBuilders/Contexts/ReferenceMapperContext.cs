@@ -15,6 +15,7 @@ namespace UltraMapper.MappingExpressionBuilders
         public ParameterExpression Mapper { get; private set; }
 
         public static MethodInfo RecursiveMapMethodInfo { get; protected set; }
+        public Mapper MapperInstance { get; private set; }
 
         static ReferenceMapperContext()
         {
@@ -36,6 +37,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 TargetNullValue = Expression.Constant( null, TargetInstance.Type );
 
             Mapper = Expression.Variable( typeof( Mapper ), "mapper" );
+            MapperInstance = new Mapper( MapperConfiguration );
         }
 
         private static MethodInfo GetUltraMapperMapGenericMethodMemberMapping()

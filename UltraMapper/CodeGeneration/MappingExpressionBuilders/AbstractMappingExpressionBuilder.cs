@@ -6,9 +6,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class AbstractMappingExpressionBuilder : ReferenceMapper
     {
-        public AbstractMappingExpressionBuilder( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;
@@ -25,7 +22,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var context = GetMapperContext( mapping );
 
-            var typeMapping = MapperConfiguration[ source.EntryType, target.EntryType ];
+            var typeMapping = context.MapperConfiguration[ source.EntryType, target.EntryType ];
             var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                 .MakeGenericMethod( source.EntryType, target.EntryType );
 
@@ -33,7 +30,7 @@ namespace UltraMapper.MappingExpressionBuilders
             (
                 new[] { context.Mapper },
 
-                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
+                Expression.Assign( context.Mapper, Expression.Constant( context.MapperInstance ) ),
 
                 Expression.Call( context.Mapper, mapMethod,
                     context.SourceInstance, context.TargetInstance,

@@ -14,9 +14,6 @@ namespace UltraMapper.MappingExpressionBuilders
         //protected override bool IsCopySourceToTempCollection => true;
         //protected override bool IsCopyTargetToTempCollection => true;
 
-        public StackMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;

@@ -10,9 +10,6 @@ namespace UltraMapper.MappingExpressionBuilders
         private static readonly Type _convertType = typeof( Convert );
         private static readonly HashSet<TypePair> _supportedConversions = new HashSet<TypePair>();
 
-        public ConvertMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;

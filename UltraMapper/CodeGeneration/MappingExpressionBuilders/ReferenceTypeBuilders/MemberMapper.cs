@@ -13,15 +13,6 @@ namespace UltraMapper.MappingExpressionBuilders
             ( error, mapping, sourceMemberValue, sourceType, targetType ) => String.Format( error, mapping,
                 sourceMemberValue ?? "null", sourceType.GetPrettifiedName(), targetType.GetPrettifiedName() );
         
-        private readonly Configuration MapperConfiguration;
-        private Mapper _mapper;
-    
-        public MemberMapper( Configuration globalConfig )
-        {
-            this.MapperConfiguration = globalConfig;
-            _mapper = new Mapper( this.MapperConfiguration );
-        }
-
         public bool CanHandle( Mapping mapping )
         {
             return mapping is MemberMapping;
@@ -92,7 +83,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     (
                         memberContext.ReferenceTracker, memberContext.SourceMember,
                         memberContext.TargetMember, memberAssignmentExp,
-                        memberContext.Mapper, _mapper,
+                        memberContext.Mapper, memberContext.MapperInstance,
                         Expression.Constant( mapping )
                     ),
 

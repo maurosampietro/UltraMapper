@@ -7,9 +7,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class DictionaryMapper : CollectionMapper
     {
-        public DictionaryMapper( Configuration configuration )
-             : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;
@@ -26,7 +23,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var source = mapping.Source.EntryType;
             var target = mapping.Target.EntryType;
 
-            return new DictionaryMapperContext(mapping );
+            return new DictionaryMapperContext( mapping );
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
@@ -46,7 +43,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 new[] { context.Mapper, context.SourceCollectionElementKey, context.SourceCollectionElementValue,
                     context.TargetCollectionElementKey, context.TargetCollectionElementValue },
 
-                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
+                Expression.Assign( context.Mapper, Expression.Constant( context.MapperInstance ) ),
 
                 ExpressionLoops.ForEach( context.SourceInstance,
                     context.SourceCollectionLoopingVar, Expression.Block
@@ -72,7 +69,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( (sourceParam.Type.IsBuiltIn( false ) && targetParam.Type.IsBuiltIn( false )) ||
                 (!sourceParam.Type.IsClass || !targetParam.Type.IsClass) )
             {
-                var itemMapping = MapperConfiguration[ sourceParam.Type,
+                var itemMapping = context.MapperConfiguration[ sourceParam.Type,
                     targetParam.Type ].MappingExpression;
 
                 var itemMappingExp = itemMapping.Body.ReplaceParameter(
@@ -82,7 +79,7 @@ namespace UltraMapper.MappingExpressionBuilders
             }
 
             return base.LookUpBlock( sourceParam, targetParam,
-                context.ReferenceTracker, context.Mapper );
+                context.ReferenceTracker, context.Mapper, context );
         }
     }
 }

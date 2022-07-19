@@ -7,9 +7,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class LinkedListMapper : CollectionMapper
     {
-        public LinkedListMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;

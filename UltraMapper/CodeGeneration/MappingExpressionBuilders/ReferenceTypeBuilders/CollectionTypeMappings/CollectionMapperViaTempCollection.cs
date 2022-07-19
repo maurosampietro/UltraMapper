@@ -252,9 +252,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
     public abstract class CollectionMappingViaTempCollection : CollectionMapper
     {
-        public CollectionMappingViaTempCollection( Configuration configuration )
-            : base( configuration ) { }
-
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
         {
             var context = contextObj as CollectionMapperContext;
@@ -294,7 +291,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         temporaryCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
                         context.Mapper,
-                        context.ReferenceTracker
+                        context.ReferenceTracker,
+                        context
                     )
                 );
             }

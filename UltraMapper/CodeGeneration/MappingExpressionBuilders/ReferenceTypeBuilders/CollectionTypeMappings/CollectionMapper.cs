@@ -11,9 +11,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class CollectionMapper : ReferenceMapper
     {
-        public CollectionMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;
@@ -32,7 +29,7 @@ namespace UltraMapper.MappingExpressionBuilders
         private Type lastRtTargetType;
         private TypeMapping lastMap;
 
-        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType )
+        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
         {
             if( lastRtLoopingVarType != loopingvar.GetType() ||
                 lastRtTargetType != targetType )
@@ -40,7 +37,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 lastRtLoopingVarType = loopingvar.GetType();
                 lastRtTargetType = targetType;
 
-                lastMap = this.MapperConfiguration[ lastRtLoopingVarType, lastRtTargetType ];
+                lastMap = config[ lastRtLoopingVarType, lastRtTargetType ];
             }
 
             return lastMap.MappingFuncPrimitives( null, loopingvar );
@@ -49,7 +46,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
-            ParameterExpression mapper, ParameterExpression referenceTracker )
+            ParameterExpression mapper, ParameterExpression referenceTracker, CollectionMapperContext context )
         {
             if( targetCollectionInsertionMethod == null )
             {
@@ -62,7 +59,7 @@ namespace UltraMapper.MappingExpressionBuilders
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
-                   ( loopingvar, targetType ) => RuntimeMappingInterfaceToPrimitiveType( loopingvar, targetType );
+                   ( loopingvar, targetType ) => RuntimeMappingInterfaceToPrimitiveType( loopingvar, targetType, context.MapperConfiguration );
 
                 var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
@@ -82,7 +79,7 @@ namespace UltraMapper.MappingExpressionBuilders
             }
             else
             {
-                var itemMapping = MapperConfiguration[ sourceCollectionElementType,
+                var itemMapping = context.MapperConfiguration[ sourceCollectionElementType,
                     targetCollectionElementType ].MappingExpression;
 
                 Expression loopBody = Expression.Call
@@ -136,7 +133,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                         Expression.Block
                         (
-                            LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper ),
+                            LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper, context ),
                             Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
                         )
                     )
@@ -145,9 +142,9 @@ namespace UltraMapper.MappingExpressionBuilders
         }
 
         protected Expression LookUpBlock( ParameterExpression sourceParam, ParameterExpression targetParam,
-            ParameterExpression referenceTracker, ParameterExpression mapper )
+            ParameterExpression referenceTracker, ParameterExpression mapper, CollectionMapperContext context )
         {
-            var itemMapping = MapperConfiguration[ sourceParam.Type, targetParam.Type ];
+            var itemMapping = context.MapperConfiguration[ sourceParam.Type, targetParam.Type ];
 
             var constructorExp = base.GetMemberNewInstanceInternal( sourceParam,
                 sourceParam.Type, targetParam.Type, itemMapping );
@@ -224,7 +221,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
                         targetCollectionInsertionMethod, context.SourceCollectionLoopingVar,
-                        context.Mapper, context.ReferenceTracker )
+                        context.Mapper, context.ReferenceTracker, context )
                 );
             }
 
@@ -325,7 +322,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 var newInstance = GetNewInstanceFromSourceCollection( context, collectionContext );
                 if( newInstance != null )
                 {
-                    var typeMapping = MapperConfiguration[ context.SourceMember.Type,
+                    var typeMapping = context.MapperConfiguration[ context.SourceMember.Type,
                         context.TargetMember.Type ];
 
 

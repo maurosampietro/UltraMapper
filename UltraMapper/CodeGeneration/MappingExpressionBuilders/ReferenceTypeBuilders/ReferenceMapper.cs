@@ -10,15 +10,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReferenceMapper : IMappingExpressionBuilder, IMemberMappingExpression
     {
-        protected readonly Mapper _mapper;
-        public readonly Configuration MapperConfiguration;
-
-        public ReferenceMapper( Configuration configuration )
-        {
-            this.MapperConfiguration = configuration;
-            _mapper = new Mapper( configuration );
-        }
-
 #if DEBUG
         private static void Debug( object o ) => Console.WriteLine( o );
         public static readonly Expression<Action<object>> _debugExp = o => Debug( o );
@@ -44,7 +35,7 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var context = this.GetMapperContext( mapping );
 
-            var typeMapping = MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
+            var typeMapping = context.MapperConfiguration[ context.SourceInstance.Type, context.TargetInstance.Type ];
 
             var memberMappings = this.GetMemberMappingsExpression( typeMapping )
                 .ReplaceParameter( context.Mapper, context.Mapper.Name )
@@ -56,7 +47,7 @@ namespace UltraMapper.MappingExpressionBuilders
             (
                 new[] { context.Mapper },
 
-                Expression.Assign( context.Mapper, Expression.Constant( _mapper ) ),
+                Expression.Assign( context.Mapper, Expression.Constant( context.MapperInstance ) ),
 
                 memberMappings,
                 this.GetExpressionBody( context )

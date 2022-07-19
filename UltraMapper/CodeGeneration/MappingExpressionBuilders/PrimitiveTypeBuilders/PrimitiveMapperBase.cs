@@ -6,13 +6,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public abstract class PrimitiveMapperBase : IMappingExpressionBuilder
     {
-        protected readonly Configuration MapperConfiguration;
-
-        public PrimitiveMapperBase( Configuration configuration )
-        {
-            this.MapperConfiguration = configuration;
-        }
-
         public LambdaExpression GetMappingExpression( Mapping mapping )
         {
             var source = mapping.Source;

@@ -6,9 +6,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class NullableMapper : PrimitiveMapperBase
     {
-        public NullableMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;
@@ -30,7 +27,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( sourceNullUnwrappedType != targetNullUnwrappedType )
             {
-                var conversionlambda = MapperConfiguration[ sourceNullUnwrappedType,
+                var conversionlambda = context.MapperConfiguration[ sourceNullUnwrappedType,
                     targetNullUnwrappedType ].MappingExpression;
 
                 returnValue = conversionlambda.Body

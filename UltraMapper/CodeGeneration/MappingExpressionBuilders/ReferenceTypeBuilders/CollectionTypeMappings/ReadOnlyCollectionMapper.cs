@@ -9,9 +9,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReadOnlyCollectionMapper : CollectionMapper
     {
-        public ReadOnlyCollectionMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;
@@ -90,7 +87,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         temporaryCollectionInsertionMethod,
                         collectionContext.SourceCollectionLoopingVar,
                         collectionContext.Mapper,
-                        collectionContext.ReferenceTracker
+                        collectionContext.ReferenceTracker, 
+                        collectionContext
                     ),
 
                     Expression.New( newTargetCtor, tempCollection )

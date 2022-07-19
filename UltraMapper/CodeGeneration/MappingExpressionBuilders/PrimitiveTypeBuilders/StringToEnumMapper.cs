@@ -6,9 +6,6 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class StringToEnumMapper : PrimitiveMapperBase
     {
-        public StringToEnumMapper( Configuration configuration )
-            : base( configuration ) { }
-
         public override bool CanHandle( Mapping mapping )
         {
             var source = mapping.Source;

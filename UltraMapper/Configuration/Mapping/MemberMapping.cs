@@ -191,7 +191,7 @@ namespace UltraMapper.Internals
 
                 //if( _memberMappingExpression == null )
                 //{
-                var memberMapper = new MemberMapper( GlobalConfig );
+                var memberMapper = new MemberMapper();
                 //var memberMapper = GlobalConfig.Mappers.First( m => m.CanHandle( this ) );
                 _memberMappingExpression = memberMapper.GetMappingExpression( this );
 
