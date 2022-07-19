@@ -108,16 +108,16 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
-            var mapping = ((Mapping)context.Options).GlobalConfig[ sourceCollectionElementType, targetCollectionElementType ];
-            if( mapping.Source.EntryType != mapping.Source.ReturnType )
-                mapping = ((Mapping)context.Options).GlobalConfig[ mapping.Source.ReturnType, targetCollectionElementType ];
+            //var mapping = ((Mapping)context.Options).GlobalConfig[ sourceCollectionElementType, targetCollectionElementType ];
+            //if( mapping.Source.EntryType != mapping.Source.ReturnType )
+            //    mapping = ((Mapping)context.Options).GlobalConfig[ mapping.Source.ReturnType, targetCollectionElementType ];
 
-            var valueGetter = mapping.Source.ValueGetter;
+            //var valueGetter = mapping.Source.ValueGetter;
 
-            /*member extraction support*/
-            Expression valueExtraction = Expression.Invoke( valueGetter, sourceCollectionLoopingVar );
-            if( ((Mapping)context.Options).Source.MemberAccessPath.Count <= 1 )
-                valueExtraction = sourceCollectionLoopingVar;
+            ///*member extraction support*/
+            //Expression valueExtraction = Expression.Invoke( valueGetter, sourceCollectionLoopingVar );
+            //if( ((Mapping)context.Options).Source.MemberAccessPath.Count <= 1 )
+            //    valueExtraction = sourceCollectionLoopingVar;
 
             return Expression.Block
             (
@@ -127,7 +127,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 (
                     Expression.IfThenElse
                     (
-                        Expression.Equal( valueExtraction, Expression.Constant( null, sourceCollectionElementType ) ),
+                        Expression.Equal( sourceCollectionLoopingVar, Expression.Constant( null, sourceCollectionElementType ) ),
 
                         Expression.Call( targetCollection, targetCollectionInsertionMethod, Expression.Default( targetCollectionElementType ) ),
 
