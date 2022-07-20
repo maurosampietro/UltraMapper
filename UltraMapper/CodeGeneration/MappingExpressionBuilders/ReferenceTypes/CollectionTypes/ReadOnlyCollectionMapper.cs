@@ -21,7 +21,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 if( hasTargetDefaultParameterlessCtor ) return false;
 
-                bool hasInputCollectionCtor = target.EntryType.GetConstructors().FirstOrDefault( ctor =>
+                bool hasInputCollectionCtor = target.EntryType
+                    .GetConstructors().FirstOrDefault( ctor =>
                 {
                     var parameters = ctor.GetParameters();
                     if( parameters.Length != 1 ) return false;

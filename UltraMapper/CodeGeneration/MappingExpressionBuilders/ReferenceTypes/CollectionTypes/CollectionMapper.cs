@@ -20,8 +20,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override ReferenceMapperContext GetMapperContext( Mapping mapping )
         {
-            var source = mapping.Source.EntryType;
-            var target = mapping.Target.EntryType;
             return new CollectionMapperContext( mapping );
         }
 
@@ -151,10 +149,9 @@ namespace UltraMapper.MappingExpressionBuilders
 
             var memberAssignment = Expression.Assign( targetParam, constructorExp );
 
-            Expression innerMappingExp = Expression.Empty();
             if( itemMapping.IsReferenceTrackingEnabled )
             {
-                innerMappingExp = ReferenceTrackingExpression.GetMappingExpression(
+                return ReferenceTrackingExpression.GetMappingExpression(
                     referenceTracker, sourceParam, targetParam,
                     memberAssignment, mapper, null,
                     Expression.Constant( itemMapping ) );
@@ -164,7 +161,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                     .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
-                innerMappingExp = Expression.Block
+                return Expression.Block
                 (
                     memberAssignment,
 
@@ -172,8 +169,6 @@ namespace UltraMapper.MappingExpressionBuilders
                         referenceTracker, Expression.Constant( itemMapping ) )
                 );
             }
-
-            return innerMappingExp;
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )

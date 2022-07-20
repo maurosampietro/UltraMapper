@@ -24,7 +24,6 @@ namespace UltraMapper.Internals
                 return LambdaExpression.Lambda( delegateType2, accessPath, accessInstance );
             }
 
-            var entryMember = memberAccessPath.First();
             var returnType = memberAccessPath.Last().GetMemberType();
 
             foreach( var memberAccess in memberAccessPath )
@@ -65,7 +64,6 @@ namespace UltraMapper.Internals
 
             var valueType = memberAccessPath.Last().GetMemberType();
             var value = Expression.Parameter( valueType, "value" );
-            var entryMember = memberAccessPath.First();
 
             foreach( var memberAccess in memberAccessPath )
             {
@@ -80,7 +78,7 @@ namespace UltraMapper.Internals
                     accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
             }
 
-            if( !(accessPath is MethodCallExpression) )
+            if( accessPath is not MethodCallExpression )
                 accessPath = Expression.Assign( accessPath, value );
 
             var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
@@ -124,18 +122,17 @@ namespace UltraMapper.Internals
             var nullConstant = Expression.Constant( null );
             var returnNull = Expression.Return( labelTarget, Expression.Default( returnType ) );
 
-            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( memberAccess =>
+            var nullChecks = memberAccesses
+                .Take( memberAccesses.Count - 1 )
+                .Select( memberAccess =>
             {
                 var equalsNull = Expression.Equal( memberAccess, nullConstant );
                 return (Expression)Expression.IfThen( equalsNull, returnNull );
-
             } ).ToList();
 
             var exp = Expression.Block
             (
-                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
-                    : (Expression)Expression.Empty(),
-
+                Expression.Block( nullChecks.ToArray() ),
                 Expression.Label( labelTarget, memberAccesses.Last() )
             );
 
@@ -180,13 +177,15 @@ namespace UltraMapper.Internals
                 }
             }
 
-            if( !(accessPath is MethodCallExpression) )
+            if( accessPath is not MethodCallExpression )
                 accessPath = Expression.Assign( accessPath, value );
 
             var nullConstant = Expression.Constant( null );
             var returnVoid = Expression.Return( labelTarget, typeof( void ) );
 
-            var nullChecks = memberAccesses.Take( memberAccesses.Count - 1 ).Select( memberAccess =>
+            var nullChecks = memberAccesses
+                .Take( memberAccesses.Count - 1 )
+                .Select( memberAccess =>
             {
                 var equalsNull = Expression.Equal( memberAccess, nullConstant );
                 return (Expression)Expression.IfThen( equalsNull, returnVoid );
@@ -195,9 +194,7 @@ namespace UltraMapper.Internals
 
             var exp = Expression.Block
             (
-                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
-                    : (Expression)Expression.Empty(),
-
+                Expression.Block( nullChecks.ToArray() ),
                 accessPath,
                 Expression.Label( labelTarget )
             );
@@ -243,7 +240,7 @@ namespace UltraMapper.Internals
                 }
             }
 
-            if( !(accessPath is MethodCallExpression) )
+            if( accessPath is not MethodCallExpression )
                 accessPath = Expression.Assign( accessPath, value );
 
             var nullConstant = Expression.Constant( null );
@@ -302,11 +299,9 @@ namespace UltraMapper.Internals
 
             var exp = Expression.Block
             (
-                nullChecks.Any() ? Expression.Block( nullChecks.ToArray() )
-                    : (Expression)Expression.Empty(),
-
+                Expression.Block( nullChecks.ToArray() ),
                 accessPath
-            //Expression.Label( labelTarget )
+                //Expression.Label( labelTarget )
             );
 
             var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
