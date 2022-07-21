@@ -23,7 +23,7 @@ namespace UltraMapper.Internals
             var enumeratorType = typeof( IEnumerator<> ).MakeGenericType( elementType );
 
             var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
-            var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( "GetEnumerator" ) );
+            var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( nameof( IEnumerable.GetEnumerator ) ) );
             var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
 
             //The MoveNext method's actually on IEnumerator, not IEnumerator<T>
@@ -45,7 +45,7 @@ namespace UltraMapper.Internals
                         (
                             new[] { loopVar },
 
-                            Expression.Assign( loopVar, Expression.Property( enumeratorVar, "Current" ) ),
+                            Expression.Assign( loopVar, Expression.Property( enumeratorVar, nameof( IEnumerator.Current ) ) ),
                             loopContent
                         ),
 

@@ -51,7 +51,7 @@ namespace UltraMapper.Tests
             var ultraMapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<FirstLevel, int>( k => k.A.Length );
-                    //.MapMember( a => a.A.Length, b => b );
+                //.MapMember( a => a.A.Length, b => b );
             } );
 
             var target = ultraMapper.MapStruct<FirstLevel, int>( source );
@@ -110,7 +110,7 @@ namespace UltraMapper.Tests
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.A1 )
                     .MapMember( a => a.GetSecond().GetThird().A, b => b.A2 )
                     .MapMember( a => a.SecondLevel.GetThird().A, b => b.SecondLevel.GetThird().A,
-                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );               
+                        ( b, value ) => b.SecondLevel.GetThird().SetA( value ) );
             } );
 
             ultraMapper.Map( source, target );
@@ -128,8 +128,6 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void ManualFlatteningNullSourceMembers()
         {
-            var source = new FirstLevel();
-
             var target = new FirstLevel()
             {
                 A = "first",

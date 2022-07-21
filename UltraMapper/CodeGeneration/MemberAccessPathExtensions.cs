@@ -99,7 +99,7 @@ namespace UltraMapper.Internals
             var returnType = memberAccessPath.Last().GetMemberType();
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );
-            var labelTarget = Expression.Label( returnType, "label" );
+            var returnLabel = Expression.Label( returnType, "label" );
 
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
@@ -120,7 +120,7 @@ namespace UltraMapper.Internals
             }
 
             var nullConstant = Expression.Constant( null );
-            var returnNull = Expression.Return( labelTarget, Expression.Default( returnType ) );
+            var returnNull = Expression.Return( returnLabel, Expression.Default( returnType ) );
 
             var nullChecks = memberAccesses
                 .Take( memberAccesses.Count - 1 )
@@ -128,12 +128,12 @@ namespace UltraMapper.Internals
             {
                 var equalsNull = Expression.Equal( memberAccess, nullConstant );
                 return (Expression)Expression.IfThen( equalsNull, returnNull );
-            } ).ToList();
+            } ).ToArray();
 
             var exp = Expression.Block
             (
-                Expression.Block( nullChecks.ToArray() ),
-                Expression.Label( labelTarget, memberAccesses.Last() )
+                Expression.Block( nullChecks ),
+                Expression.Label( returnLabel, memberAccesses.Last() )
             );
 
             var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
@@ -301,7 +301,7 @@ namespace UltraMapper.Internals
             (
                 Expression.Block( nullChecks.ToArray() ),
                 accessPath
-                //Expression.Label( labelTarget )
+            //Expression.Label( labelTarget )
             );
 
             var delegateType = typeof( Action<,> ).MakeGenericType( instanceType, valueType );
