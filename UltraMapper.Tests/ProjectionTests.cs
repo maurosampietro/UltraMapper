@@ -128,6 +128,8 @@ namespace UltraMapper.Tests
         [TestMethod]
         public void ManualFlatteningNullSourceMembers()
         {
+            var source = new FirstLevel();
+
             var target = new FirstLevel()
             {
                 A = "first",

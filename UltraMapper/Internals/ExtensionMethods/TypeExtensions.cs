@@ -56,6 +56,12 @@ namespace UltraMapper.Internals
             return Nullable.GetUnderlyingType( type ) != null;
         }
 
+        public static bool CanBeSetNull( this Type type )
+        {
+            return !type.IsValueType || (type.IsGenericType &&
+                type.GetGenericTypeDefinition() == typeof( Nullable<> ));
+        }
+
         /// <summary>
         /// Returns true if IEnumerable is implemented on the type.
         /// Returns true if <paramref name="type"/> in an array since they implement IEnumerable at runtime
