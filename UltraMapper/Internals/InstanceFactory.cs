@@ -103,28 +103,26 @@ namespace UltraMapper
         #endregion
     }
 
-
     internal partial class ConstructorFactory
     {
-        private static readonly Dictionary<int, Delegate> _cacheWeakTyped
-            = new Dictionary<int, Delegate>();
+        private static readonly Dictionary<int, Delegate> _cacheWeakTyped = new();
+        private static readonly Dictionary<int, Delegate> _cacheStrongTyped = new();
 
-        private static readonly Dictionary<int, Delegate> _cacheStrongTyped
-            = new Dictionary<int, Delegate>();
-
-        /* The hashcode function must take into account that
-           a ctor overload taking as input the same number of params of the same type
-           in different order must produce different hashcodes. 
-        
-            eg: should produce different hashcodes for this scenario:
-            class 
-            {
-                ctor(int,string);
-                ctor(string,int);           
-            }
-        */
         private static int GetArrayHashCode<T>( IEnumerable<T> array )
         {
+            /* 
+             * The hashcode function must take into account that
+             * a ctor overload taking as input the same number of params of the same type
+             * but in different order must produce different hashcodes. 
+             *
+             *  eg: should produce different hashcodes for this scenario:
+             *  class 
+             *  {
+             *      ctor(int,string);
+             *      ctor(string,int);           
+             *  }
+            */
+
             return array.Select( item => item.GetHashCode() )
                 .Aggregate( ( agg, current ) => agg * 11 ^ current.GetHashCode() );
         }
@@ -152,13 +150,13 @@ namespace UltraMapper
             return (Func<TArg1, object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ) };
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                 Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
-                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                Expression.Convert( Expression.New( ctorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -172,13 +170,13 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, object>>(
-                    Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                    Expression.Convert( Expression.New( ctorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -192,13 +190,13 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, TArg3, object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, object>>(
-                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                Expression.Convert( Expression.New( ctorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -214,13 +212,13 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof( TArg4 ) };
 
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                 Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, object>>(
-                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                Expression.Convert( Expression.New( ctorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -236,13 +234,13 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, object>>(
-                Expression.Convert( Expression.New( constructorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
+                Expression.Convert( Expression.New( ctorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -258,14 +256,14 @@ namespace UltraMapper
                 if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                     ctorArgTypes = Type.EmptyTypes;
 
-                var constructorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
                 var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
                     Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<object[], object>>(
-                   Expression.Convert( Expression.New( constructorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
+                   Expression.Convert( Expression.New( ctorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -295,13 +293,13 @@ namespace UltraMapper
             return (Func<TArg1, TInstance>)_cacheStrongTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ) };
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
+                    Expression.New( ctorInfo, lambdaArgs ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -315,13 +313,13 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, TInstance>)_cacheStrongTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
+                    Expression.New( ctorInfo, lambdaArgs ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -335,13 +333,13 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, TArg3, TInstance>)_cacheStrongTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
+                    Expression.New( ctorInfo, lambdaArgs ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -357,13 +355,13 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4)};
 
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
+                    Expression.New( ctorInfo, lambdaArgs ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -379,13 +377,13 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, TArg2, TArg3, TArg4, TArg5, TInstance>>(
-                    Expression.New( constructorInfo, lambdaArgs ), lambdaArgs );
+                    Expression.New( ctorInfo, lambdaArgs ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -401,14 +399,14 @@ namespace UltraMapper
                 if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                     ctorArgTypes = Type.EmptyTypes;
 
-                var constructorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
                 var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
                     Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<object[], TInstance>>(
-                   Expression.New( constructorInfo, constructorArgs ), lambdaArgs );
+                   Expression.New( ctorInfo, constructorArgs ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );

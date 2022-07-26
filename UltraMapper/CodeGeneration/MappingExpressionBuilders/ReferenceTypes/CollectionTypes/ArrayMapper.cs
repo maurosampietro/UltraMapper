@@ -10,9 +10,7 @@ namespace UltraMapper.MappingExpressionBuilders
     {
         public override bool CanHandle( Mapping mapping )
         {
-            var source = mapping.Source;
             var target = mapping.Target;
-
             return base.CanHandle( mapping ) && target.EntryType.IsArray;
         }
 
@@ -33,12 +31,6 @@ namespace UltraMapper.MappingExpressionBuilders
             return isResetCollection ? Expression.Call( null, clearMethod, context.TargetInstance,
                 Expression.Constant( 0, typeof( int ) ), Expression.ArrayLength( context.TargetInstance ) )
                     : (Expression)Expression.Empty();
-        }
-
-        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
-        {
-            var map = config[ loopingvar.GetType(), targetType ];
-            return map.MappingFuncPrimitives( null, loopingvar );
         }
 
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,

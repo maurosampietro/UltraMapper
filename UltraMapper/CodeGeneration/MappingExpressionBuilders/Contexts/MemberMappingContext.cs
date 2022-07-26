@@ -18,10 +18,14 @@ namespace UltraMapper.MappingExpressionBuilders
         public Expression TargetMemberNullValue { get; internal set; }
         public Expression SourceMemberNullValue { get; internal set; }
 
+        public readonly MemberMapping MemberMapping;
+
         public MemberMappingContext( MemberMapping mapping )
             : base( mapping.InstanceTypeMapping.Source.EntryType,
                     mapping.InstanceTypeMapping.Target.EntryType, mapping )
         {
+            this.MemberMapping = mapping;
+
             var sourceMemberType = mapping.SourceMember.MemberType;
             var targetMemberType = mapping.TargetMember.MemberType;
 

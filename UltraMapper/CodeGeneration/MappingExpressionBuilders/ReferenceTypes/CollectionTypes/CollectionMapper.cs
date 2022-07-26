@@ -23,22 +23,10 @@ namespace UltraMapper.MappingExpressionBuilders
             return new CollectionMapperContext( mapping );
         }
 
-        private Type lastRtLoopingVarType;
-        private Type lastRtTargetType;
-        private TypeMapping lastMap;
-
-        private object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
+        protected object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
         {
-            if( lastRtLoopingVarType != loopingvar.GetType() ||
-                lastRtTargetType != targetType )
-            {
-                lastRtLoopingVarType = loopingvar.GetType();
-                lastRtTargetType = targetType;
-
-                lastMap = config[ lastRtLoopingVarType, lastRtTargetType ];
-            }
-
-            return lastMap.MappingFuncPrimitives( null, loopingvar );
+            var map = config[ loopingvar.GetType(), targetType ];
+            return map.MappingFuncPrimitives( null, loopingvar );
         }
 
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
@@ -305,7 +293,10 @@ namespace UltraMapper.MappingExpressionBuilders
                     sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, context.SourceMember );
                 else sourceCountMethodCallExp = Expression.Call( context.SourceMember, sourceCountMethod );
 
-                return Expression.NewArrayInit( context.TargetMember.Type, sourceCountMethodCallExp );
+                var ctorArgTypes = new[] { typeof( int ) };
+                var ctorInfo = context.TargetMember.Type.GetConstructor( ctorArgTypes );
+
+                return Expression.New( ctorInfo, sourceCountMethodCallExp );
             }
 
             //OPTIMIZATION: If the types involved are primitives of exactly the same type
@@ -471,8 +462,19 @@ namespace UltraMapper.MappingExpressionBuilders
                     typeof( Func<,,> ).MakeGenericType( context.SourceCollectionElementType, context.TargetCollectionElementType, typeof( bool ) ) ) );
         }
 
-        public static MethodInfo GetCountMethod( Type type )
+        protected virtual MethodInfo GetCountMethod( Type type )
         {
+            return GetCountMethodStatic( type );
+        }
+
+        public static MethodInfo GetCountMethodStatic( Type type )
+        {
+            var getCountMethod = type.GetMethod( nameof( ICollection<int>.Count ),
+              BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );
+
+            if( getCountMethod != null )
+                return getCountMethod;
+
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
             var getCountProperty = type.GetProperty( nameof( ICollection<int>.Count ),
                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );

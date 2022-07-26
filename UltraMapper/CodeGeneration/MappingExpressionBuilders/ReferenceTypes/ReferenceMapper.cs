@@ -108,14 +108,19 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( targetType.IsArray )
             {
-                var sourceCountMethod = CollectionMapper.GetCountMethod( sourceType );
+                var sourceCountMethod = CollectionMapper.GetCountMethodStatic( sourceType );
+                if( sourceCountMethod != null )
+                {
+                    Expression sourceCountMethodCallExp;
+                    if( sourceCountMethod.IsStatic )
+                        sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, sourceValue );
+                    else sourceCountMethodCallExp = Expression.Call( sourceValue, sourceCountMethod );
 
-                Expression sourceCountMethodCallExp;
-                if( sourceCountMethod.IsStatic )
-                    sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, sourceValue );
-                else sourceCountMethodCallExp = Expression.Call( sourceValue, sourceCountMethod );
+                    var ctorArgTypes = new[] { typeof( int ) };
+                    var ctorInfo = targetType.GetConstructor( ctorArgTypes );
 
-                return Expression.NewArrayInit( targetType, sourceCountMethodCallExp );
+                    return Expression.New( ctorInfo, sourceCountMethodCallExp );
+                }
             }
 
             var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );

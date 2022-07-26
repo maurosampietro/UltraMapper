@@ -46,7 +46,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 returnValue = Expression.Convert( returnValue, targetNullUnwrappedType );
             }
 
-            if( context.SourceInstance.Type.IsNullable() )
+            if( context.SourceInstance.Type.CanBeSetNull() )
             {
                 return Expression.Block
                 (
