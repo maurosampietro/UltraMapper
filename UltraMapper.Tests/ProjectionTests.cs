@@ -54,7 +54,7 @@ namespace UltraMapper.Tests
                 //.MapMember( a => a.A.Length, b => b );
             } );
 
-            var target = ultraMapper.MapStruct<FirstLevel, int>( source );
+            var target = ultraMapper.Map<FirstLevel, int>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );

@@ -8,8 +8,8 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class ReferenceMapperContext : MapperContext
     {
-        public ConstantExpression SourceNullValue { get; protected set; }
-        public ConstantExpression TargetNullValue { get; protected set; }
+        public ConstantExpression SourceInstanceNullValue { get; protected set; }
+        public ConstantExpression TargetInstanceNullValue { get; protected set; }
 
         public ParameterExpression ReferenceTracker { get; protected set; }
         public ParameterExpression Mapper { get; private set; }
@@ -31,10 +31,10 @@ namespace UltraMapper.MappingExpressionBuilders
             ReferenceTracker = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
 
             if( !SourceInstance.Type.IsValueType )
-                SourceNullValue = Expression.Constant( null, SourceInstance.Type );
+                SourceInstanceNullValue = Expression.Constant( null, SourceInstance.Type );
 
             if( !TargetInstance.Type.IsValueType )
-                TargetNullValue = Expression.Constant( null, TargetInstance.Type );
+                TargetInstanceNullValue = Expression.Constant( null, TargetInstance.Type );
 
             Mapper = Expression.Variable( typeof( Mapper ), "mapper" );
             MapperInstance = new Mapper( MapperConfiguration );

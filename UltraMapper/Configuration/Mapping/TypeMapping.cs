@@ -13,11 +13,8 @@ namespace UltraMapper.Internals
 
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
-        private readonly Dictionary<MemberInfo, IMappingSource> _sources
-            = new Dictionary<MemberInfo, IMappingSource>();
-
-        private readonly Dictionary<MemberInfo, IMappingTarget> _targets
-            = new Dictionary<MemberInfo, IMappingTarget>();
+        private readonly Dictionary<MemberInfo, IMappingSource> _sources = new();
+        private readonly Dictionary<MemberInfo, IMappingTarget> _targets = new();
 
         /*
          *A source member can be mapped to multiple target members.

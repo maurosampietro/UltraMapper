@@ -153,7 +153,7 @@ namespace UltraMapper
                 var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
-                Expression.Parameter( type, $"p{index}" ) ).ToArray();
+                    Expression.Parameter( type, $"p{index}" ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<TArg1, object>>(
                 Expression.Convert( Expression.New( ctorInfo, lambdaArgs ), typeof( object ) ), lambdaArgs );

@@ -5,7 +5,7 @@ namespace UltraMapper
 {
     public sealed partial class Mapper
     {
-        public readonly Configuration Config;
+        public Configuration Config { get; init; }
 
         /// <summary>
         /// Initialize a new instance with the specified configuration.
@@ -30,12 +30,12 @@ namespace UltraMapper
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
         /// <param name="source">The instance to be copied.</param>
         /// <returns>A deep copy of the source instance.</returns>
-        public TSource Map<TSource>( TSource source ) where TSource : class, new()
+        public TSource Map<TSource>( TSource source ) //where TSource : class, new()
         {
-            if( source == default ) return default;
+            //if( source == default ) return default;
 
             var target = (TSource)InstanceFactory.CreateObject( source.GetType() );
-            this.Map( source, target );
+            this.Map( source, target, null );
 
             return target;
         }
@@ -46,14 +46,24 @@ namespace UltraMapper
         /// <typeparam name="TTarget">Type of the new instance.</typeparam>
         /// <param name="source">The instance to be copied.</param>
         /// <returns>A deep copy of the source instance.</returns>
-        public TTarget Map<TTarget>( object source ) where TTarget : class, new()
+        public TTarget Map<TTarget>( object source ) //where TTarget : class, new()
         {
-            if( source == null ) return null;
+            if( source == default ) return default;
 
-            var target = new TTarget();
-            this.Map( source, target );
+            var target = InstanceFactory.CreateObject<TTarget>();
+            this.Map( source, target, null );
+
             return target;
         }
+
+        public TTarget Map<TSource, TTarget>( TSource source )
+        {
+            var target = InstanceFactory.CreateObject<TTarget>();
+            this.Map( source, target, null );
+
+            return target;
+        }
+
 
         /// <summary>
         /// Maps from <param name="source"/> to the existing instance <paramref name="target"/>
@@ -63,19 +73,10 @@ namespace UltraMapper
         /// <typeparam name="TTarget">Type of the target instance.</typeparam>
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
-        public void Map<TSource, TTarget>( TSource source, TTarget target,
+        public TTarget Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking = null,
-            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
-            where TTarget : class
+            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )         
         {
-            if( source == null )
-            {
-#pragma warning disable IDE0059 // Unnecessary assignment of a value
-                target = null;
-#pragma warning restore IDE0059 // Unnecessary assignment of a value
-                return;
-            }
-
             if( this.Config.IsReferenceTrackingEnabled )
             {
                 Type targetType = target.GetType();
@@ -94,6 +95,7 @@ namespace UltraMapper
             mapping.ReferenceBehavior = refBehavior;
 
             this.Map( source, target, referenceTracking, null );
+            return target;
         }
 
         internal void Map<TSource, TTarget>( TSource source, TTarget target,
@@ -163,19 +165,19 @@ namespace UltraMapper
         }
     }
 
-    //type
-    public sealed partial class Mapper
-    {
-        public object Map( object source, Type targetType )
-        {
-            if( source == null ) return null;
+    ////type
+    //public sealed partial class Mapper
+    //{
+    //    public object Map( object source, Type targetType )
+    //    {
+    //        if( source == null ) return null;
 
-            var target = InstanceFactory.CreateObject( targetType );
-            this.Map( source, target );
+    //        var target = InstanceFactory.CreateObject( targetType );
+    //        this.Map( source, target );
 
-            return target;
-        }
-    }
+    //        return target;
+    //    }
+    //}
 
     //structs
     public sealed partial class Mapper
