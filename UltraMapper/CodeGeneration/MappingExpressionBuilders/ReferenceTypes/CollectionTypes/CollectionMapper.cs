@@ -26,7 +26,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
         {
             var map = config[ loopingvar.GetType(), targetType ];
-            return map.MappingFuncPrimitives( null, loopingvar );
+            return map.MappingFuncPrimitives( null, loopingvar, null );
         }
 
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
@@ -197,8 +197,16 @@ namespace UltraMapper.MappingExpressionBuilders
             if( (context.IsSourceElementTypeBuiltIn || context.IsTargetElementTypeBuiltIn
                 || context.SourceCollectionElementType.IsValueType || context.TargetCollectionElementType.IsValueType) )
             {
+                //var ctor = context.TargetInstance.Type.GetConstructor( new Type[] { typeof( int ) } );
+
                 return Expression.Block
                 (
+                    //Expression.IfThen
+                    //(
+                    //    Expression.Equal( context.TargetInstance, context.TargetInstanceNullValue ),
+                    //    Expression.Assign( context.TargetInstance, Expression.New( ctor, Expression.Constant( 10 ) ) )
+                    //),
+
                     isResetCollection ? GetTargetCollectionClearExpression( context ) : Expression.Empty(),
 
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,

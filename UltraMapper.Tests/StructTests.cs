@@ -51,9 +51,19 @@ namespace UltraMapper.Tests
             var mapper = new Mapper();
 
             var source = new Test();
-            var target = new StructTest();
+            mapper.Map( source, out StructTest target );
 
-            mapper.Map( source, out target );
+            var result = mapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( result );
+        }
+
+        [TestMethod]
+        public void ClassToStructMapping2()
+        {
+            var mapper = new Mapper();
+
+            var source = new Test();
+            var target = mapper.Map<StructTest>( source );
 
             var result = mapper.VerifyMapperResult( source, target );
             Assert.IsTrue( result );

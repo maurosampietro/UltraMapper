@@ -64,8 +64,8 @@ namespace UltraMapper.Internals
             }
         }
 
-        private Func<ReferenceTracker, object, object> _mappingFuncPrimitives;
-        public Func<ReferenceTracker, object, object> MappingFuncPrimitives
+        private UltraMapperFunc _mappingFuncPrimitives;
+        public UltraMapperFunc MappingFuncPrimitives
         {
             get
             {
@@ -74,25 +74,30 @@ namespace UltraMapper.Internals
 
                 var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
 
-                var sourceParam = Expression.Parameter( typeof( object ), "sourceInstance" );
-                var sourceInstance = Expression.Convert( sourceParam, this.Source.EntryType );
+                var sourceParam = Expression.Parameter( typeof(object), "sourceInstance" );
+                var targetParam = Expression.Parameter( typeof(object), "targetInstance" );
 
-                Expression bodyExp;
+                var sourceInstance = Expression.Convert( sourceParam, this.Source.EntryType );
+                var targetInstance = Expression.Convert( targetParam, this.Target.EntryType );
+
+                Expression bodyExp = this.MappingExpression;
                 if( this.MappingExpression.Parameters.Count == 1 )
                     bodyExp = Expression.Convert( Expression.Invoke( this.MappingExpression, sourceInstance ), typeof( object ) );
 
-                else if( this.MappingExpression.Parameters.Count == 2 )
-                    bodyExp = Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance );
+                else if( this.MappingExpression.Parameters.Count == 3 )
+                    bodyExp = Expression.Convert( Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance, targetInstance ), typeof(object) );
 
                 else throw new NotSupportedException( "Unsupported number of arguments" );
 
-                return _mappingFuncPrimitives = Expression.Lambda<Func<ReferenceTracker, object, object>>(
-                    bodyExp, referenceTrackerParam, sourceParam ).Compile();
+                //var delegateType = typeof( UltraMapperFunc<,> ).MakeGenericType( this.Source.EntryType, this.Target.EntryType );
+
+                return _mappingFuncPrimitives = Expression.Lambda<UltraMapperFunc>(
+                    bodyExp, referenceTrackerParam, sourceParam, targetParam ).Compile();
             }
         }
 
-        private Action<ReferenceTracker, object, object> _mappingFunc;
-        public Action<ReferenceTracker, object, object> MappingFunc
+        private UltraMapperFunc _mappingFunc;
+        public UltraMapperFunc MappingFunc
         {
             get
             {

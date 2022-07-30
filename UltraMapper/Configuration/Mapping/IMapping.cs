@@ -9,7 +9,7 @@ namespace UltraMapper.Internals
         IMappingSource Source { get; }
         IMappingTarget Target { get; }
         IMappingExpressionBuilder Mapper { get; }
-        Action<ReferenceTracker, object, object> MappingFunc { get; }
+        UltraMapperFunc MappingFunc { get; }
         LambdaExpression MappingExpression { get; }
     }
 }

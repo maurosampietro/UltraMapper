@@ -13,7 +13,7 @@ namespace UltraMapper
         /// <param name="config">The mapping configuration.</param>
         public Mapper( Configuration config )
         {
-            this.Config = config;
+            this.Config = config ?? throw new ArgumentNullException( nameof( config ) );
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace UltraMapper
         {
             if( source == default ) return default;
 
-            var target = InstanceFactory.CreateObject<TTarget>();
+            TTarget target = InstanceFactory.CreateObject<TTarget>();
             this.Map( source, target, null );
 
             return target;
@@ -64,7 +64,6 @@ namespace UltraMapper
             return target;
         }
 
-
         /// <summary>
         /// Maps from <param name="source"/> to the existing instance <paramref name="target"/>
         /// Let's you reuse an existing <see cref="ReferenceTracker"/> cache.
@@ -75,12 +74,12 @@ namespace UltraMapper
         /// <param name="target">The target instance to which the values are written.</param>
         public TTarget Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking = null,
-            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )         
+            ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
         {
+            Type targetType = target?.GetType() ?? typeof( TTarget );
+
             if( this.Config.IsReferenceTrackingEnabled )
             {
-                Type targetType = target.GetType();
-
                 if( referenceTracking == null )
                     referenceTracking = new ReferenceTracker();
 
@@ -89,12 +88,12 @@ namespace UltraMapper
 
             //this.MappingConfiguration.ReferenceBehavior = refBehavior;
 
-            var mapping = this.Config[ source.GetType(), target.GetType() ];
+            var mapping = this.Config[ source.GetType(), targetType ];
             //since we pass an existing target instance to map onto;
             //by default we use all of the existing instances we found on the target
             mapping.ReferenceBehavior = refBehavior;
 
-            this.Map( source, target, referenceTracking, null );
+            this.Map( source, target, referenceTracking, mapping );
             return target;
         }
 
@@ -156,7 +155,8 @@ namespace UltraMapper
 
                 case null:
                 {
-                    mapping = CheckResolveAbstractMapping( source.GetType(), target.GetType() );
+                    var targetType = target?.GetType() ?? typeof( TTarget );
+                    mapping = CheckResolveAbstractMapping( source.GetType(), targetType );
                     break;
                 }
             }
@@ -165,19 +165,19 @@ namespace UltraMapper
         }
     }
 
-    ////type
-    //public sealed partial class Mapper
-    //{
-    //    public object Map( object source, Type targetType )
-    //    {
-    //        if( source == null ) return null;
+    //type
+    public sealed partial class Mapper
+    {
+        public object Map( object source, Type targetType )
+        {
+            if( source == null ) return null;
 
-    //        var target = InstanceFactory.CreateObject( targetType );
-    //        this.Map( source, target );
+            var target = InstanceFactory.CreateObject( targetType );
+            this.Map( source, target );
 
-    //        return target;
-    //    }
-    //}
+            return target;
+        }
+    }
 
     //structs
     public sealed partial class Mapper
@@ -193,15 +193,8 @@ namespace UltraMapper
 
             var mapping = this.Config[ sourceType, targetType ];
 
-            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) && !targetType.IsBuiltIn( true ) )
-            {
-                var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
-                return method.Invoke( referenceTracking, source, new TTarget() );
-            }
-            else
-            {
-                return (TTarget)mapping.MappingFuncPrimitives.Invoke( referenceTracking, source );
-            }
+            var targetInstance = new TTarget();
+            return (TTarget)mapping.MappingFuncPrimitives.Invoke( referenceTracking, source, targetInstance );
         }
 
         public void Map<TSource, TTarget>( TSource source, out TTarget target,
@@ -214,16 +207,8 @@ namespace UltraMapper
             Type targetType = typeof( TTarget );
 
             var mapping = this.Config[ sourceType, targetType ];
-
-            if( sourceType.IsClass && !sourceType.IsBuiltIn( true ) && !targetType.IsBuiltIn( true ) )
-            {
-                var method = (Func<ReferenceTracker, TSource, TTarget, TTarget>)mapping.MappingExpression.Compile();
-                target = method.Invoke( referenceTracking, source, new TTarget() );
-            }
-            else
-            {
-                target = (TTarget)mapping.MappingFuncPrimitives.Invoke( referenceTracking, source );
-            }
+            target = new TTarget();
+            target = (TTarget)mapping.MappingFuncPrimitives( referenceTracking, source, target );
         }
     }
 

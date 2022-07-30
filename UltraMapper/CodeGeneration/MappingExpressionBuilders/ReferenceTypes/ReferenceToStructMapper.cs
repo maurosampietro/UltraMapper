@@ -16,9 +16,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
         public override LambdaExpression GetMappingExpression( Mapping mapping )
         {
-            var source = mapping.Source;
-            var target = mapping.Target;
-
             var context = this.GetMapperContext( mapping );
 
             var expression = Expression.Block
@@ -32,9 +29,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 context.TargetInstance
             );
 
-            var delegateType = typeof( Func<,,,> ).MakeGenericType(
-                context.ReferenceTracker.Type, context.SourceInstance.Type,
-                context.TargetInstance.Type, context.TargetInstance.Type );
+            var delegateType = typeof( UltraMapperFunc<,> )
+                .MakeGenericType( context.SourceInstance.Type, context.TargetInstance.Type );
 
             return Expression.Lambda( delegateType, expression,
                 context.ReferenceTracker, context.SourceInstance, context.TargetInstance );

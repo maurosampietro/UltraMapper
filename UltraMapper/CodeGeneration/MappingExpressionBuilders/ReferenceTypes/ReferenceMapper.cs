@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
-using UltraMapper.ReferenceTracking;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
@@ -50,12 +49,12 @@ namespace UltraMapper.MappingExpressionBuilders
                 Expression.Assign( context.Mapper, Expression.Constant( context.MapperInstance ) ),
 
                 memberMappings,
-                this.GetExpressionBody( context )
+                this.GetExpressionBody( context ),
+                context.TargetInstance
             );
 
-            var delegateType = typeof( Action<,,> ).MakeGenericType(
-                context.ReferenceTracker.Type, context.SourceInstance.Type,
-                context.TargetInstance.Type );
+            var delegateType = typeof( UltraMapperFunc<,> )
+                .MakeGenericType( context.SourceInstance.Type, context.TargetInstance.Type );
 
             return Expression.Lambda( delegateType, expression,
                 context.ReferenceTracker, context.SourceInstance, context.TargetInstance );
@@ -160,7 +159,7 @@ namespace UltraMapper.MappingExpressionBuilders
         }
 
         #region MemberMapping
-        private static readonly MemberMappingComparer _memberComparer = new MemberMappingComparer();
+        private static readonly MemberMappingComparer _memberComparer = new();
 
         private class MemberMappingComparer : IComparer<MemberMapping>
         {

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
     public class MappingExpressionBuilder
     {
-        public static Action<ReferenceTracker, object, object> GetMappingFunc(
+        public static UltraMapperFunc GetMappingFunc(
             Type source, Type target, LambdaExpression mappingExpression )
         {
             var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
@@ -23,15 +24,22 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Invoke( mappingExpression, referenceTrackerParam, sourceInstance )
                 );
 
-                return Expression.Lambda<Action<ReferenceTracker, object, object>>(
+                return Expression.Lambda<UltraMapperFunc>(
+                    bodyExp, referenceTrackerParam, sourceParam, targetParam ).Compile();
+            }
+            else if( mappingExpression.Parameters.Count == 1 )
+            {
+                var bodyExp = Expression.Convert( Expression.Invoke( mappingExpression, sourceInstance ), typeof( object ) );
+
+                return Expression.Lambda<UltraMapperFunc>(
                     bodyExp, referenceTrackerParam, sourceParam, targetParam ).Compile();
             }
             else
             {
-                var bodyExp = Expression.Invoke( mappingExpression,
-                    referenceTrackerParam, sourceInstance, targetInstance );
+                var bodyExp = Expression.Convert( Expression.Invoke( mappingExpression,
+                    referenceTrackerParam, sourceInstance, targetInstance ), typeof( object ) );
 
-                return Expression.Lambda<Action<ReferenceTracker, object, object>>(
+                return Expression.Lambda<UltraMapperFunc>(
                     bodyExp, referenceTrackerParam, sourceParam, targetParam ).Compile();
             }
         }

@@ -14,23 +14,14 @@ namespace UltraMapper.Internals
     {
         internal static LambdaExpression GetGetterExp( this MemberInfo memberInfo )
         {
-            switch( memberInfo )
+            return memberInfo switch
             {
-                case Type type:
-                    return type.GetGetterExp();
-
-                case FieldInfo fi:
-                    return fi.GetGetterExp();
-
-                case PropertyInfo pi:
-                    return pi.GetGetterExp();
-
-                case MethodInfo mi:
-                    return mi.GetGetterExp();
-
-                default:
-                    throw new ArgumentException( $"'{memberInfo}' is not supported." );
-            }
+                Type type => type.GetGetterExp(),
+                FieldInfo fi => fi.GetGetterExp(),
+                PropertyInfo pi => pi.GetGetterExp(),
+                MethodInfo mi => mi.GetGetterExp(),
+                _ => throw new ArgumentException( $"'{memberInfo}' is not supported." ),
+            };
         }
 
         internal static LambdaExpression GetGetterExp( this Type type )
@@ -194,7 +185,7 @@ namespace UltraMapper.Internals
                 memberAccesses.Add( accessPath );
             }
 
-            if( !(accessPath is MethodCallExpression) )
+            if( accessPath is not MethodCallExpression )
                 accessPath = Expression.Assign( accessPath, value );
 
             var nullConstant = Expression.Constant( null );
