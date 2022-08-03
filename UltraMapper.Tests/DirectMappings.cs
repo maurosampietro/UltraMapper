@@ -104,7 +104,23 @@ namespace UltraMapper.Tests
         public void ToPrimitiveMultidimensionalArray()
         {
             var source = Enumerable.Range( 0, 10 )
-                .Select( i => Enumerable.Range( 1, 2 ) )
+                .Select( i => Enumerable.Range( 1, 2 ).ToList() )
+                .ToList();
+
+            var ultraMapper = new Mapper();
+            var target = ultraMapper.Map<int[][]>( source );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+
+            Assert.IsFalse( Object.ReferenceEquals( source[ 0 ], target[ 0 ] ) );
+        }
+
+        [TestMethod]
+        public void UnmaterializedMultidimensionalArray()
+        {
+            var source = Enumerable.Range( 0, 10 )
+                .Select( i => Enumerable.Range( 1, 2 ) /*no .ToList(), no .ToArray() etc..*/ )
                 .ToList();
 
             var ultraMapper = new Mapper();
@@ -118,7 +134,7 @@ namespace UltraMapper.Tests
         public void ToNonPrimitiveArray()
         {
             var source = Enumerable.Range( 0, 10 )
-                .Select( i => new ComplexType() { PropertyA = i } )   
+                .Select( i => new ComplexType() { PropertyA = i } )
                 .ToList();
 
             var ultraMapper = new Mapper();
@@ -146,8 +162,8 @@ namespace UltraMapper.Tests
             //There's no .ToList() or .ToArray() or anything else here.
             var source = Enumerable.Range( 0, 10 )
                 .ToList() //removing this, the map somehow works
-                .Select( i => new ComplexType() { PropertyA = i } );                
-                
+                .Select( i => new ComplexType() { PropertyA = i } );
+
             var ultraMapper = new Mapper();
             var target = ultraMapper.Map<ComplexType[]>( source );
 
@@ -156,13 +172,27 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void ToNonPrimitiveMultidimensionalArray()
+        public void ToComplexMultidimensionalArray()
         {
             var source = new List<List<ComplexType>>()
             {
                new List<ComplexType>(){  new ComplexType() { PropertyA = 1 }, new ComplexType() { PropertyA = 2 } },
                new List<ComplexType>(){  new ComplexType() { PropertyA = 1 }, new ComplexType() { PropertyA = 2 } }
             };
+
+            var ultraMapper = new Mapper();
+            var target = ultraMapper.Map<ComplexType[][]>( source );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void UnmaterializedToComplexMultidimensionalArray()
+        {
+            var source = Enumerable.Range( 0, 10 )
+                .Select( item => Enumerable.Range( 0, 2 ).Select(
+                    subItem => new ComplexType() { PropertyA = item } ) );
 
             var ultraMapper = new Mapper();
             var target = ultraMapper.Map<ComplexType[][]>( source );
