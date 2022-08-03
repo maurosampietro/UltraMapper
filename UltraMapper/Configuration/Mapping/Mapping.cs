@@ -103,7 +103,7 @@ namespace UltraMapper.Internals
             {
                 if( _mappingFunc != null ) return _mappingFunc;
 
-                return _mappingFunc = MappingExpressionBuilder.GetMappingFunc(
+                return _mappingFunc = MappingExpressionBuilder.GetMappingEntryPoint(
                    this.Source.EntryType, this.Target.EntryType, this.MappingExpression );
             }
         }

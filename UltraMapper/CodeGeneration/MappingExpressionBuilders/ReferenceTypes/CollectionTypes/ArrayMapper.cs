@@ -38,6 +38,8 @@ namespace UltraMapper.MappingExpressionBuilders
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
             ParameterExpression mapper, ParameterExpression referenceTracker, CollectionMapperContext context )
         {
+            var resizeExp = GetResizeExpression( sourceCollection, targetCollection, context );
+
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
@@ -49,6 +51,9 @@ namespace UltraMapper.MappingExpressionBuilders
                 Expression loopBody = Expression.Block
                 (
                     new[] { newElement, itemIndex },
+
+                    resizeExp,
+
                     Expression.Assign( itemIndex, Expression.Constant( 0 ) ),
 
                     ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
@@ -68,7 +73,7 @@ namespace UltraMapper.MappingExpressionBuilders
             else
             {
                 var itemMapping = context.MapperConfiguration[ sourceCollectionElementType,
-                targetCollectionElementType ].MappingExpression;
+                    targetCollectionElementType ].MappingExpression;
 
                 var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
 
@@ -76,6 +81,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 (
                     new[] { itemIndex },
 
+                    resizeExp,
                     Expression.Assign( itemIndex, Expression.Constant( 0 ) ),
 
                     ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
@@ -89,17 +95,52 @@ namespace UltraMapper.MappingExpressionBuilders
             }
         }
 
+        private BlockExpression GetResizeExpression( ParameterExpression sourceCollection, ParameterExpression targetCollection, CollectionMapperContext context )
+        {
+            var sourceCountMethod = GetCountMethod( sourceCollection.Type );
+            var targetCountMethod = GetCountMethod( targetCollection.Type );
+            
+            Expression sourceCountMethodCallExp;
+            if( sourceCountMethod.IsStatic )
+                sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, sourceCollection );
+            else 
+                sourceCountMethodCallExp = Expression.Call( sourceCollection, sourceCountMethod );
+
+            Expression targetCountMethodCallExp;
+            if( targetCountMethod.IsStatic )
+                targetCountMethodCallExp = Expression.Call( null, targetCountMethod, targetCollection );
+            else
+                targetCountMethodCallExp = Expression.Call( targetCollection, targetCountMethod );
+
+            var resizeMethod = typeof( Array ).GetMethod( nameof( Array.Resize ) )
+                .MakeGenericMethod( context.TargetCollectionElementType );
+
+            var resizeExp = Expression.Block
+            (
+                Expression.IfThen
+                (
+                    Expression.LessThan( targetCountMethodCallExp, sourceCountMethodCallExp ),
+                    Expression.Call( resizeMethod, context.TargetInstance, sourceCountMethodCallExp )
+                )
+            );
+            return resizeExp;
+        }
+
         protected override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
             MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
             ParameterExpression referenceTracker, ParameterExpression mapper, CollectionMapperContext context = null )
         {
+
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
             var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
+            var resizeExp = GetResizeExpression( sourceCollection, targetCollection, context );
 
             return Expression.Block
             (
                 new[] { newElement, itemIndex },
+
+                resizeExp,
 
                 ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                 (

@@ -6,7 +6,7 @@ namespace UltraMapper.MappingExpressionBuilders
 {
     public class MappingExpressionBuilder
     {
-        public static UltraMapperFunc GetMappingFunc(
+        public static UltraMapperFunc GetMappingEntryPoint(
             Type source, Type target, LambdaExpression mappingExpression )
         {
             var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );

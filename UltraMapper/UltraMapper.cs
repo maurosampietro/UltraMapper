@@ -8,60 +8,68 @@ namespace UltraMapper
         public Configuration Config { get; init; }
 
         /// <summary>
-        /// Initialize a new instance with the specified configuration.
+        /// Initialize a new instance of the <see cref="Mapper"/> class with the specified configuration.
         /// </summary>
-        /// <param name="config">The mapping configuration.</param>
+        /// <param name="config">The mapper configuration.</param>
         public Mapper( Configuration config )
         {
             this.Config = config ?? throw new ArgumentNullException( nameof( config ) );
         }
 
         /// <summary>
-        /// Initialize a new instance using <see cref="DefaultMatchingRuleEvaluator"/> 
-        /// as mapping convention allowing inline editing of the configuraton itself.
+        /// Initialize a new instance of the <see cref="Mapper"/> with the default configuration,
+        /// allowing inline editing of the configuration itself.
         /// </summary>
-        /// <param name="config"></param>
-        public Mapper( Action<Configuration> config = null )
-            : this( new Configuration() ) { config?.Invoke( this.Config ); }
+        /// <param name="configSetup">An action that sets up configuration.</param>
+        public Mapper( Action<Configuration> configSetup = null )
+            : this( new Configuration() ) { configSetup?.Invoke( this.Config ); }
 
         /// <summary>
         /// Maps <param name="source"/> on a new instance of the same type.
         /// </summary>
         /// <typeparam name="TSource">Type of the source instance.</typeparam>
-        /// <param name="source">The instance to be copied.</param>
+        /// <param name="source">The source instance to be copied.</param>
         /// <returns>A deep copy of the source instance.</returns>
-        public TSource Map<TSource>( TSource source ) //where TSource : class, new()
+        public TSource Map<TSource>( TSource source )
         {
-            //if( source == default ) return default;
-
             var target = (TSource)InstanceFactory.CreateObject( source.GetType() );
-            this.Map( source, target, null );
 
-            return target;
+            return this.Map<TSource, TSource>( source, target, null );
         }
 
         /// <summary>
         /// Maps <param name="source"> on a new instance of type <typeparam name="TTarget">.
         /// </summary>
         /// <typeparam name="TTarget">Type of the new instance.</typeparam>
-        /// <param name="source">The instance to be copied.</param>
-        /// <returns>A deep copy of the source instance.</returns>
-        public TTarget Map<TTarget>( object source ) //where TTarget : class, new()
+        /// <param name="source">The source instance to be copied.</param>
+        /// <returns>A map of the source instance on a target instance of type <typeparamref name="TTarget"/> </returns>
+        public TTarget Map<TTarget>( object source )
         {
             if( source == default ) return default;
 
-            TTarget target = InstanceFactory.CreateObject<TTarget>();
-            this.Map( source, target, null );
+            TTarget target;
+            if( typeof( TTarget ).IsArray )
+                target = InstanceFactory.CreateObject<int, TTarget>( 0 );
+            else
+                target = InstanceFactory.CreateObject<TTarget>();
 
-            return target;
+            return this.Map( source, target );
         }
 
+        /// <summary>
+        /// Maps <param name="source"> on a new instance of type <typeparam name="TTarget">.
+        /// </summary>
+        /// <typeparam name="TSource">Type of the source instance.</typeparam>
+        /// <typeparam name="TTarget">Type of the new instance.</typeparam>
+        /// <param name="source">The source instance to be copied.</param>
+        /// <returns>A map of the source instance on a new instance of type <typeparamref name="TTarget"/> </returns>
         public TTarget Map<TSource, TTarget>( TSource source )
         {
+            /* This overload is useful if you want to pass as source a TSource derived instance
+             * but really want to map TSource members only.
+             */
             var target = InstanceFactory.CreateObject<TTarget>();
-            this.Map( source, target, null );
-
-            return target;
+            return this.Map( source, target, null );
         }
 
         /// <summary>
@@ -76,9 +84,10 @@ namespace UltraMapper
             ReferenceTracker referenceTracking = null,
             ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
         {
+            Type sourceType = source?.GetType() ?? typeof( TSource );
             Type targetType = target?.GetType() ?? typeof( TTarget );
 
-            if( this.Config.IsReferenceTrackingEnabled )
+            if( this.Config.IsReferenceTrackingEnabled )               
             {
                 if( referenceTracking == null )
                     referenceTracking = new ReferenceTracker();
@@ -86,18 +95,20 @@ namespace UltraMapper
                 referenceTracking.Add( source, targetType, target );
             }
 
-            //this.MappingConfiguration.ReferenceBehavior = refBehavior;
+            /*SINCE WE PASS AN EXISTING TARGET INSTANCE TO MAP ONTO
+            *WE USE TO USE ALL OF THE EXISTING INSTANCES WE FOUND ON THE TARGET AS DEFAULT.
+            *
+            *WE CAN DECIDE WETHER TO APPLY THIS REFERENCE BEHAVIOR GLOBALLY OR 
+            *ON THE SPECIFIC MAPPING CONFIGURATION OF THE TYPE INVOLVED
+            */
 
-            var mapping = this.Config[ source.GetType(), targetType ];
-            //since we pass an existing target instance to map onto;
-            //by default we use all of the existing instances we found on the target
-            mapping.ReferenceBehavior = refBehavior;
+            var mapping = this.Config[ sourceType, targetType ];
+            mapping.ReferenceBehavior = refBehavior;                     
 
-            this.Map( source, target, referenceTracking, mapping );
-            return target;
+            return this.Map( source, target, referenceTracking, mapping );
         }
 
-        internal void Map<TSource, TTarget>( TSource source, TTarget target,
+        internal TTarget Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking, IMapping mapping )
         {
             //in order to manage inheritance at runtime here
@@ -106,7 +117,7 @@ namespace UltraMapper
             //A new mapping is created only if no compatible mapping is already available
             //for concrete classes. If a mapping for the interfaces is found, it is used.
 
-            IMapping CheckResolveAbstractMapping( Type sourceType, Type targetType )
+            IMapping ResolveAbstractMapping( Type sourceType, Type targetType )
             {
                 if( (sourceType.IsInterface || sourceType.IsAbstract) &&
                     (targetType.IsInterface || targetType.IsAbstract) )
@@ -138,7 +149,7 @@ namespace UltraMapper
                         var mappingSourceType = memberTypeMapping.Source.EntryType;
                         var mappingTargetType = memberTypeMapping.Target.EntryType;
 
-                        mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                        mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     }
 
                     break;
@@ -149,19 +160,19 @@ namespace UltraMapper
                     var mappingSourceType = typeMapping.Source.EntryType;
                     var mappingTargetType = typeMapping.Target.EntryType;
 
-                    mapping = CheckResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                    mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
                     break;
                 }
 
                 case null:
                 {
                     var targetType = target?.GetType() ?? typeof( TTarget );
-                    mapping = CheckResolveAbstractMapping( source.GetType(), targetType );
+                    mapping = ResolveAbstractMapping( source.GetType(), targetType );
                     break;
                 }
             }
 
-            mapping.MappingFunc.Invoke( referenceTracking, source, target );
+            return (TTarget)mapping.MappingFunc( referenceTracking, source, target );
         }
     }
 
@@ -194,7 +205,7 @@ namespace UltraMapper
             var mapping = this.Config[ sourceType, targetType ];
 
             var targetInstance = new TTarget();
-            return (TTarget)mapping.MappingFuncPrimitives.Invoke( referenceTracking, source, targetInstance );
+            return (TTarget)mapping.MappingFuncPrimitives( referenceTracking, source, targetInstance );
         }
 
         public void Map<TSource, TTarget>( TSource source, out TTarget target,

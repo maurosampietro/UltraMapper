@@ -475,26 +475,26 @@ namespace UltraMapper.MappingExpressionBuilders
             return GetCountMethodStatic( type );
         }
 
-        public static MethodInfo GetCountMethodStatic( Type type )
+        public static MethodInfo GetCountMethodStatic( Type collectionType )
         {
-            var getCountMethod = type.GetMethod( nameof( ICollection<int>.Count ),
-              BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );
+            var getCountMethod = collectionType.GetMethod( nameof( ICollection<int>.Count ),
+                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );
 
             if( getCountMethod != null )
                 return getCountMethod;
 
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.
-            var getCountProperty = type.GetProperty( nameof( ICollection<int>.Count ),
+            var getCountProperty = collectionType.GetProperty( nameof( ICollection<int>.Count ),
                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy );
 
             if( getCountProperty != null )
                 return getCountProperty.GetGetMethod();
 
-            if( type.IsArray )
+            if( collectionType.IsArray )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
                 //Array implements ICollection.Count explicitly. For simplicity, we just look for property Length :)
-                getCountProperty = type.GetProperty( nameof( Array.Length ) );
+                getCountProperty = collectionType.GetProperty( nameof( Array.Length ) );
 
                 if( getCountProperty != null )
                     return getCountProperty.GetGetMethod();
@@ -513,12 +513,20 @@ namespace UltraMapper.MappingExpressionBuilders
                     return parameters[ 0 ].ParameterType.GetGenericTypeDefinition() == typeof( IEnumerable<> );
                 } );
 
-            var genericCount = getLinqCount?.MakeGenericMethod( type.GetGenericArguments()[ 0 ] );
+            //Trying to retrieve the elementType from the collection is not always possible
+            //in case of an instance of an unmaterialized enumerable.
+            //In that case here we are working with RangeIterator, SelectorIterator, WhereIterator etc...
+            //From some of them (for example RangeIterator) is not possible to retrieve the collection element type.
+
+            //DO NOT USE THIS
+            var genericCount = getLinqCount?.MakeGenericMethod( collectionType.GetGenericArguments()[ 0 ] );
+            
+            //var genericCount = getLinqCount?.MakeGenericMethod( elementType );
 
             if( genericCount != null )
                 return genericCount;
 
-            throw new ArgumentException( $"Type '{type}' does not define a Count or Length property and Linq.Count could not be used" );
+            throw new ArgumentException( $"Type '{collectionType}' does not define a Count or Length property and Linq.Count could not be used" );
         }
     }
 }
