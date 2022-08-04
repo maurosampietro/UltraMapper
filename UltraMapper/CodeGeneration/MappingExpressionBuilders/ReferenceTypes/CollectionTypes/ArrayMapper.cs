@@ -6,12 +6,14 @@ using UltraMapper.Internals.ExtensionMethods;
 
 namespace UltraMapper.MappingExpressionBuilders
 {
-    public class ArrayMapper : CollectionMapper
+    public class CollectionToArrayMapper : CollectionMapper
     {
         public override bool CanHandle( Mapping mapping )
         {
+            var source = mapping.Source;
             var target = mapping.Target;
-            return base.CanHandle( mapping ) && target.EntryType.IsArray;
+
+            return source.EntryType.IsCollection() && target.EntryType.IsArray;
         }
 
         protected override MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )
@@ -115,7 +117,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var resizeMethod = typeof( Array ).GetMethod( nameof( Array.Resize ) )
                 .MakeGenericMethod( context.TargetCollectionElementType );
 
-            var resizeExp = Expression.Block
+            return Expression.Block
             (
                 Expression.IfThen
                 (
@@ -123,7 +125,6 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Call( resizeMethod, context.TargetInstance, sourceCountMethodCallExp )
                 )
             );
-            return resizeExp;
         }
 
         protected override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,

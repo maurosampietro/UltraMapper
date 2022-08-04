@@ -73,6 +73,11 @@ namespace UltraMapper.Internals
             return type.GetInterfaces().Any( t => t == typeof( IEnumerable ) );
         }
 
+        public static bool IsCollection( this Type type )
+        {
+            return type.GetInterfaces().Any( t => t == typeof( ICollection ) );
+        }
+
         public static object GetDefaultValueViaActivator( this Type type )
         {
             if( type.IsValueType && Nullable.GetUnderlyingType( type ) == null )

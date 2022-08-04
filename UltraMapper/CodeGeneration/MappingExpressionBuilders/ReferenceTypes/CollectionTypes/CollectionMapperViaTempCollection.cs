@@ -267,7 +267,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
             var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
-            var temporaryCollectionInsertionMethod = this.GetTargetCollectionInsertionMethod( context );
+            var tempCollectionInsertionMethod = this.GetTempCollectionInsertionMethod( context );
 
             bool isUpdate = context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
             bool isReset = context.Options.CollectionBehavior == CollectionBehaviors.RESET;
@@ -288,7 +288,7 @@ namespace UltraMapper.MappingExpressionBuilders
                         context.SourceCollectionElementType,
                         context.TargetInstance,
                         context.TargetCollectionElementType,
-                        temporaryCollectionInsertionMethod,
+                        tempCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
                         context.Mapper,
                         context.ReferenceTracker,
@@ -310,7 +310,7 @@ namespace UltraMapper.MappingExpressionBuilders
                         context.SourceCollectionElementType,
                         context.TargetInstance,
                         context.TargetCollectionElementType,
-                        temporaryCollectionInsertionMethod,
+                        tempCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
                         context.ReferenceTracker,
                         context.Mapper,
@@ -319,7 +319,7 @@ namespace UltraMapper.MappingExpressionBuilders
             );
         }
 
-        protected virtual MethodInfo GetTemporaryCollectionInsertionMethod( CollectionMapperContext context )
+        protected virtual MethodInfo GetTempCollectionInsertionMethod( CollectionMapperContext context )
         {
             return this.GetTemporaryCollectionType( context ).GetMethod( nameof( List<int>.Add ) );
         }

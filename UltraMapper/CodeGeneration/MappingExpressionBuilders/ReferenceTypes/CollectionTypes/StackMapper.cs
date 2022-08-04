@@ -23,6 +23,11 @@ namespace UltraMapper.MappingExpressionBuilders
                 target.EntryType.IsCollectionOfType( typeof( Stack<> ) );
         }
 
+        protected override MethodInfo GetTempCollectionInsertionMethod( CollectionMapperContext context )
+        {
+            return this.GetTargetCollectionInsertionMethod( context );
+        }
+
         protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
         {
             //It is forbidden to use nameof with unbound generic types. We use 'int' just to get around that.

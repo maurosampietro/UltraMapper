@@ -489,7 +489,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( getCountProperty != null )
                 return getCountProperty.GetGetMethod();
-
+            
             if( collectionType.IsArray )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
