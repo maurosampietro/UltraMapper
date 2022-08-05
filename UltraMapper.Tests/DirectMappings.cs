@@ -272,8 +272,7 @@ namespace UltraMapper.Tests
         public void UnmaterializedMultidimensionalArray()
         {
             var source = Enumerable.Range( 0, 10 )
-                .Select( i => Enumerable.Range( 1, 2 ) /*no .ToList(), no .ToArray() etc..*/ )
-                .ToList();
+                .Select( i => Enumerable.Range( 1, 2 ) /*no .ToList(), no .ToArray() etc..*/ );
 
             var ultraMapper = new Mapper();
             var target = ultraMapper.Map<int[][]>( source );
@@ -299,7 +298,6 @@ namespace UltraMapper.Tests
         {
             //There's no .ToList() or .ToArray() or anything else here.
             var source = Enumerable.Range( 0, 10 )
-                .ToList() //removing this, the map somehow works
                 .Select( i => new ComplexType() { PropertyA = i } );
 
             var ultraMapper = new Mapper();
@@ -327,8 +325,7 @@ namespace UltraMapper.Tests
         public void UnmaterializedMultidimensionalList()
         {
             var source = Enumerable.Range( 0, 10 )
-                .Select( i => Enumerable.Range( 1, 2 ) /*no .ToList(), no .ToArray() etc..*/ )
-                .ToList();
+                .Select( i => Enumerable.Range( 1, 2 ) /*no .ToList(), no .ToArray() etc..*/ );
 
             var ultraMapper = new Mapper();
             var target = ultraMapper.Map<List<List<int>>>( source );
@@ -354,7 +351,6 @@ namespace UltraMapper.Tests
         {
             //There's no .ToList() or .ToList() or anything else here.
             var source = Enumerable.Range( 0, 10 )
-                .ToList() //removing this, the map somehow works
                 .Select( i => new ComplexType() { PropertyA = i } );
 
             var ultraMapper = new Mapper();
