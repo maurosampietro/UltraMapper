@@ -64,38 +64,6 @@ namespace UltraMapper.Internals
             }
         }
 
-        private UltraMapperFunc _mappingFuncPrimitives;
-        public UltraMapperFunc MappingFuncPrimitives
-        {
-            get
-            {
-                if( _mappingFuncPrimitives != null )
-                    return _mappingFuncPrimitives;
-
-                var referenceTrackerParam = Expression.Parameter( typeof( ReferenceTracker ), "referenceTracker" );
-
-                var sourceParam = Expression.Parameter( typeof(object), "sourceInstance" );
-                var targetParam = Expression.Parameter( typeof(object), "targetInstance" );
-
-                var sourceInstance = Expression.Convert( sourceParam, this.Source.EntryType );
-                var targetInstance = Expression.Convert( targetParam, this.Target.EntryType );
-
-                Expression bodyExp = this.MappingExpression;
-                if( this.MappingExpression.Parameters.Count == 1 )
-                    bodyExp = Expression.Convert( Expression.Invoke( this.MappingExpression, sourceInstance ), typeof( object ) );
-
-                else if( this.MappingExpression.Parameters.Count == 3 )
-                    bodyExp = Expression.Convert( Expression.Invoke( this.MappingExpression, referenceTrackerParam, sourceInstance, targetInstance ), typeof(object) );
-
-                else throw new NotSupportedException( "Unsupported number of arguments" );
-
-                //var delegateType = typeof( UltraMapperFunc<,> ).MakeGenericType( this.Source.EntryType, this.Target.EntryType );
-
-                return _mappingFuncPrimitives = Expression.Lambda<UltraMapperFunc>(
-                    bodyExp, referenceTrackerParam, sourceParam, targetParam ).Compile();
-            }
-        }
-
         private UltraMapperFunc _mappingFunc;
         public UltraMapperFunc MappingFunc
         {

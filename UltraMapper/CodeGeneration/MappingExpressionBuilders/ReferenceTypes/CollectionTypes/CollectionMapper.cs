@@ -26,7 +26,7 @@ namespace UltraMapper.MappingExpressionBuilders
         protected object RuntimeMappingInterfaceToPrimitiveType( object loopingvar, Type targetType, Configuration config )
         {
             var map = config[ loopingvar.GetType(), targetType ];
-            return map.MappingFuncPrimitives( null, loopingvar, null );
+            return map.MappingFunc( null, loopingvar, null );
         }
 
         protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,

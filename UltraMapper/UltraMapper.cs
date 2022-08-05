@@ -205,7 +205,7 @@ namespace UltraMapper
             var mapping = this.Config[ sourceType, targetType ];
 
             var targetInstance = new TTarget();
-            return (TTarget)mapping.MappingFuncPrimitives( referenceTracking, source, targetInstance );
+            return (TTarget)mapping.MappingFunc( referenceTracking, source, targetInstance );
         }
 
         public void Map<TSource, TTarget>( TSource source, out TTarget target,
@@ -219,7 +219,7 @@ namespace UltraMapper
 
             var mapping = this.Config[ sourceType, targetType ];
             target = new TTarget();
-            target = (TTarget)mapping.MappingFuncPrimitives( referenceTracking, source, target );
+            target = (TTarget)mapping.MappingFunc( referenceTracking, source, target );
         }
     }
 
