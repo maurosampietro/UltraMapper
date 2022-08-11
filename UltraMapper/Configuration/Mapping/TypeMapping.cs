@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Config;
@@ -10,6 +11,8 @@ namespace UltraMapper.Internals
     public sealed class TypeMapping : Mapping, ITypeMappingOptions
     {
         private string _toString;
+
+        public HashSet<IMappingSource> _mappingSource = new HashSet<IMappingSource>();
 
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
@@ -28,15 +31,15 @@ namespace UltraMapper.Internals
 
         public readonly Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>> TypeToMemberMappings;
 
-        public TypeMapping( Configuration globalConfig, IMappingSource source, IMappingTarget target )
-            : base( globalConfig, source, target )
+        public TypeMapping( Configuration config, IMappingSource source, IMappingTarget target )
+            : base( config, source, target )
         {
             this.MemberToMemberMappings = new Dictionary<IMappingTarget, MemberMapping>();
             this.TypeToMemberMappings = new Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>>();
         }
 
-        public TypeMapping( Configuration globalConfig, Type sourceType, Type targetType )
-            : base( globalConfig, sourceType, targetType )
+        public TypeMapping( Configuration config, Type sourceType, Type targetType )
+            : base( config, sourceType, targetType )
         {
             this.MemberToMemberMappings = new Dictionary<IMappingTarget, MemberMapping>();
             this.TypeToMemberMappings = new Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>>();
@@ -182,7 +185,13 @@ namespace UltraMapper.Internals
             LambdaExpression sourceMemberGetterExpression )
         {
             return _sources.GetOrAdd( sourceMember,
-               () => new MappingSource( sourceMemberGetterExpression ) );
+               () =>
+               {
+                   var mp = new MappingSource( sourceMemberGetterExpression );
+                   var isAdded = _mappingSource.Add( mp );
+
+                   return mp;
+               } );
         }
 
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
@@ -196,7 +205,13 @@ namespace UltraMapper.Internals
             MemberAccessPath sourceMemberPath )
         {
             return _sources.GetOrAdd( sourceMember,
-                () => new MappingSource( sourceMemberPath ) );
+               () =>
+               {
+                   var mp = new MappingSource( sourceMemberPath );
+                   var isAdded = _mappingSource.Add( mp );
+
+                   return mp;
+               } );
         }
 
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
@@ -208,6 +223,10 @@ namespace UltraMapper.Internals
 
         public MemberMapping AddMemberToMemberMapping( IMappingSource source, IMappingTarget target )
         {
+            var temp = _mappingSource.FirstOrDefault( item => item == source );
+            if( temp != null )
+                source = temp;
+
             var memberMapping = new MemberMapping( this, source, target );
             this.MemberToMemberMappings[ target ] = memberMapping;
 

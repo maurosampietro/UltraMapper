@@ -64,8 +64,8 @@ namespace UltraMapper.Internals
             }
         }
 
-        private UltraMapperFunc _mappingFunc;
-        public UltraMapperFunc MappingFunc
+        private UltraMapperDelegate _mappingFunc;
+        public UltraMapperDelegate MappingFunc
         {
             get
             {
@@ -76,17 +76,17 @@ namespace UltraMapper.Internals
             }
         }
 
-        protected Mapping( Configuration globalConfig, Type sourceType, Type targetType )
+        protected Mapping( Configuration config, Type sourceType, Type targetType )
         {
-            this.GlobalConfig = globalConfig;
+            this.GlobalConfig = config;
 
             this.Source = new MappingSource( sourceType );
             this.Target = new MappingTarget( targetType );
         }
 
-        protected Mapping( Configuration globalConfig, IMappingSource source, IMappingTarget target )
+        protected Mapping( Configuration config, IMappingSource source, IMappingTarget target )
         {
-            GlobalConfig = globalConfig;
+            GlobalConfig = config;
 
             this.Source = source;
             this.Target = target;

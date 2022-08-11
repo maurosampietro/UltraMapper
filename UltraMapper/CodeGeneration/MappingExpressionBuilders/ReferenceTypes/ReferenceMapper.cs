@@ -53,7 +53,7 @@ namespace UltraMapper.MappingExpressionBuilders
                 context.TargetInstance
             );
 
-            var delegateType = typeof( UltraMapperFunc<,> )
+            var delegateType = typeof( UltraMapperDelegate<,> )
                 .MakeGenericType( context.SourceInstance.Type, context.TargetInstance.Type );
 
             return Expression.Lambda( delegateType, expression,

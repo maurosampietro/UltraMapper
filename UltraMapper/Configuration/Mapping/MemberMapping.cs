@@ -14,7 +14,7 @@ namespace UltraMapper.Internals
         public readonly IMappingTarget TargetMember;
 
         public MemberMapping( TypeMapping typeMapping, IMappingSource source, IMappingTarget target )
-            : base( typeMapping.GlobalConfig, source.MemberType, target.MemberType )
+            : base( typeMapping.GlobalConfig, new MappingSource( source.MemberType ), new MappingTarget( target.MemberType ) )
         {
             this.InstanceTypeMapping = typeMapping;
 

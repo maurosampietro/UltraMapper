@@ -69,10 +69,15 @@ namespace UltraMapper.Tests
                 if( minVal > maxVal )
                     throw new ArgumentException( $"{nameof( maxVal )} must be a value greater or equal to {nameof( minVal )}" );
 
+                //solving reported issue: https://github.com/dotnet/runtime/issues/71643
+                IComparer<T> comparer = null;
+                if( typeof( T ) == typeof( string ) )
+                    comparer = (IComparer<T>)StringComparer.OrdinalIgnoreCase;
+
                 this.Array = new T[ maxVal - minVal ];
                 this.List = new List<T>();
                 this.HashSet = new HashSet<T>();
-                this.SortedSet = new SortedSet<T>();
+                this.SortedSet = new SortedSet<T>( comparer );
                 this.Stack = new Stack<T>();
                 this.Queue = new Queue<T>();
                 this.LinkedList = new LinkedList<T>();
@@ -620,10 +625,10 @@ namespace UltraMapper.Tests
                 List = new List<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
                 HashSet = new HashSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
                 SortedSet = new SortedSet<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
-                ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } }
+                ObservableCollection = new ObservableCollection<ComplexType>() { tempItemA, tempItemB, new ComplexType() { A = 10 } },
+                Stack = new Stack<ComplexType>()
             };
 
-            target.Stack = new Stack<ComplexType>();
             target.Stack.Push( tempItemA );
             target.Stack.Push( tempItemB );
             target.Stack.Push( new ComplexType() { A = 10 } );
