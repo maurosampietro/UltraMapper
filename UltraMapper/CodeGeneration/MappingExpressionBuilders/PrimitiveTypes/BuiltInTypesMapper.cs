@@ -14,7 +14,7 @@ namespace UltraMapper.MappingExpressionBuilders
             bool areTypesBuiltIn = source.EntryType.IsBuiltIn( false )
                 && target.EntryType.IsBuiltIn( false );
 
-            return (areTypesBuiltIn ) && (source == target ||
+            return areTypesBuiltIn && (source == target ||
                 source.EntryType.IsImplicitlyConvertibleTo( target.EntryType ) ||
                 source.EntryType.IsExplicitlyConvertibleTo( target.EntryType ));
         }

@@ -39,7 +39,7 @@ namespace UltraMapper.Internals
         }
 
         public TypeMapping( Configuration config, Type sourceType, Type targetType )
-            : base( config, sourceType, targetType )
+            : base( config, new MappingSource( sourceType ), new MappingTarget( targetType ) )
         {
             this.MemberToMemberMappings = new Dictionary<IMappingTarget, MemberMapping>();
             this.TypeToMemberMappings = new Dictionary<IMappingTarget, Dictionary<Type, MemberMapping>>();

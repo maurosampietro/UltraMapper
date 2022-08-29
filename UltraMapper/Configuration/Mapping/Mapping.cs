@@ -76,13 +76,13 @@ namespace UltraMapper.Internals
             }
         }
 
-        protected Mapping( Configuration config, Type sourceType, Type targetType )
-        {
-            this.GlobalConfig = config;
+        //protected Mapping( Configuration config, Type sourceType, Type targetType )
+        //{
+        //    this.GlobalConfig = config;
 
-            this.Source = new MappingSource( sourceType );
-            this.Target = new MappingTarget( targetType );
-        }
+        //    this.Source = new MappingSource( sourceType );
+        //    this.Target = new MappingTarget( targetType );
+        //}
 
         protected Mapping( Configuration config, IMappingSource source, IMappingTarget target )
         {
