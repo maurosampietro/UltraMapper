@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace UltraMapper.Internals
 {
@@ -75,7 +76,8 @@ namespace UltraMapper.Internals
 
         public static bool IsCollection( this Type type )
         {
-            return type.GetInterfaces().Any( t => t == typeof( ICollection ) );
+            return type.GetInterfaces().Any( t => t == typeof( ICollection ) ||
+                (t.IsGenericType && t.GetGenericTypeDefinition() == typeof( ICollection<> )) );
         }
 
         public static object GetDefaultValueViaActivator( this Type type )
@@ -111,7 +113,7 @@ namespace UltraMapper.Internals
             if( !@interface.IsInterface )
                 throw new ArgumentException( $"{nameof( @interface )} parameter must be an interface type" );
 
-            if( @interface.IsGenericTypeDefinition )
+            if( @interface.IsGenericType )
             {
                 return sourceType.GetInterfaces().Any( type => type.IsGenericType &&
                     type.GetGenericTypeDefinition() == @interface );
@@ -122,7 +124,8 @@ namespace UltraMapper.Internals
 
         public static bool IsCollectionOfType( this Type sourceType, Type testAgainstType )
         {
-            return sourceType.IsGenericType && (sourceType.GetGenericTypeDefinition() == testAgainstType);
+            return sourceType.IsCollection() && sourceType.IsGenericType &&
+                sourceType.GetGenericTypeDefinition() == testAgainstType;
         }
 
         #region IsImplicitlyConvertibleTo
