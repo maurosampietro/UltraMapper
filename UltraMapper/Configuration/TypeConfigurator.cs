@@ -108,5 +108,23 @@ namespace UltraMapper
 
             return new MemberConfigurator<TSource, TTarget>( typeMapping );
         }
+
+        /// <summary>
+        /// Lets you configure how to map from <paramref name="source"/> to <paramref name="target"/>.
+        /// This overrides mapping conventions.
+        /// </summary>
+        /// <param name="source">Source instance</param>
+        /// <param name="target">Target instance</param>
+        /// <param name="typeMappingConfig">Allow you to configure the mapping you are mapping.</param>
+        /// <returns>A strongly-typed member-mapping configurator for this type-mapping.</returns>
+        public static MemberConfigurator MapTypes( this Configuration config, Type source, 
+            Type target, Action<ITypeMappingOptions> typeMappingConfig = null )
+        {
+            var typeMapping = config[ source.GetType(), target.GetType() ];
+            typeMapping.MappingResolution = MappingResolution.USER_DEFINED;
+            typeMappingConfig?.Invoke( typeMapping );
+
+            return new MemberConfigurator( typeMapping );
+        }
     }
 }

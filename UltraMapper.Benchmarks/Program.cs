@@ -8,6 +8,7 @@ using AutoMapper;
 using System.Collections.ObjectModel;
 using UltraMapper.Internals;
 using BenchmarkDotNet.Configs;
+using System.Collections;
 
 namespace UltraMapper.Benchmarks
 {
@@ -21,6 +22,7 @@ namespace UltraMapper.Benchmarks
 
             //var ultraMapper = new AutoMapper.Mapper( new MapperConfiguration( cfg => cfg.CreateMap<List<int>, int[]>() ) );
             //var target = ultraMapper.Map<int[]>( source );
+
 
             new MappersBenchmark().UltraMapperTest();
         }

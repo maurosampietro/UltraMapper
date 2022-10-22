@@ -489,7 +489,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( getCountProperty != null )
                 return getCountProperty.GetGetMethod();
-            
+
             if( collectionType.IsArray )
             {
                 //ICollection<T> interface implementation is injected in the Array class at runtime.
@@ -520,7 +520,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
             //DO NOT USE THIS
             var genericCount = getLinqCount?.MakeGenericMethod( collectionType.GetGenericArguments()[ 0 ] );
-            
+
             //var genericCount = getLinqCount?.MakeGenericMethod( elementType );
 
             if( genericCount != null )

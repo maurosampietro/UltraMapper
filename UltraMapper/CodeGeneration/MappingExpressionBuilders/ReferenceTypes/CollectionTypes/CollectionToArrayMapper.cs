@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
@@ -212,6 +214,11 @@ namespace UltraMapper.MappingExpressionBuilders
                    context.SourceCollectionElementType,
                    context.TargetCollectionElementType
                );
+        }
+
+        protected override MethodInfo GetTargetCollectionInsertionMethod( CollectionMapperContext context )
+        {
+            return this.GetType().GetMethods().First();
         }
     }
 }

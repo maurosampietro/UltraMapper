@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UltraMapper.Internals;
@@ -12,12 +13,16 @@ namespace UltraMapper.MappingExpressionBuilders
     /// Unmaterialized enumerables must not read Count property to map on array.
     /// This mapper uses a temp List and then performs a .ToArray()
     /// </summary>
-    public class EnumerableToArrayMapper : CollectionMapper
+    public class EnumerableIteratorToArrayMapper : CollectionMapper
     {
         public override bool CanHandle( Mapping mapping )
         {
+            var source = mapping.Source;
             var target = mapping.Target;
-            return base.CanHandle( mapping ) && target.EntryType.IsArray;
+
+            return base.CanHandle( mapping )
+                //&& source.EntryType?.BaseType?.Name?.StartsWith( "Iterator" ) == true
+                && target.EntryType.IsArray;
         }
 
         protected override Expression GetExpressionBody( ReferenceMapperContext contextObj )
@@ -27,7 +32,24 @@ namespace UltraMapper.MappingExpressionBuilders
             var targetTempType = typeof( List<> ).MakeGenericType( context.TargetCollectionElementType );
             var tempColl = Expression.Parameter( targetTempType, "tempColl" );
 
-            var tempMapping = context.MapperConfiguration[ context.SourceInstance.Type, targetTempType ]
+            Type iteratorElementType = null;
+
+            var sourceInstance = context.SourceInstance.Type;
+            if( context.SourceInstance.Type.Name == "RangeIterator" )
+            {
+                iteratorElementType = context.SourceInstance.Type
+                     .BaseType.GetGenericArguments().FirstOrDefault();
+            }
+            else
+            {
+                iteratorElementType = context.SourceInstance
+                    .Type.GenericTypeArguments.LastOrDefault();
+            }
+
+            if( iteratorElementType != null )
+                sourceInstance = typeof( IEnumerable<> ).MakeGenericType( iteratorElementType );
+
+            var tempMapping = context.MapperConfiguration[ sourceInstance, targetTempType ]
                 .MappingExpression;
 
             var ctorParam = new Type[] { typeof( IEnumerable<> )
@@ -47,6 +69,7 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 Expression.Assign( tempColl, Expression.New( tempColl.Type ) ),
                 Expression.Invoke( tempMapping, context.ReferenceTracker, context.SourceInstance, tempColl ),
+                Expression.Invoke( _debugExp, tempColl ),
                 Expression.Assign( contextObj.TargetInstance, Expression.Call( tempColl, toArrayMethod ) )
             );
         }
