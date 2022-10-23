@@ -20,6 +20,7 @@ dotnet_csproj:
 before_build:
 - cmd: nuget restore
 build:
+  project: UltraMapper\UltraMapper.csproj
   publish_nuget: true
   verbosity: detailed
 deploy:
