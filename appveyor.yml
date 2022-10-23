@@ -1,7 +1,12 @@
 version: 0.2.{build}
 pull_requests:
   do_not_increment_build_number: true
-image: Visual Studio 2019
+image: Visual Studio 2022
+branches:
+  only:
+  - develop
+configuration: Release
+platform: Any CPU
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
