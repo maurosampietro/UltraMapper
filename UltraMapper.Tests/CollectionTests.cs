@@ -168,10 +168,6 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-#if NET5_0_OR_GREATER
-        //there's a bug or something going on the .NET framework: changed behavior and SortedList fails. No way to fix this now.
-        [Ignore]
-#endif
         public void PrimitiveCollection()
         {
             var excludeTypes = new TypeCode[]

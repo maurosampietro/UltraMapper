@@ -269,7 +269,6 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        [Ignore]
         public void UnmaterializedMultidimensionalArray()
         {
             var source = Enumerable.Range( 0, 10 )
