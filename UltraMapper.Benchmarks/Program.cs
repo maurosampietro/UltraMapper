@@ -12,6 +12,14 @@ using System.Collections;
 
 namespace UltraMapper.Benchmarks
 {
+
+    /*
+     
+    WORK IN PROGRESS
+     
+     */
+
+
     internal class Program
     {
         static void Main( string[] args )
@@ -29,7 +37,7 @@ namespace UltraMapper.Benchmarks
     }
 
     [SimpleJob( RuntimeMoniker.Net50 )]
-    [SimpleJob( RuntimeMoniker.Net60 )]
+    //[SimpleJob( RuntimeMoniker.Net60 )]
     public class MappersBenchmark
     {
         private readonly AutoMapper.Mapper _autoMapper;
