@@ -87,7 +87,7 @@ namespace UltraMapper
             Type sourceType = source?.GetType() ?? typeof( TSource );
             Type targetType = target?.GetType() ?? typeof( TTarget );
 
-            if( this.Config.IsReferenceTrackingEnabled )               
+            if( this.Config.IsReferenceTrackingEnabled )
             {
                 if( referenceTracking == null )
                     referenceTracking = new ReferenceTracker();
@@ -98,12 +98,12 @@ namespace UltraMapper
             /*SINCE WE PASS AN EXISTING TARGET INSTANCE TO MAP ONTO
             *WE USE TO USE ALL OF THE EXISTING INSTANCES WE FOUND ON THE TARGET AS DEFAULT.
             *
-            *WE CAN DECIDE WETHER TO APPLY THIS REFERENCE BEHAVIOR GLOBALLY OR 
+            *WE CAN DECIDE WETHER TO APPLY THIS REFERENCE BEHAVIOR GLOBALLY OR
             *ON THE SPECIFIC MAPPING CONFIGURATION OF THE TYPE INVOLVED
             */
 
             var mapping = this.Config[ sourceType, targetType ];
-            mapping.ReferenceBehavior = refBehavior;                     
+            mapping.ReferenceBehavior = refBehavior;
 
             return this.Map( source, target, referenceTracking, mapping );
         }
@@ -222,18 +222,4 @@ namespace UltraMapper
             target = (TTarget)mapping.MappingFunc( referenceTracking, source, target );
         }
     }
-
-    //public partial class Mapper
-    //{
-    //    public object Map( object source, object target, ReferenceTracker referenceTracking = null )
-    //    {
-    //        var sourceType = source.GetType();
-    //        var targetType = target.GetType();
-
-    //        var mapping = this.MappingConfiguration[ sourceType, targetType ];
-    //        mapping.MappingFunc( referenceTracking, source, target );
-
-    //        return target;
-    //    }
-    //}
 }

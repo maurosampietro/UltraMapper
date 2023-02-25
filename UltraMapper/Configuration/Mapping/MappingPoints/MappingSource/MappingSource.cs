@@ -4,9 +4,9 @@ using System.Reflection;
 
 namespace UltraMapper.Internals
 {
-    public sealed class MappingSource : MappingPoint, IMappingSource
+    public class MappingSource : MappingPoint, IMappingSource
     {
-        public LambdaExpression ValueGetter { get; }
+        public virtual LambdaExpression ValueGetter { get; }
 
         public MappingSource( Type type )
             : this( new MemberAccessPath( type ) ) { }

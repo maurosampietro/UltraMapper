@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,6 +18,7 @@ namespace UltraMapper
         }
 
         #region Member -> Member
+
         public MemberConfigurator MapMember( MemberInfo sourceMember,
             MemberInfo targetMemberGetter, MemberInfo targetMemberSetter )
         {
@@ -76,6 +78,22 @@ namespace UltraMapper
                 targetMemberGetter, targetMemberSetterExpression );
         }
 
+        protected MemberMapping MapConditionalMemberInternal(
+            LambdaExpression conditionGetter,
+            LambdaExpression falseFunc,
+            LambdaExpression sourceMemberGetter,
+            LambdaExpression targetMemberGetter )
+        {
+            var sourceMember = sourceMemberGetter.GetMemberAccessPath().Last();
+            var targetMemberPath = targetMemberGetter.GetMemberAccessPath();
+            var targetMember = targetMemberPath.Last();
+
+            var targetMemberSetterExpression = targetMemberPath.GetSetterExp();
+
+            return this.MapConditionalMemberInternal( sourceMember, targetMember, conditionGetter, falseFunc, sourceMemberGetter,
+                targetMemberGetter, targetMemberSetterExpression );
+        }
+
         protected MemberMapping MapMemberInternal( MemberInfo sourceMember, MemberInfo targetMember,
             LambdaExpression sourceMemberGetter, LambdaExpression targetMemberGetter,
             LambdaExpression targetMemberSetter )
@@ -91,9 +109,50 @@ namespace UltraMapper
 
             return mapping;
         }
-        #endregion
+
+        protected MemberMapping MapConditionalMemberInternal( MemberInfo sourceMember, MemberInfo targetMember,
+          LambdaExpression conditionGetter,
+          LambdaExpression falseFunc,
+          LambdaExpression sourceMemberGetter,
+          LambdaExpression targetMemberGetter,
+          LambdaExpression targetMemberSetter )
+        {
+            LambdaExpression conditionalSourceGetter = CreateConditional( conditionGetter, falseFunc, sourceMemberGetter );
+
+            var mappingSource = _typeMapping.GetConditionalMappingSource(
+                sourceMember,
+                sourceMemberGetter,
+                conditionalSourceGetter );
+
+            var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
+                targetMemberGetter, targetMemberSetter );
+
+            var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget );
+            _typeMapping.MemberToMemberMappings[ mappingTarget ] = mapping;
+
+            return mapping;
+        }
+
+        private LambdaExpression CreateConditional(
+            LambdaExpression conditionGetter,
+            LambdaExpression falseFunc,
+            LambdaExpression sourceMemberGetter )
+        {
+            var condtional = LambdaExpression.Condition( conditionGetter.Body, sourceMemberGetter.Body, falseFunc.Body );
+            var lambda = LabelExpression.Lambda( condtional, sourceMemberGetter.Parameters );
+
+            if( conditionGetter.Parameters.First().Name != sourceMemberGetter.Parameters.First().Name )
+            {
+                throw new ArgumentException( "The variable name for the condition and the sourceMember must be equal" );
+            }
+
+            return lambda;
+        }
+
+        #endregion Member -> Member
 
         #region Type -> Member
+
         public MemberConfigurator MapTypeToMember( Type sourceType, MemberInfo targetMember )
         {
             CheckThrowMemberBelongsToType( targetMember, sourceType );
@@ -156,7 +215,7 @@ namespace UltraMapper
             return mapping;
         }
 
-        #endregion
+        #endregion Type -> Member
 
         private void CheckThrowMemberBelongsToType( MemberInfo member, Type type )
         {
@@ -224,6 +283,16 @@ namespace UltraMapper
             return MapMember( sourceSelector, targetSelector, (Expression<Func<TSourceMember, TTargetMember>>)null, null );
         }
 
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, bool>> condition,
+            Expression<Func<TSourceMember>> falseFunc,
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector
+            )
+        {
+            return MapConditionalMember( condition, falseFunc, sourceSelector, targetSelector, (Expression<Func<TSourceMember, TTargetMember>>)null, null );
+        }
+
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
           Expression<Func<TSource, TSourceMember>> sourceSelector,
           Expression<Func<TTarget, TTargetMember>> targetSelector,
@@ -279,6 +348,22 @@ namespace UltraMapper
             return this;
         }
 
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, bool>> condition,
+            Expression<Func<TSourceMember>> falseFunc,
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Expression<Func<TSourceMember, TTargetMember>> converter,
+            Action<IMemberMappingOptions> memberMappingConfig )
+        {
+            var mapping = base.MapConditionalMemberInternal( condition, falseFunc, sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.CustomConverter = converter;
+            memberMappingConfig?.Invoke( mapping );
+
+            return this;
+        }
+
         //COLLECTION OVERLOADS
 
         /// <summary>
@@ -319,6 +404,7 @@ namespace UltraMapper
         }
 
         #region Type -> Member
+
         public MemberConfigurator<TSource, TTarget> MapTypeToMember<TSourceType, TTargetMember>(
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Expression<Func<TSourceType, TTargetMember>> converter )
@@ -354,6 +440,7 @@ namespace UltraMapper
 
             return this;
         }
-        #endregion
+
+        #endregion Type -> Member
     }
 }

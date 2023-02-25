@@ -17,12 +17,13 @@ namespace UltraMapper.Internals
         //Each source and target member is instantiated only once per typeMapping
         //so we can handle their options/configuration override correctly.
         private readonly Dictionary<MemberInfo, IMappingSource> _sources = new();
+
         private readonly Dictionary<MemberInfo, IMappingTarget> _targets = new();
 
         /*
          *A source member can be mapped to multiple target members.
          *
-         *A target member can be mapped just once and for that reason 
+         *A target member can be mapped just once and for that reason
          *multiple mappings override each other and the last one is used.
          *
          *The target member can be therefore used as the key of this dictionary
@@ -57,6 +58,7 @@ namespace UltraMapper.Internals
         }
 
         private bool? _isReferenceTrackingEnabled = null;
+
         public bool IsReferenceTrackingEnabled
         {
             get
@@ -74,6 +76,7 @@ namespace UltraMapper.Internals
         }
 
         private LambdaExpression _customConverter = null;
+
         public override LambdaExpression CustomConverter
         {
             get { return _customConverter; }
@@ -90,6 +93,7 @@ namespace UltraMapper.Internals
         }
 
         public bool? _ignoreMemberMappingResolvedByConvention = null;
+
         public bool? IgnoreMemberMappingResolvedByConvention
         {
             get
@@ -107,6 +111,7 @@ namespace UltraMapper.Internals
         }
 
         public ReferenceBehaviors _referenceBehavior = ReferenceBehaviors.INHERIT;
+
         public ReferenceBehaviors ReferenceBehavior
         {
             get
@@ -124,6 +129,7 @@ namespace UltraMapper.Internals
         }
 
         public CollectionBehaviors _collectionBehavior = CollectionBehaviors.INHERIT;
+
         public CollectionBehaviors CollectionBehavior
         {
             get
@@ -141,6 +147,7 @@ namespace UltraMapper.Internals
         }
 
         public LambdaExpression _collectionItemEqualityComparer;
+
         public LambdaExpression CollectionItemEqualityComparer
         {
             get
@@ -158,6 +165,7 @@ namespace UltraMapper.Internals
         }
 
         public LambdaExpression _customTargetConstructor;
+
         public LambdaExpression CustomTargetConstructor
         {
             get => _customTargetConstructor;
@@ -192,6 +200,17 @@ namespace UltraMapper.Internals
 
                    return mp;
                } );
+        }
+
+        public IMappingSource GetConditionalMappingSource(
+            MemberInfo sourceMember,
+            LambdaExpression sourceMemberGetterExpression,
+            LambdaExpression conditionalSourceGetter
+            )
+        {
+            // skip the original source and have a conditional one for this mapping
+            var conditionalSource = new ConditionalMappingSource( sourceMemberGetterExpression, conditionalSourceGetter );
+            return conditionalSource;
         }
 
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
