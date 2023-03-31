@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -29,19 +30,30 @@ namespace UltraMapper.MappingExpressionBuilders
             return map.MappingFunc( null, loopingvar, null );
         }
 
-        protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
-            ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
-            ParameterExpression mapper, ParameterExpression referenceTracker, CollectionMapperContext context )
+        protected Expression MakeTargetInsertExpression( ParameterExpression targetCollection, Expression item, CollectionMapperContext context, Func<CollectionMapperContext, MethodInfo> getInsertMethod )
         {
+            var lambda = context.Options.CustomTargetInsertMethod;
+            if( lambda != null )
+            {
+                return Expression.Invoke( lambda, targetCollection, item );
+            }
+
+            var targetCollectionInsertionMethod = getInsertMethod( context );
             if( targetCollectionInsertionMethod == null )
             {
                 string msg = $@"'{targetCollection.Type}' does not provide an insertion method. " +
                     $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
-
                 throw new Exception( msg );
             }
+            return Expression.Call( targetCollection, targetCollectionInsertionMethod, item );
+        }
 
+        protected virtual Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
+            ParameterExpression targetCollection, Type targetCollectionElementType,
+            ParameterExpression sourceCollectionLoopingVar,
+            Func<CollectionMapperContext, MethodInfo> getInsertMethod,
+            ParameterExpression mapper, ParameterExpression referenceTracker, CollectionMapperContext context )
+        {
             if( sourceCollectionElementType.IsInterface )
             {
                 Expression<Func<object, Type, object>> getRuntimeMapping =
@@ -56,8 +68,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     Expression.Assign( newElement, Expression.Convert(
                             Expression.Invoke( getRuntimeMapping, sourceCollectionLoopingVar,
                             Expression.Constant( targetCollectionElementType ) ), targetCollectionElementType ) ),
-
-                    Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
+                    MakeTargetInsertExpression( targetCollection, newElement, context, getInsertMethod )
                 );
 
                 return ExpressionLoops.ForEach( sourceCollection,
@@ -68,11 +79,9 @@ namespace UltraMapper.MappingExpressionBuilders
                 var itemMapping = context.MapperConfiguration[ sourceCollectionElementType,
                     targetCollectionElementType ].MappingExpression;
 
-                Expression loopBody = Expression.Call
-                (
-                    targetCollection, targetCollectionInsertionMethod,
+                Expression loopBody = MakeTargetInsertExpression( targetCollection,
                     itemMapping.Body.ReplaceParameter( sourceCollectionLoopingVar, "sourceInstance" )
-                );
+                    , context, getInsertMethod );
 
                 return ExpressionLoops.ForEach( sourceCollection,
                     sourceCollectionLoopingVar, loopBody );
@@ -81,17 +90,10 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected virtual Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
+            ParameterExpression sourceCollectionLoopingVar,
+            Func<CollectionMapperContext, MethodInfo> getInsertMethod,
             ParameterExpression referenceTracker, ParameterExpression mapper, CollectionMapperContext context = null )
         {
-            if( targetCollectionInsertionMethod == null )
-            {
-                string msg = $@"'{targetCollection.Type}' does not provide an insertion method. " +
-                    $"Please override '{nameof( GetTargetCollectionInsertionMethod )}' to provide the item insertion method.";
-
-                throw new Exception( msg );
-            }
-
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
 
             //var mapping = ((Mapping)context.Options).GlobalConfig[ sourceCollectionElementType, targetCollectionElementType ];
@@ -115,12 +117,12 @@ namespace UltraMapper.MappingExpressionBuilders
                     (
                         Expression.Equal( sourceCollectionLoopingVar, Expression.Constant( null, sourceCollectionElementType ) ),
 
-                        Expression.Call( targetCollection, targetCollectionInsertionMethod, Expression.Default( targetCollectionElementType ) ),
+                        MakeTargetInsertExpression( targetCollection, Expression.Default( targetCollectionElementType ), context, getInsertMethod ),
 
                         Expression.Block
                         (
                             LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper, context ),
-                            Expression.Call( targetCollection, targetCollectionInsertionMethod, newElement )
+                            MakeTargetInsertExpression( targetCollection, newElement, context, getInsertMethod )
                         )
                     )
                 )
@@ -164,19 +166,19 @@ namespace UltraMapper.MappingExpressionBuilders
             var context = contextObj as CollectionMapperContext;
 
             /* By default I try to retrieve the item-insertion method of the collection.
-             * The exact name of the method can be overridden so that, for example, 
+             * The exact name of the method can be overridden so that, for example,
              * on Queue you search for 'Enqueue'. The default method name searched is 'Add'.
-             * 
+             *
              * If the item-insertion method does not exist, try to retrieve a constructor
              * which takes as its only parameter 'IEnumerable<T>'. If this constructor
              * exists a temporary List<T> is created and then passed to the constructor.
-             * 
+             *
              * If neither the item insertion method nor the above constructor exist
              * an exception is thrown
              */
 
             /* -Typically a Costructor(IEnumerable<T>) is faster than AddRange that is faster than Add.
-             *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).             
+             *  By the way Construcor( capacity ) + AddRange has roughly the same performance of Construcor( IEnumerable<T> ).
              */
 
             //reset only if we keep using the same target instance
@@ -211,7 +213,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
                     SimpleCollectionLoop( context.SourceInstance, context.SourceCollectionElementType,
                         context.TargetInstance, context.TargetCollectionElementType,
-                        targetCollectionInsertionMethod, context.SourceCollectionLoopingVar,
+                        context.SourceCollectionLoopingVar,
+                        GetTargetCollectionInsertionMethod,
                         context.Mapper, context.ReferenceTracker, context )
                 );
             }
@@ -227,8 +230,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         context.SourceCollectionElementType,
                         context.TargetInstance,
                         context.TargetCollectionElementType,
-                        targetCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
+                        GetTargetCollectionInsertionMethod,
                         context.ReferenceTracker,
                         context.Mapper,
                         context
@@ -319,12 +322,11 @@ namespace UltraMapper.MappingExpressionBuilders
                     var typeMapping = context.MapperConfiguration[ context.SourceMember.Type,
                         context.TargetMember.Type ];
 
-
                     //We do not want recursion on each collection's item
                     //but Capacity and other collection members must be mapped.
                     Expression memberMappings = Expression.Empty();
 
-                    if( context.TargetMemberValueGetter != null ) //we can only map subparam if a way to access subparam is provided/resolved. Edge case is: providing a member's setter method but not the getter's 
+                    if( context.TargetMemberValueGetter != null ) //we can only map subparam if a way to access subparam is provided/resolved. Edge case is: providing a member's setter method but not the getter's
                     {
                         memberMappings = this.GetMemberMappingsExpression( typeMapping )
                             .ReplaceParameter( context.Mapper, context.Mapper.Name )
@@ -361,7 +363,6 @@ namespace UltraMapper.MappingExpressionBuilders
                 }
             }
 
-
             //OPTIMIZATION: if we need to create a new instance of a collection
             //we can try to reserve just the right capacity thus avoiding reallocations.
             //If the source collection implements ICollection we can read 'Count' property without any iteration.
@@ -372,7 +373,6 @@ namespace UltraMapper.MappingExpressionBuilders
                 if( newInstanceWithReservedCapacity != null ) return newInstanceWithReservedCapacity;
             }
 
-
             //DEALING WITH INTERFACES
             Type sourceType = context.SourceMember.Type.IsGenericType ?
                  context.SourceMember.Type.GetGenericTypeDefinition() : context.SourceMember.Type;
@@ -380,8 +380,8 @@ namespace UltraMapper.MappingExpressionBuilders
             Type targetType = context.TargetMember.Type.IsGenericType ?
                     context.TargetMember.Type.GetGenericTypeDefinition() : context.TargetMember.Type;
 
-            //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the 
-            //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance). 
+            //If we are just cloning (ie: mapping on the same type) we prefer to use exactly the
+            //same runtime-type used in the source (in order to manage abstract classes, interfaces and inheritance).
             if( context.TargetMember.Type.IsInterface && (context.TargetMember.Type.IsAssignableFrom( context.SourceMember.Type ) ||
                 targetType.IsAssignableFrom( sourceType ) || sourceType.ImplementsInterface( targetType )) )
             {

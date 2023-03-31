@@ -21,6 +21,7 @@ namespace UltraMapper.Tests
                     cfg2 =>
                     {
                         cfg2.SetCustomTargetConstructor( () => new List<User>() );
+                        cfg2.SetCustomTargetInsertMethod<IList<User>, User>( ( t, item ) => t.Add( item ) );
                     }
                  );
                 cfg.MapTypes<User, User>();
@@ -41,6 +42,7 @@ namespace UltraMapper.Tests
                     cfg2 =>
                     {
                         cfg2.SetCustomTargetConstructor( () => new List<TargetUser>() );
+                        cfg2.SetCustomTargetInsertMethod<IList<TargetUser>, TargetUser>( ( t, item ) => t.Add( item ) );
                     } );
                 cfg.MapTypes<User, TargetUser>()
                     .MapMember( s => s.Id, t => t.IdTarget );
@@ -71,6 +73,12 @@ namespace UltraMapper.Tests
             public IList<TargetUser> UsersTarget { get; set; }
         }
 
+        /// <summary>
+        /// This class mimicks a complex collection whichs is created and managed by a framework. 
+        /// The class can not be easily created using default constructor.
+        /// Therefore in the mapping would like to map this to another implementation  of IList<typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         private class ComplicatedIList<T> : IList<T>
         {
             private List<T> _child;

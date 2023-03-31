@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using UltraMapper.MappingExpressionBuilders;
@@ -202,7 +203,10 @@ namespace UltraMapper.Internals
                 return _memberMappingExpression;
             }
         }
+        public LambdaExpression CustomTargetInsertMethod { get; set; }
 
+        public void SetCustomTargetInsertMethod<TTarget, TItem>( Expression<Action<TTarget, TItem>> insert ) where TTarget : IEnumerable<TItem> =>
+                   CustomTargetInsertMethod = insert;
 
         public void SetCustomTargetConstructor<T>( Expression<Func<T>> ctor )
             => CustomTargetConstructor = ctor;
