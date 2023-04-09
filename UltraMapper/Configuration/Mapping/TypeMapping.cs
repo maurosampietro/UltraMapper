@@ -194,6 +194,17 @@ namespace UltraMapper.Internals
                } );
         }
 
+        public IMappingSource GetConditionalMappingSource(
+            LambdaExpression sourceMemberGetterExpression,
+            LambdaExpression conditionalSourceGetter
+         )
+        {
+            // skip the original source and have a conditional one for this mapping
+            var conditionalSource = new ConditionalMappingSource( sourceMemberGetterExpression, conditionalSourceGetter );
+            return conditionalSource;
+        }
+
+
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
             LambdaExpression targetMemberGetter, LambdaExpression targetMemberSetter )
         {

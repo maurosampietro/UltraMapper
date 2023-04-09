@@ -63,6 +63,19 @@ namespace UltraMapper
                 targetMemberGetter, targetMemberSetter );
         }
 
+        protected MemberMapping MapConditionalMemberInternal(
+            LambdaExpression conditionGetter,
+            LambdaExpression falseFunc,
+            LambdaExpression sourceMemberGetter,
+            LambdaExpression targetMemberGetter,
+            LambdaExpression targetMemberSetter )
+        {
+            var targetMember = targetMemberGetter.GetMemberAccessPath().Last();
+
+            return this.MapConditionalMemberInternal(targetMember, conditionGetter, falseFunc, sourceMemberGetter, targetMemberGetter, targetMemberSetter );
+        }
+
+
         protected MemberMapping MapMemberInternal( LambdaExpression sourceMemberGetter,
             LambdaExpression targetMemberGetter )
         {
@@ -73,6 +86,21 @@ namespace UltraMapper
             var targetMemberSetterExpression = targetMemberPath.GetSetterExp();
 
             return this.MapMemberInternal( sourceMember, targetMember, sourceMemberGetter,
+                targetMemberGetter, targetMemberSetterExpression );
+        }
+
+        protected MemberMapping MapConditionalMemberInternal(
+            LambdaExpression conditionGetter,
+            LambdaExpression falseFunc,
+            LambdaExpression sourceMemberGetter,
+            LambdaExpression targetMemberGetter )
+        {
+            var targetMemberPath = targetMemberGetter.GetMemberAccessPath();
+            var targetMember = targetMemberPath.Last();
+
+            var targetMemberSetterExpression = targetMemberPath.GetSetterExp();
+
+            return this.MapConditionalMemberInternal( targetMember, conditionGetter, falseFunc, sourceMemberGetter,
                 targetMemberGetter, targetMemberSetterExpression );
         }
 
@@ -91,6 +119,48 @@ namespace UltraMapper
 
             return mapping;
         }
+
+   
+
+        protected MemberMapping MapConditionalMemberInternal(MemberInfo targetMember,
+            LambdaExpression conditionGetter,
+            LambdaExpression falseFunc,
+            LambdaExpression sourceMemberGetter,
+            LambdaExpression targetMemberGetter,
+            LambdaExpression targetMemberSetter )
+        {
+            LambdaExpression conditionalSourceGetter = CreateConditional( conditionGetter, falseFunc, sourceMemberGetter );
+
+            var mappingSource = _typeMapping.GetConditionalMappingSource(
+                sourceMemberGetter,
+                conditionalSourceGetter );
+
+            var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
+                targetMemberGetter, targetMemberSetter );
+
+            var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget );
+            _typeMapping.MemberToMemberMappings[ mappingTarget ] = mapping;
+
+            return mapping;
+        }
+
+        private LambdaExpression CreateConditional(
+          LambdaExpression conditionGetter,
+          LambdaExpression falseFunc,
+          LambdaExpression sourceMemberGetter )
+        {
+            var condtional = LambdaExpression.Condition( conditionGetter.Body, sourceMemberGetter.Body, falseFunc.Body );
+            var lambda = LabelExpression.Lambda( condtional, sourceMemberGetter.Parameters );
+
+            if( conditionGetter.Parameters.First().Name != sourceMemberGetter.Parameters.First().Name )
+            {
+                throw new ArgumentException( "The variable name for the condition and the sourceMember must be equal" );
+            }
+
+            return lambda;
+        }
+
+
         #endregion
 
         #region Type -> Member
@@ -217,12 +287,39 @@ namespace UltraMapper
             return this;
         }
 
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, bool>> condition,
+            Expression<Func<TSourceMember>> falseFunc,
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
+            Expression<Action<TTarget, TSourceMember>> targetMemberSetter,
+            Action<IMemberMappingOptions> memberMappingConfig = null
+            )
+        {
+            var mapping = base.MapConditionalMemberInternal( condition, falseFunc, sourceSelector, targetMemberGetter, targetMemberSetter );
+
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            memberMappingConfig?.Invoke( mapping );
+
+            return this;
+        }
+
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector )
         {
             return MapMember( sourceSelector, targetSelector, (Expression<Func<TSourceMember, TTargetMember>>)null, null );
         }
+
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+         Expression<Func<TSource, bool>> condition,
+         Expression<Func<TSourceMember>> falseFunc,
+         Expression<Func<TSource, TSourceMember>> sourceSelector,
+         Expression<Func<TTarget, TTargetMember>> targetSelector )
+        {
+            return MapConditionalMember( condition, falseFunc, sourceSelector, targetSelector, (Expression<Func<TSourceMember, TTargetMember>>)null, null );
+        }
+
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
           Expression<Func<TSource, TSourceMember>> sourceSelector,
@@ -232,6 +329,17 @@ namespace UltraMapper
             return MapMember( sourceSelector, targetSelector, converter, null );
         }
 
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, bool>> condition,
+            Expression<Func<TSourceMember>> falseFunc,
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Expression<Func<ReferenceTracker, TSourceMember, TTargetMember>> converter )
+        {
+            return MapConditionalMember( condition, falseFunc, sourceSelector, targetSelector, converter, null );
+        }
+
+
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
@@ -240,12 +348,34 @@ namespace UltraMapper
             return MapMember( sourceSelector, targetSelector, converter, null );
         }
 
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, bool>> condition,
+            Expression<Func<TSourceMember>> falseFunc,
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Expression<Func<TSourceMember, TTargetMember>> converter )
+        {
+            return MapConditionalMember( condition, falseFunc, sourceSelector, targetSelector, converter, null );
+        }
+
+
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
             Action<IMemberMappingOptions> memberMappingConfig )
         {
             return MapMember( sourceSelector, targetSelector,
+                (Expression<Func<TSourceMember, TTargetMember>>)null, memberMappingConfig );
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+         Expression<Func<TSource, bool>> condition,
+         Expression<Func<TSourceMember>> falseFunc,
+         Expression<Func<TSource, TSourceMember>> sourceSelector,
+         Expression<Func<TTarget, TTargetMember>> targetSelector,
+         Action<IMemberMappingOptions> memberMappingConfig )
+        {
+            return MapConditionalMember( condition, falseFunc, sourceSelector, targetSelector,
                 (Expression<Func<TSourceMember, TTargetMember>>)null, memberMappingConfig );
         }
 
@@ -265,6 +395,23 @@ namespace UltraMapper
             // return MapMember( sourceSelector, targetSelector, converter, memberMappingConfig );
         }
 
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, bool>> condition,
+            Expression<Func<TSourceMember>> falseFunc,
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetSelector,
+            Expression<Func<ReferenceTracker, TSourceMember, TTargetMember>> converter,
+            Action<IMemberMappingOptions> memberMappingConfig )
+        {
+            var mapping = base.MapConditionalMemberInternal( condition, falseFunc, sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.CustomConverter = converter;
+            memberMappingConfig?.Invoke( mapping );
+
+            return this;
+        }
+
+
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(
             Expression<Func<TSource, TSourceMember>> sourceSelector,
             Expression<Func<TTarget, TTargetMember>> targetSelector,
@@ -272,6 +419,22 @@ namespace UltraMapper
             Action<IMemberMappingOptions> memberMappingConfig )
         {
             var mapping = base.MapMemberInternal( sourceSelector, targetSelector );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.CustomConverter = converter;
+            memberMappingConfig?.Invoke( mapping );
+
+            return this;
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapConditionalMember<TSourceMember, TTargetMember>(
+          Expression<Func<TSource, bool>> condition,
+          Expression<Func<TSourceMember>> falseFunc,
+          Expression<Func<TSource, TSourceMember>> sourceSelector,
+          Expression<Func<TTarget, TTargetMember>> targetSelector,
+          Expression<Func<TSourceMember, TTargetMember>> converter,
+          Action<IMemberMappingOptions> memberMappingConfig )
+        {
+            var mapping = base.MapConditionalMemberInternal( condition, falseFunc, sourceSelector, targetSelector );
             mapping.MappingResolution = MappingResolution.USER_DEFINED;
             mapping.CustomConverter = converter;
             memberMappingConfig?.Invoke( mapping );
