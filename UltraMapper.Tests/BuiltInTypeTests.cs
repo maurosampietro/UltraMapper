@@ -114,6 +114,67 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void BuiltInToBuiltInConditional()
+        {
+            var source = new BuiltInTypes()
+            {
+                Boolean = true,
+                Byte = 0x1,
+                Char = (char)2,
+                Decimal = 3,
+                Double = 4.0,
+                Int16 = 5,
+                Int32 = 6,
+                Int64 = 7,
+                SByte = 0x8,
+                Single = 9.0f,
+                UInt16 = 10,
+                UInt32 = 11,
+                UInt64 = 12,
+
+                String = "13"
+            };
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<BuiltInTypes, BuiltInTypes>()
+                    //map with custom converter
+                    .MapConditionalMember( a => true, () => -1f, a => a.Single, d => d.String, single => single.ToString() )
+
+                    //map same source property to many different targets
+                    .MapConditionalMember( a => true, () => 'f', a => a.Char, d => d.Int32 )
+
+                    //same source and destination members: last mapping overrides and adds the converter 
+                    .MapConditionalMember( a => true, () => 'f', a => a.Char, d => d.Single )
+                    .MapConditionalMember( a => true, () => -1, a => 123, d => d.Single )
+                    .MapConditionalMember( a => true, () => "", a => a.String, d => d.Single )
+                    .MapConditionalMember( a => true, () => "", a => a.String, d => d.Single, @string => Single.Parse( @string ) )
+
+                    //same sourceproperty/destinationProperty: second mapping overrides and removes (set to null) the converter
+                    .MapConditionalMember( a => true, () => -1f, a => a.Single, y => y.Double, a => a + 254 )
+                    .MapConditionalMember( a => true, () => -1f, a => a.Single, y => y.Double );
+            } );
+
+            var target = ultraMapper.Map( source );
+
+            Assert.IsTrue( target.Boolean );
+            Assert.IsTrue( target.Byte == 0x1 );
+            Assert.IsTrue( target.Char == (char)2 );
+            Assert.IsTrue( target.Decimal == 3 );
+            Assert.IsTrue( target.Double == 9.0 );
+            Assert.IsTrue( target.Int16 == 5 );
+            Assert.IsTrue( target.Int32 == 2 );
+            Assert.IsTrue( target.Int64 == 7 );
+            Assert.IsTrue( target.SByte == 0x8 );
+            Assert.IsTrue( target.Single == 13 );
+            Assert.IsTrue( target.UInt16 == 10 );
+            Assert.IsTrue( target.UInt32 == 11 );
+            Assert.IsTrue( target.UInt64 == 12 );
+        }
+
+
+
+        [TestMethod]
         public void NullablePrimitiveTypeToADifferentPrimitiveType()
         {
             var source = new NullablePrimitiveTypes();
