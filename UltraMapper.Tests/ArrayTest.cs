@@ -154,6 +154,32 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void SimpleArrayToCollectionConditional()
+        {
+            var source = new GenericArray<int>()
+            {
+                Array = Enumerable.Range( 0, 100 ).ToArray()
+            };
+
+            //var target = new GenericCollections<int>( true );
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<GenericArray<int>, GenericCollections<int>>()
+                    .MapConditionalMember( a => true, () => new int[ 0 ], a => a.Array, b => b.List );
+            } );
+
+            //using existing instance = reuse references
+            //ultraMapper.Map( source, target );
+
+            var target = ultraMapper.Map<GenericCollections<int>>( source );
+
+            Assert.IsTrue( source.Array.SequenceEqual( target.List ) );
+        }
+
+
+
+        [TestMethod]
         public void SimpleCollectionToArray()
         {
             var source = new GenericCollections<int>( false )
@@ -167,6 +193,27 @@ namespace UltraMapper.Tests
             {
                 cfg.MapTypes( source, target )
                     .MapMember( a => a.List, b => b.Array );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            Assert.IsTrue( source.List.SequenceEqual( target.Array ) );
+        }
+
+        [TestMethod]
+        public void SimpleCollectionToArrayConditional()
+        {
+            var source = new GenericCollections<int>( false )
+            {
+                List = Enumerable.Range( 0, 100 ).ToList()
+            };
+
+            var target = new GenericArray<int>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                  .MapConditionalMember( a => true, () => new List<int>(), a => a.List, b => b.Array );
             } );
 
             ultraMapper.Map( source, target );
@@ -204,6 +251,36 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void ComplexArrayToCollectionConditional()
+        {
+            var innerType = new InnerType() { String = "test" };
+            var source = new GenericArray<ComplexType>()
+            {
+                Array = new ComplexType[ 3 ]
+            };
+
+            for( int i = 0; i < 3; i++ )
+            {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
+            }
+
+            var target = new GenericCollections<ComplexType>( false );
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapConditionalMember( a => true, () => new ComplexType[ 0 ], a => a.Array, b => b.Array, memCfg => memCfg.ReferenceBehavior = ReferenceBehaviors.CREATE_NEW_INSTANCE )
+                    .MapConditionalMember( a => true, () => new ComplexType[ 0 ], a => a.Array, b => b.List );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+
+        [TestMethod]
         public void ComplexCollectionToArray()
         {
             var innerType = new InnerType() { String = "test" };
@@ -233,6 +310,38 @@ namespace UltraMapper.Tests
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
+
+        [TestMethod]
+        public void ComplexCollectionToArrayConditional()
+        {
+            var innerType = new InnerType() { String = "test" };
+            var source = new GenericCollections<ComplexType>( false );
+
+            for( int i = 0; i < 3; i++ )
+            {
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+            }
+
+            var target = new GenericArray<ComplexType>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapConditionalMember( a => true, () => new List<ComplexType>(), a => a.List, b => b.Array );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
 
         [TestMethod]
         public void ComplexArrayBehindInterface()
@@ -266,6 +375,37 @@ namespace UltraMapper.Tests
             Assert.IsTrue( isResultOk );
         }
 
+
+        [TestMethod]
+        public void ComplexArrayBehindInterfaceConditional()
+        {
+            Expression<Func<int, int>> d = i => 1;
+
+            var source = new GenericCollection<InnerType>()
+            {
+                Collection = new InnerType[ 2 ]
+                {
+                    new InnerType() { String = "A" },
+                    new InnerType() { String = "B" }
+                }
+            };
+
+            var target = new GenericCollection<InnerType>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                 .MapConditionalMember( s => true, () => (ICollection<InnerType>)new InnerType[ 0 ], s => s.Collection, t => t.Collection );
+            } );
+
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+
+
         [TestMethod]
         public void ComplexToSimpleElement()
         {
@@ -291,6 +431,32 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void ComplexToSimpleElementConditional()
+        {
+            var source = new GenericArray<InnerType>()
+            {
+                Array = Enumerable.Range( 0, 100 ).Select( i =>
+                    new InnerType() { String = i.ToString() } ).ToArray()
+            };
+
+            var target = new GenericCollections<int>( false );
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapConditionalMember( a => true, () =>new InnerType[0], a => a.Array, b => b.Array);
+
+                cfg.MapTypes<InnerType, int>( inner => Int32.Parse( inner.String ) );
+            } );
+
+            ultraMapper.Map( source, target );
+            Assert.IsTrue( source.Array.Select( inner => inner.String ).SequenceEqual(
+                target.Array.Select( item => item.ToString() ) ) );
+        }
+
+
+
+        [TestMethod]
         public void SimpleToComplexElement()
         {
             var source = new GenericCollections<int>( false )
@@ -312,6 +478,30 @@ namespace UltraMapper.Tests
             Assert.IsTrue( source.List.Select( inner => inner.ToString() ).SequenceEqual(
                 target.Array.Select( item => item.String ) ) );
         }
+
+        [TestMethod]
+        public void SimpleToComplexElementConditional()
+        {
+            var source = new GenericCollections<int>( false )
+            {
+                List = Enumerable.Range( 0, 100 ).ToList()
+            };
+
+            var target = new GenericArray<InnerType>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes( source, target )
+                    .MapConditionalMember( a => true, () => new List<int>(), a => a.List, b => b.Array );
+
+                cfg.MapTypes<int, InnerType>( i => new InnerType() { String = i.ToString() } );
+            } );
+
+            ultraMapper.Map( source, target );
+            Assert.IsTrue( source.List.Select( inner => inner.ToString() ).SequenceEqual(
+                target.Array.Select( item => item.String ) ) );
+        }
+
     }
 
     [TestClass]
