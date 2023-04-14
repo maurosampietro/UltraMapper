@@ -342,6 +342,45 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void CollectionToReadOnlyComplexCollectionConditional()
+        {
+            var innerType = new InnerType() { String = "test" };
+
+            var source = new GenericCollections<ComplexType>( false );
+            for( int i = 0; i < 10; i++ )
+            {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+            }
+
+            var target = new ReadOnlyGeneric<ComplexType>();
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<GenericCollections<ComplexType>, ReadOnlyGeneric<ComplexType>>()
+                    .MapConditionalMember( x => true, () => null, x => x.Array, y => y.Array )
+                    .MapConditionalMember( x => true, () => null, x => x.List, y => y.List )
+                    .MapConditionalMember( x => true, () => null, x => x.HashSet, y => y.HashSet )
+                    .MapConditionalMember( x => true, () => null, x => x.SortedSet, y => y.SortedSet )
+                    .MapConditionalMember( x => true, () => null, x => x.Stack, y => y.Stack )
+                    .MapConditionalMember( x => true, () => null, x => x.Queue, y => y.Queue )
+                    .MapConditionalMember( x => true, () => null, x => x.LinkedList, y => y.LinkedList )
+                    .MapConditionalMember( x => true, () => null, x => x.ObservableCollection, y => y.ObservableCollection );
+            } );
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+
+        [TestMethod]
         public void ComplexCollection()
         {
             var innerType = new InnerType() { String = "test" };
@@ -362,6 +401,53 @@ namespace UltraMapper.Tests
             var target = new GenericCollections<ComplexType>( false );
 
             var ultraMapper = new Mapper();
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+
+            Assert.IsTrue( !Object.ReferenceEquals( source.HashSet.First().InnerType, target.HashSet.First().InnerType ) );
+
+            Assert.IsTrue( target.List.Concat( target.HashSet.Concat( target.SortedSet.Concat( target.Stack.Concat(
+                target.Queue.Concat( target.LinkedList.Concat( target.ObservableCollection ) ) ) ) ) )
+                .Select( it => it.InnerType )
+                .All( item => Object.ReferenceEquals( item, target.HashSet.First().InnerType ) ) );
+        }
+
+        [TestMethod]
+        public void ComplexCollectionConditional()
+        {
+            var innerType = new InnerType() { String = "test" };
+
+            var source = new GenericCollections<ComplexType>( false );
+            for( int i = 0; i < 10; i++ )
+            {
+                source.Array[ i ] = new ComplexType() { A = i, InnerType = innerType };
+                source.List.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.HashSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.SortedSet.Add( new ComplexType() { A = i, InnerType = innerType } );
+                source.Stack.Push( new ComplexType() { A = i, InnerType = innerType } );
+                source.Queue.Enqueue( new ComplexType() { A = i, InnerType = innerType } );
+                source.LinkedList.AddLast( new ComplexType() { A = i, InnerType = innerType } );
+                source.ObservableCollection.Add( new ComplexType() { A = i, InnerType = innerType } );
+            }
+
+            var target = new GenericCollections<ComplexType>( false );
+
+            var ultraMapper = new Mapper( cfg =>
+            {
+                cfg.MapTypes<GenericCollections<ComplexType>, GenericCollections<ComplexType>>()
+                    .MapConditionalMember( x => true, () => null, x => x.Array, y => y.Array )
+                    .MapConditionalMember( x => true, () => null, x => x.List, y => y.List )
+                    .MapConditionalMember( x => true, () => null, x => x.HashSet, y => y.HashSet )
+                    .MapConditionalMember( x => true, () => null, x => x.SortedSet, y => y.SortedSet )
+                    .MapConditionalMember( x => true, () => null, x => x.Stack, y => y.Stack )
+                    .MapConditionalMember( x => true, () => null, x => x.Queue, y => y.Queue )
+                    .MapConditionalMember( x => true, () => null, x => x.LinkedList, y => y.LinkedList )
+                    .MapConditionalMember( x => true, () => null, x => x.ObservableCollection, y => y.ObservableCollection );
+            } );
+
+
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
@@ -414,6 +500,50 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void FromPrimitiveCollectionToAnotherConditional()
+        {
+            var sourceProperties = typeof( GenericCollections<int> ).GetProperties();
+            var targetProperties = typeof( GenericCollections<double> ).GetProperties();
+
+            var source = new GenericCollections<int>( false );
+
+            //initialize source
+            for( int i = 0; i < 10; i++ )
+            {
+                source.Array[ i ] = i;
+                source.List.Add( i );
+                source.HashSet.Add( i );
+                source.SortedSet.Add( i );
+                source.Stack.Push( i );
+                source.Queue.Enqueue( i );
+                source.LinkedList.AddLast( i );
+                source.ObservableCollection.Add( i );
+            }
+
+            foreach( var sourceProp in sourceProperties )
+            {
+                var target = new GenericCollections<double>( false );
+
+                var ultraMapper = new Mapper();
+                var typeMappingConfig = ultraMapper.Config.MapTypes( source, target );
+
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.Array, b => b.Array );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.List, b => b.List );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.HashSet, b => b.HashSet );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.SortedSet, b => b.SortedSet );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.Stack, b => b.Stack );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.Queue, b => b.Queue );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.LinkedList, b => b.LinkedList );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.ObservableCollection, b => b.ObservableCollection );
+
+                ultraMapper.Map( source, target );
+
+                bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+                Assert.IsTrue( isResultOk );
+            }
+        }
+
+        [TestMethod]
         public void FromComplexCollectionToAnother()
         {
             var typeProperties = typeof( GenericCollections<ComplexType> ).GetProperties();
@@ -454,6 +584,53 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void FromComplexCollectionToAnotherConditional()
+        {
+            var typeProperties = typeof( GenericCollections<ComplexType> ).GetProperties();
+
+            var source = new GenericCollections<ComplexType>( false );
+
+            //initialize source
+            for( int i = 0; i < 10; i++ )
+            {
+                source.Array[ i ] = new ComplexType() { A = i };
+                source.List.Add( new ComplexType() { A = i } );
+                source.HashSet.Add( new ComplexType() { A = i } );
+                source.SortedSet.Add( new ComplexType() { A = i } );
+                source.Stack.Push( new ComplexType() { A = i } );
+                source.Queue.Enqueue( new ComplexType() { A = i } );
+                source.LinkedList.AddLast( new ComplexType() { A = i } );
+                source.ObservableCollection.Add( new ComplexType() { A = i } );
+            }
+
+            foreach( var sourceProp in typeProperties )
+            {
+                var ultraMapper = new Mapper( cfg =>
+                {
+                    //cfg.GlobalConfiguration.IgnoreConventions = true;
+                } );
+
+                var target = new GenericCollections<ComplexType>( false );
+
+                var typeMappingConfig = ultraMapper.Config.MapTypes( source, target );
+
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.Array, b => b.Array );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.List, b => b.List );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.HashSet, b => b.HashSet );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.SortedSet, b => b.SortedSet );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.Stack, b => b.Stack );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.Queue, b => b.Queue );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.LinkedList, b => b.LinkedList );
+                typeMappingConfig.MapConditionalMember( a => true, () => null, a => a.ObservableCollection, b => b.ObservableCollection );
+
+                ultraMapper.Map( source, target );
+
+                bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+                Assert.IsTrue( isResultOk );
+            }
+        }
+
+        [TestMethod]
         public void AssignNullCollection()
         {
             var source = new GenericCollections<int>( false )
@@ -471,6 +648,42 @@ namespace UltraMapper.Tests
             var target = new GenericCollections<int>( true );
 
             var ultraMapper = new Mapper();
+            ultraMapper.Map( source, target );
+
+            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsTrue( isResultOk );
+        }
+
+        [TestMethod]
+        public void AssignNullCollectionConditional()
+        {
+            var source = new GenericCollections<int>( false )
+            {
+                Array = null,
+                List = null,
+                HashSet = null,
+                SortedSet = null,
+                Stack = null,
+                Queue = null,
+                LinkedList = null,
+                ObservableCollection = null
+            };
+
+            var target = new GenericCollections<int>( true );
+
+            var ultraMapper = new Mapper(
+             cfg => {
+                 cfg.MapTypes<GenericCollections<int>, GenericCollections<int>>()
+                    .MapConditionalMember( a => true, () => new int[ 0 ], a => a.Array, b => b.Array )
+                    .MapConditionalMember( a => true, () => new List<int>(), a => a.List, b => b.List )
+                    .MapConditionalMember( a => true, () => new HashSet<int>(), a => a.HashSet, b => b.HashSet )
+                    .MapConditionalMember( a => true, () => new SortedSet<int>(), a => a.SortedSet, b => b.SortedSet )
+                    .MapConditionalMember( a => true, () => new Stack<int>(), a => a.Stack, b => b.Stack )
+                    .MapConditionalMember( a => true, () => new Queue<int>(), a => a.Queue, b => b.Queue )
+                    .MapConditionalMember( a => true, () => new LinkedList<int>(), a => a.LinkedList, b => b.LinkedList )
+                    .MapConditionalMember( a => true, () => new ObservableCollection<int>(), a => a.ObservableCollection, b => b.ObservableCollection );
+             }
+            );
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
