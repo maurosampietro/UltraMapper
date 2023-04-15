@@ -97,47 +97,78 @@ namespace UltraMapper.Internals
             var entryMember = memberAccessPath.First();
 
             var returnType = memberAccessPath.Last().GetMemberType();
+            //   returnType = MakeNullable( returnType );
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );
-            var returnLabel = Expression.Label( returnType, "label" );
+            //var returnLabel = Expression.Label( returnType, "label" );
 
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
 
             foreach( var memberAccess in memberAccessPath )
             {
-                if( memberAccess is MethodInfo mi )
-                    accessPath = Expression.Call( accessPath, mi );
-                else
-                {
-                    if( memberAccess.DeclaringType != accessPath.Type )
-                        accessPath = Expression.Convert( accessPath, memberAccess.DeclaringType );
-
-                    accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
-                }
-
+                accessPath = MakeMemberAccess( accessPath, memberAccess );
                 memberAccesses.Add( accessPath );
             }
-
+            // begin nullsblock
             var nullConstant = Expression.Constant( null );
-            var returnNull = Expression.Return( returnLabel, Expression.Default( returnType ) );
+            var defaultExpression = Expression.Default( returnType );
+            // var returnNull = Expression.Return( returnLabel, defaultExpression );
 
-            var nullChecks = memberAccesses
-                .Take( memberAccesses.Count - 1 )
-                .Select( memberAccess =>
+            // var nullChecks = memberAccesses
+            //     .Take( memberAccesses.Count - 1 )
+            //     .Select( memberAccess =>
+            // {
+            //     var equalsNull = Expression.Equal( memberAccess, nullConstant );
+            //     return (Expression)Expression.IfThen( equalsNull, returnNull );
+            //} ).ToArray();
+            //Expression exp;
+            //exp = Expression.Block
+            //(
+            //    Expression.Block( nullChecks ),
+            //    Expression.Label( returnLabel, memberAccesses.Last() )
+            //);
+            // end nulls block
+            var currentExpression = memberAccesses.Last();
+            for( int i = memberAccesses.Count - 2; i >= 0; i-- )
             {
-                var equalsNull = Expression.Equal( memberAccess, nullConstant );
-                return (Expression)Expression.IfThen( equalsNull, returnNull );
-            } ).ToArray();
-
-            var exp = Expression.Block
-            (
-                Expression.Block( nullChecks ),
-                Expression.Label( returnLabel, memberAccesses.Last() )
-            );
-
+                var equalsNull = Expression.Equal( memberAccesses[ i ], nullConstant );
+                currentExpression = Expression.Condition( equalsNull, defaultExpression, currentExpression );
+            }
+            var exp = currentExpression;
             var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
             return LambdaExpression.Lambda( delegateType, exp, entryInstance );
+        }
+
+        private static Type MakeNullable( Type before )
+        {
+            if( !IsNullable( before ) )
+            {
+                return typeof( Nullable<> ).MakeGenericType( before );
+            }
+            return before;
+        }
+
+        static bool IsNullable( Type type )
+        {
+            if( !type.IsValueType ) return true; // ref-type
+            if( Nullable.GetUnderlyingType( type ) != null ) return true; // Nullable<T>
+            return false; // value-type
+        }
+
+        private static Expression MakeMemberAccess( Expression accessPath, MemberInfo memberInfo )
+        {
+            if( memberInfo is MethodInfo mi )
+            {
+                return Expression.Call( accessPath, mi );
+            }
+            var result = accessPath;
+            if( memberInfo.DeclaringType != accessPath.Type )
+            {
+                result = Expression.Convert( accessPath, memberInfo.DeclaringType );
+            }
+            result = Expression.MakeMemberAccess( result, memberInfo );
+            return result;
         }
 
         internal static LambdaExpression GetSetterExpWithNullChecks( this MemberAccessPath memberAccessPath )
