@@ -34,7 +34,7 @@ namespace UltraMapper.MappingExpressionBuilders
             SourceMember = Expression.Variable( sourceMemberType, "sourceValue" );
             TargetMember = Expression.Variable( targetMemberType, "targetValue" );
 
-             if( !sourceMemberType.IsValueType )
+            if( !sourceMemberType.IsValueType )
                 SourceMemberNullValue = Expression.Constant( null, sourceMemberType );
 
             if( !targetMemberType.IsValueType )
