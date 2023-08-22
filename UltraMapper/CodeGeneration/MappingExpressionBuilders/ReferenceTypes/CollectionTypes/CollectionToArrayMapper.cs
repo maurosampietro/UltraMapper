@@ -15,7 +15,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var source = mapping.Source;
             var target = mapping.Target;
 
-            return source.EntryType.IsCollection() && target.EntryType.IsArray;
+            return source.EntryType.IsEnumerable() && target.EntryType.IsArray;
         }
 
         protected override MethodInfo GetTargetCollectionClearMethod( CollectionMapperContext context )

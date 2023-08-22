@@ -5,7 +5,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Config
 {
-    internal class ConfigInheritanceTree
+    public class ConfigInheritanceTree
     {
         public ConfigInheritanceNode Root { get; private set; }
 

@@ -15,7 +15,7 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var source = mapping.Source;
             var target = mapping.Target;
-            return source.EntryType.IsEnumerable() && target.EntryType.IsEnumerable();
+            return source.EntryType.IsEnumerable() && target.EntryType.IsCollection();
         }
 
         protected override ReferenceMapperContext GetMapperContext( Mapping mapping )
@@ -294,12 +294,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
             if( context.TargetMember.Type.IsArray )
             {
-                var sourceCountMethod = GetCountMethod( context.SourceMember.Type );
+                var sourceCountMethod = GetCountMethod( context.MemberMapping.SourceMember.ReturnType );
 
                 Expression sourceCountMethodCallExp;
                 if( sourceCountMethod.IsStatic )
                     sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, context.SourceMember );
-                else sourceCountMethodCallExp = Expression.Call( context.SourceMember, sourceCountMethod );
+                else sourceCountMethodCallExp = Expression.Call( context.SourceMemberValueGetter, sourceCountMethod );
 
                 var ctorArgTypes = new[] { typeof( int ) };
                 var ctorInfo = context.TargetMember.Type.GetConstructor( ctorArgTypes );
@@ -519,12 +519,14 @@ namespace UltraMapper.MappingExpressionBuilders
             //From some of them (for example RangeIterator) is not possible to retrieve the collection element type.
 
             //DO NOT USE THIS
-            var genericCount = getLinqCount?.MakeGenericMethod( collectionType.GetGenericArguments()[ 0 ] );
+            var elementTypes = collectionType.GetGenericArguments();
+            if( elementTypes.Any() )
+            {
+                var genericCount = getLinqCount?.MakeGenericMethod( elementTypes[0] );
 
-            //var genericCount = getLinqCount?.MakeGenericMethod( elementType );
-
-            if( genericCount != null )
-                return genericCount;
+                if( genericCount != null )
+                    return genericCount;
+            }
 
             throw new ArgumentException( $"Type '{collectionType}' does not define a Count or Length property and Linq.Count could not be used" );
         }

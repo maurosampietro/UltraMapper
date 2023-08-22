@@ -39,7 +39,10 @@ namespace UltraMapper.MappingExpressionBuilders
                 var bodyExp = (Expression)Expression.Invoke( mappingExpression,
                     referenceTrackerParam, sourceInstance, targetInstance );
 
-                bodyExp = Expression.Convert( bodyExp, typeof( object ) );
+                if( bodyExp.Type == typeof( void ) )
+                    bodyExp = Expression.Block( bodyExp, targetInstance );
+                else
+                    bodyExp = Expression.Convert( bodyExp, typeof( object ) );
 
                 return Expression.Lambda<UltraMapperDelegate>(
                     bodyExp, referenceTrackerParam, sourceParam, targetParam ).Compile();

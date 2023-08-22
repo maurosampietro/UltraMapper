@@ -3,7 +3,7 @@ using UltraMapper.Internals;
 
 namespace UltraMapper.Config
 {
-    internal sealed class ConfigInheritanceNode
+    public sealed class ConfigInheritanceNode
     {
         public List<ConfigInheritanceNode> Children { get; set; }
         public ConfigInheritanceNode Parent { get; set; }

@@ -10,7 +10,7 @@ namespace UltraMapper
 {
     public sealed class Configuration
     {
-        internal readonly ConfigInheritanceTree TypeMappingTree;
+        public ConfigInheritanceTree TypeMappingTree { get; }
         internal readonly GeneratedExpressionCache ExpCache;
 
         public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
