@@ -82,6 +82,7 @@ namespace UltraMapper.Internals
         internal static LambdaExpression GetSetterExp( this FieldInfo fieldInfo )
         {
             // (target, value) => target.field = value;
+
             var targetInstance = Expression.Parameter( fieldInfo.ReflectedType, "target" );
             var value = Expression.Parameter( fieldInfo.FieldType, "value" );
 
@@ -97,6 +98,7 @@ namespace UltraMapper.Internals
         internal static LambdaExpression GetGetterExp( this PropertyInfo propertyInfo )
         {
             // (target) => target.get_Property()
+
             var targetType = propertyInfo.ReflectedType;
             var methodInfo = propertyInfo.GetGetMethod( true );
 
@@ -112,6 +114,7 @@ namespace UltraMapper.Internals
         internal static LambdaExpression GetSetterExp( this PropertyInfo propertyInfo )
         {
             // (target, value) => target.set_Property( value )
+
             var methodInfo = propertyInfo.GetSetMethod();
             if( methodInfo == null )
                 throw new ArgumentException( $"'{propertyInfo}' does not provide a setter method." );

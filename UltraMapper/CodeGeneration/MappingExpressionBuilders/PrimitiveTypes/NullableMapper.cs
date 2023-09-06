@@ -33,13 +33,21 @@ namespace UltraMapper.MappingExpressionBuilders
                 returnValue = conversionlambda.Body
                     .ReplaceParameter( returnValue, conversionlambda.Parameters[ 0 ].Name );
             }
-                       
+
             if( context.TargetInstance.Type.IsNullable() )
             {
-                var constructor = context.TargetInstance.Type
-                    .GetConstructor( new Type[] { targetNullUnwrappedType } );
+                if( sourceNullUnwrappedType != targetNullUnwrappedType )
+                {
+                    var conversionlambda = context.MapperConfiguration[ sourceNullUnwrappedType,
+                        targetNullUnwrappedType ].MappingExpression;
 
-                returnValue = Expression.New( constructor, returnValue );
+                    returnValue = Expression.Convert( conversionlambda.Body
+                        .ReplaceParameter( returnValue, conversionlambda.Parameters[ 0 ].Name ), context.TargetInstance.Type );
+                }
+                else
+                {
+                    returnValue = Expression.Convert( context.SourceInstance, context.TargetInstance.Type );
+                }
             }
             else
             {

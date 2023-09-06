@@ -8,6 +8,7 @@ namespace UltraMapper.Internals
     public sealed class MemberMapping : Mapping, IMemberMappingOptions
     {
         private string _toString;
+        private readonly MemberMapper _memberMapper = new MemberMapper();
 
         public readonly TypeMapping InstanceTypeMapping;
         public readonly IMappingSource SourceMember;
@@ -191,9 +192,8 @@ namespace UltraMapper.Internals
 
                 //if( _memberMappingExpression == null )
                 //{
-                var memberMapper = new MemberMapper();
                 //var memberMapper = GlobalConfig.Mappers.First( m => m.CanHandle( this ) );
-                _memberMappingExpression = memberMapper.GetMappingExpression( this );
+                _memberMappingExpression = _memberMapper.GetMappingExpression( this );
 
                 //GlobalConfig.ExpCache.Add( this.SourceType,
                 //    this.TargetType, (IMappingOptions)this, _memberMappingExpression );

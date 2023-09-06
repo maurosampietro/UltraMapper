@@ -117,5 +117,13 @@ namespace UltraMapper.Internals
         {
             return new ExpressionParameterReplacer( newExpression, name ).Visit( expression );
         }
+
+        public static Expression GetDefaultValueExp( this Type type )
+        {
+            if( Nullable.GetUnderlyingType( type ) != null )  // If it's a nullable value type
+                return Expression.Constant( null, type );
+
+            return Expression.Default( type );
+        }
     }
 }

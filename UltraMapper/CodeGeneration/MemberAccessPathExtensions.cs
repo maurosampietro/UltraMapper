@@ -94,13 +94,11 @@ namespace UltraMapper.Internals
                 return memberAccessPath.First().GetGetterExp();
 
             var instanceType = memberAccessPath.EntryInstance;
-            var entryMember = memberAccessPath.First();
-
             var returnType = memberAccessPath.Last().GetMemberType();
+            if( returnType.IsValueType )
+                returnType = typeof( Nullable<> ).MakeGenericType( returnType );
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );
-            var returnLabel = Expression.Label( returnType, "label" );
-
             Expression accessPath = entryInstance;
             var memberAccesses = new List<Expression>();
 
@@ -120,24 +118,25 @@ namespace UltraMapper.Internals
             }
 
             var nullConstant = Expression.Constant( null );
-            var returnNull = Expression.Return( returnLabel, Expression.Default( returnType ) );
+            var returnTypeNullExp = Expression.Constant( null, returnType );
 
-            var nullChecks = memberAccesses
-                .Take( memberAccesses.Count - 1 )
-                .Select( memberAccess =>
+            Expression currentCheck = memberAccesses.Last();
+            if( returnType.IsValueType )
+                currentCheck = Expression.Convert( currentCheck, returnType );
+
+            for( int i = memberAccesses.Count - 2; i >= 0; i-- )  // Starting from the second to last
             {
-                var equalsNull = Expression.Equal( memberAccess, nullConstant );
-                return (Expression)Expression.IfThen( equalsNull, returnNull );
-            } ).ToArray();
-
-            var exp = Expression.Block
-            (
-                Expression.Block( nullChecks ),
-                Expression.Label( returnLabel, memberAccesses.Last() )
-            );
+                if( !memberAccesses[ i ].Type.IsValueType )
+                {
+                    var equalsNull = Expression.Equal( memberAccesses[ i ], nullConstant );
+                    currentCheck = Expression.Condition( equalsNull, returnTypeNullExp, currentCheck );
+                    if( returnType.IsValueType )
+                        currentCheck = Expression.Convert( currentCheck, returnType );
+                }
+            }
 
             var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
-            return LambdaExpression.Lambda( delegateType, exp, entryInstance );
+            return LambdaExpression.Lambda( delegateType, currentCheck, entryInstance );
         }
 
         internal static LambdaExpression GetSetterExpWithNullChecks( this MemberAccessPath memberAccessPath )

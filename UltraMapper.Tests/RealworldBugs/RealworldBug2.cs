@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace UltraMapper.Tests
+namespace UltraMapper.Tests.RealworldBugs
 {
     [TestClass]
     public class RealworldBug2

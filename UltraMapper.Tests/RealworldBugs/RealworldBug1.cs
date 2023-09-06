@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace UltraMapper.Tests
+namespace UltraMapper.Tests.RealworldBugs
 {
     [TestClass]
     public class RealworldBug1

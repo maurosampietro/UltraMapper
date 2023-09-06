@@ -8,8 +8,8 @@ namespace UltraMapper.Tests.RealworldBugs
 
         public class A
         {
-            public B BProp { get; set; }
-            public C CProp { get; set; }
+            public B B { get; set; }
+            public C C { get; set; }
         }
 
         public class B
@@ -28,21 +28,20 @@ namespace UltraMapper.Tests.RealworldBugs
             public long? C_Id { get; set; }
         }
 
-
         [TestMethod]
         public void ProjectionMappingFull()
         {
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.Id, d => d.B_Id )
-                 .MapMember( a => a.CProp.Id, d => d.C_Id );
+                 .MapMember( a => a.B.Id, d => d.B_Id )
+                 .MapMember( a => a.C.Id, d => d.C_Id );
             } );
 
             var aObject = new A
             {
-                BProp = new B { Id = 1 },
-                CProp = new C { Id = 2 }
+                B = new B { Id = 1 },
+                C = new C { Id = 2 }
             };
 
             var result = mapper.Map<D>( aObject );
@@ -57,14 +56,14 @@ namespace UltraMapper.Tests.RealworldBugs
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.Id, d => d.B_Id )
-                 .MapMember( a => a.CProp.Id, d => d.C_Id );
+                 .MapMember( a => a.B.Id, d => d.B_Id )
+                 .MapMember( a => a.C.Id, d => d.C_Id );
             } );
 
             var aObject = new A
             {
-                BProp = null,
-                CProp = null
+                B = null,
+                C = null
             };
 
             var result = mapper.Map<D>( aObject );
