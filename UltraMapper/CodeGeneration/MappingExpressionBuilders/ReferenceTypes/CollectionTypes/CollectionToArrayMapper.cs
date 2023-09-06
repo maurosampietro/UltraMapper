@@ -147,10 +147,19 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 ExpressionLoops.ForEach( sourceCollection, sourceCollectionLoopingVar, Expression.Block
                 (
-                    LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper, context ),
-                    Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ), newElement ),
+                    Expression.IfThenElse
+                    (
+                        Expression.Equal( sourceCollectionLoopingVar, Expression.Constant( null, sourceCollectionElementType ) ),
+                        Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ), Expression.Default( targetCollectionElementType ) ),
 
-                    Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
+                        Expression.Block
+                        (
+                            LookUpBlock( sourceCollectionLoopingVar, newElement, referenceTracker, mapper, context ),
+                            Expression.Assign( Expression.ArrayAccess( targetCollection, itemIndex ), newElement ),
+
+                            Expression.AddAssign( itemIndex, Expression.Constant( 1 ) )
+                        )
+                    )
                 )
             ) );
         }
