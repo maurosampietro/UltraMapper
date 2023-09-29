@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net50;net60</TargetFrameworks>
+    <TargetFrameworks>net60;net70</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
