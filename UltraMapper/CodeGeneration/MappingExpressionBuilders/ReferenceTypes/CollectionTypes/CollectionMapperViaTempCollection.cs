@@ -22,7 +22,7 @@ namespace UltraMapper.MappingExpressionBuilders
     //            return base.GetExpressionBody( contextObj );
 
     //        //1. Create a new temporary collection passing the source collection as input
-    //        //   AND/OR   
+    //        //   AND/OR
     //        //   Create a new temporary collection passing the target collection as input
 
     //        //2. Read items from the source temp collection and add items to the target collection
@@ -172,7 +172,7 @@ namespace UltraMapper.MappingExpressionBuilders
     //                //    ) : Expression.Empty(),
 
     //                //isUpdate ? GetUpdateCollectionExpression( context )
-    //                //    : 
+    //                //    :
     //                ComplexCollectionLoop
     //                (
     //                    tempSourceColl,
@@ -267,7 +267,6 @@ namespace UltraMapper.MappingExpressionBuilders
             var tempCollection = Expression.Parameter( tempCollectionType, "tempCollection" );
 
             var newTempCollectionExp = Expression.New( tempCollectionConstructorInfo, context.SourceInstance );
-            var tempCollectionInsertionMethod = this.GetTempCollectionInsertionMethod( context );
 
             bool isUpdate = context.Options.CollectionBehavior == CollectionBehaviors.UPDATE;
             bool isReset = context.Options.CollectionBehavior == CollectionBehaviors.RESET;
@@ -288,8 +287,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         context.SourceCollectionElementType,
                         context.TargetInstance,
                         context.TargetCollectionElementType,
-                        tempCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
+                        this.GetTempCollectionInsertionMethod,
                         context.Mapper,
                         context.ReferenceTracker,
                         context
@@ -310,8 +309,8 @@ namespace UltraMapper.MappingExpressionBuilders
                         context.SourceCollectionElementType,
                         context.TargetInstance,
                         context.TargetCollectionElementType,
-                        tempCollectionInsertionMethod,
                         context.SourceCollectionLoopingVar,
+                        this.GetTempCollectionInsertionMethod,
                         context.ReferenceTracker,
                         context.Mapper,
                         context

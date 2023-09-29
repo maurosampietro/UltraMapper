@@ -167,6 +167,11 @@ namespace UltraMapper.Internals
         public void SetCustomTargetConstructor<T>( Expression<Func<T>> ctor )
             => CustomTargetConstructor = ctor;
 
+        public LambdaExpression CustomTargetInsertMethod { get; set; }
+
+        public void SetCustomTargetInsertMethod<TTarget, TItem>( Expression<Action<TTarget, TItem>> insert ) where TTarget : IEnumerable<TItem> =>
+                   CustomTargetInsertMethod = insert;
+
         public void SetCollectionItemEqualityComparer<TSource, TTarget>( Expression<Func<TSource, TTarget, bool>> converter )
             => CollectionItemEqualityComparer = converter;
 

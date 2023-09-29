@@ -23,12 +23,12 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 bool hasInputCollectionCtor = target.EntryType
                     .GetConstructors().FirstOrDefault( ctor =>
-                {
-                    var parameters = ctor.GetParameters();
-                    if( parameters.Length != 1 ) return false;
+                    {
+                        var parameters = ctor.GetParameters();
+                        if( parameters.Length != 1 ) return false;
 
-                    return parameters[ 0 ].ParameterType.IsEnumerable();
-                } ) != null;
+                        return parameters[ 0 ].ParameterType.IsEnumerable();
+                    } ) != null;
 
                 return hasInputCollectionCtor;
             } ).Value;
@@ -71,7 +71,6 @@ namespace UltraMapper.MappingExpressionBuilders
                 return parameters[ 0 ].ParameterType.IsEnumerable();
             } );
 
-            var temporaryCollectionInsertionMethod = this.GetTemporaryCollectionInsertionMethod( collectionContext );
             if( collectionContext.IsTargetElementTypeBuiltIn )
             {
                 return Expression.Block
@@ -85,10 +84,10 @@ namespace UltraMapper.MappingExpressionBuilders
                         collectionContext.SourceCollectionElementType,
                         tempCollection,
                         collectionContext.TargetCollectionElementType,
-                        temporaryCollectionInsertionMethod,
                         collectionContext.SourceCollectionLoopingVar,
+                        this.GetTemporaryCollectionInsertionMethod,
                         collectionContext.Mapper,
-                        collectionContext.ReferenceTracker, 
+                        collectionContext.ReferenceTracker,
                         collectionContext
                     ),
 
@@ -108,8 +107,8 @@ namespace UltraMapper.MappingExpressionBuilders
                     collectionContext.SourceCollectionElementType,
                     tempCollection,
                     collectionContext.TargetCollectionElementType,
-                    temporaryCollectionInsertionMethod,
                     collectionContext.SourceCollectionLoopingVar,
+                    this.GetTemporaryCollectionInsertionMethod,
                     context.ReferenceTracker,
                     context.Mapper,
                     collectionContext

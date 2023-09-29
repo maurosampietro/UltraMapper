@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -39,7 +38,8 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override Expression SimpleCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
+            ParameterExpression sourceCollectionLoopingVar,
+            Func<CollectionMapperContext, MethodInfo> getInsertMethod,
             ParameterExpression mapper, ParameterExpression referenceTracker, CollectionMapperContext context )
         {
             var resizeExp = GetResizeExpression( sourceCollection, targetCollection, context );
@@ -103,11 +103,11 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var sourceCountMethod = GetCountMethod( sourceCollection.Type );
             var targetCountMethod = GetCountMethod( targetCollection.Type );
-            
+
             Expression sourceCountMethodCallExp;
             if( sourceCountMethod.IsStatic )
                 sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, sourceCollection );
-            else 
+            else
                 sourceCountMethodCallExp = Expression.Call( sourceCollection, sourceCountMethod );
 
             Expression targetCountMethodCallExp;
@@ -131,10 +131,10 @@ namespace UltraMapper.MappingExpressionBuilders
 
         protected override Expression ComplexCollectionLoop( ParameterExpression sourceCollection, Type sourceCollectionElementType,
             ParameterExpression targetCollection, Type targetCollectionElementType,
-            MethodInfo targetCollectionInsertionMethod, ParameterExpression sourceCollectionLoopingVar,
+            ParameterExpression sourceCollectionLoopingVar,
+            Func<CollectionMapperContext, MethodInfo> getInsertMethod,
             ParameterExpression referenceTracker, ParameterExpression mapper, CollectionMapperContext context = null )
         {
-
             var newElement = Expression.Variable( targetCollectionElementType, "newElement" );
             var itemIndex = Expression.Parameter( typeof( int ), "itemIndex" );
             var resizeExp = GetResizeExpression( sourceCollection, targetCollection, context );
