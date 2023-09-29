@@ -57,8 +57,8 @@ namespace UltraMapper.Tests.RealworldBugs
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.Id, d => d.B_Id )
-                 .MapMember( a => a.CProp.Id, d => d.C_Id );
+                 .MapMemberNullProjection( a => a.BProp.Id, d => d.B_Id )
+                 .MapMemberNullProjection( a => a.CProp.Id, d => d.C_Id );
             } );
 
             var aObject = new A

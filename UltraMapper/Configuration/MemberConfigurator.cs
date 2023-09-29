@@ -91,6 +91,41 @@ namespace UltraMapper
 
             return mapping;
         }
+
+        protected MemberMapping MapStructMemberInternal<TSource, TSourceMember, TTarget, TTargetMember>(
+         Expression<Func<TSource, TSourceMember>> sourceMemberGetter,
+         Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
+         Expression<Action<TTarget, TTargetMember>> targetMemberSetter ) where TSourceMember : struct
+        {
+            var sourceMemberPath = sourceMemberGetter.GetMemberAccessPath();
+            var targetMemberPath = targetMemberGetter.GetMemberAccessPath();
+            var targetMember = targetMemberPath.Last();
+            var targetMemberSetterExpression = (targetMemberSetter == null) ? targetMemberPath.GetSetterExp() : targetMemberSetter;
+            return this.MapStructMemberInternal(
+                sourceMemberPath,
+                targetMember,
+                sourceMemberGetter,
+                targetMemberGetter,
+                targetMemberSetterExpression );
+        }
+
+        protected MemberMapping MapStructMemberInternal(
+            MemberAccessPath sourceMemberPath,
+            MemberInfo targetMember,
+            LambdaExpression sourceMemberGetter,
+            LambdaExpression targetMemberGetter,
+            LambdaExpression targetMemberSetter )
+        {
+            var mappingSource = _typeMapping.GetNullStructMappingSource( sourceMemberPath, sourceMemberGetter );
+            var mappingTarget = _typeMapping.GetMappingTarget( targetMember,
+               targetMemberGetter, targetMemberSetter );
+
+            var mapping = new MemberMapping( _typeMapping, mappingSource, mappingTarget );
+            _typeMapping.MemberToMemberMappings[ mappingTarget ] = mapping;
+            return mapping;
+
+        }
+
         #endregion
 
         #region Type -> Member
@@ -200,6 +235,49 @@ namespace UltraMapper
 
             mappingTarget.Ignore = true;
             return this;
+        }
+
+        /// <summary>
+        /// USe this method when the SourceMember is a not nullable struct,
+        /// but there is a possibillity that in the chain of this projecting some parent property can be NULL.
+        /// </summary>
+        /// <typeparam name="TSourceMember"></typeparam>
+        /// <typeparam name="TTargetMember"></typeparam>
+        /// <param name="sourceSelector"></param>
+        /// <param name="targetMemberGetter"></param>
+        /// <param name="targetMemberSetter"></param>
+        /// <param name="converter"></param>
+        /// <param name="memberMappingConfig"></param>
+        /// <returns></returns>
+        public MemberConfigurator<TSource, TTarget> MapMemberNullProjection<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
+            Expression<Action<TTarget, TTargetMember>> targetMemberSetter,
+            Expression<Func<TSourceMember?, TTargetMember>> converter,
+            Action<IMemberMappingOptions> memberMappingConfig ) where TSourceMember : struct
+        {
+            var mapping = base.MapStructMemberInternal<TSource, TSourceMember, TTarget, TTargetMember>( sourceSelector, targetMemberGetter, targetMemberSetter );
+            mapping.MappingResolution = MappingResolution.USER_DEFINED;
+            mapping.CustomConverter = converter;
+            memberMappingConfig?.Invoke( mapping );
+
+            return this;
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMemberNullProjection<TSourceMember, TTargetMember>(
+             Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetMemberGetter ) where TSourceMember : struct
+        {
+            return MapMemberNullProjection(sourceSelector, targetMemberGetter, null);
+        }
+
+        public MemberConfigurator<TSource, TTarget> MapMemberNullProjection<TSourceMember, TTargetMember>(
+            Expression<Func<TSource, TSourceMember>> sourceSelector,
+            Expression<Func<TTarget, TTargetMember>> targetMemberGetter,
+            Expression<Func<TSourceMember?, TTargetMember>> converter
+            ) where TSourceMember : struct
+        {
+            return MapMemberNullProjection( sourceSelector, targetMemberGetter, null, converter, null );
         }
 
         public MemberConfigurator<TSource, TTarget> MapMember<TSourceMember, TTargetMember>(

@@ -140,6 +140,67 @@ namespace UltraMapper.Internals
             return LambdaExpression.Lambda( delegateType, exp, entryInstance );
         }
 
+        internal static LambdaExpression GetNullableGetterExpWithNullChecks( this MemberAccessPath memberAccessPath )
+        {
+            var instanceType = memberAccessPath.EntryInstance;
+
+            var returnType = memberAccessPath.Last().GetMemberType();
+            returnType = MakeNullable( returnType );
+
+            var entryInstance = Expression.Parameter( instanceType, "instance" );
+
+            if( memberAccessPath.Count < 2 )
+            {
+                return MakeNullableExpWithoutNullChecks( returnType, instanceType, memberAccessPath, entryInstance );
+            }
+            Expression accessPath = entryInstance;
+            var memberAccesses = new List<Expression>();
+            foreach( var memberAccess in memberAccessPath )
+            {
+                accessPath = MakeMemberAccess( accessPath, memberAccess );
+                memberAccesses.Add( accessPath );
+            }
+            // begin nullsblock
+            var nullConstant = Expression.Constant( null );
+            var defaultExpression = Expression.Default( returnType );
+            var currentExpression = memberAccesses.Last();
+            for( int i = memberAccesses.Count - 2; i >= 0; i-- )
+            {
+                var equalsNull = Expression.Equal( memberAccesses[ i ], nullConstant );
+                var castNullable = Expression.Convert( currentExpression, returnType );
+                currentExpression = Expression.Condition( equalsNull, defaultExpression, castNullable );
+            }
+            var exp = currentExpression;
+            var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
+            return LambdaExpression.Lambda( delegateType, exp, entryInstance );
+        }
+
+        private static LambdaExpression MakeNullableExpWithoutNullChecks( Type returnType, Type instanceType, MemberAccessPath memberAccessPath, ParameterExpression entryInstance )
+        {
+            Expression accessPath = entryInstance;
+            if( memberAccessPath.Count == 0 )
+            {
+                if( instanceType != returnType )
+                    accessPath = Expression.Convert( entryInstance, returnType );
+
+                var delegateType2 = typeof( Func<,> ).MakeGenericType( instanceType, instanceType );
+                return LambdaExpression.Lambda( delegateType2, accessPath, entryInstance );
+            }
+            var memberAccess = memberAccessPath.Single();
+            if( memberAccess is MethodInfo mi )
+                accessPath = Expression.Call( accessPath, mi );
+            else
+            {
+                if( memberAccess.DeclaringType != accessPath.Type )
+                    accessPath = Expression.Convert( accessPath, memberAccess.DeclaringType );
+
+                accessPath = Expression.MakeMemberAccess( accessPath, memberAccess );
+            }
+            accessPath = Expression.Convert( accessPath, returnType );
+            var delegateType = typeof( Func<,> ).MakeGenericType( instanceType, returnType );
+            return LambdaExpression.Lambda( delegateType, accessPath, entryInstance );
+        }
+
         private static Type MakeNullable( Type before )
         {
             if( !IsNullable( before ) )

@@ -12,7 +12,7 @@ namespace UltraMapper.Tests.Projections
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.CProp.Id, d => d.NullableId );
+                 .MapMemberNullProjection( a => a.BProp.CProp.Id, d => d.NullableId );
             } );
 
             var aObject = new A
@@ -30,7 +30,7 @@ namespace UltraMapper.Tests.Projections
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.CProp.Id, d => d.NullableId );
+                 .MapMemberNullProjection( a => a.BProp.CProp.Id, d => d.NullableId );
             } );
 
             var aObject = new A
@@ -48,7 +48,7 @@ namespace UltraMapper.Tests.Projections
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.CProp.Id, d => d.NullableId );
+                 .MapMemberNullProjection( a => a.BProp.CProp.Id, d => d.NullableId );
             } );
             var aObject = new A
             {
@@ -64,7 +64,7 @@ namespace UltraMapper.Tests.Projections
             var mapper = new Mapper( cfg =>
             {
                 cfg.MapTypes<A, D>()
-                 .MapMember( a => a.BProp.CProp.Id, d => d.NullableId );
+                 .MapMemberNullProjection( a => a.BProp.CProp.Id, d => d.NullableId );
             } );
 
             var aObject = new A
