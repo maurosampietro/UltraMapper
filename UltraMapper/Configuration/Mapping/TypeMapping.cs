@@ -219,6 +219,18 @@ namespace UltraMapper.Internals
                } );
         }
 
+        public IMappingSource GetNullStructMappingSource( MemberAccessPath sourcePath, LambdaExpression sourceMemberGetterExpression )
+        {
+            var sourceMember = sourcePath.Last();
+            return _sources.GetOrAdd( sourceMember,
+                  () =>
+                  {
+                      var mp = new StructMappingSource( sourcePath, sourceMemberGetterExpression );
+                      var isAdded = _mappingSource.Add( mp );
+                      return mp;
+                  } );
+        }
+
         public IMappingTarget GetMappingTarget( MemberInfo targetMember,
             MemberAccessPath targetMemberPath )
         {
