@@ -69,6 +69,7 @@ namespace UltraMapper
             {
                 //new MemberMapper( this ),
                 //new AbstractMappingExpressionBuilder(this),
+                new CopyValueMapper(),
                 new StringToEnumMapper(),
                 new EnumMapper(),
                 new BuiltInTypeMapper(),

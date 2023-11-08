@@ -82,7 +82,7 @@ namespace UltraMapper.Tests
                 .ToList();
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<int?[]>( source );
+            var target = ultraMapper.MapArray<int?[]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
@@ -94,7 +94,7 @@ namespace UltraMapper.Tests
             var source = Enumerable.Range( 0, 10 ).ToList();
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<int[]>( source );
+            var target = ultraMapper.MapArray<int[]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
@@ -108,7 +108,7 @@ namespace UltraMapper.Tests
                 .ToList();
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<int[][]>( source );
+            var target = ultraMapper.MapArray<int[][]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
 
@@ -124,7 +124,7 @@ namespace UltraMapper.Tests
                 .ToList();
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<ComplexType[]>( source );
+            var target = ultraMapper.MapArray<ComplexType[]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
@@ -140,7 +140,7 @@ namespace UltraMapper.Tests
             };
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<ComplexType[][]>( source );
+            var target = ultraMapper.MapArray<ComplexType[][]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
@@ -275,7 +275,7 @@ namespace UltraMapper.Tests
                 .Select( i => Enumerable.Range( 1, 2 ) /*no .ToList(), no .ToArray() etc..*/ );
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<int[][]>( source );
+            var target = ultraMapper.MapArray<int[][]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
@@ -287,7 +287,7 @@ namespace UltraMapper.Tests
             var source = Enumerable.Range( 0, 10 );
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<int[]>( source );
+            var target = ultraMapper.MapArray<int[]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
@@ -301,7 +301,7 @@ namespace UltraMapper.Tests
                 .Select( i => new ComplexType() { PropertyA = i } );
 
             var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<ComplexType[]>( source );
+            var target = ultraMapper.MapArray<ComplexType[]>( source );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );

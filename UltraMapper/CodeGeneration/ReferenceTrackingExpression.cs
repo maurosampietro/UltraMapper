@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using UltraMapper.Internals;
 using UltraMapper.MappingExpressionBuilders;
 
 namespace UltraMapper.ReferenceTracking
@@ -29,7 +30,8 @@ namespace UltraMapper.ReferenceTracking
             Expression memberAssignment,
             ParameterExpression mapperParam,
             Mapper mapper,
-            Expression mapping,
+            IMapping mapping,
+            Expression mappingConstExp,
             bool redirectMappingToRuntime = true )
         {
             var refLookupExp = Expression.Call
@@ -102,7 +104,8 @@ namespace UltraMapper.ReferenceTracking
                                 addRefToTrackerExp,
 
                                 redirectMappingToRuntime ? Expression.Call( mapperParam, mapMethod, sourceMember,
-                                    targetMember, referenceTracker, mapping ) : (Expression)Expression.Empty()
+                                    targetMember, referenceTracker, mappingConstExp ) :
+                                    Expression.Invoke( mapping.MappingExpression, referenceTracker, sourceMember, targetMember )              
                             )
                         )
                     )

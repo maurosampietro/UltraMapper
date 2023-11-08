@@ -69,7 +69,6 @@ namespace UltraMapper.MappingExpressionBuilders
 
                 Expression.Assign( tempColl, Expression.New( tempColl.Type ) ),
                 Expression.Invoke( tempMapping, context.ReferenceTracker, context.SourceInstance, tempColl ),
-                //Expression.Invoke( _debugExp, tempColl ),
                 Expression.Assign( contextObj.TargetInstance, Expression.Call( tempColl, toArrayMethod ) )
             );
         }

@@ -141,11 +141,19 @@ namespace UltraMapper.MappingExpressionBuilders
             {
                 return ReferenceTrackingExpression.GetMappingExpression(
                     referenceTracker, sourceParam, targetParam,
-                    memberAssignment, mapper, null,
+                    memberAssignment, mapper, null, itemMapping,
                     Expression.Constant( itemMapping ) );
             }
             else
             {
+                ////non recursive
+                //return Expression.Block
+                //(
+                //      memberAssignment,
+                //      Expression.Invoke( itemMapping.MappingExpression, referenceTracker, sourceParam, targetParam )
+                //);
+
+                //recursive
                 var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                     .MakeGenericMethod( sourceParam.Type, targetParam.Type );
 
@@ -522,7 +530,7 @@ namespace UltraMapper.MappingExpressionBuilders
             var elementTypes = collectionType.GetGenericArguments();
             if( elementTypes.Any() )
             {
-                var genericCount = getLinqCount?.MakeGenericMethod( elementTypes[0] );
+                var genericCount = getLinqCount?.MakeGenericMethod( elementTypes[ 0 ] );
 
                 if( genericCount != null )
                     return genericCount;

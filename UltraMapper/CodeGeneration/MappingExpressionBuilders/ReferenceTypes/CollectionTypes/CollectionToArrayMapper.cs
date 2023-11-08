@@ -74,6 +74,28 @@ namespace UltraMapper.MappingExpressionBuilders
                 return ExpressionLoops.ForEach( sourceCollection,
                     sourceCollectionLoopingVar, loopBody );
             }
+            else if( sourceCollectionElementType == targetCollectionElementType )
+            {
+                if( sourceCollection.Type.IsArray )
+                {
+                    var copyToMi = sourceCollection.Type.GetMethod( nameof( Array.CopyTo ), BindingFlags.Instance | BindingFlags.Public, null, new Type[] { targetCollectionElementType.MakeArrayType(), typeof( int ) }, null );
+                    return Expression.Block
+                    (
+                        resizeExp,
+                        Expression.Call( sourceCollection, copyToMi, targetCollection, Expression.Constant( 0, typeof( int ) ) )
+                    );
+                }
+                else
+                {
+                    var copyToMi = sourceCollection.Type.GetMethod( nameof( Array.CopyTo ), BindingFlags.Instance | BindingFlags.Public, null, new Type[] { targetCollectionElementType.MakeArrayType() }, null );
+
+                    return Expression.Block
+                    (
+                        resizeExp,
+                        Expression.Call( sourceCollection, copyToMi, targetCollection )
+                    );
+                }
+            }
             else
             {
                 var itemMapping = context.MapperConfiguration[ sourceCollectionElementType,
@@ -103,11 +125,11 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var sourceCountMethod = GetCountMethod( sourceCollection.Type );
             var targetCountMethod = GetCountMethod( targetCollection.Type );
-            
+
             Expression sourceCountMethodCallExp;
             if( sourceCountMethod.IsStatic )
                 sourceCountMethodCallExp = Expression.Call( null, sourceCountMethod, sourceCollection );
-            else 
+            else
                 sourceCountMethodCallExp = Expression.Call( sourceCollection, sourceCountMethod );
 
             Expression targetCountMethodCallExp;

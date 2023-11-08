@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -21,9 +22,10 @@ namespace UltraMapper.Internals
             var elementType = loopVar.Type;
             var enumerableType = typeof( IEnumerable<> ).MakeGenericType( elementType );
             var enumeratorType = typeof( IEnumerator<> ).MakeGenericType( elementType );
-
+            
             var enumeratorVar = Expression.Variable( enumeratorType, "enumerator" );
-            var getEnumeratorCall = Expression.Call( collection, enumerableType.GetMethod( nameof( IEnumerable.GetEnumerator ) ) );
+            var getEnumerator = enumerableType.GetMethod( nameof( IEnumerable.GetEnumerator ) );
+            var getEnumeratorCall = Expression.Call( collection, getEnumerator );
             var enumeratorAssign = Expression.Assign( enumeratorVar, getEnumeratorCall );
 
             //The MoveNext method's actually on IEnumerator, not IEnumerator<T>
@@ -40,7 +42,7 @@ namespace UltraMapper.Internals
                 (
                     Expression.IfThenElse
                     (
-                        Expression.Equal( moveNextCall, Expression.Constant( true ) ),
+                        Expression.IsTrue( moveNextCall ),
                         Expression.Block
                         (
                             new[] { loopVar },
@@ -56,7 +58,7 @@ namespace UltraMapper.Internals
                     @continue
                ) );
         }
-
+    
         public static Expression For( ParameterExpression loopVar, Expression initValue,
             Expression condition, Expression increment, Expression loopContent )
         {

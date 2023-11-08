@@ -92,7 +92,7 @@ namespace UltraMapper
                 return instanceCreator();
             }
 
-            //else //with parameters
+            ////else //with parameters
             {
                 var paramTypes = constructorValues.Select( value => value.GetType() ).ToArray();
                 var instanceCreator = ConstructorFactory.CreateConstructor( intanceType, paramTypes );

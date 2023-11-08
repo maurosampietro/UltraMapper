@@ -23,6 +23,14 @@ namespace UltraMapper.MappingExpressionBuilders
             var context = GetMapperContext( mapping );
 
             var typeMapping = context.MapperConfiguration[ source.EntryType, target.EntryType ];
+
+            ////non recursive
+            //var expression = Expression.Block
+            //(
+            //    Expression.Invoke( typeMapping.MappingExpression, context.ReferenceTracker, context.SourceInstance, context.TargetInstance )
+            //);
+
+            //recursive 
             var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                 .MakeGenericMethod( source.EntryType, target.EntryType );
 

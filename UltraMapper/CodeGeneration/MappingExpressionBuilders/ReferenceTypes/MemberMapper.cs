@@ -12,7 +12,7 @@ namespace UltraMapper.MappingExpressionBuilders
         private static readonly Expression<Func<string, string, object, Type, Type, string>> _getErrorExp =
             ( error, mapping, sourceMemberValue, sourceType, targetType ) => String.Format( error, mapping,
                 sourceMemberValue ?? "null", sourceType.GetPrettifiedName(), targetType.GetPrettifiedName() );
-        
+
         public bool CanHandle( Mapping mapping )
         {
             return mapping is MemberMapping;
@@ -83,7 +83,7 @@ namespace UltraMapper.MappingExpressionBuilders
                     (
                         memberContext.ReferenceTracker, memberContext.SourceMember,
                         memberContext.TargetMember, memberAssignmentExp,
-                        memberContext.Mapper, memberContext.MapperInstance,
+                        memberContext.Mapper, memberContext.MapperInstance, mapping,
                         Expression.Constant( mapping )
                     ),
 
@@ -94,6 +94,19 @@ namespace UltraMapper.MappingExpressionBuilders
             }
             else
             {
+
+                //non recursive
+                //var exp = Expression.Block
+                //(
+                //    memberAssignmentExp
+                //        .ReplaceParameter( memberContext.SourceMemberValueGetter, "sourceValue" )
+                //        .ReplaceParameter( memberContext.TargetMemberValueGetter, "targetValue" ),
+
+                //    Expression.Invoke( mapping.MappingExpression, memberContext.ReferenceTracker,
+                //        memberContext.SourceMemberValueGetter, memberContext.TargetMemberValueGetter )
+                //);
+
+                //recursive
                 var mapMethod = ReferenceMapperContext.RecursiveMapMethodInfo
                     .MakeGenericMethod( memberContext.SourceMember.Type, memberContext.TargetMember.Type );
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.AccessControl;
 using UltraMapper.Internals;
 
 namespace UltraMapper
@@ -43,16 +44,23 @@ namespace UltraMapper
         /// <typeparam name="TTarget">Type of the new instance.</typeparam>
         /// <param name="source">The source instance to be copied.</param>
         /// <returns>A map of the source instance on a target instance of type <typeparamref name="TTarget"/> </returns>
+        public TTarget MapArray<TTarget>( object source )
+        {
+            if( source == default ) return default;
+            TTarget target = InstanceFactory.CreateObject<int, TTarget>( 0 );
+            return this.Map( source, target );
+        }
+
+        /// <summary>
+        /// Maps <param name="source"> on a new instance of type <typeparam name="TTarget">.
+        /// </summary>
+        /// <typeparam name="TTarget">Type of the new instance.</typeparam>
+        /// <param name="source">The source instance to be copied.</param>
+        /// <returns>A map of the source instance on a target instance of type <typeparamref name="TTarget"/> </returns>
         public TTarget Map<TTarget>( object source )
         {
             if( source == default ) return default;
-
-            TTarget target;
-            if( typeof( TTarget ).IsArray )
-                target = InstanceFactory.CreateObject<int, TTarget>( 0 );
-            else
-                target = InstanceFactory.CreateObject<TTarget>();
-
+            TTarget target = target = InstanceFactory.CreateObject<TTarget>();
             return this.Map( source, target );
         }
 
@@ -87,7 +95,7 @@ namespace UltraMapper
             Type sourceType = source?.GetType() ?? typeof( TSource );
             Type targetType = target?.GetType() ?? typeof( TTarget );
 
-            if( this.Config.IsReferenceTrackingEnabled )               
+            if( this.Config.IsReferenceTrackingEnabled )
             {
                 if( referenceTracking == null )
                     referenceTracking = new ReferenceTracker();
@@ -103,7 +111,7 @@ namespace UltraMapper
             */
 
             var mapping = this.Config[ sourceType, targetType ];
-            mapping.ReferenceBehavior = refBehavior;                     
+            mapping.ReferenceBehavior = refBehavior;
 
             return this.Map( source, target, referenceTracking, mapping );
         }
@@ -117,60 +125,63 @@ namespace UltraMapper
             //A new mapping is created only if no compatible mapping is already available
             //for concrete classes. If a mapping for the interfaces is found, it is used.
 
-            IMapping ResolveAbstractMapping( Type sourceType, Type targetType )
-            {
-                if( (sourceType.IsInterface || sourceType.IsAbstract) &&
-                    (targetType.IsInterface || targetType.IsAbstract) )
-                {
-                    return this.Config[ source.GetType(), target.GetType() ];
-                }
+            //IMapping ResolveAbstractMapping( Type sourceType, Type targetType )
+            //{
+            //    if( (sourceType.IsInterface || sourceType.IsAbstract) &&
+            //        (targetType.IsInterface || targetType.IsAbstract) )
+            //    {
+            //        return this.Config[ source.GetType(), target.GetType() ];
+            //    }
 
-                if( sourceType.IsInterface || sourceType.IsAbstract )
-                    return this.Config[ source.GetType(), targetType ];
+            //    if( sourceType.IsInterface || sourceType.IsAbstract )
+            //        return this.Config[ source.GetType(), targetType ];
 
-                if( targetType.IsInterface || targetType.IsAbstract )
-                    return this.Config[ sourceType, target.GetType() ];
+            //    if( targetType.IsInterface || targetType.IsAbstract )
+            //        return this.Config[ sourceType, target.GetType() ];
 
-                if( mapping == null )
-                    return this.Config[ sourceType, targetType ];
+            //    if( mapping == null )
+            //        return this.Config[ sourceType, targetType ];
+            //    return mapping;
+            //}
 
-                return mapping;
-            }
+            ////removing abstract mapping resolution at this level entirely
+            ////can save us 200ms (1100ms instead of 1300ms) on the current benchamark test.
+            ////mapping resolution is a good but less used feature. can favor performance.
+            //if( mapping == null )
+            //{
+            //    var targetType = target?.GetType() ?? typeof( TTarget );
+            //    mapping = ResolveAbstractMapping( source.GetType(), targetType );
+            //}
+            //else if( mapping.NeedsRuntimeTypeInspection )
+            //{
+            //    switch( mapping )
+            //    {
+            //        case MemberMapping memberMapping:
+            //        {
+            //            if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION &&
+            //                memberMapping.InstanceTypeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+            //            {
+            //                var memberTypeMapping = memberMapping.TypeToTypeMapping;
 
-            switch( mapping )
-            {
-                case MemberMapping memberMapping:
-                {
-                    if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION &&
-                        memberMapping.InstanceTypeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-                    {
-                        var memberTypeMapping = memberMapping.TypeToTypeMapping;
+            //                var mappingSourceType = memberTypeMapping.Source.EntryType;
+            //                var mappingTargetType = memberTypeMapping.Target.EntryType;
 
-                        var mappingSourceType = memberTypeMapping.Source.EntryType;
-                        var mappingTargetType = memberTypeMapping.Target.EntryType;
+            //                mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
+            //            }
 
-                        mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                    }
+            //            break;
+            //        }
 
-                    break;
-                }
+            //        case TypeMapping typeMapping:
+            //        {
+            //            var mappingSourceType = typeMapping.Source.EntryType;
+            //            var mappingTargetType = typeMapping.Target.EntryType;
 
-                case TypeMapping typeMapping:
-                {
-                    var mappingSourceType = typeMapping.Source.EntryType;
-                    var mappingTargetType = typeMapping.Target.EntryType;
-
-                    mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
-                    break;
-                }
-
-                case null:
-                {
-                    var targetType = target?.GetType() ?? typeof( TTarget );
-                    mapping = ResolveAbstractMapping( source.GetType(), targetType );
-                    break;
-                }
-            }
+            //            mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
+            //            break;
+            //        }
+            //    }
+            //}
 
             return (TTarget)mapping.MappingFunc( referenceTracking, source, target );
         }

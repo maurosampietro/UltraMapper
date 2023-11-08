@@ -1,30 +1,21 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using AutoMapper;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using AutoMapper;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UltraMapper.Internals;
-using BenchmarkDotNet.Configs;
-using System.Collections;
 
 namespace UltraMapper.Benchmarks
 {
-
-    /*
-     
-    WORK IN PROGRESS
-     
-     */
-
-
     internal class Program
     {
         static void Main( string[] args )
         {
-            //   var summary = BenchmarkRunner.Run<MappersBenchmark>( new DebugInProcessConfig() );
+            BenchmarkRunner.Run<MappersBenchmark>( new DebugInProcessConfig() );
 
             //var source = Enumerable.Range( 0, 10 ).ToList();
 
@@ -32,12 +23,10 @@ namespace UltraMapper.Benchmarks
             //var target = ultraMapper.Map<int[]>( source );
 
 
-            new MappersBenchmark().UltraMapperTest();
         }
     }
 
-    [SimpleJob( RuntimeMoniker.Net50 )]
-    [SimpleJob( RuntimeMoniker.Net60 )]
+    [SimpleJob( RuntimeMoniker.Net70 )]
     public class MappersBenchmark
     {
         private readonly AutoMapper.Mapper _autoMapper;
@@ -181,11 +170,11 @@ namespace UltraMapper.Benchmarks
             _ultraMapper.Map( _source, target );
         }
 
-        [Benchmark]
-        public void AutoMapperTest()
-        {
-            var target = new ReadOnlyGeneric<ComplexType>();
-            _autoMapper.Map( _source, target );
-        }
+        //[Benchmark]
+        //public void AutoMapperTest()
+        //{
+        //    var target = new ReadOnlyGeneric<ComplexType>();
+        //    _autoMapper.Map( _source, target );
+        //}
     }
 }

@@ -11,5 +11,10 @@ namespace UltraMapper.Internals
         IMappingExpressionBuilder Mapper { get; }
         UltraMapperDelegate MappingFunc { get; }
         LambdaExpression MappingExpression { get; }
+
+        /// <summary>
+        /// Source is a non-concrete type
+        /// </summary>
+        bool NeedsRuntimeTypeInspection { get; }
     }
 }

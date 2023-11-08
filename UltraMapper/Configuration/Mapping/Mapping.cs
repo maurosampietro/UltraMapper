@@ -76,6 +76,9 @@ namespace UltraMapper.Internals
             }
         }
 
+        private bool? _needsRuntimeTypeInstepction = null;
+        public bool NeedsRuntimeTypeInspection => _needsRuntimeTypeInstepction ??= Source.ReturnType.IsInterface || Source.ReturnType.IsAbstract;
+
         //protected Mapping( Configuration config, Type sourceType, Type targetType )
         //{
         //    this.GlobalConfig = config;
