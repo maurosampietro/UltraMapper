@@ -119,69 +119,72 @@ namespace UltraMapper
         internal TTarget Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking, IMapping mapping )
         {
-            //in order to manage inheritance at runtime here
-            //we check if a mapping has been defined and if it has not
-            //we create a specific mapping at runtime.
-            //A new mapping is created only if no compatible mapping is already available
-            //for concrete classes. If a mapping for the interfaces is found, it is used.
+            if( this.Config.IsRuntimeInterfaceAbstractResolutionEnabled )
+            {
+                //in order to manage inheritance at runtime here
+                //we check if a mapping has been defined and if it has not
+                //we create a specific mapping at runtime.
+                //A new mapping is created only if no compatible mapping is already available
+                //for concrete classes. If a mapping for the interfaces is found, it is used.
 
-            //IMapping ResolveAbstractMapping( Type sourceType, Type targetType )
-            //{
-            //    if( (sourceType.IsInterface || sourceType.IsAbstract) &&
-            //        (targetType.IsInterface || targetType.IsAbstract) )
-            //    {
-            //        return this.Config[ source.GetType(), target.GetType() ];
-            //    }
+                IMapping ResolveAbstractMapping( Type sourceType, Type targetType )
+                {
+                    if( (sourceType.IsInterface || sourceType.IsAbstract) &&
+                        (targetType.IsInterface || targetType.IsAbstract) )
+                    {
+                        return this.Config[ source.GetType(), target.GetType() ];
+                    }
 
-            //    if( sourceType.IsInterface || sourceType.IsAbstract )
-            //        return this.Config[ source.GetType(), targetType ];
+                    if( sourceType.IsInterface || sourceType.IsAbstract )
+                        return this.Config[ source.GetType(), targetType ];
 
-            //    if( targetType.IsInterface || targetType.IsAbstract )
-            //        return this.Config[ sourceType, target.GetType() ];
+                    if( targetType.IsInterface || targetType.IsAbstract )
+                        return this.Config[ sourceType, target.GetType() ];
 
-            //    if( mapping == null )
-            //        return this.Config[ sourceType, targetType ];
-            //    return mapping;
-            //}
+                    if( mapping == null )
+                        return this.Config[ sourceType, targetType ];
+                    return mapping;
+                }
 
-            ////removing abstract mapping resolution at this level entirely
-            ////can save us 200ms (1100ms instead of 1300ms) on the current benchamark test.
-            ////mapping resolution is a good but less used feature. can favor performance.
-            //if( mapping == null )
-            //{
-            //    var targetType = target?.GetType() ?? typeof( TTarget );
-            //    mapping = ResolveAbstractMapping( source.GetType(), targetType );
-            //}
-            //else if( mapping.NeedsRuntimeTypeInspection )
-            //{
-            //    switch( mapping )
-            //    {
-            //        case MemberMapping memberMapping:
-            //        {
-            //            if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION &&
-            //                memberMapping.InstanceTypeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
-            //            {
-            //                var memberTypeMapping = memberMapping.TypeToTypeMapping;
+                ////removing abstract mapping resolution at this level entirely
+                ////can save us 200ms (1100ms instead of 1300ms) on the current benchamark test.
+                ////mapping resolution is a good but less used feature. can favor performance.
+                if( mapping == null )
+                {
+                    var targetType = target?.GetType() ?? typeof( TTarget );
+                    mapping = ResolveAbstractMapping( source.GetType(), targetType );
+                }
+                else if( mapping.NeedsRuntimeTypeInspection )
+                {
+                    switch( mapping )
+                    {
+                        case MemberMapping memberMapping:
+                        {
+                            if( memberMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION &&
+                                memberMapping.InstanceTypeMapping.MappingResolution == MappingResolution.RESOLVED_BY_CONVENTION )
+                            {
+                                var memberTypeMapping = memberMapping.TypeToTypeMapping;
 
-            //                var mappingSourceType = memberTypeMapping.Source.EntryType;
-            //                var mappingTargetType = memberTypeMapping.Target.EntryType;
+                                var mappingSourceType = memberTypeMapping.Source.EntryType;
+                                var mappingTargetType = memberTypeMapping.Target.EntryType;
 
-            //                mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
-            //            }
+                                mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                            }
 
-            //            break;
-            //        }
+                            break;
+                        }
 
-            //        case TypeMapping typeMapping:
-            //        {
-            //            var mappingSourceType = typeMapping.Source.EntryType;
-            //            var mappingTargetType = typeMapping.Target.EntryType;
+                        case TypeMapping typeMapping:
+                        {
+                            var mappingSourceType = typeMapping.Source.EntryType;
+                            var mappingTargetType = typeMapping.Target.EntryType;
 
-            //            mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
-            //            break;
-            //        }
-            //    }
-            //}
+                            mapping = ResolveAbstractMapping( mappingSourceType, mappingTargetType );
+                            break;
+                        }
+                    }
+                }
+            }
 
             return (TTarget)mapping.MappingFunc( referenceTracking, source, target );
         }

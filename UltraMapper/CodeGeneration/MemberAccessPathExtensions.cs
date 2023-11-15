@@ -95,7 +95,7 @@ namespace UltraMapper.Internals
 
             var instanceType = memberAccessPath.EntryInstance;
             var returnType = memberAccessPath.Last().GetMemberType();
-            if( returnType.IsValueType )
+            if( returnType.IsValueType && !returnType.IsNullable() )
                 returnType = typeof( Nullable<> ).MakeGenericType( returnType );
 
             var entryInstance = Expression.Parameter( instanceType, "instance" );

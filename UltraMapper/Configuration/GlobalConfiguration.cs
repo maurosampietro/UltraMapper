@@ -25,6 +25,11 @@ namespace UltraMapper
         public bool IgnoreMemberMappingResolvedByConvention { get; set; } = false;
 
         /// <summary>
+        /// Enables or disables interface and abstract types runtime resolution mechanism
+        /// </summary>
+        public bool IsRuntimeInterfaceAbstractResolutionEnabled { get; set; } = true;
+
+        /// <summary>
         /// Enables or disables the reference tracking mechanism
         /// </summary>
         public bool IsReferenceTrackingEnabled { get; set; } = true;
