@@ -241,11 +241,11 @@ namespace UltraMapper.Tests.Projections
 
         private Mapper CustomConversionMapper => new Mapper( cfg =>
         {
-            //cfg.MapTypes<A, D>()
-            // .MapMember( a => a.BProp.CProp.Id, d => d.NullableId, s => s ?? -1 );
+            cfg.MapTypes<A, D>()
+             .MapMember<long?, long?>( a => a.BProp.CProp.Id, d => d.NullableId, converter: ( refTracker, s ) => s ?? -1 );
 
-            //cfg.MapTypes<A, F>()
-            // .MapMember( a => a.BProp.CProp.Id, f => f.ConvertTo, s => s.HasValue ? s.ToString() : "NULL" );
+            cfg.MapTypes<A, F>()
+             .MapMember<long?,string>( a => a.BProp.CProp.Id, f => f.ConvertTo, converter: (refTracker, s) => s.HasValue ? s.ToString() : "NULL" );
 
             cfg.MapTypes<A, ParentHolder>()
               .MapMember( a => a.BProp.CProp.Id, p => p.ConvertTo );
