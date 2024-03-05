@@ -1,6 +1,9 @@
+[![Paypal](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.paypal.com/donate/?hosted_button_id=MC59U7TDE3KCQ)
+
 # UltraMapper
 [![Build status](https://ci.appveyor.com/api/projects/status/github/maurosampietro/UltraMapper?svg=true)](https://ci.appveyor.com/project/maurosampietro/ultramapper/branch/master)
 [![NuGet](http://img.shields.io/nuget/v/UltraMapper.svg)](https://www.nuget.org/packages/UltraMapper/)
+
 
 A nicely coded object-mapper for .NET 
 
