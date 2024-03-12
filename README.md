@@ -1,6 +1,6 @@
 [![Paypal](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.paypal.com/donate/?hosted_button_id=MC59U7TDE3KCQ)
 
-[![Paypal]([https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png](https://png.pngtree.com/png-vector/20220603/ourmid/pngtree-donate-button-png-image_4813535.png))](https://www.paypal.com/donate/?hosted_button_id=MC59U7TDE3KCQ)
+[![Paypal](https://png.pngtree.com/png-vector/20220603/ourmid/pngtree-donate-button-png-image_4813535.png)](https://www.paypal.com/donate/?hosted_button_id=MC59U7TDE3KCQ)
 
 
 # UltraMapper
