@@ -157,7 +157,7 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        [Ignore]
+        //[Ignore]
         public void CollectionOfInterfaceElementToCollectionOfComplexElement()
         {
             var source = new List<I>()
@@ -207,17 +207,17 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        [Ignore]
+        //[Ignore]
         public void CollectionBehindInterface2()
         {
             var source = new List<string>() { "a", "b", "c" };
 
             var mapper = new Mapper();
-            //mapper.MappingConfiguration.MapTypes( typeof( List<> ), typeof( IEnumerable<> ) );
+            mapper.Config.MapTypes( typeof( List<> ), typeof( IEnumerable<> ) );
 
             //maybe temp colllection + cast ?
-            //var target = mapper.Map<List<string>, IEnumerable<string>>( source );
-            //Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
+            var target = mapper.Map<List<string>, IEnumerable<string>>( source );
+            Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
 
             throw new NotImplementedException();
         }

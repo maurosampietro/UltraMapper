@@ -133,9 +133,9 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        [Ignore]
+        //[Ignore]
         public void ReferenceBackedByObjectTypeTest4()
-        {
+        {          
             var innerType = new InnerType() { A = "this is a test" };
 
             var strongTypeSource = new OuterType()
@@ -151,74 +151,16 @@ namespace UltraMapper.Tests
             object source = strongTypeSource;
 
             var ultraMapper = new Mapper();
+            //nothing to copy when the target type is object: a empty object will be created
             var target = ultraMapper.Map<object>( source );
-
+           
             Assert.IsFalse( Object.ReferenceEquals( source, target ) );
-            Assert.IsTrue( source.GetType() == target.GetType() );
-            Assert.IsTrue( target.GetType() == typeof( OuterType ) );
+            Assert.IsTrue( target.GetType() == typeof( object ) );
+            Assert.IsTrue( target.GetType() == typeof( object ) );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
             Assert.IsTrue( isResultOk );
         }
-
-        [TestMethod]
-        [Ignore]
-        public void ReferenceBackedByObjectTypeTest5()
-        {
-            var innerType = new InnerType() { A = "this is a test" };
-
-            var strongTypeSource = new OuterType()
-            {
-                InnerType = innerType,
-                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
-                ComplexList = new List<InnerType>() { innerType },
-                String = "ok"
-            };
-
-            strongTypeSource.InnerType.C = strongTypeSource;
-
-            object source = strongTypeSource;
-
-            var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<object>( source );
-
-            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
-            Assert.IsTrue( source.GetType() == target.GetType() );
-            Assert.IsTrue( target.GetType() == typeof( OuterType ) );
-
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
-        }
-
-        [TestMethod]
-        [Ignore]
-        public void ReferenceBackedByObjectTypeTest6()
-        {
-            var innerType = new InnerType() { A = "this is a test" };
-
-            var strongTypeSource = new OuterType()
-            {
-                InnerType = innerType,
-                PrimitiveList = Enumerable.Range( 20, 10 ).ToList(),
-                ComplexList = new List<InnerType>() { innerType },
-                String = "ok"
-            };
-
-            strongTypeSource.InnerType.C = strongTypeSource;
-
-            OuterType source = strongTypeSource;
-
-            var ultraMapper = new Mapper();
-            var target = ultraMapper.Map<object>( source );
-
-            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
-            Assert.IsTrue( source.GetType() == target.GetType() );
-            Assert.IsTrue( target.GetType() == typeof( OuterType ) );
-
-            bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
-            Assert.IsTrue( isResultOk );
-        }
-
 
 
         private class A

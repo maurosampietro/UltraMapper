@@ -36,6 +36,14 @@ namespace UltraMapper.Tests
         }
 
         #region Arrays
+
+        [TestMethod]
+        public void CreateEmptyPrimitiveArrayStrongTyped()
+        {
+            var instance = InstanceFactory.CreateObject<int[]>();
+            Assert.IsTrue( instance.Length == 0 );
+        }
+
         [TestMethod]
         public void CreatePrimitiveArrayStrongTyped()
         {
@@ -91,6 +99,13 @@ namespace UltraMapper.Tests
             Assert.IsTrue( instance[ 0 ][ 1 ][ 0 ][ 1 ].Length == 2 );
             Assert.IsTrue( instance[ 0 ][ 1 ][ 1 ][ 0 ].Length == 2 );
             Assert.IsTrue( instance[ 0 ][ 1 ][ 1 ][ 1 ].Length == 2 );
+        }
+
+        [TestMethod]
+        public void CreateEmptyComplexArrayStrongTyped()
+        {
+            var instance = InstanceFactory.CreateObject<Complex[]>();
+            Assert.IsTrue( instance.Length == 0 );
         }
 
         [TestMethod]

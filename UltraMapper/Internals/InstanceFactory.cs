@@ -83,19 +83,19 @@ namespace UltraMapper
             return instanceCreator( arg1, arg2, arg3, arg4, arg5 );
         }
 
-        public static object CreateObject( Type intanceType, params object[] constructorValues )
+        public static object CreateObject( Type instanceType, params object[] constructorValues )
         {
             //parameterless
             if( constructorValues == null || constructorValues.Length == 0 )
             {
-                var instanceCreator = ConstructorFactory.CreateConstructor( intanceType );
+                var instanceCreator = ConstructorFactory.CreateConstructor( instanceType );
                 return instanceCreator();
             }
 
             ////else //with parameters
             {
                 var paramTypes = constructorValues.Select( value => value.GetType() ).ToArray();
-                var instanceCreator = ConstructorFactory.CreateConstructor( intanceType, paramTypes );
+                var instanceCreator = ConstructorFactory.CreateConstructor( instanceType, paramTypes );
 
                 return instanceCreator( constructorValues );
             }
@@ -135,6 +135,9 @@ namespace UltraMapper
 
             return (Func<object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
+                if( instanceType.IsArray )
+                    return Expression.Lambda<Func<object>>( Expression.NewArrayInit( instanceType.GetElementType() ) ).Compile();
+
                 var instanceCreatorExp = Expression.Lambda<Func<object>>(
                     Expression.Convert( Expression.New( instanceType ), typeof( object ) ) );
 

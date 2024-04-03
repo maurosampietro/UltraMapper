@@ -151,6 +151,17 @@ namespace UltraMapper.Tests.Projections
         }
 
         [TestMethod]
+        public void CustomExternalConverter_WithMemberConverters_MapTestPropHasValue()
+        {
+            var aObject = new A
+            {
+                BProp = new B { CProp = new C { Id = 2 } }
+            };
+            var result = CustomConversionMapperUsingMemberConverters.Map<ParentHolder>( aObject );
+            Assert.AreEqual( "My val 2", result.ConvertTo.ConvertTo );
+        }
+
+        [TestMethod]
         public void CustomExternalConverter_MapTestPropDefault()
         {
             var aObject = new A
@@ -159,6 +170,18 @@ namespace UltraMapper.Tests.Projections
             };
 
             var result = CustomConversionMapper.Map<ParentHolder>( aObject );
+            Assert.AreEqual( "My val 0", result.ConvertTo.ConvertTo );
+        }
+
+        [TestMethod]
+        public void CustomExternalConverter_WithMemberConverters_MapTestPropDefault()
+        {
+            var aObject = new A
+            {
+                BProp = new B { CProp = new C { Id = 0 } }
+            };
+
+            var result = CustomConversionMapperUsingMemberConverters.Map<ParentHolder>( aObject );
             Assert.AreEqual( "My val 0", result.ConvertTo.ConvertTo );
         }
 
@@ -174,6 +197,17 @@ namespace UltraMapper.Tests.Projections
         }
 
         [TestMethod]
+        public void CustomExternalConverter_WithMemberConverters_MapTestChain1Null()
+        {
+            var aObject = new A
+            {
+                BProp = null
+            };
+            var result = CustomConversionMapperUsingMemberConverters.Map<ParentHolder>( aObject );
+            Assert.AreEqual( "MY NULL", result.ConvertTo.ConvertTo );
+        }
+
+        [TestMethod]
         public void CustomExternalConverter_MapTestChain2Null()
         {
             var aObject = new A
@@ -181,6 +215,17 @@ namespace UltraMapper.Tests.Projections
                 BProp = new B { CProp = null }
             };
             var result = CustomConversionMapper.Map<ParentHolder>( aObject );
+            Assert.AreEqual( "MY NULL", result.ConvertTo.ConvertTo );
+        }
+
+        [TestMethod]
+        public void CustomExternalConverter_WithMemberConverters_MapTestChain2Null()
+        {
+            var aObject = new A
+            {
+                BProp = new B { CProp = null }
+            };
+            var result = CustomConversionMapperUsingMemberConverters.Map<ParentHolder>( aObject );
             Assert.AreEqual( "MY NULL", result.ConvertTo.ConvertTo );
         }
 
@@ -239,6 +284,18 @@ namespace UltraMapper.Tests.Projections
             }
         );
 
+        private Mapper CustomConversionMapperUsingMemberConverters => new Mapper( cfg =>
+        {
+            cfg.MapTypes<A, D>()
+             .MapMember<long?, long?>( a => a.BProp.CProp.Id, d => d.NullableId, converter: ( refTracker, s ) => s ?? -1 );
+
+            cfg.MapTypes<A, F>()
+             .MapMember<long?, string>( a => a.BProp.CProp.Id, f => f.ConvertTo, converter: ( refTracker, s ) => s.HasValue ? s.ToString() : "NULL" );
+
+            cfg.MapTypes<A, ParentHolder>()
+              .MapMember<long?, TargetTypeToMap>( a => a.BProp.CProp.Id, p => p.ConvertTo, converter: ( refTracker, s ) => new TargetTypeToMap { ConvertTo = s.HasValue ? $"My val {s}" : "MY NULL" } );
+        } );
+
         private Mapper CustomConversionMapper => new Mapper( cfg =>
         {
             cfg.MapTypes<A, D>()
@@ -250,7 +307,7 @@ namespace UltraMapper.Tests.Projections
             cfg.MapTypes<A, ParentHolder>()
               .MapMember( a => a.BProp.CProp.Id, p => p.ConvertTo );
 
-            cfg.MapTypes<long?, TargetTypeToMap>( s => new TargetTypeToMap { ConvertTo = s.HasValue ? $"My val {s}" : "MY NULL" } );
+            cfg.MapTypes<long, TargetTypeToMap>( s => new TargetTypeToMap { ConvertTo = $"My val {s}" } );
         } );
 
 
