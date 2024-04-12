@@ -60,7 +60,7 @@ namespace UltraMapper
         public TTarget Map<TTarget>( object source )
         {
             if( source == default ) return default;
-            TTarget target = target = InstanceFactory.CreateObject<TTarget>();
+            TTarget target = InstanceFactory.CreateObject<TTarget>();
             return this.Map( source, target );
         }
 
@@ -76,6 +76,16 @@ namespace UltraMapper
             /* This overload is useful if you want to pass as source a TSource derived instance
              * but really want to map TSource members only.
              */
+
+            var targetType = typeof( TTarget );
+            if( targetType.IsAbstract || targetType.IsInterface )
+            {
+                throw new ArgumentException( "Cannot map to an abstract/interface target. (Cannot create instance)" );
+
+                //TODO: we actually should check in the configuration if any specific type is configured for a 
+                //specific type and use it if configured
+            }
+
             var target = InstanceFactory.CreateObject<TTarget>();
             return this.Map( source, target, null );
         }

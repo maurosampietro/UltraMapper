@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48;net50;net60;net70;</TargetFrameworks>
+    <TargetFrameworks>net48;net50;net60;net70;net80</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Authors>Mauro Sampietro</Authors>
     <Copyright>2021</Copyright>

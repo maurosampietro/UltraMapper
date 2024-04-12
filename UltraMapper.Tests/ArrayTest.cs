@@ -252,12 +252,12 @@ namespace UltraMapper.Tests
 
             var ultraMapper = new Mapper( cfg =>
             {
-                //cfg.MapTypes( source, target )
-                //   .MapMember( s => s.Collection, t => t.Collection, memberMappingConfig: config =>
-                //   {
-                //       Expression<Func<ICollection<InnerType>>> temp = () => new List<InnerType>();
-                //       config.CustomTargetConstructor = temp;
-                //   } );
+                cfg.MapTypes( source, target )
+                   .MapMember( s => s.Collection, t => t.Collection, memberMappingConfig: config =>
+                   {
+                       Expression<Func<ICollection<InnerType>>> temp = () => new List<InnerType>();
+                       config.CustomTargetConstructor = temp;
+                   } );
             } );
 
             ultraMapper.Map( source, target );

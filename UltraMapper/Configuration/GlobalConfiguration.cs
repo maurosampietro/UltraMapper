@@ -11,6 +11,8 @@ namespace UltraMapper
     public sealed class Configuration
     {
         public ConfigInheritanceTree TypeMappingTree { get; }
+        //public TargetTypeConfiguration TargetResolution { get; }
+
         internal readonly GeneratedExpressionCache ExpCache;
 
         public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
@@ -66,6 +68,7 @@ namespace UltraMapper
             };
 
             TypeMappingTree = new ConfigInheritanceTree( rootMapping );
+            //TargetResolution = new TargetTypeConfiguration();
             ExpCache = new GeneratedExpressionCache();
 
             //Order is important: the first MapperExpressionBuilder able to handle a mapping is used.

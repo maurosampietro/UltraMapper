@@ -15,7 +15,7 @@ namespace UltraMapper.MappingExpressionBuilders
         {
             var source = mapping.Source;
             var target = mapping.Target;
-            return source.EntryType.IsEnumerable() && target.EntryType.IsCollection();
+            return source.EntryType.IsEnumerable() && target.EntryType.IsEnumerable();
         }
 
         protected override ReferenceMapperContext GetMapperContext( Mapping mapping )

@@ -97,7 +97,12 @@ namespace UltraMapper.Internals
         public void Add( Type source, Type target, IMappingOptions options, LambdaExpression mappingExpression )
         {
             var key = new TypePairWithOptions( source, target, options );
-            _cache.Add( key, mappingExpression );
+#if NET5_0_OR_GREATER
+            _cache.TryAdd( key, mappingExpression );
+#else
+            if( !_cache.ContainsKey( key ) )
+                _cache.Add( key, mappingExpression );
+#endif
         }
     }
 }

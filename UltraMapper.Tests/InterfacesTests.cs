@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace UltraMapper.Tests
 {
@@ -196,30 +197,27 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
-        public void CollectionBehindInterface()
+        public void CollectionBehindInterfaceTargetTypeRuntimeResolution()
         {
             var source = new List<string>() { "a", "b", "c" };
             IEnumerable<string> target = new List<string>();
             var mapper = new Mapper();
 
             mapper.Map( source, target );
+            Assert.IsFalse( Object.ReferenceEquals( source, target ) );
             Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
         }
 
-        [TestMethod]
-        //[Ignore]
-        public void CollectionBehindInterface2()
+        [TestMethod]        
+        public void CollectionBehindInterfaceTargetTypeStaticResolution()
         {
-            var source = new List<string>() { "a", "b", "c" };
+            Assert.ThrowsException<ArgumentException>( () =>
+            {
+                var source = new List<string>() { "a", "b", "c" };
+                var mapper = new Mapper();
 
-            var mapper = new Mapper();
-            mapper.Config.MapTypes( typeof( List<> ), typeof( IEnumerable<> ) );
-
-            //maybe temp colllection + cast ?
-            var target = mapper.Map<List<string>, IEnumerable<string>>( source );
-            Assert.IsTrue( mapper.VerifyMapperResult( source, target ) );
-
-            throw new NotImplementedException();
+                var target = mapper.Map<List<string>, IEnumerable<string>>( source );
+            } );
         }
 
         //public void Cases()

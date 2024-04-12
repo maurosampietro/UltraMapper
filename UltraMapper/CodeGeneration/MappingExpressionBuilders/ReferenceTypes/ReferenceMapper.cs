@@ -121,11 +121,20 @@ namespace UltraMapper.MappingExpressionBuilders
                     return Expression.New( ctorInfo, sourceCountMethodCallExp );
                 }
             }
-
+            
             var defaultCtor = targetType.GetConstructor( Type.EmptyTypes );
             if( defaultCtor != null )
                 return Expression.New( targetType );
 
+            if( targetType == typeof( DateTime ) )
+            {
+                var ctor = targetType.GetConstructor( new[] { typeof( long ) } );
+                if( ctor != null )
+                {
+                    var newExpression = Expression.New( ctor, Expression.Constant( DateTime.MinValue.Ticks ) );
+                    return newExpression;
+                }
+            }
             //DON'T TRY TO AUTOMATICALLY HANDLE INHERITANCE WITH CONCRETE OBJECTS HERE
             //JUST CONFIGURE THAT OUT: cfg.MapTypes<CA, CB>( () => new ConcreteType() )
 

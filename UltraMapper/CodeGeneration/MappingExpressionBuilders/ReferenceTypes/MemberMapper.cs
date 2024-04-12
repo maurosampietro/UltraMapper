@@ -38,7 +38,11 @@ namespace UltraMapper.MappingExpressionBuilders
                 var targetSetterInstanceParamName = mapping.TargetMember.ValueSetter.Parameters[ 0 ].Name;
                 var targetSetterValueParamName = mapping.TargetMember.ValueSetter.Parameters[ 1 ].Name;
 
-                var valueReaderExp = Expression.Invoke( mapping.CustomConverter, memberContext.SourceMemberValueGetter );
+                Expression valueReaderExp = Expression.Empty();
+                if( mapping.CustomConverter.Parameters[ 0 ].Type == typeof( ReferenceTracker ) )
+                    valueReaderExp = Expression.Invoke( mapping.CustomConverter, memberContext.ReferenceTracker, memberContext.SourceMemberValueGetter );
+                else
+                    valueReaderExp = Expression.Invoke( mapping.CustomConverter, memberContext.SourceMemberValueGetter );
 
                 var exp = mapping.TargetMember.ValueSetter.Body
                     .ReplaceParameter( memberContext.TargetInstance, targetSetterInstanceParamName )
@@ -77,7 +81,8 @@ namespace UltraMapper.MappingExpressionBuilders
                 (
                     parameters,
 
-                    Expression.Assign( memberContext.SourceMember, memberContext.SourceMemberValueGetter ),
+                    //Try a cast. Would be nice to have a 'transitive' resolver/engine figuring out how to mix resolved maps/configured maps to get from A->B, B->C to A->C
+                    Expression.Assign( memberContext.SourceMember, Expression.Convert( memberContext.SourceMemberValueGetter, memberContext.SourceMember.Type ) ),
 
                     ReferenceTrackingExpression.GetMappingExpression
                     (
