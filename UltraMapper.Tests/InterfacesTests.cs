@@ -197,6 +197,22 @@ namespace UltraMapper.Tests
         }
 
         [TestMethod]
+        public void CollectionOfInterfaceElementToCollectionOfOtherInterfaceElementTargetRuntimeResoulution()
+        {
+            var source = new List<I>()
+            {
+                new TypeAImplementingI(){ MyProperty = 0 },
+                new TypeBImplementingI(){ MyProperty = 1 }
+            };
+
+            var target = new List<I2>();
+            var mapper = new Mapper();
+
+            //Because we don't know what concrete type to create on target
+            Assert.ThrowsException<Exception>( () => mapper.Map( source, target ) );
+        }
+
+        [TestMethod]
         public void CollectionBehindInterfaceTargetTypeRuntimeResolution()
         {
             var source = new List<string>() { "a", "b", "c" };

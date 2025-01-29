@@ -153,7 +153,8 @@ namespace UltraMapper
             return (Func<TArg1, object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ) };
-                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -173,7 +174,8 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
-                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -193,7 +195,8 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, TArg3, object>)_cacheWeakTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
-                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -215,7 +218,8 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof( TArg4 ) };
 
-                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                 Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -237,7 +241,8 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." );
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -259,14 +264,15 @@ namespace UltraMapper
                 if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                     ctorArgTypes = Type.EmptyTypes;
 
-                var ctorInfo = instanceType.GetConstructor( ctorArgTypes );
+                var ctorInfo = instanceType.GetConstructor( ctorArgTypes ) ?? 
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." );
 
                 var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
                 var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(
                     Expression.ArrayIndex( lambdaArgs, Expression.Constant( i ) ), t ) ).ToArray();
 
                 var instanceCreatorExp = Expression.Lambda<Func<object[], object>>(
-                   Expression.Convert( Expression.New( ctorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
+                    Expression.Convert( Expression.New( ctorInfo, constructorArgs ), typeof( object ) ), lambdaArgs );
 
                 return instanceCreatorExp.Compile();
             } );
@@ -296,7 +302,8 @@ namespace UltraMapper
             return (Func<TArg1, TInstance>)_cacheStrongTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ) };
-                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -316,7 +323,8 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, TInstance>)_cacheStrongTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ) };
-                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -336,7 +344,8 @@ namespace UltraMapper
             return (Func<TArg1, TArg2, TArg3, TInstance>)_cacheStrongTyped.GetOrAdd( key, () =>
             {
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ), typeof( TArg3 ) };
-                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -358,7 +367,8 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4)};
 
-                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -380,7 +390,8 @@ namespace UltraMapper
                 var ctorArgTypes = new[] { typeof( TArg1 ), typeof( TArg2 ),
                     typeof( TArg3 ), typeof(TArg4), typeof(TArg5) };
 
-                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = ctorArgTypes.Select( ( type, index ) =>
                     Expression.Parameter( type, $"p{index}" ) ).ToArray();
@@ -402,7 +413,8 @@ namespace UltraMapper
                 if( ctorArgTypes == null || ctorArgTypes.Length == 0 )
                     ctorArgTypes = Type.EmptyTypes;
 
-                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes );
+                var ctorInfo = typeof( TInstance ).GetConstructor( ctorArgTypes ) ??
+                    throw new ArgumentException( $"Constructor with argument types {String.Join( ", ", ctorArgTypes.Select( t => t.Name ) )} not found." ); ;
 
                 var lambdaArgs = Expression.Parameter( typeof( object[] ), "args" );
                 var constructorArgs = ctorArgTypes.Select( ( t, i ) => Expression.Convert(

@@ -263,6 +263,11 @@ namespace UltraMapper.Tests
             ultraMapper.Map( source, target );
 
             bool isResultOk = ultraMapper.VerifyMapperResult( source, target );
+            Assert.IsFalse( Object.ReferenceEquals( source.Collection, target.Collection ) );
+            
+            //would be better if same collection type is used if available
+            //Assert.IsTrue( source.Collection.GetType() == target.Collection.GetType() );
+
             Assert.IsTrue( isResultOk );
         }
 

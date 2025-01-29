@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using UltraMapper.Internals;
 
@@ -33,8 +34,8 @@ namespace UltraMapper
         /// <returns>A deep copy of the source instance.</returns>
         public TSource Map<TSource>( TSource source )
         {
+            //var target = InstanceFactory.CreateObject<TSource>();
             var target = (TSource)InstanceFactory.CreateObject( source.GetType() );
-
             return this.Map<TSource, TSource>( source, target, null );
         }
 
@@ -47,6 +48,7 @@ namespace UltraMapper
         public TTarget MapArray<TTarget>( object source )
         {
             if( source == default ) return default;
+            CheckThrowNonConcreteTargetType<TTarget>();
             TTarget target = InstanceFactory.CreateObject<int, TTarget>( 0 );
             return this.Map( source, target );
         }
@@ -60,6 +62,8 @@ namespace UltraMapper
         public TTarget Map<TTarget>( object source )
         {
             if( source == default ) return default;
+
+            CheckThrowNonConcreteTargetType<TTarget>();
             TTarget target = InstanceFactory.CreateObject<TTarget>();
             return this.Map( source, target );
         }
@@ -77,15 +81,7 @@ namespace UltraMapper
              * but really want to map TSource members only.
              */
 
-            var targetType = typeof( TTarget );
-            if( targetType.IsAbstract || targetType.IsInterface )
-            {
-                throw new ArgumentException( "Cannot map to an abstract/interface target. (Cannot create instance)" );
-
-                //TODO: we actually should check in the configuration if any specific type is configured for a 
-                //specific type and use it if configured
-            }
-
+            CheckThrowNonConcreteTargetType<TTarget>();
             var target = InstanceFactory.CreateObject<TTarget>();
             return this.Map( source, target, null );
         }
@@ -98,6 +94,7 @@ namespace UltraMapper
         /// <typeparam name="TTarget">Type of the target instance.</typeparam>
         /// <param name="source">The source instance from which the values are read.</param>
         /// <param name="target">The target instance to which the values are written.</param>
+        [MethodImpl( MethodImplOptions.AggressiveInlining )]
         public TTarget Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking = null,
             ReferenceBehaviors refBehavior = ReferenceBehaviors.USE_TARGET_INSTANCE_IF_NOT_NULL )
@@ -107,9 +104,7 @@ namespace UltraMapper
 
             if( this.Config.IsReferenceTrackingEnabled )
             {
-                if( referenceTracking == null )
-                    referenceTracking = new ReferenceTracker();
-
+                referenceTracking ??= new ReferenceTracker();
                 referenceTracking.Add( source, targetType, target );
             }
 
@@ -126,6 +121,7 @@ namespace UltraMapper
             return this.Map( source, target, referenceTracking, mapping );
         }
 
+        [MethodImpl( MethodImplOptions.AggressiveInlining )]
         internal TTarget Map<TSource, TTarget>( TSource source, TTarget target,
             ReferenceTracker referenceTracking, IMapping mapping )
         {
@@ -198,6 +194,18 @@ namespace UltraMapper
 
             return (TTarget)mapping.MappingFunc( referenceTracking, source, target );
         }
+
+        private void CheckThrowNonConcreteTargetType<TTarget>()
+        {
+            CheckThrowNonConcreteTargetType( typeof( TTarget ) );
+        }
+
+        [MethodImpl( MethodImplOptions.AggressiveInlining )]
+        private void CheckThrowNonConcreteTargetType( Type targetType )
+        {
+            if( targetType.IsAbstract || targetType.IsInterface )
+                throw new ArgumentException( "Cannot map to an abstract/interface target. (Cannot create instance)" );
+        }
     }
 
     //type
@@ -206,6 +214,7 @@ namespace UltraMapper
         public object Map( object source, Type targetType )
         {
             if( source == null ) return null;
+            CheckThrowNonConcreteTargetType( targetType );
 
             var target = InstanceFactory.CreateObject( targetType );
             this.Map( source, target );
