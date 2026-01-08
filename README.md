@@ -1,3 +1,25 @@
+## 🚀 Project Status & Call for Feedback
+
+**UltraMapper introduces a general-purpose mapping engine that goes beyond traditional serializers.**    
+Major improvements in performance, code quality, and scenario handling were developed in 2022 to support the creation of a more general-purpose mapping engine and framework. This framework is designed to allow developers to map anything to anything by creating plugins or bindings.
+
+Serializers (such as JSON, XML, or, more generally, any text-to-object solution) can be seen as being composed of two parts: a parser and a mapper.
+
+With these changes to the UltraMapper core engine, it will be possible to implement only the parser step (by implementing a specific interface) and fully delegate the mapping step to UltraMapper. Despite being a highly general solution with a strong focus on configurability, it still delivers good performance.
+
+Several implementations already exist as proof of concept, including UltraMapper.Xml, UltraMapper.Json, and UltraMapper.CSV (advanced implementation) and i'd love developers to support new formats.
+
+**UltraMapper has been developed primarily by a single full-time engineer.** While the core architecture is solid and production-ready in many areas, finalization and ecosystem growth require additional time and resources.
+
+Since AutoMapper has transitioned to a commercial model, **there is an opportunity for UltraMapper to evolve into a sustainable open-source or commercially supported alternative.**
+🤝 I am actively seeking feedback, strategic interest, or support to determine the best path forward—whether through collaboration, sponsorship, or partial commercialization.
+
+👉 If you find this approach valuable, please:
+- ⭐ Star the project
+- 💬 Share feedback or ideas
+- 🤝 Reach out if you’d like to contribute or sponsor development
+
+
 [Please take a minute to support this project with a small donation!](https://www.paypal.com/donate/?hosted_button_id=MC59U7TDE3KCQ)     
 [![Paypal](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.paypal.com/donate/?hosted_button_id=MC59U7TDE3KCQ)
 
