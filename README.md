@@ -11,7 +11,7 @@ Several implementations already exist as proof of concept, including UltraMapper
 **UltraMapper has been developed primarily by a single full-time engineer.** While the core architecture is solid and production-ready in many areas, finalization and ecosystem growth require additional time and resources.
 
 Since AutoMapper has transitioned to a commercial model, **there is an opportunity for UltraMapper to evolve into a sustainable open-source or commercially supported alternative.**
-🤝 I am actively seeking feedback, strategic interest, or support to determine the best path forward—whether through collaboration, sponsorship, or partial commercialization.
+🤝 I am actively seeking feedback, strategic interest, or support to determine the best path forward—whether through collaboration or sponsorship.
 
 👉 If you find this approach valuable, please:
 - ⭐ Star the project
