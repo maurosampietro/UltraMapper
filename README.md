@@ -3,8 +3,7 @@
 **UltraMapper introduces a general-purpose mapping engine that goes beyond traditional serializers.**    
 Major improvements in performance, code quality, and scenario handling were developed in 2022 to support the creation of a more general-purpose mapping engine and framework. This framework is designed to allow developers to map anything to anything by creating plugins or bindings.
 
-Serializers (such as JSON, XML, or, more generally, any text-to-object solution) can be seen as being composed of two parts: a parser and a mapper.
-
+Serializers in particular (such as JSON, XML, or, more generally, any text-to-object solution) can be seen as being composed of two parts: a parser and a mapper.   
 With these changes to the UltraMapper core engine, it will be possible to implement only the parser step (by implementing a specific interface) and fully delegate the mapping step to UltraMapper. Despite being a highly general solution with a strong focus on configurability, it still delivers good performance.
 
 Several implementations already exist as proof of concept, including UltraMapper.Xml, UltraMapper.Json, and UltraMapper.CSV (advanced implementation) and i'd love developers to support new formats.
